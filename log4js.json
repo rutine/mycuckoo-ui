@@ -1,0 +1,20 @@
+{
+  "appenders": {
+    "console": {
+      "type": "console"
+    },
+    "dateFile": {
+        "type": "dateFile",
+        "filename": "logs/mycuckoo.log",
+        "pattern": "-yyyy-MM-dd"
+    },
+    "mycuckooFile": {
+      "type": "logLevelFilter",
+      "level": "DEBUG",
+      "appender": "dateFile"
+    }
+  },
+  "categories": {
+    "default": { "appenders": ["console", "mycuckooFile"], "level": "debug" }
+  }
+}

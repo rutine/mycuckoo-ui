@@ -1,0 +1,12 @@
+#!/usr/bin/env node
+var log4js = require('log4js');
+var app = require('../app');
+
+
+log4js.configure('log4js.json');
+var logger = log4js.getLogger("mycockoo");
+
+app.set('port', process.env.PORT || 3111);
+var server = app.listen(app.get('port'), function() {
+  logger.info('\n\nMycuckoo Front start on port:' + server.address().port + '\n\n');
+});

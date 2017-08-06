@@ -1,0 +1,37 @@
+/* html */
+html, body {color: rgba(255, 255, 255, 0.8); background: url("../images/glow.png") no-repeat scroll center center #0D7BD5;}
+body {margin: 60px 0; }
+.form-signin {
+	border: 1px solid #E5E5E5;
+	border-radius: 5px 5px 5px 5px;
+	box-shadow: 0 1px 2px rgba(0, 0, 0, 0.05);
+	margin: 0 auto 20px;
+	padding: 19px 9px 29px;
+}
+/* .form-signin h1 {margin-bottom:15px;} */
+.form-signin .role {
+	color: #8B0000;
+	font-family: "Helvetica Neue","Hiragino Sans GB","Segoe UI","Microsoft Yahei","微软雅黑",Tahoma,Arial,STHeiti,sans-serif;
+	font-size: 13px;
+	padding: 7px 12px;
+}
+.form-signin .error {
+	color: #ea5200;
+	font-size: 20px;
+	font-weight: bold;
+	line-height: 35px;
+	margin: 0;
+	padding: 0;
+	background: 0 50%;
+}
+.background {
+	background: url("../images/login/wait.gif") no-repeat scroll center 30% #000000;
+	/*background-color: #000000;*/
+	bottom: 0;
+	left: 0;
+	position: fixed;
+	right: 0;
+	top: 0;
+	z-index: 1001;
+	opacity: 0.8;
+}

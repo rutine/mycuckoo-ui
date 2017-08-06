@@ -1,0 +1,34 @@
+		<header class="navbar navbar-default navbar-static-top" role="bannel">
+			<div class="container">
+				<div class="navbar-header">
+					<button class="navbar-toggle" data-target=".bs-navbar-collapse" data-toggle="collapse" type="button">
+						<span class="sr-only">Toggle navigation</span>
+						<span class="icon-bar"></span>
+						<span class="icon-bar"></span>
+						<span class="icon-bar"></span>
+					</button>
+					<a class="navbar-brand" href="../">MicroVotes</a>
+				</div>
+				<nav class="navbar-collapse collapse bs-navbar-collapse" role="navigation">
+					<ul class="navbar-nav nav">
+						<% if(request.param.navbarMenu === 'homePage') { %>
+						<li class="active"><a href="#">首页</a></li>
+						<% } else { %>
+						<li><a href="/?navbarMenu=homePage">首页</a></li>
+						<% } %>
+						
+						<% if(request.param.navbarMenu === 'activity') { %>
+						<li class="active"><a href="#">活动</a></li>
+						<% } else { %>
+						<li><a href="/activity?navbarMenu=activity">活动</a></li>
+						<% } %>
+						
+						<% if(request.param.navbarMenu === 'user') { %>
+						<li class="active"><a href="#">用户</a></li>
+						<% } else { %>
+						<li><a href="/users?navbarMenu=user">用户</a></li>
+						<% } %>
+					</ul>
+				</nav>
+			</div>
+		</header>
