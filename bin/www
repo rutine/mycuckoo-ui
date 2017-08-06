@@ -4,7 +4,7 @@ var app = require('../app');
 
 
 log4js.configure('log4js.json');
-var logger = log4js.getLogger("mycockoo");
+var logger = log4js.getLogger("mycuckoo");
 
 app.set('port', process.env.PORT || 3111);
 var server = app.listen(app.get('port'), function() {

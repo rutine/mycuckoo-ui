@@ -12,9 +12,9 @@
   <div class="container">
     <div class="row">
       <div class="col-md-8 col-md-offset-2">
-        <form name="loginForm" action="/login" method="post" class="form-horizontal form-signin">
+        <form name="signinForm" action="/login" method="post" class="form-horizontal form-signin">
           <div class="form-group">
-            <div class="col-md-8 col-md-offset-3">
+            <div class="col-md-8 col-md-offset-4">
               <h1 class="form-control-static">系统平台</h1>
             </div>
           </div>
@@ -39,7 +39,7 @@
           <div class="form-group">
             <div class="col-md-4 col-md-offset-4">
               <input type="button" class="btn btn-primary btn-lg" 
-                  name="loginBtn" value="&nbsp;&nbsp;&nbsp;登录&nbsp;&nbsp;&nbsp;" 
+                  name="signinBtn" value="&nbsp;&nbsp;&nbsp;登录&nbsp;&nbsp;&nbsp;" 
                   data-loading-text="登陆中..."/>
             </div>
           </div>
@@ -47,31 +47,36 @@
       </div>
     </div>
     
-    <div class="row role-pane hidden">
+    <div class="row role-pane" style="display: none;">
       
     </div>
     
   </div>
   <script src="/static/jquery/3.2.1/jquery.min.js" type="text/javascript"></script>
   <script src="/static/bootstrap/3.2.0/js/bootstrap.min.js" type="text/javascript"></script>
-  <script src="/static/js/mycuckoo.js" type="text/javascript"></script>
+  <script src="/static/mycuckoo.js" type="text/javascript"></script>
+  <script src="/static/mycuckoo.api.js" type="text/javascript"></script>
   <script type="text/javascript">
     jQuery(function($) {
-      var host = 'http://localhost:8080';
-      var $bground = $('<div class="background"></div>');
-      var $loginForm = $('form[name=loginForm]');
-      var $userCode = $loginForm.find('input[name=userCode]');
-      var $password = $loginForm.find('input[name=password]');
-      var $helpText = $loginForm.find('.text-danger');
-      var $loginBtn = $loginForm.find('input[name=loginBtn]');
+      $.ajaxSetup({
+        type: 'POST',
+        dataType: 'json',
+        xhrFields: { withCredentials: true },
+      });
       
+      var $bground = $('<div class="background"></div>');
+      var $signinForm = $('form[name=signinForm]');
+      var $userCode = $signinForm.find('input[name=userCode]');
+      var $password = $signinForm.find('input[name=password]');
+      var $helpText = $signinForm.find('.text-danger');
+      var $signinBtn = $signinForm.find('input[name=signinBtn]');
       var $rolePane = $('.role-pane');
       
       
-      $loginBtn.button('reset');
+      $signinBtn.button('reset');
       
       // 用户改变事件
-      $loginForm.on('blur', $userCode, function() {
+      $userCode.on('blur', function() {
         if (!$(this).val()) {
           $helpText.eq(0).removeClass('hidden');
         } else {
@@ -79,7 +84,7 @@
         }
       });
       // 密码改变事件
-      $loginForm.on('blur', $password, function() {
+      $password.on('blur', function() {
         if (!$(this).val()) {
           $helpText.eq(1).removeClass('hidden');
         } else {
@@ -88,22 +93,17 @@
       });
       
       // 登陆
-      $loginForm.on('click', $loginBtn, function(e) {
+      $signinBtn.on('click', function(e) {
         if (!$userCode.val()) {
           $userCode.focus();
         } else if (!$password.val()) {
           $password.focus();
-        } 
-        /* else if(!$orgRole.data('userRoleLoginParams') 
-            && !$agent.data('userAgentLoginParams')) {
-          MyCuckoo.showMsg({state: 'danger', title: '警告', msg: '无角色权限!', duration: 1000});
-        }  */
-        else {
+        } else {
           preLogin();
         }
       });
       // 捕获enter
-      $loginForm.on('keyup', function(e) {
+      $signinForm.on('keyup', function(e) {
         switch(e.keyCode) {
         case 13 :
           if (!$userCode.val()) {
@@ -118,7 +118,7 @@
       });
       
       var preLogin = function() {
-        $loginBtn.button('loading');
+        $signinBtn.button('loading');
         $bground.appendTo(($('body')));
         MyCuckoo.showMsg({state: 'info', title: '提示', msg: ' 预登录中,请稍候... '});
         var userCode = $userCode.val();
@@ -127,9 +127,11 @@
             userCode: userCode, 
             password: password
         }
-        $.post(host + '/login/preLogin', params, function(json) {
+        $.post(mycuckoo.login.firstStepUrl, params, function(json) {
           if(json.code != 0) {
             loginError(json.code, json.msg);
+            $bground.remove();
+            $signinBtn.button('reset');
             return;
           }
           
@@ -142,15 +144,16 @@
               } else {
                 roleUser.roleName = roleUser.organName + ' - ' + roleUser.roleName;
               }
-              $('<div class="col-sm-2 col-md-1">'
+              $('<div class="col-sm-6 col-md-3">'
                 + '  <div class="thumbnail">'
                 + '    <div class="caption">'
                 + '      <h3>' + roleUser.roleName + '</h3>'
                 + '    </div>'
                 + '  </div>'
-                + '</div>').data(roleUser)
+                + '</div>')
+                .data(roleUser)
                 .on('click', function() {
-                    loginSys(this.data(), null);
+                    loginSys($(this).data(), null);
                  }).appendTo($rolePane);
             }
           }
@@ -159,41 +162,47 @@
           if(json.data.agents) {
             for(var i = 0, len = json.data.agents.length; i < len; i++) {
               var agent = json.data.agents[i];
-              $('<div class="col-sm-2 col-md-1">'
+              $('<div class="col-sm-6 col-md-3">'
                   + '  <div class="thumbnail">'
                   + '    <div class="caption">'
                   + '      <h3>' + agent.userName + '(代理)</h3>'
                   + '    </div>'
                   + '  </div>'
-                  + '</div>').data(agent)
+                  + '</div>')
+                  .data(agent)
                   .on('click', function() {
-                    loginSys(null, this.data());
+                    loginSys(null, $(this).data());
                   })
                   .appendTo($rolePane);
             }
           }
           
-          $loginForm.hide();
+          $signinForm.hide();
           $rolePane.show();
         }, 'json').always(function() {
           setTimeout(function() { 
             $bground.remove();
-            $loginBtn.button('reset');
+            $signinBtn.button('reset');
           }, 1000);
         });
       };
       
       var loginSys = function(role, agent) {
-        $.post(host + '/login/loginSysFirstDo', {role: role, agent: agent}, function(json) {
-              var code = json.code;
-              var msg = json.msg;
-              if(code != 0) {
-                loginError(code, msg);
-              } else {
-                console.log('login success');
-                //window.location = 'login/loginForward?multiRole=Y&userCode=' + userCode;
-              }
-        }, 'json').always(function() {
+        $.ajax({
+          url: mycuckoo.login.secondStepUrl,
+          contentType: 'application/json; charset=utf-8',
+          data: JSON.stringify({role: role, agent: agent}),
+          success: function(json) {
+            var code = json.code;
+            var msg = json.msg;
+            if(code != 0) {
+              loginError(code, msg);
+            } else {
+              console.log('login success');
+              //window.location = 'login/loginForward?multiRole=Y&userCode=' + userCode;
+            }
+          } 
+        }).always(function() {
           setTimeout(function() { 
             
           }, 2000);

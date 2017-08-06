@@ -8,13 +8,6 @@ body {margin: 60px 0; }
 	margin: 0 auto 20px;
 	padding: 19px 9px 29px;
 }
-/* .form-signin h1 {margin-bottom:15px;} */
-.form-signin .role {
-	color: #8B0000;
-	font-family: "Helvetica Neue","Hiragino Sans GB","Segoe UI","Microsoft Yahei","微软雅黑",Tahoma,Arial,STHeiti,sans-serif;
-	font-size: 13px;
-	padding: 7px 12px;
-}
 .form-signin .error {
 	color: #ea5200;
 	font-size: 20px;
@@ -23,6 +16,20 @@ body {margin: 60px 0; }
 	margin: 0;
 	padding: 0;
 	background: 0 50%;
+}
+.role-pane .thumbnail {
+	color: #8B0000;
+	font-family: "Helvetica Neue","Hiragino Sans GB","Segoe UI","Microsoft Yahei","微软雅黑",Tahoma,Arial,STHeiti,sans-serif;
+	font-size: 13px;
+	padding: 7px 12px;
+	cursor: pointer;
+}
+.role-pane .thumbnail:hover {
+	color: #8B0000;
+	font-family: "Helvetica Neue","Hiragino Sans GB","Segoe UI","Microsoft Yahei","微软雅黑",Tahoma,Arial,STHeiti,sans-serif;
+	font-size: 13px;
+	padding: 7px 12px;
+	background-color: #729fcf;
 }
 .background {
 	background: url("../images/login/wait.gif") no-repeat scroll center 30% #000000;
