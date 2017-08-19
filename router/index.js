@@ -11,7 +11,7 @@ router.get('/', function(req, res) {
 
 router.get('/login', function(req, res) {
   logger.info("login");
-  req.session['user'] ? res.redirect('/') : res.render('login', {
+  res.render('login', {
     title : 'mycuckoo－登陆',
     request : req
   });

@@ -7,3 +7,19 @@ const mycuckoo = {
     thirdStepUrl: host + '/login/step/third',
   }
 }
+
+if(exports) {
+  const axios = require('axios');
+  axios.defaults.baseURL = host;
+  axios.defaults.headers.post['Content-Type'] = 'application/json; charset=UTF-8';
+  
+  module.exports = {
+      postMenu: function(params, callback) {
+        axios.post('/login/step/third', params).then(function (response) {
+          if(!response.code) {
+            callback(response.data.data);
+          }
+        });
+      }
+  }
+}
