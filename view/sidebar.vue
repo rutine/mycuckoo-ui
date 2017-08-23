@@ -8,7 +8,7 @@
       <a class="usedfuncmaint-hidden">常用功能<span class="glyphicon glyphicon-chevron-up"></span></a>
       <ul class="nav">
         <li v-for="commFun in menu.commonFun">
-        <!--   {{ var url = '/menu/' + commFun.belongToSys + '/' + commFun.modEnId + '?&modPageType=' + commFun.modPageType }} -->
+           <!--{{ var url = '/menu/' + commFun.belongToSys + '/' + commFun.modEnId + '?&modPageType=' + commFun.modPageType; }}-->
           <router-link :to="'/menu/' + commFun.belongToSys + '/' + commFun.modEnId + '?&modPageType=' + commFun.modPageType" 
             :class="commFun.modImgCls + '-hidden'">{{ commFun.modName }}</router-link>
         </li>
@@ -50,8 +50,8 @@ export default {
   },
   created() {
      let $this = this;
-     this.api.postMenu(null, function(data) {
-       $this.menu = data;
+     this.api.postMenu(null).then(data => {
+         $this.menu = data;
      });
   },
   methods:{

@@ -14,12 +14,8 @@ if(exports) {
   axios.defaults.headers.post['Content-Type'] = 'application/json; charset=UTF-8';
   
   module.exports = {
-      postMenu: function(params, callback) {
-        axios.post('/login/step/third', params).then(function (response) {
-          if(!response.code) {
-            callback(response.data.data);
-          }
-        });
+      postMenu: function(params) {
+        return axios.post('/login/step/third', params).then(response => response.data.data);
       }
   }
 }
