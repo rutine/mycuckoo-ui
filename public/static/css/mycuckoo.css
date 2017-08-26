@@ -8,8 +8,8 @@
 .mycuckoo-sidebar {font-family:"Microsoft Yahei","SimHei"; font-size:13px;}
 .mycuckoo-sidenav {margin: 20px 0;}
 .mycuckoo-sidebar .nav .nav {display:none; padding-left:10px;}
-.mycuckoo-sidebar .nav > li > a {display:block; padding:4px 18px; -color:#999; font-size:13px; font-weight:500; cursor:pointer;}
-.mycuckoo-sidebar .nav .nav > li > a {padding-bottom:1px; padding-top:1px; margin-left:10px; font-size:12px; font-weight:400;}
+.mycuckoo-sidebar .nav > li > a {display:block; padding:4px 18px; -color:#999; font-size:16px; font-weight:500; cursor:pointer;}
+.mycuckoo-sidebar .nav .nav > li > a {padding-bottom:1px; padding-top:1px; margin-left:10px; font-size:13px; font-weight:400;}
 .mycuckoo-sidebar .nav > li > a:hover, .mycuckoo-sidebar  .nav > li > a:focus { padding-left:17px; border-left:1px solid #563d7c; -color:#563d7c; color:#0099FF; text-decoration:none; background-color:transparent;}
 .mycuckoo-sidebar .nav > .active > a, .mycuckoo-sidebar .nav > .active:hover > a, .mycuckoo-sidebar .nav > .active:focus > a {border-left:2px solid #563d7c; padding-left:18px;-color:#563d7c; color:#0099FF; font-weight:700; background-color:transparent;}
 .mycuckoo-sidebar .nav .nav > li > a:hover, .mycuckoo-sidebar .nav .nav > li > a:focus {margin-left:10px}
@@ -128,7 +128,7 @@
 .ztree li span.button.system-parameter-mgr-icon_ico_open, .ztree li span.button.system-parameter-mgr-icon_ico_close {background:url(../images/menu/system-parameter-mgr.png) no-repeat scroll 0 50% transparent;}
 .ztree li span.button.log-mgr-icon_ico_open, .ztree li span.button.log-mgr-icon_ico_close {background:url(../images/menu/log-mgr.png) no-repeat scroll 0 50% transparent;}
 .ztree li span.button.system-log-mgr-icon_ico_open, .ztree li span.button.system-log-mgr-icon_ico_close {background:url(../images/menu/system-log-mgr.png) no-repeat scroll 0 50% transparent;}
-.ztree li span.button.system-config-mgr-icon_ico_open., .ztree li span.button.system-config-mgr-icon_ico_close {background:url(../images/menu/system-config-mgr.png) no-repeat scroll 0 50% transparent;}
+.ztree li span.button.system-config-mgr-icon_ico_open, .ztree li span.button.system-config-mgr-icon_ico_close {background:url(../images/menu/system-config-mgr.png) no-repeat scroll 0 50% transparent;}
 .ztree li span.button.module-mgr-icon_ico_open, .ztree li span.button.module-mgr-icon_ico_close {background:url(../images/menu/module-mgr.png) no-repeat scroll 0 50% transparent;}
 .ztree li span.button.operate-mgr-icon_ico_open, .ztree li span.button.operate-mgr-icon_ico_close {background:url(../images/menu/operate-mgr.png) no-repeat scroll 0 50% transparent;}
 /*-------------------------操作按钮---------------------------------------*/

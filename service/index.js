@@ -11,7 +11,7 @@ vue.use(vueRouter);
 
 const router = new vueRouter({
     routes: [
-      { path: '/userCommFunMgr/index', component: resolve => require(['../view/uum/test.vue'], resolve) }
+      { path: '/userCommFunMgr', component: resolve => require(['../view/uum/test.vue'], resolve) }
     ]
 });
 
