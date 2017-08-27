@@ -1,28 +1,28 @@
 <template>
 <section>
-<div v-for="(firstMenu, index) in menu.first" 
+<div v-for="(first, index) in menu.first"
     :style="index == 0 ? 'display: block' : 'display: none'" 
-    :id="firstMenu.moduleId + '_menu'">
+    :id="first.moduleId + '_menu'">
   <ul class="nav nav-sidebar mycuckoo-sidenav">
     <li v-if="menu.commonFun.length">
       <a class="usedfuncmaint-hidden">常用功能</a>
       <ul class="nav" :style="'display: block'">
         <li v-for="commFun in menu.commonFun" @click="activeMenu">
-           <!--{{ var url = '/menu/' + commFun.belongToSys + '/' + commFun.modEnId + '?&modPageType=' + commFun.modPageType; }}-->
-          <router-link :to="'/menu/' + commFun.belongToSys + '/' + commFun.modEnId + '?&modPageType=' + commFun.modPageType" 
-            :class="commFun.modImgCls + '-hidden'">{{ commFun.modName }}</router-link>
+          <router-link
+                  :to="'/' + commFun.belongToSys + '/' + commFun.modEnId"
+                  :class="commFun.modImgCls + '-hidden'">{{ commFun.modName }}</router-link>
         </li>
       </ul>
     </li>
     
-    <li v-for="(secondMenu, index2) in menu.second[firstMenu.moduleId]">
-      <a :class="secondMenu.modImgCls + '-hidden'">{{ secondMenu.modName }}</a>
+    <li v-for="(second, index2) in menu.second[first.moduleId]">
+      <a :class="second.modImgCls + '-hidden'">{{ second.modName }}</a>
       
       <ul class="nav" :style="'display: block'">
-          <li v-for="(thirdMenu, index3) in menu.third[secondMenu.moduleId]" @click="activeMenu">
-            <router-link :to="'/menu/' + thirdMenu.belongToSys + '/' + thirdMenu.modEnId 
-                  + '/index?&moduleId=' + thirdMenu.moduleId + '&modPageType=' + thirdMenu.modPageType" 
-              :class="thirdMenu.modImgCls + '-hidden'">{{ thirdMenu.modName }}</router-link>
+          <li v-for="(third, index3) in menu.third[second.moduleId]" @click="activeMenu">
+            <router-link
+                    :to="'/' + third.belongToSys + '/' + third.modEnId + '/' + third.moduleId"
+                    :class="third.modImgCls + '-hidden'">{{ third.modName }}</router-link>
           </li>
       </ul>
     </li>
@@ -34,19 +34,11 @@
 export default {
   data () {
     return {
-      menu: {
-        first: [],
-        second: [],
-        third: [],
-        commonFun: []
-      }
+
     }
   },
   created() {
-     let $this = this;
-     this.api.postMenu(null).then(data => {
-         $this.menu = data;
-     });
+
   },
   methods: {
     activeMenu: function(el) {//二级菜单

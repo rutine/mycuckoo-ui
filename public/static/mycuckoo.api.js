@@ -15,12 +15,21 @@ if(exports) {
   axios.defaults.headers.post['Content-Type'] = 'application/json; charset=UTF-8';
   
   module.exports = {
-    postUploadLogo: host + '/uum/user/mgr/upload/photo',
     getLogout: function() {
-      return axios.post('/login/logout').then(response => response.data.data);
+      return axios.post('/login/logout').then(res => res.data.data);
     },
     postMenu: function(params) {
-      return axios.post('/login/step/third', params).then(response => response.data.data);
-    }
+      return axios.post('/login/step/third', params).then(res => res.data.data);
+    },
+    postUploadLogo: host + '/uum/user/mgr/upload/photo',
+
+    userMgr: {
+      getChildNodes: function(params) {
+        return axios.get('/uum/user/mgr/get/child/nodes', {params: params}).then(res => res.data.data);
+      },
+      list: function(params) {
+        return axios.get('/uum/user/mgr/list', {params: params}).then(res => res.data.data);
+      },
+    },
   }
 }

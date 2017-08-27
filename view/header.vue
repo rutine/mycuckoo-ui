@@ -64,17 +64,14 @@
 export default {
   data () {
     return {
-      menu: []
+
     }
   },
   created() {
-    let $this = this;
-    this.api.postMenu(null).then(data => {
-      $this.menu = data;
-    });
+
   },
   mounted() {
-    let $api = this.api;
+    let $vue = this;
     // 个人中心
     var $userCenter = $('.form.photo-upload').remove();
     var $userBtn = $('.navbar .user');
@@ -97,7 +94,7 @@ export default {
         title : '个人信息'
       }).on('shown.bs.popover', function() {
       uploader = WebUploader.create({
-        server: $api.postUploadLogo,
+        server: $vue.api.postUploadLogo,
         pick: $('.navbar #photo_picker'),
 
         resize: false,
