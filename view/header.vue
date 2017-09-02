@@ -177,7 +177,6 @@ export default {
       $(sidebarIdForShow).show('normal', 'linear');
     },
     doLogout: function() {
-      console.log(this.api);
       this.api.getLogout().then(data => {
         window.location = '/view/login.html';
       });

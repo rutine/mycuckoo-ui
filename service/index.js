@@ -4,6 +4,7 @@ import viewHeader from '../view/header.vue';
 import viewSidebar from '../view/sidebar.vue';
 import pagination from '../view/component/pagination.vue';
 import toolbar from '../view/component/toolbar.vue';
+import selector from '../view/component/selector.vue';
 import api from '../public/static/mycuckoo.api.js';
 
 
@@ -14,6 +15,7 @@ vue.use(vueRouter);
 //注册全局组件
 vue.component('pagination', pagination);
 vue.component('toolbar', toolbar);
+vue.component('selector', selector);
 
 const router = new vueRouter({
     routes: [

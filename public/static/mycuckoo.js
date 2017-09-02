@@ -113,24 +113,17 @@ MyCuckoo = (function($) {
       $table.off('click', 'input[name=all]:checkbox');
       $table.off('click', 'tr:has(input[name=single]:checkbox)');
       $table.on('click', 'input[name=all]:checkbox', function() {
-        var $singleCheckboxs = $table.find('input[name=single]:checkbox');
+        var $singleCheckboxes = $table.find('input[name=single]:checkbox');
         if(this.checked) {
-          $singleCheckboxs.attr('checked', true);
+          $singleCheckboxes.prop('checked', 'checked');
         } else {
-          $singleCheckboxs.attr('checked', false);
+          $singleCheckboxes.prop('checked', null);
         }
       });
-      $table.on('click', 'tr:has(input[name=single]:checkbox)', function() {
-        var $singleCheckbox = $(this).find('input[name=single]:checkbox');
-        if($singleCheckbox.attr('checked')) {
-          $singleCheckbox.attr('checked', false);
-        } else {
-          $singleCheckbox.attr('checked', true);
-        }
-      });
-      $table.on('click', 'input[name=single]:checkbox', function(e) {
-        e.stopPropagation();
-      });
+      // $table.on('click', 'tr:has(input[name=single]:checkbox)', function(e) {
+      //   e.stopPropagation();
+      //   var $singleCheckbox = $(this).find('input[name=single]:checkbox');
+      // });
     },
 
     /**

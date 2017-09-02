@@ -1,27 +1,27 @@
 <template>
   <div class="text-center">
     <ul class="pagination pagination-sm">
-      <template v-if="page.hasPreviousPage">
-      <li><a href="#?pageNo=1&searchParams}">«</a></li>
-      <li><a href="#?pageNo=${current - 1}&${searchParams}">‹</a></li>
+      <template v-if="!page.firstPage">
+      <li><a href="javascript:" @click="selectPage(1)">«</a></li>
+      <li><a href="javascript:" @click="selectPage(current - 1)">‹</a></li>
       </template>
       <template v-else>
-      <li class="disabled"><a href="#">«</a></li>
-      <li class="disabled"><a href="#">‹</a></li>
+      <li class="disabled"><a href="javascript:">«</a></li>
+      <li class="disabled"><a href="javascript:">‹</a></li>
       </template>
 
       <template v-for="i in end">
-        <li v-if="i >= begin && i == current" class="active"><a :href="'#?pageNo=' + i">{{ i }}</a></li>
-        <li v-if="i >= begin && i != current"><a :href="'#?pageNo=' + i">{{ i }}</a></li>
+        <li v-if="i >= begin && i == current" class="active"><a href="javascript:" @click="selectPage(i)">{{ i }}</a></li>
+        <li v-if="i >= begin && i != current"><a href="javascript:" @click="selectPage(i)">{{ i }}</a></li>
       </template>
 
-      <template v-if="page.hasNextPage">
-      <li><a :href="'#?pageNo=' + current + 1 + '&${searchParams}'">›</a></li>
-      <li><a :href="'#?pageNo=' + page.totalPages + '&${searchParams}'">»</a></li>
+      <template v-if="!page.lastPage">
+      <li><a href="javascript:" @click="selectPage(current + 1)">›</a></li>
+      <li><a href="javascript:" @click="selectPage(page.totalPages)">»</a></li>
       </template>
       <template v-else>
-      <li class="disabled"><a href="#">›</a></li>
-      <li class="disabled"><a href="#">»</a></li>
+      <li class="disabled"><a href="javascript:">›</a></li>
+      <li class="disabled"><a href="javascript:">»</a></li>
       </template>
     </ul>
   </div>
@@ -29,24 +29,29 @@
 <script>
   export default {
     props: {
-      page: Object,
-      paginationSize: Number
+      page: Object
     },
     data () {
-      let current = this.page.number + 1;
-      let begin = Math.max(1, current - this.paginationSize / 2);
-      let end = Math.min(begin + (this.paginationSize - 1), this.page.totalPages);
       return {
-        current: current,
-        begin: begin,
-        end: end
+        current: 1,
+        begin: 1,
+        end: 0
       }
     },
     created() {
 
     },
+    watch: {
+      page: function(page) {
+        this.current = page.number + 1;
+        this.begin = Math.max(1, this.current - parseInt(page.size / 2));
+        this.end = Math.min(this.begin + (page.size - 1), page.totalPages);
+      }
+    },
     methods: {
-
+      selectPage: function(number) {
+        this.$emit('selectPage', number);
+      }
     }
   }
 </script>
