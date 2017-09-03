@@ -64,7 +64,7 @@
           <th>创建日期</th>
         </tr>
         <tr v-for="(user, index) in page.content">
-          <td><input type="checkbox" name="single" v-model="selectData" :value="index"/></td>
+          <td><input type="checkbox" name="single" v-model="selectData" :value="user.userId"/></td>
           <td>{{ index + 1 }}</td>
           <td>{{ user.userCode }}</td>
           <td>{{ user.userName }}</td>
@@ -96,29 +96,30 @@
     </div>
     </div>
 
-    <component :is="config.view" :config="config"></component>
+    <component :is="config.view" :config="config" @refresh="list"></component>
   </div>
 </template>
 <script>
 import mgrForm from './userMgrForm.vue';
+import roleForm from './userMgrAssignRole.vue';
 
 export default {
   data () {
     return {
-      param: {
-        treeId: null,
-        userCode: '',
-        userName: '',
-        pageNo: 1,
-        pageSize: 3
-      },
       page: {
-        number: 0,
+        number: 1,
         size: 10,
         totalPages: 0,
         firstPage: true,
         lastPage: false,
         content: []
+      },
+      param: {
+        treeId: null,
+        userCode: null,
+        userName: null,
+        pageNo: 1,
+        pageSize: 10
       },
       selectData: [],
       config: {}
@@ -155,7 +156,8 @@ export default {
     $vue.list();
   },
   components: {
-    mgrForm: mgrForm
+    mgrForm: mgrForm,
+    roleForm: roleForm
   },
   methods: {
     //列表
@@ -187,6 +189,13 @@ export default {
         });
       }
     },
+    //检查选中
+    checkSelect() {
+      if(this.selectData.length != 1) {
+        MyCuckoo.showMsg({state: 'warning', title: '提示', msg: '请选择一条件记录!'});
+        throw new Error('请选择一条件记录');
+      }
+    },
     //操作
     operator(fn) {
       eval('this.' + fn + '()');
@@ -200,17 +209,128 @@ export default {
     },
     //修改
     modify() {
+      this.checkSelect();
+
+      this.config = {
+        view: 'mgrForm',
+        action: 'update',
+        id: this.selectData[0]
+      }
+    },
+    //查看
+    view() {
+      this.checkSelect();
+
+      this.config = {
+        view: 'mgrForm',
+        action: 'view',
+        id: this.selectData[0]
+      }
+    },
+    //删除
+    delete() {
+      this.checkSelect();
+
       let $vue = this;
-      if($vue.selectData.length == 1) {
-        this.config = {
-          view: 'mgrForm',
-          action: 'update',
-          id: $vue.page.content[$vue.selectData[0]].userId
+      MyCuckoo.showDialog({
+        title: '警告提示',
+        msg: '您确认删除此记录吗?',
+        okBtn: '是',
+        cancelBtn: '否',
+        ok: function() {
+          this.api.userMgr.del({id: this.selectData[0]}).then(data => {
+            MyCuckoo.showMsg({state: 'success', title: '提示', msg: data.message});
+
+            $vue.list(); // 刷新列表
+          });
         }
-        return;
+      });
+    },
+    //启用
+    enable() {
+      this.checkSelect();
+
+      let $vue = this;
+      for(let index in $vue.page.content) {
+        let item = $vue.page.content[index];
+        if($vue.selectData[0] == item.userId && item.status == 'enable') {
+          MyCuckoo.showMsg({ state: 'info', title : '提示', msg : '此用户已经启用' });
+          return;
+        }
       }
 
-      MyCuckoo.showMsg({state: 'warning', title: '提示', msg: '请选择一条件记录!'});
+      $vue.api.userMgr.disEnable({id: $vue.selectData[0], disEnableFlag: 'enable'}).then(data => {
+        MyCuckoo.showMsg({state: 'success', title: '提示', msg: '用户停用成功!此用户将不能在使用本系统。'});
+
+        $vue.list(); // 刷新列表
+      });
+    },
+    //停用
+    disable() {
+      this.checkSelect();
+
+      let $vue = this;
+      for(let index in $vue.page.content) {
+        let item = $vue.page.content[index];
+        if($vue.selectData[0] == item.userId && item.status == 'disable') {
+          MyCuckoo.showMsg({ state: 'info', title : '提示', msg : '此用户已经停用' });
+          return;
+        }
+      }
+
+      MyCuckoo.showDialog({
+        msg : '您确认停用此用户?如停用,此用户将归入无角色用户并自动清除所有权限。',
+        okBtn: '是',
+        cancelBtn: '否',
+        ok : function() {
+          $vue.api.userMgr.disEnable({id: $vue.selectData[0], disEnableFlag: 'disable'}).then(data => {
+            MyCuckoo.showMsg({state: 'success', title: '提示', msg: '用户启用成功'});
+
+            $vue.list(); // 刷新列表
+          });
+        }
+      });
+    },
+    //重置密码
+    resetpwd() {
+      this.checkSelect();
+
+      let $vue = this;
+      let userName = '';
+      for(let index in $vue.page.content) {
+        let item = $vue.page.content[index];
+        if($vue.selectData[0] == item.userId) {
+          userName = item.userName;
+        }
+      }
+
+      $vue.api.userMgr.resetPwd({id: $vue.selectData[0], userName: userName}).then(data => {
+        MyCuckoo.showMsg({state: 'success', title: '提示', msg: '用户启用成功'});
+
+        $vue.list(); // 刷新列表
+      });
+    },
+    //分配角色
+    assignrole() {
+      this.checkSelect();
+
+      let $vue = this;
+      let user = null;
+      for(let index in $vue.page.content) {
+        let item = $vue.page.content[index];
+        if ($vue.selectData[0] == item.userId) {
+          user = item;
+          if(item.status == 'disable') {
+            MyCuckoo.showMsg({state: 'info', title: '提示', msg: '请先启用此用户'});
+            return;
+          }
+        }
+      }
+
+      this.config = {
+        view: 'roleForm',
+        user: user
+      }
     }
 
   }
@@ -226,198 +346,14 @@ export default {
           event.preventDefault();
           var opt = $(this).attr('href'); // modId = 53
           switch(opt) {
-          case BasicConstant.OPT_ADD_LINK:
-            addOrUpdateOrView('createForm');
-            break;
-          case BasicConstant.OPT_MODIFY_LINK:
-            addOrUpdateOrView('updateForm');
-            break;
-          case BasicConstant.OPT_DELETE_LINK:
-            del();
-            break;
-          case BasicConstant.OPT_VIEW_LINK:
-            addOrUpdateOrView('viewForm');
-            break;
-          case BasicConstant.OPT_ENABLE_LINK:
-            disEnable(BasicConstant.OPT_ENABLE_LINK);
-            break;
-          case BasicConstant.OPT_DISABLE_LINK:
-            disEnable(BasicConstant.OPT_DISABLE_LINK);
-            break;
           case BasicConstant.OPT_OPTPRI_LINK:
             assignPriv();
             break;
           case 'assignrole':
             assignRole();
             break;
-          case 'resetpwd':
-            resetPwd();
-            break;
           }
         });
-
-      // 增加、更新、查看操作
-      function addOrUpdateOrView(_url) {
-        if(/view|update/.test(_url)) {
-          var $singleCheck = $main.find('.table input:checked[name=single]');
-          if($singleCheck.size() != 1) {
-            MyCuckoo.showMsg({state: 'warning', title: '提示', msg: '请选择一条件记录!'});
-            return;
-          }
-          var _jsonObj = $.parseJSON($singleCheck.next(':first').html());
-          _url = _url + '?id=' + _jsonObj.userId;
-        }
-        $.get(_url, function(html) {
-          $('.mycuckoo-main .row').removeClass('active').addClass('hidden');
-          var $html = $('<div class="row active"></div>').append(html).appendTo('.mycuckoo-main');
-          // 操作按钮
-          $html.on('click', '.btn-toolbar .btn-group a', function(event) {
-            event.preventDefault();
-            $(this).button('loading');
-            switch($(this).attr('href')) {
-            case 'save':
-              btnCommit((/update/.test(_url)) ? 'update' : 'save');
-              break;
-            case 'saveadd':
-              btnCommit('saveadd');
-              $(this).button('reset');
-              break;
-            case 'reback':
-              $('.mycuckoo-main .row:not(:first)').remove();
-              $('.mycuckoo-main .row').removeClass('hidden').addClass('active');
-              break;
-            }
-          });
-          // 用户有效期
-          $html.find('#user_avidate').datetimepicker({
-            language : 'zh-CN',
-            format : 'yyyy-mm-dd',
-            autoclose : 1,
-            todayHighlight: 1,
-            todayBtn : 'linked',
-            startView : 2,
-            minView : 2,
-            forceParse : 0
-          });
-          // 选择角色
-          $html.on('focus click', 'input[name=uumRoleName], .btn.select', function() {
-            var $this = $(this);
-            var _setting = MyCuckoo.cloneObject(setting); // 复制机构角色树对象
-            var callback = {
-              onClick : function(evane, treeId, treeNode) {
-                var _flag = treeNode.id.indexOf('_');
-                if(treeNode.id.substr(_flag + 1) == '1' || treeNode.id == '0') return;
-                var id = treeNode.id.substr(0, _flag);
-                var name = treeNode.getParentNode() ? (treeNode.getParentNode().text + '-' + treeNode.text) : treeNode.text;
-                $this.siblings('input:hidden').val(id);
-                $this.hasClass('btn') ? $this.siblings('input:not(:hidden)').val(name) : $this.val(name);
-                $modal.modal('hide');
-              }
-            };
-            var $modal = $(MyCuckoo.modalTemplate);
-            $modal.on('hidden.bs.modal', function() { $(this).off().find('.btn').off().end().remove(); });
-            $modal.find('.modal-dialog').addClass('modal-sm');
-            $modal.find('h3').text('选择角色');
-            $modal.find('.modal-body').append('<ul class="nav nav-list">' +
-                      '<li style="font-size:13px">' + 
-                        '<strong>机构角色树</strong>' + 
-                      '</li>' +
-                      '<li><ul class="ztree"></ul></li>' +
-                    '</ul>');
-            $modal.find('.modal-footer .btn:first').remove();
-            $modal.modal();
-            $modal.appendTo($('body'));
-            
-            _setting.callback = callback;
-            $.fn.zTree.init($modal.find('.modal-body .ztree'), _setting);
-          });
-          // 保存函数
-          function btnCommit(btn) {
-            var $form = $html.find('form[name=editForm]');
-            // 验证表单
-            if($form.validate().form()) {
-              var params = $form.serialize();
-              $.post(_url, params, function(json) {
-                MyCuckoo.showMsg({state: json.status ? 'success' : 'danger', title: '提示', msg: json.msg});
-                if(json.status) {
-                  reload(config); // 刷新列表
-                  if(btn == 'saveadd') {
-                    $form[0].reset();
-                  } else {
-                    $('.mycuckoo-main .row:not(:first)').remove();
-                    $('.mycuckoo-main .row').removeClass('hidden').addClass('active');
-                  }
-                }
-              }, 'json');
-            }
-          }
-        });
-      }
-      
-      // 删除操作
-      function del() {
-        var $singleCheck = $main.find('.main input:checked[name=single]');
-        if($singleCheck.size() != 1) {
-          MyCuckoo.showMsg({state: 'warning', title: '提示', msg: '请选择一条件记录!'});
-          return;
-        }
-        MyCuckoo.showDialog({
-          title: '警告提示',
-          msg: '您确认删除此记录吗?',
-          okBtn: '是',
-          cancelBtn: '否',
-          ok: function() {
-            var _jsonObj = $.parseJSON($singleCheck.next(':first').html());
-            var _id = _jsonObj.userId;
-            $.getJSON('delete', {id: _id}, function(json) {
-              if(json.status) {
-                MyCuckoo.showMsg({state: 'success', title: '提示', msg: json.msg});
-                reload(config); // 刷新列表
-              } else {
-                MyCuckoo.showMsg({state: 'danger', title: '提示', msg: json.msg});
-              }
-            });
-          }
-        });
-      }
-      
-      // 启用、停用操作
-      function disEnable(flag) {
-        var $singleCheck = $main.find('.table input:checked[name=single]');
-        if ($singleCheck.size() != 1) {
-          MyCuckoo.showMsg({ state: 'warning', title : '提示', msg : '请选择一条件记录!' });
-          return;
-        }
-        var _jsonObj = $.parseJSON($singleCheck.next(':first').html());
-        if (flag == _jsonObj.status) {
-          var msg = (flag != BasicConstant.OPT_DISABLE_LINK ? '此用户已经启用!' : '此用户已经停用!');
-          MyCuckoo.showMsg({ state: 'info', title : '提示', msg : msg });
-          return;
-        }
-        if (flag == BasicConstant.OPT_DISABLE_LINK) {
-          MyCuckoo.showDialog({
-            msg : '您确认停用此用户?如停用,此用户将归入无角色用户并自动清除所有权限。',
-            okBtn: '是',
-            cancelBtn: '否',
-            ok : function() {
-              disableEnalbeOpt(flag, _jsonObj.userId);
-            }
-          });
-        } else {
-          disableEnalbeOpt(flag, _jsonObj.userId);
-        }
-        function disableEnalbeOpt(flag, id) {
-          $.getJSON('disEnable', {id: id, disEnableFlag: flag}, function(json) {
-            if(json.status) {
-              var msg = (flag != BasicConstant.OPT_DISABLE_LINK ? '用户启用成功!' : '用户停用成功!此用户将不能在使用本系统。');
-              MyCuckoo.showMsg({state:'success', title: '提示', msg: msg});
-              reload(config); // 刷新列表
-            } else {
-              MyCuckoo.showMsg({state:'danger', title: '提示', msg: '操作失败!'});
-            }
-          });
-        }
-      }
       
       // 分配特殊权限
       function assignPriv() {
@@ -929,23 +865,6 @@ export default {
             $modal.find('input[name=defaultRoleName]').val('');
           }
         };
-      }
-      
-      // 重置密码
-      function resetPwd() {
-        var $singleCheck = $main.find('.table input:checked[name=single]');
-        if ($singleCheck.size() != 1) {
-          MyCuckoo.alertMsg({ state: 'warning', title : '提示', msg : '请选择一条件记录!' });
-          return;
-        }
-        var _jsonObj = $.parseJSON($singleCheck.next(':first').html());
-        $.post('resetPwd', {id : _jsonObj.userId, userName : _jsonObj.userName},  function(data) {
-          if(data.status) {
-            MyCuckoo.showMsg({state:'success', title: '提示', msg: data.msg});
-          } else {
-            MyCuckoo.showMsg({state:'danger', title: '提示', msg: data.msg});
-          }
-        });
       }
       // the end...
       

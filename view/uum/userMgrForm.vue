@@ -94,8 +94,7 @@
       config: Object
     },
     data () {
-      console.log(this.config);
-      if(this.config.id) {
+      if(this.config.id > -1) {
         this.api.userMgr.view(this.config).then(data => {
           this.user = data;
         });
@@ -151,8 +150,9 @@
               if(treeNode.id.substr(_flag + 1) == '1' || treeNode.id == '0') return;
               var id = treeNode.id.substr(0, _flag);
               var name = treeNode.getParentNode() ? (treeNode.getParentNode().text + '-' + treeNode.text) : treeNode.text;
-              $this.siblings('input:hidden').val(id);
-              $this.hasClass('btn') ? $this.siblings('input:not(:hidden)').val(name) : $this.val(name);
+
+              $vue.user.orgRoleId = id;
+              $vue.user.roleName = name;
               $modal.modal('hide');
             },
             beforeExpand : function(treeId, treeNode) {
@@ -197,13 +197,21 @@
       operator(fn) {
         eval('this.' + fn + '()');
       },
-      saveadd() {
+      create() {
+        let $vue = this;
         this.api.userMgr.create(this.user).then(data => {
           MyCuckoo.showMsg({state: 'success', title: '提示', msg: data.message});
+
+          $vue.$emit('refresh');
         });
       },
-      save() {
+      update() {
+        let $vue = this;
+        this.api.userMgr.update(this.user).then(data => {
+          MyCuckoo.showMsg({state: 'success', title: '提示', msg: data.message});
 
+          $vue.$emit('refresh');
+        });
       },
       reback() {
         this.config.view = '';

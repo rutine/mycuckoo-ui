@@ -13,13 +13,9 @@
 <div v-else-if="name == 'formOpt'" class="btn-toolbar">
   <div class="btn-group">
       <template v-if="value == 'create'">
-      <a href="javascript:" @click="$emit('operator', 'save')"
+      <a href="javascript:" @click="$emit('operator', 'create')"
          class="btn btn-default btn-sm" data-loading-text="执行中...">保存
         <span class="glyphicon glyphicon-hdd"></span>
-      </a>
-      <a href="javascript:" @click="$emit('operator', 'saveadd')"
-         class="btn btn-default btn-sm" data-loading-text="执行中...">保存增加
-        <span class="glyphicon glyphicon-plus-sign"></span>
       </a>
       <a href="javascript:" @click="$emit('operator', 'reback')"
          class="btn btn-default btn-sm" data-loading-text="执行中...">返回
@@ -27,7 +23,7 @@
       </a>
       </template>
       <template v-else-if="value == 'update'">
-      <a href="javascript:" @click="$emit('operator', 'save')"
+      <a href="javascript:" @click="$emit('operator', 'update')"
          class="btn btn-default btn-sm" data-loading-text="执行中...">保存
         <span class="glyphicon glyphicon-hdd"></span>
       </a>

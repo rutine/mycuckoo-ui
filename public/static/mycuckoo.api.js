@@ -13,12 +13,16 @@ if(exports) {
   axios.defaults.baseURL = host;
   axios.defaults.withCredentials = true
   axios.defaults.headers.post['Content-Type'] = 'application/json; charset=UTF-8';
+  axios.defaults.headers.put['Content-Type'] = 'application/x-www-form-urlencoded; charset=UTF-8';
 
   //返回状态判断(添加响应拦截器)
   axios.interceptors.response.use((res) => {
     if(res.data.code == 405) {//未登录
       window.location = '/view/login.html';
     }
+    // else if(res.data.code != 200) {
+    //   MyCuckoo.showMsg({state: 'danger', title: '提示', msg: res.data.message});
+    // }
 
     return res;
   }, (error) => {
@@ -45,8 +49,26 @@ if(exports) {
       create: function(params) {
         return axios.post('/uum/user/mgr/create', params).then(res => res.data.data);
       },
+      update: function(params) {
+        return axios.post('/uum/user/mgr/update', params).then(res => res.data.data);
+      },
       view: function(params) {
         return axios.get('/uum/user/mgr/view', {params: params}).then(res => res.data.data);
+      },
+      del: function(params) {
+        return axios.get('/uum/user/mgr/delete', {params: params}).then(res => res.data.data);
+      },
+      disEnable: function(params) {
+        return axios.get('/uum/user/mgr/disEnable', {params: params}).then(res => res.data.data);
+      },
+      resetPwd: function(params) {
+        return axios.get('/uum/user/mgr/reset/password', {params: params}).then(res => res.data.data);
+      },
+      listRolePrivilege: function(params) {
+        return axios.get('/uum/user/mgr/list/role/privilege', {params: params}).then(res => res.data.data);
+      },
+      saveRolePrivilege: function(params) {
+        return axios.get('/uum/user/mgr/save/role/privilege', {params: params}).then(res => res.data.data);
       }
     },
   }

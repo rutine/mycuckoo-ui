@@ -129,7 +129,7 @@
         }
         $.post(mycuckoo.login.firstStepUrl, params, function(json) {
           if(json.code != 0) {
-            loginError(json.code, json.msg);
+            loginError(json.code, json.message);
             $bground.remove();
             $signinBtn.button('reset');
             return;
@@ -194,7 +194,7 @@
           data: JSON.stringify({role: role, agent: agent}),
           success: function(json) {
             var code = json.code;
-            var msg = json.msg;
+            var msg = json.message;
             if(code != 0) {
               loginError(code, msg);
             } else {
