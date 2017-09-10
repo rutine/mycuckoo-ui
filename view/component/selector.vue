@@ -130,7 +130,7 @@
   export default {
     props: {
       name: String,
-      value: String,
+      value: [String, Number],
       field: String,
       disabled: String
     },

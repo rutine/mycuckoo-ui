@@ -43,6 +43,35 @@ if(exports) {
         return axios.get('/uum/organ/mgr/get/child/nodes', {params: params}).then(res => res.data.data);
       },
     },
+    roleMgr: {
+      list: function(params) {
+        return axios.get('/uum/role/mgr/list', {params: params}).then(res => res.data.data);
+      },
+      listRowPrivilege: function(params) {
+        return axios.get('/uum/role/mgr/list/row/privilege', {params: params}).then(res => res.data.data);
+      },
+      create: function(params) {
+        return axios.put('/uum/role/mgr/create', params).then(res => res.data.data);
+      },
+      update: function(params) {
+        return axios.put('/uum/role/mgr/update', params).then(res => res.data.data);
+      },
+      view: function(params) {
+        return axios.get('/uum/role/mgr/view', {params: params}).then(res => res.data.data);
+      },
+      del: function(params) {
+        return axios.delete('/uum/role/mgr/delete', {params: params}).then(res => res.data.data);
+      },
+      disEnable: function(params) {
+        return axios.get('/uum/role/mgr/disEnable', {params: params}).then(res => res.data.data);
+      },
+      saveOperationPrivilege: function(params) {
+        return axios.get('/uum/role/mgr/save/operation/privilege', {params: params}).then(res => res.data.data);
+      },
+      saveRowPrivilege: function(params) {
+        return axios.get('/uum/role/mgr/save/row/privilege', {params: params}).then(res => res.data.data);
+      },
+    },
     userMgr: {
       getChildNodes: function(params) {
         return axios.get('/uum/user/mgr/get/child/nodes', {params: params}).then(res => res.data.data);
@@ -51,16 +80,16 @@ if(exports) {
         return axios.get('/uum/user/mgr/list', {params: params}).then(res => res.data.data);
       },
       create: function(params) {
-        return axios.post('/uum/user/mgr/create', params).then(res => res.data.data);
+        return axios.put('/uum/user/mgr/create', params).then(res => res.data.data);
       },
       update: function(params) {
-        return axios.post('/uum/user/mgr/update', params).then(res => res.data.data);
+        return axios.put('/uum/user/mgr/update', params).then(res => res.data.data);
       },
       view: function(params) {
         return axios.get('/uum/user/mgr/view', {params: params}).then(res => res.data.data);
       },
       del: function(params) {
-        return axios.get('/uum/user/mgr/delete', {params: params}).then(res => res.data.data);
+        return axios.delete('/uum/user/mgr/delete', {params: params}).then(res => res.data.data);
       },
       disEnable: function(params) {
         return axios.get('/uum/user/mgr/disEnable', {params: params}).then(res => res.data.data);

@@ -89,130 +89,132 @@
 </div>
 </template>
 <script>
-  export default {
-    props: {
-      config: Object
-    },
-    data () {
-      if(this.config.id > -1) {
-        this.api.userMgr.view(this.config).then(data => {
-          this.user = data;
-        });
-      }
-      return {
-        user: {
-          userCode: null,
-          userName: null,
-          userPhotoUrl: null,
-          userPassword: null,
-          userGender: null,
-          userPosition: null,
-          userQq: null,
-          userMsn: null,
-          userMobile: null,
-          userMobile2: null,
-          userOfficeTel: null,
-          userFamilyTel: null,
-          userAddress: null,
-          userEmail: null,
-          userAvidate: null,
-          belongOrganId: null,
-          orgRoleId: null,
-          roleName: null,
-          memo: null
-        }
-      }
-    },
-    mounted() {
-      let $vue = this;
-
-      // 用户有效期
-      let $html = $(this.$el);
-      $html.find('#user_avidate').datetimepicker({
-        language : 'zh-CN',
-        format : 'yyyy-mm-dd',
-        autoclose : 1,
-        todayHighlight: 1,
-        todayBtn : 'linked',
-        startView : 2,
-        minView : 2,
-        forceParse : 0
+export default {
+  props: {
+    config: Object
+  },
+  data () {
+    if(this.config.id > -1) {
+      this.api.userMgr.view(this.config).then(data => {
+        this.user = data;
       });
-
-      // 选择角色
-      $html.on('click', 'input[name=roleName], .btn.select', function() {
-        var $this = $(this);
-        let setting = {
-          check : { enable : false},
-          callback : {
-            onClick : function(evane, treeId, treeNode) {
-              let index = treeNode.id.indexOf('_');
-              if(treeNode.id == '0' || treeNode.id.substr(0, index) == 'orgId') return;
-              var id = treeNode.id.substr(index + 1);
-              var name = treeNode.getParentNode() ? (treeNode.getParentNode().text + '-' + treeNode.text) : treeNode.text;
-
-              $vue.user.orgRoleId = id;
-              $vue.user.roleName = name;
-              $modal.modal('hide');
-            },
-            beforeExpand : function(treeId, treeNode) {
-              !treeNode.loaded && $vue.api.userMgr.getChildNodes({ treeId: treeNode.id }).then(data => {
-                treeNode.loaded = true;
-                zTree.addNodes(treeNode, data, true);
-              });
-            }
-          },
-          data : { key : { name : 'text', icon : 'iconCls' } },
-          view : {
-            showLine : true,
-            showIcon : false
-          }
-        }
-        var $modal = $(MyCuckoo.modalTemplate);
-        $modal.on('hidden.bs.modal', function() { $(this).off().find('.btn').off().end().remove(); });
-        $modal.find('.modal-dialog').addClass('modal-sm');
-        $modal.find('h3').text('选择角色');
-        $modal.find('.modal-body').append(
-            '<ul class="nav nav-list">' +
-            '   <li style="font-size:13px">' +
-            '     <strong>机构角色树</strong>' +
-            '   </li>' +
-            '   <li><ul class="ztree"></ul></li>' +
-            '</ul>');
-        $modal.find('.modal-footer .btn:first').remove();
-        $modal.modal();
-        $modal.appendTo($('body'));
-
-        let zTree = null;
-        $vue.api.userMgr.getChildNodes(null).then(data => {
-          zTree = $.fn.zTree.init($modal.find('.modal-body .ztree'), setting, data);
-        });
-      });
-
-    },
-    methods: {
-      operator(fn) {
-        eval('this.' + fn + '()');
-      },
-      create() {
-        let $vue = this;
-        this.api.userMgr.create(this.user).then(data => {
-          MyCuckoo.showMsg({state: 'success', title: '提示', msg: data});
-
-          $vue.$emit('refresh');
-        });
-      },
-      update() {
-        let $vue = this;
-        this.api.userMgr.update(this.user).then(data => {
-          MyCuckoo.showMsg({state: 'success', title: '提示', msg: data});
-
-          $vue.$emit('refresh');
-        });
-      },
-      reback() {
-        this.config.view = '';
+    }
+    return {
+      user: {
+        userCode: null,
+        userName: null,
+        userPhotoUrl: null,
+        userPassword: null,
+        userGender: null,
+        userPosition: null,
+        userQq: null,
+        userMsn: null,
+        userMobile: null,
+        userMobile2: null,
+        userOfficeTel: null,
+        userFamilyTel: null,
+        userAddress: null,
+        userEmail: null,
+        userAvidate: null,
+        belongOrganId: null,
+        orgRoleId: null,
+        roleName: null,
+        memo: null
       }
     }
+  },
+  mounted() {
+    let $vue = this;
+
+    // 用户有效期
+    let $html = $(this.$el);
+    $html.find('#user_avidate').datetimepicker({
+      language : 'zh-CN',
+      format : 'yyyy-mm-dd',
+      autoclose : 1,
+      todayHighlight: 1,
+      todayBtn : 'linked',
+      startView : 2,
+      minView : 2,
+      forceParse : 0
+    });
+
+    // 选择角色
+    $html.on('click', 'input[name=roleName], .btn.select', function() {
+      var $this = $(this);
+      let setting = {
+        check : { enable : false},
+        callback : {
+          onClick : function(evane, treeId, treeNode) {
+            let index = treeNode.id.indexOf('_');
+            if(treeNode.id == '0' || treeNode.id.substr(0, index) == 'orgId') return;
+            var id = treeNode.id.substr(index + 1);
+            var name = treeNode.getParentNode() ? (treeNode.getParentNode().text + '-' + treeNode.text) : treeNode.text;
+
+            $vue.user.orgRoleId = id;
+            $vue.user.roleName = name;
+            $modal.modal('hide');
+          },
+          beforeExpand : function(treeId, treeNode) {
+            !treeNode.loaded && $vue.api.userMgr.getChildNodes({ treeId: treeNode.id }).then(data => {
+              treeNode.loaded = true;
+              zTree.addNodes(treeNode, data, true);
+            });
+          }
+        },
+        data : { key : { name : 'text', icon : 'iconCls' } },
+        view : {
+          showLine : true,
+          showIcon : false
+        }
+      }
+      var $modal = $(MyCuckoo.modalTemplate);
+      $modal.on('hidden.bs.modal', function() { $(this).off().find('.btn').off().end().remove(); });
+      $modal.find('.modal-dialog').addClass('modal-sm');
+      $modal.find('h3').text('选择角色');
+      $modal.find('.modal-body').append(
+          '<ul class="nav nav-list">' +
+          '   <li style="font-size:13px">' +
+          '     <strong>机构角色树</strong>' +
+          '   </li>' +
+          '   <li><ul class="ztree"></ul></li>' +
+          '</ul>');
+      $modal.find('.modal-footer .btn:first').remove();
+      $modal.modal();
+      $modal.appendTo($('body'));
+
+      let zTree = null;
+      $vue.api.userMgr.getChildNodes(null).then(data => {
+        zTree = $.fn.zTree.init($modal.find('.modal-body .ztree'), setting, data);
+      });
+    });
+
+  },
+  methods: {
+    operator(fn) {
+      eval('this.' + fn + '()');
+    },
+    create() {
+      let $vue = this;
+      this.api.userMgr.create(this.user).then(data => {
+        MyCuckoo.showMsg({state: 'success', title: '提示', msg: data});
+
+        $vue.$emit('refresh');
+        this.reback();
+      });
+    },
+    update() {
+      let $vue = this;
+      this.api.userMgr.update(this.user).then(data => {
+        MyCuckoo.showMsg({state: 'success', title: '提示', msg: data});
+
+        $vue.$emit('refresh');
+        this.reback();
+      });
+    },
+    reback() {
+      this.config.view = '';
+    }
   }
+}
 </script>

@@ -1,6 +1,6 @@
 <template>
   <div class="row">
-    <div v-show="!config.view" >
+    <div v-show="!config.view">
     <div class="col-sm-3 col-md-2 mycuckoo-sidebar">
       <ul class="nav">
         <li style="font-size:13px">
@@ -63,31 +63,31 @@
           <th>创建人</th>
           <th>创建日期</th>
         </tr>
-        <tr v-for="(user, index) in page.content">
-          <td><input type="checkbox" name="single" v-model="selectData" :value="user.userId"/></td>
+        <tr v-for="(item, index) in page.content">
+          <td><input type="checkbox" name="single" v-model="selectData" :value="item"/></td>
           <td>{{ index + 1 }}</td>
-          <td>{{ user.userCode }}</td>
-          <td>{{ user.userName }}</td>
+          <td>{{ item.userCode }}</td>
+          <td>{{ item.userName }}</td>
           <td class="hidden"></td>
           <td><selector name="gender" :value="user.userGender"></selector></td>
-          <td>{{ user.userPosition }}</td>
+          <td>{{ item.userPosition }}</td>
           <td class="hidden"></td>
           <td class="hidden"></td>
-          <td>{{ user.userQq }}</td>
+          <td>{{ item.userQq }}</td>
           <td class="hidden"></td>
-          <td>{{ user.userMobile }}</td>
-          <td class="hidden"></td>
-          <td class="hidden"></td>
+          <td>{{ item.userMobile }}</td>
           <td class="hidden"></td>
           <td class="hidden"></td>
-          <td>{{ user.userEmail }}</td>
           <td class="hidden"></td>
-          <td>{{ user.orgName }}</td>
-          <td>{{ user.roleName }}</td>
+          <td class="hidden"></td>
+          <td>{{ item.userEmail }}</td>
+          <td class="hidden"></td>
+          <td>{{ item.orgName }}</td>
+          <td>{{ item.roleName }}</td>
           <td><selector name="status" :value="user.status"></selector></td>
           <td class="hidden"></td>
-          <td>{{ user.creator }}</td>
-          <td>{{ user.createDate }}</td>
+          <td>{{ item.creator }}</td>
+          <td>{{ item.createDate }}</td>
         </tr>
       </table>
 
@@ -165,6 +165,7 @@ export default {
     //列表
     list() {
       let $vue = this;
+      $vue.selectData = [];
       $vue.api.userMgr.list($vue.param).then(data => {
         $vue.page = data;
       });
@@ -187,7 +188,7 @@ export default {
       } else {
         $vue.selectData = [];
         $vue.page.content.forEach(function(item, i) {
-          $vue.selectData.push(i);
+          $vue.selectData.push(item);
         });
       }
     },
@@ -200,14 +201,7 @@ export default {
     },
     //查找选中
     retrieve() {
-      for(let index in this.page.content) {
-        let item = this.page.content[index];
-        if(this.selectData[0] == item.userId) {
-          return item;
-        }
-      }
-
-      return null;
+      return this.selectData[0];
     },
     //操作
     operator(fn) {
@@ -229,7 +223,7 @@ export default {
       this.config = {
         view: 'mgrForm',
         action: 'update',
-        id: this.selectData[0]
+        id: this.selectData[0].userId
       }
     },
     //查看
@@ -239,7 +233,7 @@ export default {
       this.config = {
         view: 'mgrForm',
         action: 'view',
-        id: this.selectData[0]
+        id: this.selectData[0].userId
       }
     },
     //删除
@@ -253,7 +247,7 @@ export default {
         okBtn: '是',
         cancelBtn: '否',
         ok: function() {
-          this.api.userMgr.del({id: this.selectData[0]}).then(data => {
+          this.api.userMgr.del({id: this.selectData[0].userId}).then(data => {
             MyCuckoo.showMsg({state: 'success', title: '提示', msg: data.message});
 
             $vue.list(); // 刷新列表
@@ -272,8 +266,8 @@ export default {
         return;
       }
 
-      $vue.api.userMgr.disEnable({id: $vue.selectData[0], disEnableFlag: 'enable'}).then(data => {
-        MyCuckoo.showMsg({state: 'success', title: '提示', msg: '用户停用成功!此用户将不能在使用本系统。'});
+      $vue.api.userMgr.disEnable({id: user.userId, disEnableFlag: 'enable'}).then(data => {
+        MyCuckoo.showMsg({state: 'success', title: '提示', msg: '用户启用成功'});
 
         $vue.list(); // 刷新列表
       });
@@ -290,12 +284,12 @@ export default {
       }
 
       MyCuckoo.showDialog({
-        msg : '您确认停用此用户?如停用,此用户将归入无角色用户并自动清除所有权限。',
+        msg : '您确认停用此用户?如停用,此用户将归入无角色用户并自动清除所有权限.',
         okBtn: '是',
         cancelBtn: '否',
         ok : function() {
-          $vue.api.userMgr.disEnable({id: $vue.selectData[0], disEnableFlag: 'disable'}).then(data => {
-            MyCuckoo.showMsg({state: 'success', title: '提示', msg: '用户启用成功'});
+          $vue.api.userMgr.disEnable({id: user.userId, disEnableFlag: 'disable'}).then(data => {
+            MyCuckoo.showMsg({state: 'success', title: '提示', msg: '用户停用成功!此用户将不能在使用本系统'});
 
             $vue.list(); // 刷新列表
           });
@@ -308,7 +302,7 @@ export default {
 
       let $vue = this;
       let user = this.retrieve();
-      $vue.api.userMgr.resetPwd({id: $vue.selectData[0], userName: user.userName}).then(data => {
+      $vue.api.userMgr.resetPwd({id: user.userId, userName: user.userName}).then(data => {
         MyCuckoo.showMsg({state: 'success', title: '提示', msg: data});
 
         $vue.list(); // 刷新列表
@@ -334,7 +328,6 @@ export default {
       this.checkSelect();
 
       let user = this.retrieve();
-
       if (user.status == 'disable') {
         MyCuckoo.showMsg({ state : 'danger', title : '提示', msg : '请先启用此用户！' });
         return;
@@ -348,6 +341,7 @@ export default {
         user: user
       }
     }
+    //end
 
   }
 }

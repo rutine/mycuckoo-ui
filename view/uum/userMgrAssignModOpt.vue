@@ -49,7 +49,7 @@
       </table>
       <div class="panel-footer">
         <button type="button" class="btn btn-default btn-sm" @click="config.view = ''">返回</button>
-        <button type="button" class="btn btn-primary btn-sm" @click="saveUserPrivilege">保存</button>
+        <button type="button" class="btn btn-primary btn-sm" @click="saveOperationPrivilege">保存</button>
       </div>
     </div>
 
@@ -340,7 +340,7 @@
         });
       },
       //保存用户权限
-      saveUserPrivilege() {
+      saveOperationPrivilege() {
         if(!this.privilegeScope) {
           MyCuckoo.alertMsg({ title : '提示', msg : '请选择权限范围!' });
           return;
