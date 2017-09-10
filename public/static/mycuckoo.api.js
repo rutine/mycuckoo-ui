@@ -13,7 +13,6 @@ if(exports) {
   axios.defaults.baseURL = host;
   axios.defaults.withCredentials = true
   axios.defaults.headers.post['Content-Type'] = 'application/json; charset=UTF-8';
-  axios.defaults.headers.put['Content-Type'] = 'application/x-www-form-urlencoded; charset=UTF-8';
 
   //返回状态判断(添加响应拦截器)
   axios.interceptors.response.use((res) => {
@@ -39,6 +38,11 @@ if(exports) {
     },
     postUploadLogo: host + '/uum/user/mgr/upload/photo',
 
+    organMgr: {
+      getChildNodes: function(params) {
+        return axios.get('/uum/organ/mgr/get/child/nodes', {params: params}).then(res => res.data.data);
+      },
+    },
     userMgr: {
       getChildNodes: function(params) {
         return axios.get('/uum/user/mgr/get/child/nodes', {params: params}).then(res => res.data.data);
@@ -67,8 +71,23 @@ if(exports) {
       listRolePrivilege: function(params) {
         return axios.get('/uum/user/mgr/list/role/privilege', {params: params}).then(res => res.data.data);
       },
+      listUserPrivilege: function(params) {
+        return axios.get('/uum/user/mgr/list/user/privilege', {params: params}).then(res => res.data.data);
+      },
+      listRowPrivilege: function(params) {
+        return axios.get('/uum/user/mgr/list/row/privilege', {params: params}).then(res => res.data.data);
+      },
       saveRolePrivilege: function(params) {
         return axios.get('/uum/user/mgr/save/role/privilege', {params: params}).then(res => res.data.data);
+      },
+      saveOperationPrivilege: function(params) {
+        return axios.get('/uum/user/mgr/save/operation/privilege', {params: params}).then(res => res.data.data);
+      },
+      saveRowPrivilege: function(params) {
+        return axios.get('/uum/user/mgr/save/row/privilege', {params: params}).then(res => res.data.data);
+      },
+      queryUsers: function(params) {
+        return axios.get('/uum/user/mgr/query/users', {params: params}).then(res => res.data.data);
       }
     },
   }

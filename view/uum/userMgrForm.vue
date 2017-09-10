@@ -146,9 +146,9 @@
           check : { enable : false},
           callback : {
             onClick : function(evane, treeId, treeNode) {
-              var _flag = treeNode.id.indexOf('_');
-              if(treeNode.id.substr(_flag + 1) == '1' || treeNode.id == '0') return;
-              var id = treeNode.id.substr(0, _flag);
+              let index = treeNode.id.indexOf('_');
+              if(treeNode.id == '0' || treeNode.id.substr(0, index) == 'orgId') return;
+              var id = treeNode.id.substr(index + 1);
               var name = treeNode.getParentNode() ? (treeNode.getParentNode().text + '-' + treeNode.text) : treeNode.text;
 
               $vue.user.orgRoleId = id;
@@ -190,9 +190,6 @@
       });
 
     },
-    created() {
-
-    },
     methods: {
       operator(fn) {
         eval('this.' + fn + '()');
@@ -200,7 +197,7 @@
       create() {
         let $vue = this;
         this.api.userMgr.create(this.user).then(data => {
-          MyCuckoo.showMsg({state: 'success', title: '提示', msg: data.message});
+          MyCuckoo.showMsg({state: 'success', title: '提示', msg: data});
 
           $vue.$emit('refresh');
         });
@@ -208,7 +205,7 @@
       update() {
         let $vue = this;
         this.api.userMgr.update(this.user).then(data => {
-          MyCuckoo.showMsg({state: 'success', title: '提示', msg: data.message});
+          MyCuckoo.showMsg({state: 'success', title: '提示', msg: data});
 
           $vue.$emit('refresh');
         });
