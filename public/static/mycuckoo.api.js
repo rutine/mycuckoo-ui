@@ -43,6 +43,20 @@ if(exports) {
         return axios.get('/uum/organ/mgr/get/child/nodes', {params: params}).then(res => res.data.data);
       },
     },
+    organRoleMgr: {
+      list: function(params) {
+        return axios.get('/uum/role/assign/mgr/list', {params: params}).then(res => res.data.data);
+      },
+      listUnselectRole: function(params) {
+        return axios.get('/uum/role/assign/mgr/list/unselect/role', {params: params}).then(res => res.data.data);
+      },
+      save: function(params) {
+        return axios.put('/uum/role/assign/mgr/save', params).then(res => res.data.data);
+      },
+      del: function(params) {
+        return axios.delete('/uum/role/assign/mgr/delete', {params: params}).then(res => res.data.data);
+      },
+    },
     roleMgr: {
       list: function(params) {
         return axios.get('/uum/role/mgr/list', {params: params}).then(res => res.data.data);

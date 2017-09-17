@@ -18,11 +18,12 @@ vue.component('toolbar', toolbar);
 vue.component('selector', selector);
 
 const router = new vueRouter({
-    routes: [
-      { path: '/userCommFunMgr', component: resolve => require(['../view/uum/test.vue'], resolve) },
-      { path: '/uum/userMgr/:moduleId', component: resolve => require(['../view/uum/userMgr.vue'], resolve) },
-      { path: '/uum/roleMgr/:moduleId', component: resolve => require(['../view/uum/roleMgr.vue'], resolve) }
-    ]
+  routes: [
+    { path: '/userCommFunMgr', component: resolve => require(['../view/uum/test.vue'], resolve) },
+    { path: '/uum/roleAssignMgr/:moduleId', component: resolve => require(['../view/uum/organRoleMgr.vue'], resolve) },
+    { path: '/uum/userMgr/:moduleId', component: resolve => require(['../view/uum/userMgr.vue'], resolve) },
+    { path: '/uum/roleMgr/:moduleId', component: resolve => require(['../view/uum/roleMgr.vue'], resolve) },
+  ]
 });
 
 router.afterEach((to, from, next) => {

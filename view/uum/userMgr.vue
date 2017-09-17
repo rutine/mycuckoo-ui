@@ -69,7 +69,7 @@
           <td>{{ item.userCode }}</td>
           <td>{{ item.userName }}</td>
           <td class="hidden"></td>
-          <td><selector name="gender" :value="user.userGender"></selector></td>
+          <td><selector name="gender" :value="item.userGender"></selector></td>
           <td>{{ item.userPosition }}</td>
           <td class="hidden"></td>
           <td class="hidden"></td>
@@ -84,7 +84,7 @@
           <td class="hidden"></td>
           <td>{{ item.orgName }}</td>
           <td>{{ item.roleName }}</td>
-          <td><selector name="status" :value="user.status"></selector></td>
+          <td><selector name="status" :value="item.status"></selector></td>
           <td class="hidden"></td>
           <td>{{ item.creator }}</td>
           <td>{{ item.createDate }}</td>
@@ -247,8 +247,8 @@ export default {
         okBtn: '是',
         cancelBtn: '否',
         ok: function() {
-          this.api.userMgr.del({id: this.selectData[0].userId}).then(data => {
-            MyCuckoo.showMsg({state: 'success', title: '提示', msg: data.message});
+          $vue.api.userMgr.del({id: $vue.selectData[0].userId}).then(data => {
+            MyCuckoo.showMsg({state: 'success', title: '提示', msg: data});
 
             $vue.list(); // 刷新列表
           });

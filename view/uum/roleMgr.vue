@@ -167,7 +167,7 @@ export default {
         okBtn: '是',
         cancelBtn: '否',
         ok: function() {
-          this.api.roleMgr.del({id: this.selectData[0].roleId}).then(data => {
+          $vue.api.roleMgr.del({id: $vue.selectData[0].roleId}).then(data => {
             MyCuckoo.showMsg({state: 'success', title: '提示', msg: data.message});
 
             $vue.list(); // 刷新列表

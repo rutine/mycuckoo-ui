@@ -1,5 +1,5 @@
 <template>
-  <div class="text-center">
+  <div class="text-center" v-show="page.totalPages != 0">
     <ul class="pagination pagination-sm">
       <template v-if="!page.firstPage">
       <li><a href="javascript:" @click="selectPage(1)">«</a></li>
