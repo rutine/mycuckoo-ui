@@ -137,6 +137,7 @@ export default {
       },
       callback : {
         onClick : function(event, treeId, treeNode) {
+          $vue.clear();
           $vue.param.treeId = treeNode.id;
           $vue.list();
         },

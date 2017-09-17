@@ -42,6 +42,24 @@ if(exports) {
       getChildNodes: function(params) {
         return axios.get('/uum/organ/mgr/get/child/nodes', {params: params}).then(res => res.data.data);
       },
+      list: function(params) {
+        return axios.get('/uum/organ/mgr/list', {params: params}).then(res => res.data.data);
+      },
+      create: function(params) {
+        return axios.put('/uum/organ/mgr/create', params).then(res => res.data.data);
+      },
+      update: function(params) {
+        return axios.put('/uum/organ/mgr/update', params).then(res => res.data.data);
+      },
+      view: function(params) {
+        return axios.get('/uum/organ/mgr/view', {params: params}).then(res => res.data.data);
+      },
+      del: function(params) {
+        return axios.delete('/uum/organ/mgr/delete', {params: params}).then(res => res.data.data);
+      },
+      disEnable: function(params) {
+        return axios.get('/uum/organ/mgr/disEnable', {params: params}).then(res => res.data.data);
+      },
     },
     organRoleMgr: {
       list: function(params) {
@@ -133,5 +151,19 @@ if(exports) {
         return axios.get('/uum/user/mgr/query/users', {params: params}).then(res => res.data.data);
       }
     },
+
+
+    districtMgr: {
+      getChildNodes: function(params) {
+        return axios.get('/platform/district/mgr/get/child/nodes', {params: params}).then(res => res.data.data);
+      },
+    },
+
+
+    typeDictionaryMgr: {
+      getSmallType: function (params) {
+        return axios.get('/platform/type/dictionary/mgr/get/small/type', {params: params}).then(res => res.data.data);
+      }
+    }
   }
 }
