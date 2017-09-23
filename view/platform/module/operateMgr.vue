@@ -5,12 +5,12 @@
 
       <!-- 查询表单 -->
       <div class="page-header">
-        <form class="form-inline" name="searchForm" action="index">
+        <form class="form-inline" name="searchForm">
           <div class="form-group">
             <label class="sr-only">操作名称&nbsp;</label>
             <input type="text" class="form-control input-sm" v-model="param.operateName" placeholder=操作名称 />
           </div>
-          <button type="submit" class="btn btn-info btn-sm">&nbsp;查询
+          <button class="btn btn-info btn-sm" @click="list">&nbsp;查询
             <span class="glyphicon glyphicon-search"></span>
           </button>
         </form>

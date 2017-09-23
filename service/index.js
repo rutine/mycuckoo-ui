@@ -27,6 +27,7 @@ const router = new vueRouter({
 
     { path: '/platform/moduleMgr/:moduleId', component: resolve => require(['../view/platform/module/moduleMgr.vue'], resolve) },
     { path: '/platform/operateMgr/:moduleId', component: resolve => require(['../view/platform/module/operateMgr.vue'], resolve) },
+    { path: '/platform/afficheMgr/:moduleId', component: resolve => require(['../view/platform/module/afficheMgr.vue'], resolve) },
   ]
 });
 

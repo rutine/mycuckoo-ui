@@ -30,13 +30,15 @@ if(exports) {
   });
   
   module.exports = {
+    postUploadLogo: host + '/uum/user/mgr/upload/photo',
+    postUploadAccessory: host + '/platform/accessory/mgr/upload',
+
     getLogout: function() {
       return axios.post('/login/logout').then(res => res.data.data);
     },
     postMenu: function(params) {
       return axios.post('/login/step/third', params).then(res => res.data.data);
     },
-    postUploadLogo: host + '/uum/user/mgr/upload/photo',
 
     organMgr: {
       getChildNodes: function(params) {
@@ -191,6 +193,31 @@ if(exports) {
       },
       disEnable: function(params) {
         return axios.get('/platform/operate/mgr/disEnable', {params: params}).then(res => res.data.data);
+      },
+    },
+    afficheMgr: {
+      list: function(params) {
+        return axios.get('/platform/affiche/mgr/list', {params: params}).then(res => res.data.data);
+      },
+      create: function(params) {
+        return axios.put('/platform/affiche/mgr/create', params).then(res => res.data.data);
+      },
+      update: function(params) {
+        return axios.put('/platform/affiche/mgr/update', params).then(res => res.data.data);
+      },
+      view: function(params) {
+        return axios.get('/platform/affiche/mgr/view', {params: params}).then(res => res.data.data);
+      },
+      del: function(params) {
+        return axios.delete('/platform/affiche/mgr/delete', {params: params}).then(res => res.data.data);
+      },
+    },
+    accessoryMgr: {
+      download: function(params) {
+        return axios.get('/platform/accessory/mgr/download/' + params.id).then(res => res.data.data);
+      },
+      del: function(params) {
+        return axios.delete('/platform/accessory/mgr/delete/' + params.id).then(res => res.data.data);
       },
     },
     districtMgr: {
