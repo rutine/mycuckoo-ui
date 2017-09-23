@@ -88,8 +88,8 @@ export default {
     }
     this.api.typeDictionaryMgr.getSmallType({bigTypeCode: 'organType'}).then(data => {
       this.dicSmallTypes = data;
-
     });
+
     return {
       organ: {
         orgId: null,
@@ -192,7 +192,7 @@ export default {
             $modal.modal('hide');
           },
           beforeExpand : function(treeId, treeNode) {
-            !treeNode.loaded && $vue.api.districtMgr.getChildNodes({ districtId: treeNode.id }).then(data => {
+            !treeNode.loaded && $vue.api.districtMgr.getChildNodes({ treeId: treeNode.id }).then(data => {
               treeNode.loaded = true;
               zTree.addNodes(treeNode, data, true);
             });

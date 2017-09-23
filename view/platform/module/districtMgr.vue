@@ -1,23 +1,24 @@
 <template>
   <div class="row">
     <div v-show="!config.view">
-    <div class="col-sm-12 col-md-12">
+    <div class="col-sm-3 col-md-2 mycuckoo-sidebar">
+      <ul class="nav">
+        <li style="font-size:13px">
+          <strong>地区树</strong>
+        </li>
+        <li><ul id="tree_district" class="ztree"></ul></li>
+      </ul>
+    </div>
+
+    <div class="col-sm-9 col-md-10 mycuckoo-submain">
       <!-- 查询表单 -->
       <div class="page-header">
         <form class="form-inline" name="searchForm">
           <div class="form-group">
-            <label class="sr-only">中文编码&nbsp;</label>
-            <input type="text" class="form-control input-sm" v-model="param.codeName" placeholder=中文编码 />
+            <label class="sr-only">地区名称</label>
+            <input type="text" class="form-control input-sm" v-model="param.districtName" placeholder=地区名称 />
           </div>
-          <div class="form-group">
-            <label class="sr-only">英文编码&nbsp;</label>
-            <input type="text" class="form-control input-sm" v-model="param.codeEngName" placeholder=英文编码 />
-          </div>
-          <div class="form-group">
-            <label class="sr-only">模块名称&nbsp;</label>
-            <input type="text" class="form-control input-sm" v-model="param.moduleName" placeholder=模块名称 />
-          </div>
-          <button class="btn btn-info btn-sm" name="search" @click="list">&nbsp;查询
+          <button type="button" class="btn btn-info btn-sm" name="search" @click="list">查询
             <span class="glyphicon glyphicon-search"></span>
           </button>
           <button type="button" class="btn btn-default btn-sm" name="clear" @click="clear">&nbsp;清空
@@ -32,36 +33,32 @@
       <!-- 内容列表 -->
       <table class="table table-striped table-hover table-condensed">
         <tr>
-          <th><input type="checkbox" name="all" @click="selectAll" /></th>
+          <th><input type="checkbox" name="all" @click="selectAll"/></th>
           <th>序号</th>
-          <th>英文编码名称</th>
-          <th>中文编码名称</th>
-          <th>模块名称</th>
-          <th>分隔符</th>
-          <th>段数</th>
-          <th class="hide">段格式</th>
-          <th class="hide">段格式内容</th>
-          <th>编码效果</th>
-          <th>编码状态</th>
-          <th class="hide">编码备注</th>
+          <th>地区名称</th>
+          <th>地区代码</th>
+          <th>地区邮编</th>
+          <th>电话区号</th>
+          <th>地区级别</th>
+          <th>地区状态</th>
+          <th class="hide">模块备注</th>
           <th>创建者</th>
           <th>创建日期</th>
+          <th class="hide">上级地区</th>
         </tr>
         <tr v-for="(item, index) in page.content">
           <td><input type="checkbox" name="single" v-model="selectData" :value="item" /></td>
           <td>{{ index + 1 }}</td>
-          <td>{{ item.codeEngName }}</td>
-          <td>{{ item.codeName }}</td>
-          <td>{{ item.moduleName }}</td>
-          <td>{{ item.delimite }}</td>
-          <td>{{ item.partNum }}</td>
-          <td class="hidden"></td>
-          <td class="hidden"></td>
-          <td>{{ item.codeEffect }}</td>
+          <td>{{ item.districtName }}</td>
+          <td>{{ item.districtCode }}</td>
+          <td>{{ item.districtPostal }}</td>
+          <td>{{ item.districtTelcode }}</td>
+          <td>{{ item.districtLevel }}</td>
           <td><selector name="status" :value="item.status"></selector></td>
-          <td class="hidden"></td>
+          <td class="hide"></td>
           <td>{{ item.creator }}</td>
           <td>{{ item.createDate }}</td>
+          <td class="hide"></td>
         </tr>
       </table>
 
@@ -74,12 +71,9 @@
   </div>
 </template>
 <script>
-import mgrForm from './codeMgrForm.vue';
-
+import mgrForm from './districtMgrForm.vue';
 export default {
   data() {
-    this.list();
-
     return {
       page: {
         number: 1,
@@ -90,15 +84,45 @@ export default {
         content: []
       },
       param: {
-        codeName: null,
-        codeEngName: null,
-        moduleName: null,
+        treeId: null,
+        districtName: null,
         pageNo: 1,
         pageSize: 10
       },
       selectData: [],
       config: {}
     }
+  },
+  mounted() {
+    let $vue = this;
+    let setting = {
+      check: {enable: false},
+      data: {key: {name: 'text', icon: 'iconCls'}},
+      view: {
+        showLine: true,
+        showIcon: false
+      },
+      callback: {
+        onClick: function (event, treeId, treeNode) {
+          $vue.clear();
+          $vue.param.treeId = treeNode.id;
+          $vue.list();
+        },
+        beforeExpand: function (treeId, treeNode) {
+          !treeNode.loaded && $vue.api.districtMgr.getChildNodes({treeId: treeNode.id}).then(data => {
+            treeNode.loaded = true;
+            zTree.addNodes(treeNode, data, true);
+          });
+        }
+      }
+    };
+
+    let zTree = null;
+    $vue.api.districtMgr.getChildNodes(null).then(data => {
+      zTree = $.fn.zTree.init($('#tree_district'), setting, data);
+    });
+
+    $vue.list();
   },
   components: {
     mgrForm: mgrForm
@@ -108,13 +132,13 @@ export default {
     list() {
       let $vue = this;
       $vue.selectData = [];
-      $vue.api.codeMgr.list($vue.param).then(data => {
+      $vue.api.districtMgr.list($vue.param).then(data => {
         $vue.page = data;
       });
     },
     //清理查询
     clear() {
-      for (let p in this.param) {
+      for(let p in this.param) {
         this.param[p] = '';
       }
     },
@@ -129,14 +153,14 @@ export default {
         $vue.selectData = [];
       } else {
         $vue.selectData = [];
-        $vue.page.content.forEach(function (item, i) {
+        $vue.page.content.forEach(function(item, i) {
           $vue.selectData.push(item);
         });
       }
     },
     //检查选中
     checkSelect() {
-      if (this.selectData.length != 1) {
+      if(this.selectData.length != 1) {
         MyCuckoo.showMsg({state: 'warning', title: '提示', msg: '请选择一条件记录!'});
         throw new Error('请选择一条件记录');
       }
@@ -164,7 +188,7 @@ export default {
       this.config = {
         view: 'mgrForm',
         action: 'update',
-        id: this.selectData[0].codeId
+        id: this.selectData[0].districtId
       }
     },
     //查看
@@ -174,7 +198,7 @@ export default {
       this.config = {
         view: 'mgrForm',
         action: 'view',
-        id: this.selectData[0].codeId
+        id: this.selectData[0].districtId
       }
     },
     //启用
@@ -182,14 +206,14 @@ export default {
       this.checkSelect();
 
       let $vue = this;
-      let code = this.retrieve();
-      if(code.status == 'enable') {
-        MyCuckoo.showMsg({ state: 'info', title : '提示', msg : '此编码已经启用' });
+      let user = this.retrieve();
+      if(user.status == 'enable') {
+        MyCuckoo.showMsg({ state: 'info', title : '提示', msg : '此地区已经启用' });
         return;
       }
 
-      $vue.api.codeMgr.disEnable({id: code.codeId, disEnableFlag: 'enable'}).then(data => {
-        MyCuckoo.showMsg({state: 'success', title: '提示', msg: '编码启用成功'});
+      $vue.api.userMgr.disEnable({id: user.userId, disEnableFlag: 'enable'}).then(data => {
+        MyCuckoo.showMsg({state: 'success', title: '提示', msg: '地区启用成功'});
 
         $vue.list(); // 刷新列表
       });
@@ -199,19 +223,19 @@ export default {
       this.checkSelect();
 
       let $vue = this;
-      let code = this.retrieve();
-      if(code.status == 'disable') {
-        MyCuckoo.showMsg({ state: 'info', title : '提示', msg : '此编码已经停用' });
+      let user = this.retrieve();
+      if(user.status == 'disable') {
+        MyCuckoo.showMsg({ state: 'info', title : '提示', msg : '此地区已经停用' });
         return;
       }
 
       MyCuckoo.showDialog({
-        msg : '您确认停用此编码?',
+        msg : '您确认停用此地区?',
         okBtn: '是',
         cancelBtn: '否',
         ok : function() {
-          $vue.api.codeMgr.disEnable({id: code.codeId, disEnableFlag: 'disable'}).then(data => {
-            MyCuckoo.showMsg({state: 'success', title: '提示', msg: '编码停用成功'});
+          $vue.api.userMgr.disEnable({id: user.userId, disEnableFlag: 'disable'}).then(data => {
+            MyCuckoo.showMsg({state: 'success', title: '提示', msg: '地区停用成功'});
 
             $vue.list(); // 刷新列表
           });
