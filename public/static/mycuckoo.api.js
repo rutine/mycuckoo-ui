@@ -175,7 +175,23 @@ if(exports) {
       view: function(params) {
         return axios.get('/platform/module/mgr/view', {params: params}).then(res => res.data.data);
       },
-
+    },
+    operateMgr: {
+      list: function(params) {
+        return axios.get('/platform/operate/mgr/list', {params: params}).then(res => res.data.data);
+      },
+      create: function(params) {
+        return axios.put('/platform/operate/mgr/create', params).then(res => res.data.data);
+      },
+      update: function(params) {
+        return axios.put('/platform/operate/mgr/update', params).then(res => res.data.data);
+      },
+      view: function(params) {
+        return axios.get('/platform/operate/mgr/view', {params: params}).then(res => res.data.data);
+      },
+      disEnable: function(params) {
+        return axios.get('/platform/operate/mgr/disEnable', {params: params}).then(res => res.data.data);
+      },
     },
     districtMgr: {
       getChildNodes: function(params) {

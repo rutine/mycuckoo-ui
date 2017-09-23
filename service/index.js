@@ -26,6 +26,7 @@ const router = new vueRouter({
     { path: '/uum/roleMgr/:moduleId', component: resolve => require(['../view/uum/roleMgr.vue'], resolve) },
 
     { path: '/platform/moduleMgr/:moduleId', component: resolve => require(['../view/platform/module/moduleMgr.vue'], resolve) },
+    { path: '/platform/operateMgr/:moduleId', component: resolve => require(['../view/platform/module/operateMgr.vue'], resolve) },
   ]
 });
 
