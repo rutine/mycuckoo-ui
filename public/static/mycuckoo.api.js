@@ -220,6 +220,26 @@ if(exports) {
         return axios.delete('/platform/accessory/mgr/delete/' + params.id).then(res => res.data.data);
       },
     },
+    codeMgr: {
+      list: function(params) {
+        return axios.get('/platform/code/mgr/list', {params: params}).then(res => res.data.data);
+      },
+      create: function(params) {
+        return axios.put('/platform/code/mgr/create', params).then(res => res.data.data);
+      },
+      update: function(params) {
+        return axios.put('/platform/code/mgr/update', params).then(res => res.data.data);
+      },
+      view: function(params) {
+        return axios.get('/platform/code/mgr/view', {params: params}).then(res => res.data.data);
+      },
+      del: function(params) {
+        return axios.delete('/platform/code/mgr/delete', {params: params}).then(res => res.data.data);
+      },
+      disEnable: function(params) {
+        return axios.get('/platform/code/mgr/disEnable', {params: params}).then(res => res.data.data);
+      },
+    },
     districtMgr: {
       getChildNodes: function(params) {
         return axios.get('/platform/district/mgr/get/child/nodes', {params: params}).then(res => res.data.data);

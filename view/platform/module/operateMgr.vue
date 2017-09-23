@@ -165,13 +165,13 @@ export default {
       this.checkSelect();
 
       let $vue = this;
-      let user = this.retrieve();
-      if(user.status == 'enable') {
+      let operate = this.retrieve();
+      if(operate.status == 'enable') {
         MyCuckoo.showMsg({ state: 'info', title : '提示', msg : '此操作已经启用' });
         return;
       }
 
-      $vue.api.operateMgr.disEnable({id: user.userId, disEnableFlag: 'enable'}).then(data => {
+      $vue.api.operateMgr.disEnable({id: operate.operateId, disEnableFlag: 'enable'}).then(data => {
         MyCuckoo.showMsg({state: 'success', title: '提示', msg: '操作启用成功'});
 
         $vue.list(); // 刷新列表
@@ -182,8 +182,8 @@ export default {
       this.checkSelect();
 
       let $vue = this;
-      let user = this.retrieve();
-      if(user.status == 'disable') {
+      let operate = this.retrieve();
+      if(operate.status == 'disable') {
         MyCuckoo.showMsg({ state: 'info', title : '提示', msg : '此操作已经停用' });
         return;
       }
@@ -193,7 +193,7 @@ export default {
         okBtn: '是',
         cancelBtn: '否',
         ok : function() {
-          $vue.api.operateMgr.disEnable({id: user.userId, disEnableFlag: 'disable'}).then(data => {
+          $vue.api.operateMgr.disEnable({id: operate.operateId, disEnableFlag: 'disable'}).then(data => {
             MyCuckoo.showMsg({state: 'success', title: '提示', msg: '操作停用成功'});
 
             $vue.list(); // 刷新列表

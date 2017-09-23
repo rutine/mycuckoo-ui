@@ -6,17 +6,16 @@
       <div class="page-header">
         <form class="form-inline" name="searchForm">
           <div class="form-group">
-            <label class="sr-only">公告标题:&nbsp;</label>
-            <input type="text" class="form-control input-sm" v-model="param.afficheTitle" placeholder=公告标题 />
+            <label class="sr-only">中文编码&nbsp;</label>
+            <input type="text" class="form-control input-sm" v-model="param.codeName" placeholder=中文编码 />
           </div>
           <div class="form-group">
-            <label>是否发布:&nbsp;</label>
-            <label class="radio-inline">
-              <input type="radio" name="affichePulish" value="0" v-model="param.affichePulish"> 是&nbsp;&nbsp;
-            </label>
-            <label class="radio-inline">
-              <input type="radio" name="affichePulish" value="1" v-model="param.affichePulish"> 否&nbsp;&nbsp;
-            </label>
+            <label class="sr-only">英文编码&nbsp;</label>
+            <input type="text" class="form-control input-sm" v-model="param.codeEngName" placeholder=英文编码 />
+          </div>
+          <div class="form-group">
+            <label class="sr-only">模块名称&nbsp;</label>
+            <input type="text" class="form-control input-sm" v-model="param.moduleName" placeholder=模块名称 />
           </div>
           <button class="btn btn-info btn-sm" name="search" @click="list">&nbsp;查询
             <span class="glyphicon glyphicon-search"></span>
@@ -33,26 +32,36 @@
       <!-- 内容列表 -->
       <table class="table table-striped table-hover table-condensed">
         <tr>
-          <th><input type="checkbox" name="all" @click="selectAll"/></th>
+          <th><input type="checkbox" name="all" @click="selectAll" /></th>
           <th>序号</th>
-          <th>公告标题</th>
-          <th>有效日期</th>
-          <th>是否发布</th>
-          <th class="hide">公告正文</th>
-          <th class="hide">公告附件</th>
+          <th>英文编码名称</th>
+          <th>中文编码名称</th>
+          <th>模块名称</th>
+          <th>分隔符</th>
+          <th>段数</th>
+          <th class="hide">段格式</th>
+          <th class="hide">段格式内容</th>
+          <th>编码效果</th>
+          <th>编码状态</th>
+          <th class="hide">编码备注</th>
+          <th>创建者</th>
+          <th>创建日期</th>
         </tr>
         <tr v-for="(item, index) in page.content">
           <td><input type="checkbox" name="single" v-model="selectData" :value="item" /></td>
           <td>{{ index + 1 }}</td>
-          <td>{{ item.afficheTitle }}</td>
-          <td>{{ item.afficheInvalidate }}</td>
-          <td>
-            <span v-if="item.affichePulish == 0">已发布</span>
-            <span v-else-if="item.affichePulish == 1">未发布</span>
-          </td>
-          <td class="hide"></td>
-          <td class="hide"></td>
-
+          <td>{{ item.codeEngName }}</td>
+          <td>{{ item.codeName }}</td>
+          <td>{{ item.moduleName }}</td>
+          <td>{{ item.delimite }}</td>
+          <td>{{ item.partNum }}</td>
+          <td class="hidden"></td>
+          <td class="hidden"></td>
+          <td>{{ item.codeEffect }}</td>
+          <td><selector name="status" :value="item.status"></selector></td>
+          <td class="hidden"></td>
+          <td>{{ item.creator }}</td>
+          <td>{{ item.createDate }}</td>
         </tr>
       </table>
 
@@ -65,7 +74,7 @@
   </div>
 </template>
 <script>
-import mgrForm from './afficheMgrForm.vue';
+import mgrForm from './codeMgrForm.vue';
 
 export default {
   data() {
@@ -81,8 +90,9 @@ export default {
         content: []
       },
       param: {
-        afficheTitle: null,
-        affichePulish: null,
+        treeId: null,
+        userCode: null,
+        userName: null,
         pageNo: 1,
         pageSize: 10
       },
@@ -98,7 +108,7 @@ export default {
     list() {
       let $vue = this;
       $vue.selectData = [];
-      $vue.api.afficheMgr.list($vue.param).then(data => {
+      $vue.api.codeMgr.list($vue.param).then(data => {
         $vue.page = data;
       });
     },
@@ -154,7 +164,7 @@ export default {
       this.config = {
         view: 'mgrForm',
         action: 'update',
-        id: this.selectData[0].afficheId
+        id: this.selectData[0].codeId
       }
     },
     //查看
@@ -164,29 +174,50 @@ export default {
       this.config = {
         view: 'mgrForm',
         action: 'view',
-        id: this.selectData[0].afficheId
+        id: this.selectData[0].codeId
       }
     },
-    //删除
-    delete() {
+    //启用
+    enable() {
       this.checkSelect();
 
       let $vue = this;
+      let code = this.retrieve();
+      if(code.status == 'enable') {
+        MyCuckoo.showMsg({ state: 'info', title : '提示', msg : '此编码已经启用' });
+        return;
+      }
+
+      $vue.api.codeMgr.disEnable({id: code.codeId, disEnableFlag: 'enable'}).then(data => {
+        MyCuckoo.showMsg({state: 'success', title: '提示', msg: '编码启用成功'});
+
+        $vue.list(); // 刷新列表
+      });
+    },
+    //停用
+    disable() {
+      this.checkSelect();
+
+      let $vue = this;
+      let code = this.retrieve();
+      if(code.status == 'disable') {
+        MyCuckoo.showMsg({ state: 'info', title : '提示', msg : '此编码已经停用' });
+        return;
+      }
+
       MyCuckoo.showDialog({
-        title: '警告提示',
-        msg: '您确认删除此记录吗?',
+        msg : '您确认停用此编码?',
         okBtn: '是',
         cancelBtn: '否',
-        ok: function() {
-          $vue.api.afficheMgr.del({ids: $vue.selectData[0].afficheId}).then(data => {
-            MyCuckoo.showMsg({state: 'success', title: '提示', msg: data});
+        ok : function() {
+          $vue.api.codeMgr.disEnable({id: code.codeId, disEnableFlag: 'disable'}).then(data => {
+            MyCuckoo.showMsg({state: 'success', title: '提示', msg: '编码停用成功'});
 
             $vue.list(); // 刷新列表
           });
         }
       });
     },
-    //end
   }
 }
 </script>
