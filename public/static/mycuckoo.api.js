@@ -153,13 +153,35 @@ if(exports) {
     },
 
 
+    moduleMgr: {
+      getChildNodes: function(params) {
+        return axios.get('/platform/module/mgr/get/child/nodes', {params: params}).then(res => res.data.data);
+      },
+      list: function(params) {
+        return axios.get('/platform/module/mgr/list', {params: params}).then(res => res.data.data);
+      },
+      listOperation: function(params) {
+        return axios.get('/platform/module/mgr/list/operation', {params: params}).then(res => res.data.data);
+      },
+      create: function(params) {
+        return axios.put('/platform/module/mgr/create', params).then(res => res.data.data);
+      },
+      createModuleOptRefs: function(params) {
+        return axios.get('/platform/module/mgr/create/module/operation/ref', {params: params}).then(res => res.data.data);
+      },
+      update: function(params) {
+        return axios.put('/platform/module/mgr/update', params).then(res => res.data.data);
+      },
+      view: function(params) {
+        return axios.get('/platform/module/mgr/view', {params: params}).then(res => res.data.data);
+      },
+
+    },
     districtMgr: {
       getChildNodes: function(params) {
         return axios.get('/platform/district/mgr/get/child/nodes', {params: params}).then(res => res.data.data);
       },
     },
-
-
     typeDictionaryMgr: {
       getSmallType: function (params) {
         return axios.get('/platform/type/dictionary/mgr/get/small/type', {params: params}).then(res => res.data.data);
