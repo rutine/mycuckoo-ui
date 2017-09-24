@@ -311,6 +311,22 @@ if(exports) {
       schedulerStatus: function(params) {
         return axios.get('/platform/system/scheduler/mgr/scheduler/status', {params: params}).then(res => res.data.data);
       },
+    },
+    systemConfigMgr: {
+      list: function(params) {
+        return axios.get('/platform/system/config/mgr/list', {params: params}).then(res => res.data.data);
+      },
+      update: function(params) {
+        return axios.put('/platform/system/config/mgr/update', params).then(res => res.data.data);
+      },
+      view: function(params) {
+        return axios.get('/platform/system/config/mgr/view', {params: params}).then(res => res.data.data);
+      },
+      startJconsole: function(params) {
+        return axios.get('/platform/system/config/mgr/start/jconsole').then(res => res.data.data);
+      },
     }
+
+    //the end
   }
 }
