@@ -32,6 +32,7 @@ const router = new vueRouter({
     { path: '/platform/typeDictionaryMgr/:moduleId', component: resolve => require(['../view/platform/system/dictionaryMgr.vue'], resolve) },
     { path: '/platform/schedulerMgr/:moduleId', component: resolve => require(['../view/platform/system/schedulerMgr.vue'], resolve) },
     { path: '/platform/systemConfigMgr/:moduleId', component: resolve => require(['../view/platform/system/systemConfigMgrForm.vue'], resolve) },
+    { path: '/platform/systemLogMgr/:moduleId', component: resolve => require(['../view/platform/system/systemLogMgr.vue'], resolve) },
   ]
 });
 

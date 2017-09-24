@@ -322,9 +322,17 @@ if(exports) {
       view: function(params) {
         return axios.get('/platform/system/config/mgr/view', {params: params}).then(res => res.data.data);
       },
-      startJconsole: function(params) {
+      startJConsole: function(params) {
         return axios.get('/platform/system/config/mgr/start/jconsole').then(res => res.data.data);
       },
+    },
+    systemLogMgr: {
+      list: function(params) {
+        return axios.get('/platform/system/log/mgr/list', {params: params}).then(res => res.data.data);
+      },
+      view: function(params) {
+        return axios.get('/platform/system/log/mgr/view', {params: params}).then(res => res.data.data);
+      }
     }
 
     //the end
