@@ -41,12 +41,6 @@
           </td>
           <td width=14%><label>所属系统</label></td>
           <td>
-            <!--<c:import url="/platform/typeDictionaryMgr/getSmallTypeDicByBigTypeCode">
-              <c:param name="selectName" value="belongToSys" />
-              <c:param name="selectCode" v-model="module.belongToSys" />
-              <c:param name="selectClass" value="required" />
-              <c:param name="bigTypeCode" value="systemType" />
-            </c:import>-->
             <select name="orgType" class="required" v-model="module.belongToSys">
               <option v-for="item in systemTypes" :value="item.smallTypeCode">{{ item.smallTypeName }}</option>
             </select>
@@ -55,12 +49,6 @@
         <tr>
           <td width=14%><label>页面类型</label></td>
           <td>
-           <!-- <c:import url="/platform/typeDictionaryMgr/getSmallTypeDicByBigTypeCode">
-              <c:param name="selectName" value="modPageType" />
-              <c:param name="selectCode" v-model="module.modPageType" />
-              <c:param name="selectClass" value="required" />
-              <c:param name="bigTypeCode" value="modPageType" />
-            </c:import>-->
             <select name="orgType" class="required" v-model="module.modPageType">
               <option v-for="item in modPageTypes" :value="item.smallTypeCode">{{ item.smallTypeName }}</option>
             </select>
@@ -98,11 +86,11 @@ export default {
         this.module = data;
       });
     }
-    this.api.typeDictionaryMgr.getSmallType({bigTypeCode: 'modPageType'}).then(data => {
+    this.api.dictionaryMgr.getSmallType({bigTypeCode: 'modPageType'}).then(data => {
       this.modPageTypes = data;
 
     });
-    this.api.typeDictionaryMgr.getSmallType({bigTypeCode: 'systemType'}).then(data => {
+    this.api.dictionaryMgr.getSmallType({bigTypeCode: 'systemType'}).then(data => {
       this.systemTypes = data;
 
     });

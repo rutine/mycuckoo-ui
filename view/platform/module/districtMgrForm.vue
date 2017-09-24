@@ -58,7 +58,7 @@
           this.district = data;
         });
       }
-      this.api.typeDictionaryMgr.getSmallType({bigTypeCode: 'district'}).then(data => {
+      this.api.dictionaryMgr.getSmallType({bigTypeCode: 'district'}).then(data => {
         this.dicSmallTypes = data;
       });
 

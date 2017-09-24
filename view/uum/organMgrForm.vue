@@ -86,7 +86,7 @@ export default {
         this.organ = data;
       });
     }
-    this.api.typeDictionaryMgr.getSmallType({bigTypeCode: 'organType'}).then(data => {
+    this.api.dictionaryMgr.getSmallType({bigTypeCode: 'organType'}).then(data => {
       this.dicSmallTypes = data;
     });
 

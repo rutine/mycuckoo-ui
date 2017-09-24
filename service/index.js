@@ -19,7 +19,6 @@ vue.component('selector', selector);
 
 const router = new vueRouter({
   routes: [
-    { path: '/userCommFunMgr', component: resolve => require(['../view/uum/test.vue'], resolve) },
     { path: '/uum/organMgr/:moduleId', component: resolve => require(['../view/uum/organMgr.vue'], resolve) },
     { path: '/uum/roleAssignMgr/:moduleId', component: resolve => require(['../view/uum/organRoleMgr.vue'], resolve) },
     { path: '/uum/userMgr/:moduleId', component: resolve => require(['../view/uum/userMgr.vue'], resolve) },
@@ -30,6 +29,7 @@ const router = new vueRouter({
     { path: '/platform/afficheMgr/:moduleId', component: resolve => require(['../view/platform/module/afficheMgr.vue'], resolve) },
     { path: '/platform/codeMgr/:moduleId', component: resolve => require(['../view/platform/module/codeMgr.vue'], resolve) },
     { path: '/platform/districtMgr/:moduleId', component: resolve => require(['../view/platform/module/districtMgr.vue'], resolve) },
+    { path: '/platform/typeDictionaryMgr/:moduleId', component: resolve => require(['../view/platform/system/dictionaryMgr.vue'], resolve) },
   ]
 });
 

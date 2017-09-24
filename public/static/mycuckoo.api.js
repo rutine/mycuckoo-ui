@@ -263,10 +263,25 @@ if(exports) {
         return axios.get('/platform/district/mgr/disEnable', {params: params}).then(res => res.data.data);
       },
     },
-    typeDictionaryMgr: {
+    dictionaryMgr: {
       getSmallType: function (params) {
-        return axios.get('/platform/type/dictionary/mgr/get/small/type', {params: params}).then(res => res.data.data);
-      }
+        return axios.get('/platform/system/dictionary/mgr/get/small/type', {params: params}).then(res => res.data.data);
+      },
+      list: function(params) {
+        return axios.get('/platform/system/dictionary/mgr/list', {params: params}).then(res => res.data.data);
+      },
+      create: function(params) {
+        return axios.put('/platform/system/dictionary/mgr/create', params).then(res => res.data.data);
+      },
+      update: function(params) {
+        return axios.put('/platform/system/dictionary/mgr/update', params).then(res => res.data.data);
+      },
+      view: function(params) {
+        return axios.get('/platform/system/dictionary/mgr/view', {params: params}).then(res => res.data.data);
+      },
+      disEnable: function(params) {
+        return axios.get('/platform/system/dictionary/mgr/disEnable', {params: params}).then(res => res.data.data);
+      },
     }
   }
 }
