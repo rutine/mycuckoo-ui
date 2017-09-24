@@ -4,72 +4,72 @@
     <toolbar name="formOpt" :value="config.action" v-on:operator="operator"></toolbar>
 
     <form class="form-inline" name="editForm" action="">
-      <input type="hidden" name="orgId" v-model="organ.orgId"/>
+      <input type="hidden" name="orgId" v-model="formData.orgId"/>
       <table class="table table-bordered">
         <tr>
           <td width=14%><label>机构简称</label></td>
-          <td><input type=text  name="orgSimpleName" v-model="organ.orgSimpleName" class="required" maxlength="10"/></td>
+          <td><input type=text  name="orgSimpleName" v-model="formData.orgSimpleName" class="required" maxlength="10"/></td>
           <td width=14%><label>机构全称</label></td>
-          <td><input type=text name="orgFullName" v-model="organ.orgFullName" maxlength="60"/></td>
+          <td><input type=text name="orgFullName" v-model="formData.orgFullName" maxlength="60"/></td>
         </tr>
         <tr>
           <td width=14%><label>机构代码</label></td>
-          <td><input type=text name="orgCode" v-model="organ.orgCode" class="alphanumeric" maxlength="10"/></td>
+          <td><input type=text name="orgCode" v-model="formData.orgCode" class="alphanumeric" maxlength="10"/></td>
           <td width=14%><label>所属地区</label></td>
           <td>
-            <input type="hidden" name="orgBelongDist" v-model="organ.orgBelongDist" />
-            <input type="text" name="orgBelongDistName" v-model="organ.orgBelongDistName" class="required" />
+            <input type="hidden" name="orgBelongDist" v-model="formData.orgBelongDist" />
+            <input type="text" name="orgBelongDistName" v-model="formData.orgBelongDistName" class="required" />
             <span class="btn btn-warning btn-xs select"><span class="glyphicon glyphicon-search"></span></span>
           </td>
         </tr>
         <tr>
           <td width=14%><label>联系地址1</label></td>
-          <td><input type=text name="orgAddress1" v-model="organ.orgAddress1" maxlength="100"/></td>
+          <td><input type=text name="orgAddress1" v-model="formData.orgAddress1" maxlength="100"/></td>
           <td width=14%><label>联系地址2</label></td>
-          <td><input type=text name="orgAddress2" v-model="organ.orgAddress2" maxlength="100"/></td>
+          <td><input type=text name="orgAddress2" v-model="formData.orgAddress2" maxlength="100"/></td>
         </tr>
         <tr>
           <td width=14%><label>联系电话1</label></td>
-          <td><input type=text name="orgTel1" v-model="organ.orgTel1" class="digits" maxlength="15"/></td>
+          <td><input type=text name="orgTel1" v-model="formData.orgTel1" class="digits" maxlength="15"/></td>
           <td width=14%><label>联系电话2</label></td>
-          <td><input type=text name="orgTel2" v-model="organ.orgTel2" class="digits" maxlength="15"/></td>
+          <td><input type=text name="orgTel2" v-model="formData.orgTel2" class="digits" maxlength="15"/></td>
         </tr>
         <tr>
           <td width=14%><label>成立日期</label></td>
           <td>
             <div id="org_begin_date" class="input-group date">
-              <input type="text" class="form-control required" name="orgBeginDate" v-model="organ.orgBeginDate" readOnly />
+              <input type="text" class="form-control required" name="orgBeginDate" v-model="formData.orgBeginDate" readOnly />
               <span class="input-group-addon"><span class="glyphicon glyphicon-calendar"></span></span>
             </div>
           </td>
           <td width=14%><label>机构类型</label></td>
           <td>
-            <select name="orgType" class="required" v-model="organ.orgType">
+            <select name="orgType" class="required" v-model="formData.orgType">
               <option v-for="item in dicSmallTypes" :value="item.smallTypeCode">{{ item.smallTypeName }}</option>
             </select>
           </td>
         </tr>
         <tr>
           <td width=14%><label>机构邮编</label></td>
-          <td><input type=text name="orgPostal" v-model="organ.orgPostal" class="digits" maxlength="6"/></td>
+          <td><input type=text name="orgPostal" v-model="formData.orgPostal" class="digits" maxlength="6"/></td>
           <td width=14%><label>法人代表</label></td>
-          <td><input type=text name="orgLegal" v-model="organ.orgLegal" maxlength="10"/></td>
+          <td><input type=text name="orgLegal" v-model="formData.orgLegal" maxlength="10"/></td>
         </tr>
         <tr>
           <td width=14%><label>税务号</label></td>
-          <td><input type=text name="orgTaxNo" v-model="organ.orgTaxNo" class="alphanumeric" maxlength="25"/></td>
+          <td><input type=text name="orgTaxNo" v-model="formData.orgTaxNo" class="alphanumeric" maxlength="25"/></td>
           <td width=14%><label>注册登记号</label></td>
-          <td><input type=text name="orgRegNo" v-model="organ.orgRegNo" class="alphanumeric" maxlength="25"/></td>
+          <td><input type=text name="orgRegNo" v-model="formData.orgRegNo" class="alphanumeric" maxlength="25"/></td>
         </tr>
         <tr>
           <td width=14%><label>上级机构</label></td>
           <td>
-            <input type="hidden" name="parentId" v-model="organ.parentId" />
-            <input type="text" name="parentName" v-model="organ.parentName" class="required" />
+            <input type="hidden" name="parentId" v-model="formData.parentId" />
+            <input type="text" name="parentName" v-model="formData.parentName" class="required" />
             <span class="btn btn-warning btn-xs select2"><span class="glyphicon glyphicon-search"></span></span>
           </td>
           <td width=14%><label>备注</label></td>
-          <td><input type="text" name="memo" v-model="organ.memo" maxlength="50"/></td>
+          <td><input type="text" name="memo" v-model="formData.memo" maxlength="50"/></td>
         </tr>
       </table>
     </form>
@@ -83,7 +83,7 @@ export default {
   data () {
     if(this.config.id > -1) {
       this.api.organMgr.view(this.config).then(data => {
-        this.organ = data;
+        this.formData = data;
       });
     }
     this.api.dictionaryMgr.getSmallType({bigTypeCode: 'organType'}).then(data => {
@@ -91,7 +91,7 @@ export default {
     });
 
     return {
-      organ: {
+      formData: {
         orgId: null,
         parentId: null,
         parentName: null,
@@ -142,8 +142,8 @@ export default {
         check : { enable : false},
         callback : {
           onClick : function(evane, treeId, treeNode) {
-            $vue.organ.parentId = treeNode.id;
-            $vue.organ.parentName = treeNode.text;
+            $vue.formData.parentId = treeNode.id;
+            $vue.formData.parentName = treeNode.text;
             $modal.modal('hide');
           },
           beforeExpand : function(treeId, treeNode) {
@@ -187,8 +187,8 @@ export default {
         check : { enable : false},
         callback : {
           onClick : function(evane, treeId, treeNode) {
-            $vue.organ.orgBelongDistName = treeNode.id;
-            $vue.organ.orgBelongDistName = treeNode.text;
+            $vue.formData.orgBelongDistName = treeNode.id;
+            $vue.formData.orgBelongDistName = treeNode.text;
             $modal.modal('hide');
           },
           beforeExpand : function(treeId, treeNode) {
@@ -232,7 +232,7 @@ export default {
     },
     create() {
       let $vue = this;
-      this.api.organMgr.create(this.organ).then(data => {
+      this.api.organMgr.create(this.formData).then(data => {
         MyCuckoo.showMsg({state: 'success', title: '提示', msg: data});
 
         $vue.$emit('refresh');
@@ -241,7 +241,7 @@ export default {
     },
     update() {
       let $vue = this;
-      this.api.organMgr.update(this.organ).then(data => {
+      this.api.organMgr.update(this.formData).then(data => {
         MyCuckoo.showMsg({state: 'success', title: '提示', msg: data});
 
         $vue.$emit('refresh');

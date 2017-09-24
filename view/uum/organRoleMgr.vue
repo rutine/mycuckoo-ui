@@ -18,10 +18,10 @@
           <label class="sr-only">角色名称</label>
           <input type="text" class="form-control input-sm" v-model="param.roleName" placeholder=角色名称 />
         </div>
-        <button type="button" class="btn btn-info btn-sm" name="search" @click="list">查询
+        <button type="button" class="btn btn-info btn-sm" @click="list">查询
           <span class="glyphicon glyphicon-search"></span>
         </button>
-        <button type="button" class="btn btn-default btn-sm" name="clear" @click="clear">&nbsp;清空
+        <button type="button" class="btn btn-default btn-sm" @click="clear">&nbsp;清空
           <span class="glyphicon glyphicon-repeat"></span>
         </button>
       </form>
@@ -203,123 +203,3 @@ export default {
   }
 }
 </script>
-<!--<script type="text/javascript">
-		jQuery(function($) {
-			var config = {};
-			var $main = $('.mycuckoo-submain');
-			var setting = {
-				async : { enable : true, type : 'get', url : '${ctx}/uum/organMgr/getChildNodes', autoParam : [ 'id=treeId' ] },
-				callback : {
-					onClick : function(evane, treeId, treeNode) {
-						var queryString = $main.find('form[name=searchForm]').serialize();
-						var params = MyCuckoo.fromQueryString(queryString);
-						MyCuckoo.apply(params, config);
-						params.treeId = treeNode.id;
-						reload(params);
-					}
-				},
-				data : { key : { name : 'text', icon : 'iconCls' } },
-				view : {
-					dblClickExpand : false, showLine : true, selectedMulti : false,
-					expandSpeed : ($.browser.msie && parseInt($.browser.version) <= 6) ? '' : 'fast'
-				}
-			};
-			var zTree = $.fn.zTree.init($('#tree_role_organ'), setting);
-
-			
-			// 为机构分配角色
-			function assignRole() {
-				var orgNodes = zTree.getSelectedNodes();
-				if(orgNodes.length != 1) {
-					MyCuckoo.showMsg({ state : 'warning', title : '提示', msg : '请选择要分配角色的机构' });
-					return;
-				}
-				var $modal = $(MyCuckoo.modalTemplate);
-				$modal.on('hidden.bs.modal', function() { $(this).off().find('.btn').off().end().remove(); });
-				$modal.find('h3').text('选择角色');
-				$modal.find('.modal-body').load('queryUnselectedRoleList', 
-						{treeId : orgNodes[0].id}, function() {
-							
-					modalCallBack();
-				});
-				// 保存为机构分配的角色
-				$modal.on('click', '.modal-footer .btn:first', function() {
-					var $singleCheck = $modal.find('.table input:checked[name=single]');
-					if($singleCheck.size() == 0) {
-						MyCuckoo.showMsg({state: 'danger', title: '提示', msg: '请选择一条或多条记录!'});
-						return;
-					}
-					var roleIdList = [];
-					$singleCheck.each(function() {
-						var _json = $.parseJSON($(this).next(':first').html());
-						roleIdList.push(_json.roleId);
-					});
-					$.post('save', {id : orgNodes[0].id, roleIdList : roleIdList.join(',')}, function(data) {
-						if(data.status) {
-							MyCuckoo.showMsg({state:'success', title: '提示', msg: data.msg});
-						} else {
-							MyCuckoo.showMsg({state:'danger', title: '提示', msg: data.msg});
-						}
-						// 刷新列表
-						reload(MyCuckoo.apply({treeId : orgNodes[0].id}, config));
-						$modal.modal('hide');
-					});
-				});
-				$modal.modal();
-				$modal.appendTo($('body'));
-				
-				function modalCallBack() {
-					// page分页
-					$modal.off('click', '.pagination li > a');
-					$modal.on('click', '.pagination li > a', function(event) {
-						event.preventDefault(); // 阻止超链接点击事件
-						var cls = $(this).parent('li').attr('class');
-						if(cls == 'disabled' || cls == 'active') return;
-						
-						var params = MyCuckoo.fromQueryString($(this).attr('href'));
-						MyCuckoo.apply(params, config);
-						// 刷新列表
-						$modal.find('.modal-body').load('unselectedRoleList', params, function() {
-							modalCallBack();
-						});
-					});
-					// 复选框
-					MyCuckoo.checkbox($modal);
-				}
-			}
-			
-			// 删除操作
-			function del() {
-				var $singleCheck = $main.find('.table input:checked[name=single]');
-				if($singleCheck.size() == 0) {
-					MyCuckoo.showMsg({state: 'warning', title: '提示', msg: '请至少选择一条记录!'});
-					return;
-				}
-				MyCuckoo.showDialog({
-					title: '警告提示',
-					msg: '您确认删除此记录吗?',
-					okBtn: '是',
-					cancelBtn: '否',
-					ok: function() {
-						var roleIdList = [];
-						$singleCheck.each(function() {
-							var _json = $.parseJSON($(this).next(':first').html());
-							roleIdList.push(_json.roleId);
-						});
-						var orgId = zTree.getSelectedNodes()[0].id;
-						$.getJSON('delete', {id :  orgId, roleIdList : roleIdList.join(',')}, function(json) {
-							if(json.code == 1) {
-								MyCuckoo.showMsg({state:'danger', title: '提示', msg: '您不能删除选择角色,角色下已有用户,请先将相应用户的角色删除!'});
-							} else if(json.status) {
-								MyCuckoo.showMsg({state:'success', title: '提示', msg: json.msg});
-								// 刷新页面
-								reload(MyCuckoo.apply({treeId : orgId}, config));
-							} else {
-								MyCuckoo.showMsg({state:'error', title: '提示', msg: json.msg});
-							}
-						});
-					}
-				});
-			}
-		});
-	</script>-->

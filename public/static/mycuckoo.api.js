@@ -333,6 +333,31 @@ if(exports) {
       view: function(params) {
         return axios.get('/platform/system/log/mgr/view', {params: params}).then(res => res.data.data);
       }
+    },
+    systemLogMgr: {
+      list: function(params) {
+        return axios.get('/platform/system/log/mgr/list', {params: params}).then(res => res.data.data);
+      },
+      view: function(params) {
+        return axios.get('/platform/system/log/mgr/view', {params: params}).then(res => res.data.data);
+      }
+    },
+    systemParameterMgr: {
+      list: function(params) {
+        return axios.get('/platform/system/parameter/mgr/list', {params: params}).then(res => res.data.data);
+      },
+      create: function(params) {
+        return axios.put('/platform/system/parameter/mgr/create', params).then(res => res.data.data);
+      },
+      update: function(params) {
+        return axios.put('/platform/system/parameter/mgr/update', params).then(res => res.data.data);
+      },
+      view: function(params) {
+        return axios.get('/platform/system/parameter/mgr/view', {params: params}).then(res => res.data.data);
+      },
+      disEnable: function(params) {
+        return axios.get('/platform/system/parameter/mgr/disEnable', {params: params}).then(res => res.data.data);
+      },
     }
 
     //the end

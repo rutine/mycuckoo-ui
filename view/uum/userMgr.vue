@@ -278,8 +278,8 @@ export default {
       this.checkSelect();
 
       let $vue = this;
-      let user = this.retrieve();
-      if(user.status == 'disable') {
+      let item = this.retrieve();
+      if(item.status == 'disable') {
         MyCuckoo.showMsg({ state: 'info', title : '提示', msg : '此用户已经停用' });
         return;
       }
@@ -289,7 +289,7 @@ export default {
         okBtn: '是',
         cancelBtn: '否',
         ok : function() {
-          $vue.api.userMgr.disEnable({id: user.userId, disEnableFlag: 'disable'}).then(data => {
+          $vue.api.userMgr.disEnable({id: item.userId, disEnableFlag: 'disable'}).then(data => {
             MyCuckoo.showMsg({state: 'success', title: '提示', msg: '用户停用成功!此用户将不能在使用本系统'});
 
             $vue.list(); // 刷新列表
@@ -302,8 +302,8 @@ export default {
       this.checkSelect();
 
       let $vue = this;
-      let user = this.retrieve();
-      $vue.api.userMgr.resetPwd({id: user.userId, userName: user.userName}).then(data => {
+      let item = this.retrieve();
+      $vue.api.userMgr.resetPwd({id: item.userId, userName: item.userName}).then(data => {
         MyCuckoo.showMsg({state: 'success', title: '提示', msg: data});
 
         $vue.list(); // 刷新列表
@@ -313,33 +313,33 @@ export default {
     assignrole() {
       this.checkSelect();
 
-      let user = this.retrieve();
-      if(user.status == 'disable') {
+      let item = this.retrieve();
+      if(item.status == 'disable') {
         MyCuckoo.showMsg({state: 'info', title: '提示', msg: '请先启用此用户'});
         return;
       }
 
       this.config = {
         view: 'roleForm',
-        user: user
+        user: item
       }
     },
     //分配权限
     optpri() {
       this.checkSelect();
 
-      let user = this.retrieve();
-      if (user.status == 'disable') {
+      let item = this.retrieve();
+      if (item.status == 'disable') {
         MyCuckoo.showMsg({ state : 'danger', title : '提示', msg : '请先启用此用户！' });
         return;
-      } else if(user.orgRoleId == 0) {
+      } else if(item.orgRoleId == 0) {
         MyCuckoo.showMsg({ state : 'danger', title : '提示', msg : '请先为此用户分配有效角色！' });
         return;
       }
 
       this.config = {
         view: 'operationForm',
-        user: user
+        user: item
       }
     }
     //end

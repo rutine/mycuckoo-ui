@@ -18,10 +18,10 @@
               <input type="radio" name="affichePulish" value="1" v-model="param.affichePulish"> 否&nbsp;&nbsp;
             </label>
           </div>
-          <button class="btn btn-info btn-sm" name="search" @click="list">&nbsp;查询
+          <button class="btn btn-info btn-sm" @click="list">&nbsp;查询
             <span class="glyphicon glyphicon-search"></span>
           </button>
-          <button type="button" class="btn btn-default btn-sm" name="clear" @click="clear">&nbsp;清空
+          <button type="button" class="btn btn-default btn-sm" @click="clear">&nbsp;清空
             <span class="glyphicon glyphicon-repeat"></span>
           </button>
         </form>

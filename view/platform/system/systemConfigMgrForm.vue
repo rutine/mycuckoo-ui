@@ -9,7 +9,7 @@
               <form action="#" class="form-inline">
                 <div class="form-group">
                   <label class="control-label" for="systemName">系统名称&nbsp;</label>
-                  <input type="text" class="form-control" name="systemName" v-model="systemConfigBean.systemName" required/>
+                  <input type="text" class="form-control" name="systemName" v-model="formData.systemName" required/>
                 </div>
                 <p></p>
                 <p><button type="button" class="btn btn-primary" data-loading-text="处理中..." @click="saveName">设置</button></p>
@@ -24,7 +24,7 @@
                 <div class="form-group">
                   <label class="control-label" for="systemMgr">管理员列表&nbsp;</label>
                   <select class="form-control" name="systemMgr">
-                    <option v-for="systemMgr in systemConfigBean.systemMgr" :value="systemMgr">{{ systemMgr }}</option>
+                    <option v-for="systemMgr in formData.systemMgr" :value="systemMgr">{{ systemMgr }}</option>
                   </select>
                 </div>
                 <p></p>
@@ -42,10 +42,10 @@
               <form action="#" class="form-inline">
                 <label class="control-label">日志级别</label>
                 <div class="radio">
-                  <label class="radio-inline"><input type="radio" name=loggerLevel value="1" v-model="systemConfigBean.loggerLevel" />增、删、改</label>
-                  <label class="radio-inline"><input type="radio" name=loggerLevel value="2" v-model="systemConfigBean.loggerLevel" />删、改、其它</label>
-                  <label class="radio-inline"><input type="radio" name=loggerLevel value="3" v-model="systemConfigBean.loggerLevel" />删、其它</label>
-                  <label class="radio-inline"><input type="radio" name=loggerLevel value="0" v-model="systemConfigBean.loggerLevel" />关闭</label>
+                  <label class="radio-inline"><input type="radio" name=loggerLevel value="1" v-model="formData.loggerLevel" />增、删、改</label>
+                  <label class="radio-inline"><input type="radio" name=loggerLevel value="2" v-model="formData.loggerLevel" />删、改、其它</label>
+                  <label class="radio-inline"><input type="radio" name=loggerLevel value="3" v-model="formData.loggerLevel" />删、其它</label>
+                  <label class="radio-inline"><input type="radio" name=loggerLevel value="0" v-model="formData.loggerLevel" />关闭</label>
                 </div>
                 <p></p>
                 <p><button type="button" class="btn btn-primary" data-loading-text="处理中..." @click="saveLogLevel">设置</button></p>
@@ -59,7 +59,7 @@
               <form action="#" class="form-inline">
                 <div class="form-group">
                   <label class="control-label" for="logRecordKeepDays">保留天数&nbsp;</label>
-                  <select class="form-control" name="logRecordKeepDays" v-model="systemConfigBean.logRecordKeepDays">
+                  <select class="form-control" name="logRecordKeepDays" v-model="formData.logRecordKeepDays">
                     <option value="-1">不设置</option>
                     <option value="3">3天</option>
                     <option value="7">7天</option>
@@ -107,9 +107,9 @@
               <form action="#" class="form-inline">
                 <label class="control-label">行权限级别</label>
                 <div class="radio">
-                  <label class="radio-inline"><input type="radio" name=rowPrivilegeLevel value="org" v-model="systemConfigBean.rowPrivilegeLevel" />机构</label>
-                  <label class="radio-inline"><input type="radio" name=rowPrivilegeLevel value="rol" v-model="systemConfigBean.rowPrivilegeLevel" />角色</label>
-                  <label class="radio-inline"><input type="radio" name=rowPrivilegeLevel value="usr" v-model="systemConfigBean.rowPrivilegeLevel" />用户</label>
+                  <label class="radio-inline"><input type="radio" name=rowPrivilegeLevel value="org" v-model="formData.rowPrivilegeLevel" />机构</label>
+                  <label class="radio-inline"><input type="radio" name=rowPrivilegeLevel value="rol" v-model="formData.rowPrivilegeLevel" />角色</label>
+                  <label class="radio-inline"><input type="radio" name=rowPrivilegeLevel value="usr" v-model="formData.rowPrivilegeLevel" />用户</label>
                 </div>
                 <p></p>
                 <p><button type="button" class="btn btn-primary" data-loading-text="处理中..." @click="saveRowPrivilege">设置</button></p>
@@ -213,7 +213,7 @@ export default {
       selectData: [],
       config: {},
 
-      systemConfigBean: {
+      formData: {
         loggerLevel: null,
         logRecordKeepDays: null,
         systemMgr: [],
@@ -275,7 +275,7 @@ export default {
     //刷新当前页
     refresh() {
       this.api.systemConfigMgr.view(this.config).then(data => {
-        this.systemConfigBean = data;
+        this.formData = data;
       });
     },
 
@@ -283,7 +283,7 @@ export default {
     //选择管理员
     selectAdmin(userAddDelFlag) {
       this.param.userAddDelFlag = userAddDelFlag;
-      this.systemConfigBean.userAddDelFlag = userAddDelFlag;
+      this.formData.userAddDelFlag = userAddDelFlag;
 
       let $modal = $('#system_config_mgr_form_modal');
       $modal.modal();
@@ -293,7 +293,7 @@ export default {
 
     // 系统名称设置
     saveName() {
-      this.api.systemConfigMgr.update({systemName: this.systemConfigBean.systemName}).then(data => {
+      this.api.systemConfigMgr.update({systemName: this.formData.systemName}).then(data => {
         MyCuckoo.showMsg({state: 'success', title: '提示', msg: data});
         this.refresh();
       });
@@ -308,7 +308,7 @@ export default {
       });
 
       this.api.systemConfigMgr.update({
-            userAddDelFlag :  this.systemConfigBean.userAddDelFlag,
+            userAddDelFlag :  this.formData.userAddDelFlag,
             systemMgr : userCodes
           }).then(data => {
         MyCuckoo.showMsg({state: 'success', title: '提示', msg: data});
@@ -317,14 +317,14 @@ export default {
     },
     // 系统日志级别设置
     saveLogLevel() {
-      this.api.systemConfigMgr.update({loggerLevel: this.systemConfigBean.loggerLevel}).then(data => {
+      this.api.systemConfigMgr.update({loggerLevel: this.formData.loggerLevel}).then(data => {
         MyCuckoo.showMsg({state: 'success', title: '提示', msg: data});
         this.refresh();
       });
     },
     // 系统日志保留天数设置
     saveLogKeepDays() {
-      this.api.systemConfigMgr.update({logRecordKeepDays: this.systemConfigBean.logRecordKeepDays}).then(data => {
+      this.api.systemConfigMgr.update({logRecordKeepDays: this.formData.logRecordKeepDays}).then(data => {
         MyCuckoo.showMsg({state: 'success', title: '提示', msg: data});
         this.refresh();
       });
@@ -338,7 +338,7 @@ export default {
     },
     //系统行权限设置
     saveRowPrivilege() {
-      this.api.systemConfigMgr.update({rowPrivilegeLevel: this.systemConfigBean.rowPrivilegeLevel}).then(data => {
+      this.api.systemConfigMgr.update({rowPrivilegeLevel: this.formData.rowPrivilegeLevel}).then(data => {
         MyCuckoo.showMsg({state: 'success', title: '提示', msg: data});
         this.refresh();
       });

@@ -17,10 +17,10 @@
             <label class="sr-only">模块名称&nbsp;</label>
             <input type="text" class="form-control input-sm" v-model="param.moduleName" placeholder=模块名称 />
           </div>
-          <button class="btn btn-info btn-sm" name="search" @click="list">&nbsp;查询
+          <button class="btn btn-info btn-sm" @click="list">&nbsp;查询
             <span class="glyphicon glyphicon-search"></span>
           </button>
-          <button type="button" class="btn btn-default btn-sm" name="clear" @click="clear">&nbsp;清空
+          <button type="button" class="btn btn-default btn-sm" @click="clear">&nbsp;清空
             <span class="glyphicon glyphicon-repeat"></span>
           </button>
         </form>
@@ -182,13 +182,13 @@ export default {
       this.checkSelect();
 
       let $vue = this;
-      let code = this.retrieve();
-      if(code.status == 'enable') {
+      let item = this.retrieve();
+      if(item.status == 'enable') {
         MyCuckoo.showMsg({ state: 'info', title : '提示', msg : '此编码已经启用' });
         return;
       }
 
-      $vue.api.codeMgr.disEnable({id: code.codeId, disEnableFlag: 'enable'}).then(data => {
+      $vue.api.codeMgr.disEnable({id: item.codeId, disEnableFlag: 'enable'}).then(data => {
         MyCuckoo.showMsg({state: 'success', title: '提示', msg: '编码启用成功'});
 
         $vue.list(); // 刷新列表
@@ -199,8 +199,8 @@ export default {
       this.checkSelect();
 
       let $vue = this;
-      let code = this.retrieve();
-      if(code.status == 'disable') {
+      let item = this.retrieve();
+      if(item.status == 'disable') {
         MyCuckoo.showMsg({ state: 'info', title : '提示', msg : '此编码已经停用' });
         return;
       }
@@ -210,7 +210,7 @@ export default {
         okBtn: '是',
         cancelBtn: '否',
         ok : function() {
-          $vue.api.codeMgr.disEnable({id: code.codeId, disEnableFlag: 'disable'}).then(data => {
+          $vue.api.codeMgr.disEnable({id: item.codeId, disEnableFlag: 'disable'}).then(data => {
             MyCuckoo.showMsg({state: 'success', title: '提示', msg: '编码停用成功'});
 
             $vue.list(); // 刷新列表

@@ -6,20 +6,19 @@
       <toolbar name="formOpt" :value="config.action" v-on:operator="operator"></toolbar>
 
       <form name="editForm" action="editForm" method="post" class="form form-inline">
-        <input type="hidden" name="opt" value="" />
-        <input type="hidden" name="afficheId" v-model="affiche.afficheId"/>
+        <input type="hidden" name="afficheId" v-model="formData.afficheId"/>
         <div class="jumbotron" style="margin-bottom:10px; padding:15px; font-size:12px;">
           <p><strong class="text-info">公告信息</strong></p>
           <table class="table">
             <tr>
               <td width=14%><label>公告标题</label></td>
-              <td><input type=text name="afficheTitle" v-model="affiche.afficheTitle"
+              <td><input type=text name="afficheTitle" v-model="formData.afficheTitle"
                          class="form-control required" maxlength="100"/></td>
               <td width=14%><label>有效日期</label></td>
               <td>
                 <div id="affiche_invalidate" class="input-group date">
                   <input type="text" class="form-control required" name="afficheInvalidate"
-                         v-model="affiche.afficheInvalidate" readOnly />
+                         v-model="formData.afficheInvalidate" readOnly />
                   <span class="input-group-addon"><span class="glyphicon glyphicon-remove"></span></span>
                   <span class="input-group-addon"><span class="glyphicon glyphicon-calendar"></span></span>
                 </div>
@@ -29,17 +28,17 @@
               <td width=14%><label>是否发布</label></td>
               <td colspan="3">
                 <label class="radio-inline">
-                  <input type="radio" name="affichePulish" value="0" v-model="affiche.affichePulish"> 是&nbsp;&nbsp;
+                  <input type="radio" name="affichePulish" value="0" v-model="formData.affichePulish"> 是&nbsp;&nbsp;
                 </label>
                 <label class="radio-inline">
-                  <input type="radio" name="affichePulish" value="1" v-model="affiche.affichePulish"> 否&nbsp;&nbsp;
+                  <input type="radio" name="affichePulish" value="1" v-model="formData.affichePulish"> 否&nbsp;&nbsp;
                 </label>
               </td>
             </tr>
             <tr>
               <td width=14%><label>公告正文</label></td>
               <td colspan="3">
-                <textarea rows="6" name="afficheContent" class="form-control" v-model="affiche.afficheContent"></textarea>
+                <textarea rows="6" name="afficheContent" class="form-control" v-model="formData.afficheContent"></textarea>
               </td>
             </tr>
           </table>
@@ -51,7 +50,7 @@
         </p>
         <div v-if="config.action != 'view'" id="file_picker"><span class="glyphicon glyphicon-plus"></span> 添加文件</div>
         <table class="table table-condensed file-list">
-            <tr v-for="accessory in affiche.accessories"
+            <tr v-for="accessory in formData.accessories"
                 :id="accessory.file ? accessory.file.id : ''" class="template-download fade in">
               <td width="25%" class="name">
                 <span v-if="!accessory.file">
@@ -101,11 +100,11 @@ export default {
   data() {
     if (this.config.id > -1) {
       this.api.afficheMgr.view(this.config).then(data => {
-        this.affiche = data;
+        this.formData = data;
       });
     }
     return {
-      affiche: {
+      formData: {
         afficheId: null,
         afficheTitle: null,
         afficheInvalidate: null,
@@ -119,7 +118,7 @@ export default {
   mounted() {
     if (this.config.id > -1) {
       this.api.afficheMgr.view(this.config).then(data => {
-        this.affiche = data;
+        this.formData = data;
 
         this.init(data.afficheId);
       });
@@ -154,7 +153,7 @@ export default {
       });
       // 当有文件被添加进队列的时候
       $vue.uploader.on('fileQueued', function(file) {
-        $vue.affiche.accessories.push({
+        $vue.formData.accessories.push({
           accessoryName: file.name,
           size: WebUploader.Base.formatSize(file.size),
           file: file
@@ -169,7 +168,7 @@ export default {
         if(!json || !json.files.length) return;
 
         file = MyCuckoo.apply(file, json.files[0]);
-        $vue.affiche.accessories.forEach(item => {
+        $vue.formData.accessories.forEach(item => {
           if(item.file && file.id == item.file.id) {
             item.file = null;
             item.accessoryId = file.url;
@@ -204,9 +203,9 @@ export default {
     deleteAccessory(accessoryId) {
       let $vue = this;
       this.api.accessoryMgr.del({id: accessoryId}).then(data => {
-        $vue.affiche.accessories.forEach((item, index) => {
+        $vue.formData.accessories.forEach((item, index) => {
           if(item.accessoryId == accessoryId) {
-            $vue.affiche.accessories.splice(index, 1);
+            $vue.formData.accessories.splice(index, 1);
           }
         });
 
@@ -228,7 +227,7 @@ export default {
     },
     create() {
       let $vue = this;
-      let params = JSON.parse(JSON.stringify(this.affiche));
+      let params = JSON.parse(JSON.stringify(this.formData));
       params.accessories.forEach(item => {
         item.accessoryName = item.accessoryId;
         item.accessoryId = null;
@@ -243,7 +242,7 @@ export default {
     },
     update() {
       let $vue = this;
-      let params = JSON.parse(JSON.stringify(this.affiche));
+      let params = JSON.parse(JSON.stringify(this.formData));
       params.accessories.forEach(item => {
         if(isNaN(item.accessoryId)) {
           item.accessoryName = item.accessoryId;

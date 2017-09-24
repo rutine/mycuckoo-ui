@@ -7,14 +7,14 @@
     <toolbar name="formOpt" :value="config.action" v-on:operator="operator"></toolbar>
 
     <form name="editForm" action="editForm" method="post">
-      <input type="hidden" name="roleId" v-model="role.roleId"/>
+      <input type="hidden" name="roleId" v-model="formData.roleId"/>
       <table class="table table-bordered">
         <tr>
           <td width=14%><label>角色名称</label></td>
-          <td><input type=text  name="roleName" v-model="role.roleName" class="required" maxlength="10"/></td>
+          <td><input type=text  name="roleName" v-model="formData.roleName" class="required" maxlength="10"/></td>
           <td width=14%><label>角色级别</label></td>
           <td>
-            <select name="roleLevel" class="required" v-model="role.roleLevel">
+            <select name="roleLevel" class="required" v-model="formData.roleLevel">
               <option value="1">1</option>
               <option value="2">2</option>
               <option value="3">3</option>
@@ -30,13 +30,13 @@
         <tr>
           <td width=14%><label>角色状态</label></td>
           <td>
-            <select name="status" class="required" v-model="role.status">
+            <select name="status" class="required" v-model="formData.status">
               <option value="enable">启用</option>
               <option value="disable">停用</option>
             </select>
           </td>
           <td width=14%><label>备注</label></td>
-          <td><input type="text" name="memo" v-model="role.memo" maxlength="50"/></td>
+          <td><input type="text" name="memo" v-model="formData.memo" maxlength="50"/></td>
         </tr>
       </table>
     </form>
@@ -51,11 +51,11 @@ export default {
   data () {
     if(this.config.id) {
       this.api.roleMgr.view(this.config).then(data => {
-        this.role = data;
+        this.formData = data;
       });
     }
     return {
-      role: {
+      formData: {
         roleId: null,
         roleName: null,
         status: null,
@@ -72,7 +72,7 @@ export default {
     },
     create() {
       let $vue = this;
-      this.api.roleMgr.create(this.role).then(data => {
+      this.api.roleMgr.create(this.formData).then(data => {
         MyCuckoo.showMsg({state: 'success', title: '提示', msg: data});
 
         $vue.$emit('refresh');
@@ -81,7 +81,7 @@ export default {
     },
     update() {
       let $vue = this;
-      this.api.roleMgr.update(this.role).then(data => {
+      this.api.roleMgr.update(this.formData).then(data => {
         MyCuckoo.showMsg({state: 'success', title: '提示', msg: data});
 
         $vue.$emit('refresh');

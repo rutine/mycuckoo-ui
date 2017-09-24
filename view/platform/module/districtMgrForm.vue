@@ -4,30 +4,30 @@
     <toolbar name="formOpt" :value="config.action" v-on:operator="operator"></toolbar>
 
     <form name="editForm" action="">
-      <input type="hidden" name="districtId" v-model="district.districtId"/>
+      <input type="hidden" name="districtId" v-model="formData.districtId"/>
       <table class="table table-bordered">
         <tr>
           <td width=14%><label>地区名称</label></td>
-          <td><input type=text  name="districtName" v-model="district.districtName" class="required" maxlength="10"/></td>
+          <td><input type=text  name="districtName" v-model="formData.districtName" class="required" maxlength="10"/></td>
           <td width=14%><label>地区代码</label></td>
-          <td><input type=text name="districtCode" v-model="district.districtCode" maxlength="10"/></td>
+          <td><input type=text name="districtCode" v-model="formData.districtCode" maxlength="10"/></td>
         </tr>
         <tr>
           <td width=14%><label>地区邮编</label></td>
-          <td><input type=text name="districtPostal" v-model="district.districtPostal" class="digits" maxlength="6"/></td>
+          <td><input type=text name="districtPostal" v-model="formData.districtPostal" class="digits" maxlength="6"/></td>
           <td width=14%><label>电话区号</label></td>
-          <td><input type=text name="districtTelcode" v-model="district.districtTelcode" class="digits" maxlength="10"/></td>
+          <td><input type=text name="districtTelcode" v-model="formData.districtTelcode" class="digits" maxlength="10"/></td>
         </tr>
         <tr>
           <td width=14%><label>地区级别</label></td>
           <td>
-            <select name="districtLevel" class="required" v-model="district.districtLevel">
+            <select name="districtLevel" class="required" v-model="formData.districtLevel">
               <option v-for="item in dicSmallTypes" :value="item.smallTypeCode">{{ item.smallTypeName }}</option>
             </select>
           </td>
           <td width=14%><label>地区状态</label></td>
           <td>
-            <select name="status" class="required" v-model="district.status">
+            <select name="status" class="required" v-model="formData.status">
               <option value="enable">启用</option>
               <option value="disable">停用</option>
             </select>
@@ -36,12 +36,12 @@
         <tr>
           <td width=14%><label>上级地区</label></td>
           <td>
-            <input type="hidden" name="upDistrictId" v-model="district.parentId" />
-            <input type="text" name="upDistrictName" v-model="district.parentName" class="required" />
+            <input type="hidden" name="upDistrictId" v-model="formData.parentId" />
+            <input type="text" name="upDistrictName" v-model="formData.parentName" class="required" />
             <span class="btn btn-warning btn-xs select"><span class="glyphicon glyphicon-search"></span></span>
           </td>
           <td width=14%><label>备注</label></td>
-          <td><input type="text" name="memo" v-model="district.memo" maxlength="50"/></td>
+          <td><input type="text" name="memo" v-model="formData.memo" maxlength="50"/></td>
         </tr>
       </table>
     </form>
@@ -55,7 +55,7 @@
     data () {
       if(this.config.id > -1) {
         this.api.districtMgr.view(this.config).then(data => {
-          this.district = data;
+          this.formData = data;
         });
       }
       this.api.dictionaryMgr.getSmallType({bigTypeCode: 'district'}).then(data => {
@@ -63,7 +63,7 @@
       });
 
       return {
-        district: {
+        formData: {
           districtId: null,
           parentId: null,
           parentName: null,
@@ -97,8 +97,8 @@
           },
           callback : {
             onClick : function(evane, treeId, treeNode) {
-              $vue.district.parentId = treeNode.id;
-              $vue.district.parentName = treeNode.text;
+              $vue.formData.parentId = treeNode.id;
+              $vue.formData.parentName = treeNode.text;
               $modal.modal('hide');
             },
             beforeExpand : function(treeId, treeNode) {
@@ -137,7 +137,7 @@
       },
       create() {
         let $vue = this;
-        this.api.districtMgr.create(this.district).then(data => {
+        this.api.districtMgr.create(this.formData).then(data => {
           MyCuckoo.showMsg({state: 'success', title: '提示', msg: data});
 
           $vue.$emit('refresh');
@@ -146,7 +146,7 @@
       },
       update() {
         let $vue = this;
-        this.api.districtMgr.update(this.district).then(data => {
+        this.api.districtMgr.update(this.formData).then(data => {
           MyCuckoo.showMsg({state: 'success', title: '提示', msg: data});
 
           $vue.$emit('refresh');

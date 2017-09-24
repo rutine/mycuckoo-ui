@@ -3,21 +3,21 @@
     <!-- 表单操作按钮 -->
     <toolbar name="formOpt" :value="config.action" v-on:operator="operator"></toolbar>
     
-    <form name="editForm" action="">
-      <input type="hidden" name="moduleId" v-model="module.moduleId"/>
+    <form name="editForm">
+      <input type="hidden" name="moduleId" v-model="formData.moduleId"/>
       <table class="table table-bordered">
         <tr>
           <td width=14%><label>模块名称</label></td>
-          <td><input type=text  name="modName" v-model="module.modName" class="required" maxlength="10"/></td>
+          <td><input type=text  name="modName" v-model="formData.modName" class="required" maxlength="10"/></td>
           <td width=14%><label>模块英文ID</label></td>
-          <td><input type=text name="modEnId" v-model="module.modEnId" class="required" maxlength="40"/></td>
+          <td><input type=text name="modEnId" v-model="formData.modEnId" class="required" maxlength="40"/></td>
         </tr>
         <tr>
           <td width=14%><label>模块图片样式</label></td>
-          <td><input type=text name="modImgCls" v-model="module.modImgCls" class="alphanumeric" /></td>
+          <td><input type=text name="modImgCls" v-model="formData.modImgCls" class="alphanumeric" /></td>
           <td width=14%><label>模块级别</label></td>
           <td>
-            <select name="modLevel" class="required" v-model="module.modLevel">
+            <select name="modLevel" class="required" v-model="formData.modLevel">
               <option :value="1">第一</option>
               <option :value="2">第二</option>
               <option :value="3">第三</option>
@@ -27,7 +27,7 @@
         <tr>
           <td width=14%><label>模块顺序</label></td>
           <td>
-            <select name="modOrder" class="required" v-model="module.modOrder">
+            <select name="modOrder" class="required" v-model="formData.modOrder">
               <option :value="1">1</option>
               <option :value="2">2</option>
               <option :value="3">3</option>
@@ -41,7 +41,7 @@
           </td>
           <td width=14%><label>所属系统</label></td>
           <td>
-            <select name="orgType" class="required" v-model="module.belongToSys">
+            <select name="orgType" class="required" v-model="formData.belongToSys">
               <option v-for="item in systemTypes" :value="item.smallTypeCode">{{ item.smallTypeName }}</option>
             </select>
           </td>
@@ -49,13 +49,13 @@
         <tr>
           <td width=14%><label>页面类型</label></td>
           <td>
-            <select name="orgType" class="required" v-model="module.modPageType">
+            <select name="orgType" class="required" v-model="formData.modPageType">
               <option v-for="item in modPageTypes" :value="item.smallTypeCode">{{ item.smallTypeName }}</option>
             </select>
           </td>
           <td width=14%><label>模块状态</label></td>
           <td>
-            <select name="status" class="required" v-model="module.status">
+            <select name="status" class="required" v-model="formData.status">
               <option value="enable">启用</option>
               <option value="disable">停用</option>
             </select>
@@ -64,12 +64,12 @@
         <tr>
           <td width=14%><label>模块的上级名称</label></td>
           <td>
-            <input type="hidden" name="parentId" v-model="module.parentId" />
-            <input type="text" name="parentName" v-model="module.parentName" class="required" />
+            <input type="hidden" name="parentId" v-model="formData.parentId" />
+            <input type="text" name="parentName" v-model="formData.parentName" class="required" />
             <span class="btn btn-warning btn-xs select"><span class="glyphicon glyphicon-search"></span></span>
           </td>
           <td width=14%><label>备注</label></td>
-          <td><input type="text" name="memo" v-model="module.memo" maxlength="50"/></td>
+          <td><input type="text" name="memo" v-model="formData.memo" maxlength="50"/></td>
         </tr>
       </table>
     </form>
@@ -83,7 +83,7 @@ export default {
   data () {
     if(this.config.id > -1) {
       this.api.moduleMgr.view(this.config).then(data => {
-        this.module = data;
+        this.formData = data;
       });
     }
     this.api.dictionaryMgr.getSmallType({bigTypeCode: 'modPageType'}).then(data => {
@@ -96,7 +96,7 @@ export default {
     });
 
     return {
-      module: {
+      formData: {
         moduleId: null,
         parentId: null,
         parentName: null,
@@ -184,7 +184,7 @@ export default {
     },
     create() {
       let $vue = this;
-      this.api.moduleMgr.create(this.module).then(data => {
+      this.api.moduleMgr.create(this.formData).then(data => {
         MyCuckoo.showMsg({state: 'success', title: '提示', msg: data});
 
         $vue.$emit('refresh');
@@ -193,7 +193,7 @@ export default {
     },
     update() {
       let $vue = this;
-      this.api.moduleMgr.update(this.module).then(data => {
+      this.api.moduleMgr.update(this.formData).then(data => {
         MyCuckoo.showMsg({state: 'success', title: '提示', msg: data});
 
         $vue.$emit('refresh');

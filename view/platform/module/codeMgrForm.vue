@@ -6,26 +6,25 @@
       <toolbar name="formOpt" :value="config.action" v-on:operator="operator"></toolbar>
 
       <form name="editForm" action="editForm" method="post">
-        <input type="hidden" name="opt" value="" />
-        <input type="hidden" name="codeId" v-model="code.codeId"/>
+        <input type="hidden" name="codeId" v-model="formData.codeId"/>
         <div class="jumbotron" style="margin-bottom:10px; padding:15px; font-size:12px;">
           <p><strong  class="text-info">系统编码参数</strong></p>
           <table class="table">
             <tr>
               <td width=14%><label>英文编码</label></td>
-              <td><input type=text  name="codeEngName" v-model="code.codeEngName" class="required alphanumeric" maxlength="20"/></td>
+              <td><input type=text  name="codeEngName" v-model="formData.codeEngName" class="required alphanumeric" maxlength="20"/></td>
               <td width=14%><label>中文编码</label></td>
-              <td><input type=text name="codeName" v-model="code.codeName" class="required" maxlength="20"/></td>
+              <td><input type=text name="codeName" v-model="formData.codeName" class="required" maxlength="20"/></td>
             </tr>
             <tr>
               <td width=14%><label>模块名称</label></td>
               <td>
-                <input type=text name="moduleName" v-model="code.moduleName" class="required" />
+                <input type=text name="moduleName" v-model="formData.moduleName" class="required" />
                 <span class="btn btn-warning badge"><span class="glyphicon glyphicon-search"></span></span>
               </td>
               <td width=14%><label>编码状态</label></td>
               <td>
-                <select name="status" class="required" v-model="code.status">
+                <select name="status" class="required" v-model="formData.status">
                   <option value="enable">启用</option>
                   <option value="disable">停用</option>
                 </select>
@@ -34,7 +33,7 @@
             <tr>
               <td width=14%><label>分隔符</label></td>
               <td>
-                <select name="delimite" v-model="code.delimite" class="required" @change="calcCodeEffect">
+                <select name="delimite" v-model="formData.delimite" class="required" @change="calcCodeEffect">
                   <option value="-">-</option>
                   <option value="_">_</option>
                   <option value=":">:</option>
@@ -43,12 +42,12 @@
                 </select>
               </td>
               <td width=14%><label>编码备注</label></td>
-              <td><input type="text" name="memo" v-model="code.memo" maxlength="50"/></td>
+              <td><input type="text" name="memo" v-model="formData.memo" maxlength="50"/></td>
             </tr>
             <tr>
               <td width=14%><label>段数</label></td>
               <td>
-                <select name="partNum" class="required" v-model="code.partNum">
+                <select name="partNum" class="required" v-model="formData.partNum">
                   <option value="1">1</option>
                   <option value="2">2</option>
                   <option value="3">3</option>
@@ -56,7 +55,7 @@
                 </select>
               </td>
               <td width=14%><label>编码效果</label></td>
-              <td><input type="text" name="codeEffect" v-model="code.codeEffect" readOnly/></td>
+              <td><input type="text" name="codeEffect" v-model="formData.codeEffect" readOnly/></td>
             </tr>
           </table>
         </div>
@@ -66,7 +65,7 @@
             <tr>
               <td width=14%><label>段一格式</label></td>
               <td>
-                <select name="part1" v-model="code.part1" >
+                <select name="part1" v-model="formData.part1" >
                   <option value="char">字符</option>
                   <option value="date">日期</option>
                   <option value="number">序号</option>
@@ -75,15 +74,15 @@
               </td>
               <td width=14%><label>段一格式内容</label></td>
               <td>
-                <div v-if="code.part1 == 'date'">
-                  <select name="part1Con" v-model="code.part1Con" @change="calcCodeEffect">
+                <div v-if="formData.part1 == 'date'">
+                  <select name="part1Con" v-model="formData.part1Con" @change="calcCodeEffect">
                     <option value="yyyy">年(yyyy)</option>
                     <option value="yyyyMM">年月(yyyyMM)</option>
                     <option value="yyyyMMdd">年月日(yyyyMMdd)</option>
                   </select>
                 </div>
-                <div v-else-if="code.part1 == 'number'">
-                  <select name="part1Con" v-model="code.part1Con" @change="calcCodeEffect">
+                <div v-else-if="formData.part1 == 'number'">
+                  <select name="part1Con" v-model="formData.part1Con" @change="calcCodeEffect">
                     <option value="01">两位(01)</option>
                     <option value="001">三位(001)</option>
                     <option value="0001">四位(0001)</option>
@@ -91,22 +90,22 @@
                     <option value="000001">六位(000001)</option>
                   </select>
                 </div>
-                <div v-else-if="code.part1 == 'sysPara'">
-                  <select name="part1Con" v-model="code.part1Con" @change="calcCodeEffect">
+                <div v-else-if="formData.part1 == 'sysPara'">
+                  <select name="part1Con" v-model="formData.part1Con" @change="calcCodeEffect">
                     <option value="userName">用户名</option>
                     <option value="roleUser">角色+用户名</option>
                     <option value="organRoleUser">机构+角色+用户名</option>
                   </select>
                 </div>
                 <div v-else="">
-                  <input type="text" name="part1Con" v-model="code.part1Con" @change="calcCodeEffect"/>
+                  <input type="text" name="part1Con" v-model="formData.part1Con" @change="calcCodeEffect"/>
                 </div>
               </td>
             </tr>
             <tr>
               <td width=14%><label>段二格式</label></td>
               <td>
-                <select name="part2" v-model="code.part2" :disabled="part2Disable">
+                <select name="part2" v-model="formData.part2" :disabled="part2Disable">
                   <option value="char">字符</option>
                   <option value="date">日期</option>
                   <option value="number">序号</option>
@@ -115,15 +114,15 @@
               </td>
               <td width=14%><label>段二格式内容</label></td>
               <td>
-                <div v-if="code.part2 == 'date'">
-                  <select name="part1Con" v-model="code.part2Con" :disabled="part2Disable" @change="calcCodeEffect">
+                <div v-if="formData.part2 == 'date'">
+                  <select name="part1Con" v-model="formData.part2Con" :disabled="part2Disable" @change="calcCodeEffect">
                     <option value="yyyy">年(yyyy)</option>
                     <option value="yyyyMM">年月(yyyyMM)</option>
                     <option value="yyyyMMdd">年月日(yyyyMMdd)</option>
                   </select>
                 </div>
-                <div v-else-if="code.part2 == 'number'">
-                  <select name="part2Con" v-model="code.part2Con" :disabled="part2Disable" @change="calcCodeEffect">
+                <div v-else-if="formData.part2 == 'number'">
+                  <select name="part2Con" v-model="formData.part2Con" :disabled="part2Disable" @change="calcCodeEffect">
                     <option value="01">两位(01)</option>
                     <option value="001">三位(001)</option>
                     <option value="0001">四位(0001)</option>
@@ -131,22 +130,22 @@
                     <option value="000001">六位(000001)</option>
                   </select>
                 </div>
-                <div v-else-if="code.part2 == 'sysPara'">
-                  <select name="part2Con" v-model="code.part2Con" :disabled="part2Disable" @change="calcCodeEffect">
+                <div v-else-if="formData.part2 == 'sysPara'">
+                  <select name="part2Con" v-model="formData.part2Con" :disabled="part2Disable" @change="calcCodeEffect">
                     <option value="userName">用户名</option>
                     <option value="roleUser">角色+用户名</option>
                     <option value="organRoleUser">机构+角色+用户名</option>
                   </select>
                 </div>
                 <div v-else="">
-                  <input type="text" name="part2Con" v-model="code.part2Con" :disabled="part2Disable" @change="calcCodeEffect"/>
+                  <input type="text" name="part2Con" v-model="formData.part2Con" :disabled="part2Disable" @change="calcCodeEffect"/>
                 </div>
               </td>
             </tr>
             <tr>
               <td width=14%><label>段三格式</label></td>
               <td>
-                <select name="part3" v-model="code.part3" :disabled="part3Disable">
+                <select name="part3" v-model="formData.part3" :disabled="part3Disable">
                   <option value="char">字符</option>
                   <option value="date">日期</option>
                   <option value="number">序号</option>
@@ -155,15 +154,15 @@
               </td>
               <td width=14%><label>段三格式内容</label></td>
               <td>
-                <div v-if="code.part3 == 'date'">
-                  <select name="part3Con" v-model="code.part3Con" :disabled="part3Disable" @change="calcCodeEffect">
+                <div v-if="formData.part3 == 'date'">
+                  <select name="part3Con" v-model="formData.part3Con" :disabled="part3Disable" @change="calcCodeEffect">
                     <option value="yyyy">年(yyyy)</option>
                     <option value="yyyyMM">年月(yyyyMM)</option>
                     <option value="yyyyMMdd">年月日(yyyyMMdd)</option>
                   </select>
                 </div>
-                <div v-else-if="code.part3 == 'number'">
-                  <select name="part3Con" v-model="code.part3Con" :disabled="part3Disable" @change="calcCodeEffect">
+                <div v-else-if="formData.part3 == 'number'">
+                  <select name="part3Con" v-model="formData.part3Con" :disabled="part3Disable" @change="calcCodeEffect">
                     <option value="01">两位(01)</option>
                     <option value="001">三位(001)</option>
                     <option value="0001">四位(0001)</option>
@@ -171,22 +170,22 @@
                     <option value="000001">六位(000001)</option>
                   </select>
                 </div>
-                <div v-else-if="code.part3 == 'sysPara'">
-                  <select name="part3Con" v-model="code.part3Con" :disabled="part3Disable" @change="calcCodeEffect">
+                <div v-else-if="formData.part3 == 'sysPara'">
+                  <select name="part3Con" v-model="formData.part3Con" :disabled="part3Disable" @change="calcCodeEffect">
                     <option value="userName">用户名</option>
                     <option value="roleUser">角色+用户名</option>
                     <option value="organRoleUser">机构+角色+用户名</option>
                   </select>
                 </div>
                 <div v-else="">
-                  <input type="text" name="part3Con" v-model="code.part3Con" :disabled="part3Disable" @change="calcCodeEffect"/>
+                  <input type="text" name="part3Con" v-model="formData.part3Con" :disabled="part3Disable" @change="calcCodeEffect"/>
                 </div>
               </td>
             </tr>
             <tr>
               <td width=14%><label>段四格式</label></td>
               <td>
-                <select name="part4" v-model="code.part4" :disabled="part4Disable">
+                <select name="part4" v-model="formData.part4" :disabled="part4Disable">
                   <option value="char">字符</option>
                   <option value="date">日期</option>
                   <option value="number">序号</option>
@@ -195,15 +194,15 @@
               </td>
               <td width=14%><label>段四格式内容</label></td>
               <td>
-                <div v-if="code.part4 == 'date'">
-                  <select name="part4Con" v-model="code.part4Con" :disabled="part4Disable" @change="calcCodeEffect">
+                <div v-if="formData.part4 == 'date'">
+                  <select name="part4Con" v-model="formData.part4Con" :disabled="part4Disable" @change="calcCodeEffect">
                     <option value="yyyy">年(yyyy)</option>
                     <option value="yyyyMM">年月(yyyyMM)</option>
                     <option value="yyyyMMdd">年月日(yyyyMMdd)</option>
                   </select>
                 </div>
-                <div v-else-if="code.part4 == 'number'">
-                  <select name="part4Con" v-model="code.part4Con" :disabled="part4Disable" @change="calcCodeEffect">
+                <div v-else-if="formData.part4 == 'number'">
+                  <select name="part4Con" v-model="formData.part4Con" :disabled="part4Disable" @change="calcCodeEffect">
                     <option value="01">两位(01)</option>
                     <option value="001">三位(001)</option>
                     <option value="0001">四位(0001)</option>
@@ -211,15 +210,15 @@
                     <option value="000001">六位(000001)</option>
                   </select>
                 </div>
-                <div v-else-if="code.part4 == 'sysPara'">
-                  <select name="part4Con" v-model="code.part4Con" :disabled="part4Disable" @change="calcCodeEffect">
+                <div v-else-if="formData.part4 == 'sysPara'">
+                  <select name="part4Con" v-model="formData.part4Con" :disabled="part4Disable" @change="calcCodeEffect">
                     <option value="userName">用户名</option>
                     <option value="roleUser">角色+用户名</option>
                     <option value="organRoleUser">机构+角色+用户名</option>
                   </select>
                 </div>
                 <div v-else="">
-                  <input type="text" name="part4Con" v-model="code.part4Con" :disabled="part4Disable" @change="calcCodeEffect"/>
+                  <input type="text" name="part4Con" v-model="formData.part4Con" :disabled="part4Disable" @change="calcCodeEffect"/>
                 </div>
               </td>
             </tr>
@@ -258,12 +257,12 @@
     data() {
       if (this.config.id > -1) {
         this.api.codeMgr.view(this.config).then(data => {
-          this.code = data;
+          this.formData = data;
         });
       }
 
       return {
-        code: {
+        formData: {
           codeId: null,
           codeEngName: null,
           codeName: null,
@@ -291,7 +290,7 @@
       }
     },
     watch: {
-      'code.partNum': function (newVal, oldVal) {
+      'formData.partNum': function (newVal, oldVal) {
         this.part2Disable = newVal < 2;
         this.part3Disable = newVal < 3;
         this.part4Disable = newVal < 4;
@@ -309,7 +308,7 @@
         view : { dblClickExpand : false, showLine : true, selectedMulti : false},
         callback : {
           onClick : function(evane, treeId, treeNode) {
-            $vue.code.moduleName = treeNode.text;
+            $vue.formData.moduleName = treeNode.text;
             $modal.modal('hide');
           },
           beforeExpand: function (treeId, treeNode) {
@@ -357,12 +356,12 @@
       },
       //编码效果
       calcCodeEffect() {
-        let partNum = parseInt(this.code.partNum);
-        let delimite = this.code.delimite;
-        let codePart1 = this.formatDate(this.code.part1Con);
-        let codePart2 = this.formatDate(this.code.part2Con);
-        let codePart3 = this.formatDate(this.code.part3Con);
-        let codePart4 = this.formatDate(this.code.part4Con);
+        let partNum = parseInt(this.formData.partNum);
+        let delimite = this.formData.delimite;
+        let codePart1 = this.formatDate(this.formData.part1Con);
+        let codePart2 = this.formatDate(this.formData.part2Con);
+        let codePart3 = this.formatDate(this.formData.part3Con);
+        let codePart4 = this.formatDate(this.formData.part4Con);
 
         let value;
         switch (partNum) {
@@ -378,7 +377,7 @@
           default:
             value = codePart1;
         }
-        this.code.codeEffect = value;
+        this.formData.codeEffect = value;
       },
 
 
@@ -387,7 +386,7 @@
       },
       create() {
         let $vue = this;
-        this.api.codeMgr.create(this.code).then(data => {
+        this.api.codeMgr.create(this.formData).then(data => {
           MyCuckoo.showMsg({state: 'success', title: '提示', msg: data});
 
           $vue.$emit('refresh');
@@ -396,7 +395,7 @@
       },
       update() {
         let $vue = this;
-        this.api.codeMgr.update(this.code).then(data => {
+        this.api.codeMgr.update(this.formData).then(data => {
           MyCuckoo.showMsg({state: 'success', title: '提示', msg: data});
 
           $vue.$emit('refresh');

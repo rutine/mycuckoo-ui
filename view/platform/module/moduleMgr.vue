@@ -23,10 +23,10 @@
             <label class="sr-only">模块ID</label>
             <input type="text" class="form-control input-sm" v-model="param.modEnId" placeholder=模块ID />
           </div>
-          <button type="button" class="btn btn-info btn-sm" name="search" @click="list">查询
+          <button type="button" class="btn btn-info btn-sm" @click="list">查询
             <span class="glyphicon glyphicon-search"></span>
           </button>
-          <button type="button" class="btn btn-default btn-sm" name="clear" @click="clear">&nbsp;清空
+          <button type="button" class="btn btn-default btn-sm" @click="clear">&nbsp;清空
             <span class="glyphicon glyphicon-repeat"></span>
           </button>
         </form>
@@ -96,8 +96,8 @@ export default {
       },
       param: {
         treeId: null,
-        userCode: null,
-        userName: null,
+        modName: null,
+        modEnId: null,
         pageNo: 1,
         pageSize: 10
       },
@@ -238,17 +238,17 @@ export default {
       this.checkSelect();
 
       let $vue = this;
-      let module = this.retrieve();
-      if(module.status == 'enable') {
+      let item = this.retrieve();
+      if(item.status == 'enable') {
         MyCuckoo.showMsg({ state: 'info', title : '提示', msg : '此菜单已经启用' });
         return;
       }
-      if (module.modLevel != 3) {
+      if (item.modLevel != 3) {
         MyCuckoo.showMsg({ state: 'warning', title : '提示', msg : '请您选择第三级菜单!' });
         return;
       }
 
-      $vue.api.moduleMgr.disEnable({id: user.userId, disEnableFlag: 'enable'}).then(data => {
+      $vue.api.moduleMgr.disEnable({id: item.moduleId, disEnableFlag: 'enable'}).then(data => {
         MyCuckoo.showMsg({state: 'success', title: '提示', msg: '菜单启用成功'});
 
         $vue.list(); // 刷新列表
@@ -259,12 +259,12 @@ export default {
       this.checkSelect();
 
       let $vue = this;
-      let module = this.retrieve();
-      if(module.status == 'disable') {
+      let item = this.retrieve();
+      if(item.status == 'disable') {
         MyCuckoo.showMsg({ state: 'info', title : '提示', msg : '此菜单已经停用' });
         return;
       }
-      if (module.modLevel != 3) {
+      if (item.modLevel != 3) {
         MyCuckoo.showMsg({ state: 'warning', title : '提示', msg : '请您选择第三级菜单!' });
         return;
       }
@@ -274,7 +274,7 @@ export default {
         okBtn: '是',
         cancelBtn: '否',
         ok : function() {
-          $vue.api.moduleMgr.disEnable({id: user.userId, disEnableFlag: 'disable'}).then(data => {
+          $vue.api.moduleMgr.disEnable({id: item.moduleId, disEnableFlag: 'disable'}).then(data => {
             MyCuckoo.showMsg({state: 'success', title: '提示', msg: '菜单启用成功'});
 
             $vue.list(); // 刷新列表
@@ -286,15 +286,15 @@ export default {
     optassign() {
       this.checkSelect();
 
-      let module = this.retrieve();
-      if(module.modLevel != 3) {
+      let item = this.retrieve();
+      if(item.modLevel != 3) {
         MyCuckoo.showMsg({state: 'info', title: '提示', msg: '请您选择第三级模块菜单'});
         return;
       }
 
       this.config = {
         view: 'operationForm',
-        module: module
+        module: item
       }
     },
     //

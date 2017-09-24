@@ -33,6 +33,7 @@ const router = new vueRouter({
     { path: '/platform/schedulerMgr/:moduleId', component: resolve => require(['../view/platform/system/schedulerMgr.vue'], resolve) },
     { path: '/platform/systemConfigMgr/:moduleId', component: resolve => require(['../view/platform/system/systemConfigMgrForm.vue'], resolve) },
     { path: '/platform/systemLogMgr/:moduleId', component: resolve => require(['../view/platform/system/systemLogMgr.vue'], resolve) },
+    { path: '/platform/systemParameterMgr/:moduleId', component: resolve => require(['../view/platform/system/systemParameterMgr.vue'], resolve) },
   ]
 });
 

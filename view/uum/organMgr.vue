@@ -24,10 +24,10 @@
                 <label class="sr-only">机构代码</label>
                 <input type="text" class="form-control input-sm" v-model="param.orgCode" placeholder=机构代码 />
               </div>
-              <button type="button" class="btn btn-info btn-sm" name="search" @click="list">查询
+              <button type="button" class="btn btn-info btn-sm" @click="list">查询
                 <span class="glyphicon glyphicon-search"></span>
               </button>
-              <button type="button" class="btn btn-default btn-sm" name="clear" @click="clear">&nbsp;清空
+              <button type="button" class="btn btn-default btn-sm" @click="clear">&nbsp;清空
                 <span class="glyphicon glyphicon-repeat"></span>
               </button>
             </form>
@@ -111,8 +111,8 @@ export default {
       },
       param: {
         treeId: null,
-        userCode: null,
-        userName: null,
+        orgCode: null,
+        orgName: null,
         pageNo: 1,
         pageSize: 10
       },
@@ -233,13 +233,13 @@ export default {
       this.checkSelect();
 
       let $vue = this;
-      let organ = this.retrieve();
-      if(organ.status == 'enable') {
+      let item = this.retrieve();
+      if(item.status == 'enable') {
         MyCuckoo.showMsg({ state: 'info', title : '提示', msg : '此机构已经启用' });
         return;
       }
 
-      $vue.api.organMgr.disEnable({id: organ.orgId, disEnableFlag: 'enable'}).then(data => {
+      $vue.api.organMgr.disEnable({id: item.orgId, disEnableFlag: 'enable'}).then(data => {
         MyCuckoo.showMsg({state: 'success', title: '提示', msg: '机构启用成功'});
 
         $vue.list(); // 刷新列表
@@ -250,8 +250,8 @@ export default {
       this.checkSelect();
 
       let $vue = this;
-      let organ = this.retrieve();
-      if(organ.status == 'disable') {
+      let item = this.retrieve();
+      if(item.status == 'disable') {
         MyCuckoo.showMsg({ state: 'info', title : '提示', msg : '此机构已经停用' });
         return;
       }
@@ -261,7 +261,7 @@ export default {
         okBtn: '是',
         cancelBtn: '否',
         ok : function() {
-          $vue.api.organMgr.disEnable({id: organ.orgId, disEnableFlag: 'disable'}).then(data => {
+          $vue.api.organMgr.disEnable({id: item.orgId, disEnableFlag: 'disable'}).then(data => {
             MyCuckoo.showMsg({state: 'success', title: '提示', msg: '机构停用成功'});
 
             $vue.list(); // 刷新列表

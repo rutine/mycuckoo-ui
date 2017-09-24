@@ -3,15 +3,15 @@
   <div class="col-sm-12 col-md-12" v-show="!config.view">
     <!-- 查询表单 -->
     <div class="page-header">
-      <form class="form-inline" name="searchForm" action="index">
+      <form class="form-inline" name="searchForm">
         <div class="form-group">
           <label class="sr-only">角色名称:&nbsp;</label>
           <input type="text" class="form-control input-sm" v-model="param.roleName" placeholder=角色名称 />
         </div>
-        <button type="button" class="btn btn-info btn-sm" name="search" @click="list">&nbsp;查询
+        <button type="button" class="btn btn-info btn-sm" @click="list">&nbsp;查询
           <span class="glyphicon glyphicon-search"></span>
         </button>
-        <button type="button" class="btn btn-default btn-sm" name="clear" @click="clear">&nbsp;清空
+        <button type="button" class="btn btn-default btn-sm" @click="clear">&nbsp;清空
           <span class="glyphicon glyphicon-repeat"></span>
         </button>
       </form>
@@ -180,13 +180,13 @@ export default {
       this.checkSelect();
 
       let $vue = this;
-      let role = this.retrieve();
-      if(role.status == 'enable') {
+      let item = this.retrieve();
+      if(item.status == 'enable') {
         MyCuckoo.showMsg({ state: 'info', title : '提示', msg : '此角色已经启用' });
         return;
       }
 
-      $vue.api.roleMgr.disEnable({id: role.roleId, disEnableFlag: 'enable'}).then(data => {
+      $vue.api.roleMgr.disEnable({id: item.roleId, disEnableFlag: 'enable'}).then(data => {
         MyCuckoo.showMsg({state: 'success', title: '提示', msg: '角色启用成功'});
 
         $vue.list(); // 刷新列表
@@ -197,8 +197,8 @@ export default {
       this.checkSelect();
 
       let $vue = this;
-      let role = this.retrieve();
-      if(role.status == 'disable') {
+      let item = this.retrieve();
+      if(item.status == 'disable') {
         MyCuckoo.showMsg({ state: 'info', title : '提示', msg : '此角色已经停用' });
         return;
       }
@@ -208,7 +208,7 @@ export default {
         okBtn: '是',
         cancelBtn: '否',
         ok : function() {
-          $vue.api.roleMgr.disEnable({id: role.roleId, disEnableFlag: 'disable'}).then(data => {
+          $vue.api.roleMgr.disEnable({id: item.roleId, disEnableFlag: 'disable'}).then(data => {
             MyCuckoo.showMsg({state: 'success', title: '提示', msg: '角色停用成功'});
 
             $vue.list(); // 刷新列表
@@ -220,15 +220,15 @@ export default {
     optpri() {
       this.checkSelect();
 
-      let role = this.retrieve();
-      if (role.status == 'disable') {
+      let item = this.retrieve();
+      if (item.status == 'disable') {
         MyCuckoo.showMsg({ state : 'danger', title : '提示', msg : '请先启用此角色！' });
         return;
       }
 
       this.config = {
         view: 'operationForm',
-        role: role
+        role: item
       }
     }
     //end
