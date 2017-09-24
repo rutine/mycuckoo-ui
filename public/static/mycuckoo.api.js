@@ -282,6 +282,35 @@ if(exports) {
       disEnable: function(params) {
         return axios.get('/platform/system/dictionary/mgr/disEnable', {params: params}).then(res => res.data.data);
       },
+    },
+    schedulerMgr: {
+      list: function(params) {
+        return axios.get('/platform/system/scheduler/mgr/list', {params: params}).then(res => res.data.data);
+      },
+      create: function(params) {
+        return axios.put('/platform/system/scheduler/mgr/create', params).then(res => res.data.data);
+      },
+      update: function(params) {
+        return axios.put('/platform/system/scheduler/mgr/update', params).then(res => res.data.data);
+      },
+      view: function(params) {
+        return axios.get('/platform/system/scheduler/mgr/view', {params: params}).then(res => res.data.data);
+      },
+      startScheduler: function(params) {
+        return axios.get('/platform/system/scheduler/mgr/start/scheduler').then(res => res.data.data);
+      },
+      stopScheduler: function(params) {
+        return axios.get('/platform/system/scheduler/mgr/stop/scheduler').then(res => res.data.data);
+      },
+      startJob: function(params) {
+        return axios.get('/platform/system/scheduler/mgr/start/job', {params: params}).then(res => res.data.data);
+      },
+      stopJob: function(params) {
+        return axios.get('/platform/system/scheduler/mgr/stop/job', {params: params}).then(res => res.data.data);
+      },
+      schedulerStatus: function(params) {
+        return axios.get('/platform/system/scheduler/mgr/scheduler/status', {params: params}).then(res => res.data.data);
+      },
     }
   }
 }
