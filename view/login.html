@@ -136,9 +136,9 @@
           }
           
           // 角色列表
-          if(json.data.roles) {
-            for(var i = 0, len = json.data.roles.length; i < len; i++) {
-              var roleUser = json.data.roles[i];
+          if(json.data) {
+            for(var i = 0, len = json.data.length; i < len; i++) {
+              var roleUser = json.data[i];
               if(roleUser.isDefault == 'Y') {
                 roleUser.roleName = roleUser.organName + ' - ' + roleUser.roleName + '(默认)';
               } else {
@@ -153,27 +153,8 @@
                 + '</div>')
                 .data(roleUser)
                 .on('click', function() {
-                    loginSys($(this).data(), null);
+                    loginSys($(this).data());
                  }).appendTo($rolePane);
-            }
-          }
-          
-          // 用户代理列表
-          if(json.data.agents) {
-            for(var i = 0, len = json.data.agents.length; i < len; i++) {
-              var agent = json.data.agents[i];
-              $('<div class="col-sm-6 col-md-3">'
-                  + '  <div class="thumbnail">'
-                  + '    <div class="caption">'
-                  + '      <h3>' + agent.userName + '(代理)</h3>'
-                  + '    </div>'
-                  + '  </div>'
-                  + '</div>')
-                  .data(agent)
-                  .on('click', function() {
-                    loginSys(null, $(this).data());
-                  })
-                  .appendTo($rolePane);
             }
           }
           
@@ -187,11 +168,11 @@
         });
       };
       
-      var loginSys = function(role, agent) {
+      var loginSys = function(role) {
         $.ajax({
           url: mycuckoo.login.secondStepUrl,
           contentType: 'application/json; charset=utf-8',
-          data: JSON.stringify({role: role, agent: agent}),
+          data: JSON.stringify({role: role}),
           success: function(json) {
             var code = json.code;
             var msg = json.message;

@@ -4,17 +4,6 @@
     :style="index == 0 ? 'display: block' : 'display: none'" 
     :id="first.moduleId + '_menu'">
   <ul class="nav nav-sidebar mycuckoo-sidenav">
-    <li v-if="menu.commonFun.length">
-      <a class="usedfuncmaint-hidden">常用功能</a>
-      <ul class="nav" :style="'display: block'">
-        <li v-for="commFun in menu.commonFun" @click="activeMenu">
-          <router-link
-                  :to="'/' + commFun.belongToSys + '/' + commFun.modEnId"
-                  :class="commFun.modImgCls + '-hidden'">{{ commFun.modName }}</router-link>
-        </li>
-      </ul>
-    </li>
-    
     <li v-for="(second, index2) in menu.second[first.moduleId]">
       <a :class="second.modImgCls + '-hidden'">{{ second.modName }}</a>
       

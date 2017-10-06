@@ -177,6 +177,9 @@ if(exports) {
       view: function(params) {
         return axios.get('/platform/module/mgr/view', {params: params}).then(res => res.data.data);
       },
+      del: function(params) {
+        return axios.delete('/platform/module/mgr/delete', {params: params}).then(res => res.data.data);
+      },
     },
     operateMgr: {
       list: function(params) {
