@@ -31,7 +31,8 @@ if(exports) {
   
   module.exports = {
     postUploadLogo: host + '/uum/user/mgr/upload/photo',
-    postUploadAccessory: host + '/platform/accessory/mgr/upload',
+    download: host + '/file/download',
+    postFile: host + '/file',
 
     getLogout: function() {
       return axios.post('/login/logout').then(res => res.data.data);
@@ -216,11 +217,13 @@ if(exports) {
       },
     },
     accessoryMgr: {
-      download: function(params) {
-        return axios.get('/platform/accessory/mgr/download/' + params.id).then(res => res.data.data);
-      },
       del: function(params) {
-        return axios.delete('/platform/accessory/mgr/delete/' + params.id).then(res => res.data.data);
+        return axios.delete('/platform/accessory/mgr/delete', {params: params}).then(res => res.data.data);
+      },
+    },
+    fileMgr: {
+      del: function(params) {
+        return axios.delete('/file/delete', {params: params}).then(res => res.data.data);
       },
     },
     codeMgr: {

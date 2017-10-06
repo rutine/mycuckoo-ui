@@ -23,8 +23,6 @@
             <span class="glyphicon glyphicon-cog"></span> 常用配置<span class="caret"></span>
           </a>
           <ul class="dropdown-menu" role="menu">
-            <li><router-link to="/userCommFunMgr"><span class="glyphicon glyphicon-tasks"></span> 设置常用功能</router-link></li>
-            <li><router-link to="/userAgentMgr"><span class="glyphicon glyphicon-dashboard"></span> 设置代理</router-link></li>
             <li><router-link to="/uum/userMgr/updateUserInfo"><span class="glyphicon glyphicon-log-in"></span> 设置密码</router-link></li>
           </ul>
         </li>

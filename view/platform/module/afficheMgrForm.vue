@@ -54,7 +54,7 @@
                 :id="accessory.file ? accessory.file.id : ''" class="template-download fade in">
               <td width="25%" class="name">
                 <span v-if="!accessory.file">
-                  <a :href="'/platform/accessory/mgr/download/' + accessory.accessoryId">
+                  <a :href="downloadUrl + '?business=document&fileName=' + accessory.accessoryName">
                     <img :src="getThumbnail(accessory.accessoryName)">&nbsp;&nbsp;
                     <span>{{ accessory.accessoryName }}</span>
                   </a>
@@ -112,7 +112,8 @@ export default {
         afficheContent: null,
         accessories: []
       },
-      uploader: null
+      uploader: null,
+      downloadUrl: this.api.download
     }
   },
   mounted() {
@@ -144,11 +145,11 @@ export default {
 
       // 文件上传
       $vue.uploader = WebUploader.create({
-        server: $vue.api.postUploadAccessory,
+        server: $vue.api.postFile,
         pick: $html.find('#file_picker'),
         resize: false,
         formData: {
-          afficheId: id
+          business: 'document'
         }
       });
       // 当有文件被添加进队列的时候
@@ -165,9 +166,9 @@ export default {
         $percent.text(parseInt(percentage * 100) + '%');
       });
       $vue.uploader.on('uploadSuccess', function(file, json) {
-        if(!json || !json.files.length) return;
+        if(!json || !json.data) return;
 
-        file = MyCuckoo.apply(file, json.files[0]);
+        file = MyCuckoo.apply(file, json.data);
         $vue.formData.accessories.forEach(item => {
           if(item.file && file.id == item.file.id) {
             item.file = null;
@@ -202,13 +203,20 @@ export default {
     // 删除附件
     deleteAccessory(accessoryId) {
       let $vue = this;
-      this.api.accessoryMgr.del({id: accessoryId}).then(data => {
+      this.api.accessoryMgr.del({fileNameOrId: accessoryId}).then(data => {
         $vue.formData.accessories.forEach((item, index) => {
           if(item.accessoryId == accessoryId) {
             $vue.formData.accessories.splice(index, 1);
           }
         });
 
+        MyCuckoo.showMsg({state: 'success', title: '提示', msg: data});
+      });
+    },
+    // 下载附件
+    download(accessoryName) {
+      let $vue = this;
+      this.api.fileMgr.download({business: 'document', fileName: accessoryName}).then(data => {
         MyCuckoo.showMsg({state: 'success', title: '提示', msg: data});
       });
     },
