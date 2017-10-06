@@ -19,6 +19,7 @@ vue.component('selector', selector);
 
 const router = new vueRouter({
   routes: [
+    { path: '/setting/updateUserInfo', component: resolve => require(['../view/uum/userInfoSetting.vue'], resolve) },
     { path: '/uum/organMgr/:moduleId', component: resolve => require(['../view/uum/organMgr.vue'], resolve) },
     { path: '/uum/roleAssignMgr/:moduleId', component: resolve => require(['../view/uum/organRoleMgr.vue'], resolve) },
     { path: '/uum/userMgr/:moduleId', component: resolve => require(['../view/uum/userMgr.vue'], resolve) },

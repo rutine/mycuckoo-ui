@@ -23,7 +23,7 @@
             <span class="glyphicon glyphicon-cog"></span> 常用配置<span class="caret"></span>
           </a>
           <ul class="dropdown-menu" role="menu">
-            <li><router-link to="/uum/userMgr/updateUserInfo"><span class="glyphicon glyphicon-log-in"></span> 设置密码</router-link></li>
+            <li><router-link to="/setting/updateUserInfo"><span class="glyphicon glyphicon-log-in"></span> 设置密码</router-link></li>
           </ul>
         </li>
         <li class="nav-divider"></li>

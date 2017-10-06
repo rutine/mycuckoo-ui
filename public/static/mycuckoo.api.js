@@ -155,6 +155,9 @@ if(exports) {
       },
       updatePhoto: function(params) {
         return axios.put('/uum/user/mgr/update/photo', params).then(res => res.data.data);
+      },
+      updatePassword: function(params) {
+        return axios.put('/uum/user/mgr/update/password', params).then(res => res.data.data);
       }
     },
 
