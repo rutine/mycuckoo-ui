@@ -48,7 +48,9 @@ router.afterEach((to, from, next) => {
 });
 
 api.postMenu(null).then(data => {
-  vue.prototype.menu = data;
+  vue.prototype.menu = data.menu;
+  vue.prototype.userInfo = data.user;
+
   new vue({
     router,
     components: {

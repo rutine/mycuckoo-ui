@@ -172,7 +172,7 @@
         $.ajax({
           url: mycuckoo.login.secondStepUrl,
           contentType: 'application/json; charset=utf-8',
-          data: JSON.stringify({role: role}),
+          data: JSON.stringify(role),
           success: function(json) {
             var code = json.code;
             var msg = json.message;

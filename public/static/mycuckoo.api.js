@@ -30,7 +30,7 @@ if(exports) {
   });
   
   module.exports = {
-    postUploadLogo: host + '/uum/user/mgr/upload/photo',
+    host: host,
     download: host + '/file/download',
     postFile: host + '/file',
 
@@ -152,6 +152,9 @@ if(exports) {
       },
       queryUsers: function(params) {
         return axios.get('/uum/user/mgr/query/users', {params: params}).then(res => res.data.data);
+      },
+      updatePhoto: function(params) {
+        return axios.put('/uum/user/mgr/update/photo', params).then(res => res.data.data);
       }
     },
 

@@ -28,7 +28,7 @@
         </li>
         <li class="nav-divider"></li>
         <li>
-          <a href="#" class="user" data-photo-url="${sessionScope.userPhotoUrl}">
+          <a href="#" class="user">
           <span class="glyphicon glyphicon-user"></span> 个人中心</a>
         </li>
         <li class="nav-divider"></li>
@@ -46,10 +46,8 @@
              aria-valuemin="0" aria-valuemax="100" aria-valuenow="10" style="width:10%;"></div>
       </div>
       <div class="btn-group btn-group-sm hidden">
-        <button class="btn btn-primary btn-start" data-loading-text="上传中"><span
-                class="glyphicon glyphicon-upload"></span>上传
-        </button>
-        <button class="btn btn-danger btn-cancel"><span class="glyphicon glyphicon-ban-circle"></span>取消</button>
+        <a class="btn btn-primary btn-start" data-loading-text="上传中"><span class="glyphicon glyphicon-upload"></span>上传</a>
+        <a class="btn btn-danger btn-cancel"><span class="glyphicon glyphicon-ban-circle"></span>取消</a>
       </div>
     </div>
     <div id="photo_picker" class="hidden"><span class="glyphicon glyphicon-picture"></span>上传头像</div>
@@ -74,11 +72,14 @@ export default {
     var $userCenter = $('.form.photo-upload').remove();
     var $userBtn = $('.navbar .user');
     var uploader = null;
-    var userPhotoUrl = '';//$userBtn.attr('data-photo-url');
+    var userPhotoUrl = $vue.userInfo.userPhotoUrl;
 
     // 判断用户是否有头像
     if(userPhotoUrl) {
       $userCenter.find('img').attr('src', userPhotoUrl);
+      $userCenter.find('img').click(function() {
+        $userCenter.find('#photo_picker input[name=file]').trigger('click');
+      });
     } else {
       $userCenter.find('.photo').addClass('hidden');
       $userCenter.find('#photo_picker').removeClass('hidden');
@@ -92,7 +93,10 @@ export default {
         title : '个人信息'
       }).on('shown.bs.popover', function() {
       uploader = WebUploader.create({
-        server: $vue.api.postUploadLogo,
+        server: $vue.api.postFile,
+        formData: {
+          business: 'photo'
+        },
         pick: $('.navbar #photo_picker'),
 
         resize: false,
@@ -146,6 +150,12 @@ export default {
       });
       uploader.on('uploadSuccess', function(file, json) {
         $btnGroup.addClass('hidden');
+        let params = {
+          photo: $vue.api.host + '/' + json.data.url
+        }
+        $vue.api.userMgr.updatePhoto(params).then(data => {
+          MyCuckoo.showMsg({state: 'success', title: '提示', msg: '更换头像成功'});
+        });
       });
       uploader.on('uploadError', function(file) {
         $error.removeClass('hidden').text('上传失败!');
