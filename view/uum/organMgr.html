@@ -1,0 +1,209 @@
+<!DOCTYPE html>
+<html>
+<head>
+  <meta http-equiv="Content-Type" content="text/html; charset=utf-8" />
+  <title>统一用户</title>
+  <link type="image/x-icon" href="../../public/static/images/favicon.ico" rel="shortcut icon" />
+  <link type="text/css" href="../../public/static/layui/2.4.3/css/layui.css" rel="stylesheet" />
+  <link type="text/css" href="../../public/static/css/mycuckoo.css" rel="stylesheet" />
+</head>
+<body>
+<div class="mycuckoo-site-nav">
+    <span class="layui-breadcrumb">
+      <a href="javascript:;">我的桌面</a>
+      <a><cite>机构</cite></a>
+    </span>
+    <span class="right">
+      <a class="layui-btn layui-btn-sm" href="javascript:location.replace(location.href);" title="刷新">
+        <i class="layui-icon layui-icon-refresh"></i>
+      </a>
+    </span>
+</div>
+
+<div class="mycuckoo-main">
+  <div class="layui-row">
+    <form class="layui-col-md12 layui-form mycuckoo-search">
+      <div class="layui-inline">
+        <label class="layui-form-label">搜索：</label>
+        <div class="layui-input-inline">
+          <input class="layui-input" name="orgName" placeholder="机构简称">
+        </div>
+        <div class="layui-input-inline">
+          <input class="layui-input" name="orgCode" placeholder="机构代码">
+        </div>
+        <div class="layui-input-inline">
+          <button class="layui-btn" lay-filter="search" lay-submit>
+            <i class="layui-icon">&#xe615;</i>
+          </button>
+        </div>
+      </div>
+    </form>
+  </div>
+
+  <table id="table" class="layui-hide" lay-filter="table"></table>
+</div>
+</body>
+<script type="text/javascript" src="../../public/static/layui/2.4.3/layui.js" charset="UTF-8"></script>
+<script type="text/javascript" src="../../public/static/mycuckoo.js" charset="UTF-8"></script>
+<script type="text/javascript" src="../../public/static/mycuckoo.api.js" charset="UTF-8"></script>
+<script type="text/html" id="toolbar">
+  <div class="layui-btn-group btn-toolbar">
+    {{# layui.each(d.operator, function(index, item){ }}
+    <button class="layui-btn layui-btn-sm" lay-event="{{ item.optFunLink }}">
+      <i class="layui-icon layui-icon-{{ item.modImgCls }}"></i> {{ item.modName }}
+    </button>
+    {{# }); }}
+  </div>
+</script>
+<script type="text/javascript">
+  layui.config({
+    base: '../../public/static/extend/',
+    version: '101100'
+  });
+
+  layui.use(['jquery', 'form', 'element', 'treeGrid'], function() {
+    let $ = layui.jquery,
+      form = layui.form,
+      table = layui.treeGrid;
+
+    //本地缓存数据
+    let menu = JSON.parse(sessionStorage.getItem('myMenu'));
+    let queryObj = MyCuckoo.getQueryObject(location.search);
+    let operator = menu.fourth[queryObj.id];
+
+    form.on('submit(search)', function(data) {
+      //执行重载
+      table.reload('table', {
+        page: {
+          pageNo: 1 //重新从第 1 页开始
+        },
+        where: data.field
+      });
+
+      return false;
+    });
+
+    let treeTable = table.render({
+      id: 'table',
+      elem: '#table',
+      url: api.organMgr.url,
+      method: 'get',
+      height: '100%',
+      cellMinWidth: 100,
+      toolbar: '#toolbar',
+      idField: 'orgId',
+      treeId: 'orgId', //树形id字段名称,
+      treeUpId: 'parentId', //树形父id字段名称
+      treeShowName: 'orgSimpleName', //以树形式显示的字段
+      iconOpen: false, //是否显示图标【默认显示】
+      isOpenDefault: true, //节点默认是展开还是折叠【默认展开】
+      operator: operator,
+      cols: [[
+        {type: 'numbers'},
+        {type: 'radio'},
+        {field: 'orgSimpleName', dialog: 'text', title: '机构简称'},
+        {field: 'orgCode', dialog: 'text', title: '机构代码'},
+        {field: 'orgAddress1', title: '联系地址1'},
+        {field: 'orgTel1', title: '联系电话1'},
+        {field: 'orgBeginDate', title: '成立日期'},
+        {field: 'status', title: '机构状态',
+          templet: function(d) {
+            if(d.status == 'enable') {
+              return '启用';
+            } else if(d.status == 'disable') {
+              return '停用';
+            }
+          }
+        },
+        {field: 'creator', title: '创建人'},
+        {field: 'createDate', title: '创建日期', sort: true}
+      ]],
+      page: true,
+      request: {
+        pageName: 'pageNo',
+        limitName: 'pageSize'
+      },
+      where: {
+        pageSize: 1000,
+      },
+      parseData: function(res) {
+        return {
+          code: res.code,
+          msg: res.message,
+          count: res.data.totalElements,
+          data: res.data.content
+        }
+      }
+    });
+
+    table.on('toolbar(table)', function (obj) {
+      if (obj.event == 'add') {
+        active[obj.event].call(this);
+        return;
+      }
+
+      let data = table.radioStatus(obj.config.id);
+      if (!data.orgId) {
+        MyCuckoo.alert({title : '提示', msg : '请选择一条记录' });
+        return;
+      }
+
+      active[obj.event] ? active[obj.event].call(data) : '';
+    });
+
+    function reload() {
+      table.reload('table', { page: { pageNo: 1 } });
+    }
+
+    let active = {
+      del() {
+        MyCuckoo.alert({title : '提示', msg : JSON.stringify(this) });
+      },
+      //增加
+      add() {
+        MyCuckoo.dialog('机构信息', 'organMgrForm.html?action=create');
+      },
+      //修改
+      modify() {
+        MyCuckoo.dialog('机构信息', 'organMgrForm.html?action=modify&id=' + this.orgId);
+      },
+      //查看
+      view() {
+        MyCuckoo.dialog('机构信息', 'organMgrForm.html?action=view&id=' + this.orgId);
+      },
+      //启用
+      enable() {
+        let item = this;
+        if(item.status == 'enable') {
+          MyCuckoo.msg({ msg : '此机构已经启用' });
+          return;
+        }
+
+        $.put(api.organMgr.disEnableUrl, {id: item.orgId, disEnableFlag: 'enable'}).then(data => {
+          MyCuckoo.msg({ msg: '机构启用成功' });
+
+          reload(); // 刷新列表
+        });
+      },
+      //停用
+      disable() {
+        let item = this;
+        if(item.status == 'disable') {
+          MyCuckoo.alert({ title : '提示', msg : '此机构已经停用' });
+          return;
+        }
+
+        MyCuckoo.confirm({msg : '您确认停用此机构吗.', ok : function() {
+            $.put(api.organMgr.disEnableUrl, {id: item.orgId, disEnableFlag: 'disable'}).then(data => {
+              MyCuckoo.msg({ msg: '机构停用成功' });
+
+              reload(); // 刷新列表
+            });
+          }
+        });
+      }
+    }
+
+  });
+</script>
+</html>

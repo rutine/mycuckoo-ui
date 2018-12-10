@@ -101,7 +101,7 @@ export default {
     create() {
       let $vue = this;
       this.api.operateMgr.create(this.formData).then(data => {
-        MyCuckoo.showMsg({state: 'success', title: '提示', msg: data});
+        MyCuckoo.msg({state: 'success', title: '提示', msg: data});
 
         $vue.$emit('refresh');
         this.reback();
@@ -110,7 +110,7 @@ export default {
     update() {
       let $vue = this;
       this.api.operateMgr.update(this.formData).then(data => {
-        MyCuckoo.showMsg({state: 'success', title: '提示', msg: data});
+        MyCuckoo.msg({state: 'success', title: '提示', msg: data});
 
         $vue.$emit('refresh');
         this.reback();

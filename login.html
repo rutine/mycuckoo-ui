@@ -1,0 +1,201 @@
+<!DOCTYPE html>
+<html>
+<head>
+  <meta http-equiv="Content-Type" content="text/html; charset=UTF-8">
+  <meta name="renderer" content="webkit|ie-comp|ie-stand">
+  <meta http-equiv="X-UA-Compatible" content="IE=edge,chrome=1">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, minimum-scale=1.0, maximum-scale=1.0, user-scalable=0">
+  <meta http-equiv="Cache-Control" content="no-siteapp" />
+  <title>登陆界面</title>
+  
+  <link type="image/x-icon" href="public/static/images/favicon.ico" rel="shortcut icon">
+  <link type="text/css" href="public/static/layui/2.4.3/css/layui.css" rel="stylesheet" />
+  <link type="text/css" href="public/static/css/font.css" rel="stylesheet" />
+  <link type="text/css" href="public/static/css/mycuckoo.css" rel="stylesheet" />
+  <link type="text/css" href="public/static/css/login.css" rel="stylesheet" />
+</head>
+<body>
+  <div class="layui-container">
+    <div class="layui-row">
+      <div class="layui-col-md8 layui-col-md-offset2">
+        <form name="signForm" action="/login" method="post" class="layui-form form-sign">
+          <div class="layui-form-item">
+            <div class="layui-col-md8 layui-col-md-offset4">
+              <h1 style="color: rgba(255, 255, 255, 0.8);">系统平台</h1>
+            </div>
+          </div>
+          <div class="layui-form-item">
+            <div class="layui-col-md8 layui-col-md-offset2">
+              <label class="layui-form-label"><i class="layui-icon layui-icon-username" style="font-size: 28px; color: #ea5200;"></i></label>
+              <div class="layui-input-inline">
+                <input type="text" class="layui-input" name="userCode" placeholder="用户" lay-verify="required" required>
+              </div>
+              <div class="layui-form-mid error layui-hide">请输入用户名</div>
+            </div>
+          </div>
+          <div class="layui-form-item">
+            <div class="layui-col-md8 layui-col-md-offset2">
+              <label class="layui-form-label"><i class="layui-icon layui-icon-password" style="font-size: 28px; color: #ea5200;"></i></label>
+              <div class="layui-input-inline">
+                <input type="password" class="layui-input" name="password" placeholder="密码" autocomplete="off" lay-verify="required" required>
+              </div>
+              <div class="layui-form-mid error layui-hide">请输入密码</div>
+            </div>
+          </div>
+          <div class="layui-form-item">
+            <div class="layui-col-md8 layui-col-md-offset2">
+              <label class="layui-form-label"></label>
+              <div class="layui-input-inline">
+                <input type="submit" value="登录" lay-filter="login" style="width:100%;" lay-submit >
+              </div>
+            </div>
+          </div>
+        </form>
+      </div>
+    </div>
+    
+    <div class="layui-row role-pane" style="display: none;">
+      
+    </div>
+    
+  </div>
+  <script type="text/javascript" src="public/static/layui/2.4.3/layui.js" charset="UTF-8"></script>
+  <script type="text/javascript" src="public/static/mycuckoo.api.js" charset="UTF-8"></script>
+  <script type="text/javascript">
+    layui.config({
+      base: 'public/static/extend/',
+      version: '101100'
+    });
+
+    layui.use(['jquery', 'form'], function() {
+      var $ = layui.jquery;
+      var form = layui.form;
+
+      var $bground = $('<div class="background"></div>');
+      var $signForm = $('form[name=signForm]');
+      var $userCode = $signForm.find('input[name=userCode]');
+      var $password = $signForm.find('input[name=password]');
+      var $helpText = $signForm.find('.layui-form-mid');
+      var $rolePane = $('.role-pane');
+
+      // 用户改变事件
+      $userCode.on('blur', function() {
+        if (!$(this).val()) {
+          $helpText.eq(0).removeClass('layui-hide');
+        } else {
+          $helpText.eq(0).addClass('layui-hide');
+        }
+      });
+      // 密码改变事件
+      $password.on('blur', function() {
+        if (!$(this).val()) {
+          $helpText.eq(1).removeClass('layui-hide');
+        } else {
+          $helpText.eq(1).addClass('layui-hide');
+        }
+      });
+
+      // 登陆
+      form.on('submit(login)', function(data) {
+        if (!$userCode.val()) {
+          $userCode.focus();
+        } else if (!$password.val()) {
+          $password.focus();
+        } else {
+          preLogin();
+        }
+
+        return false;
+      });
+
+
+      var preLogin = function() {
+        $bground.appendTo(($('body')));
+        layer.msg('预登录中,请稍候... ');
+        var userCode = $userCode.val();
+        var password = $password.val();
+        var params = {
+          userCode: userCode,
+          password: password
+        }
+        $.post(api.login.firstStepUrl, params).then(json => {
+          if(json.code != 0) {
+            loginError(json.code, json.message);
+            $bground.remove();
+            return;
+          }
+
+          // 角色列表
+          if(json.data) {
+            for(var i = 0, len = json.data.length; i < len; i++) {
+              var roleUser = json.data[i];
+              if(roleUser.isDefault == 'Y') {
+                roleUser.roleName = roleUser.organName + ' - ' + roleUser.roleName + '(默认)';
+              } else {
+                roleUser.roleName = roleUser.organName + ' - ' + roleUser.roleName;
+              }
+              $('<div class="layui-col-sm6 layui-col-md3">'
+                + '  <ul class="site-doc-icon site-doc-anim">'
+                + '    <li>'
+                + '      <div class="layui-anim" data-anim="layui-anim-up">'
+                + '        <h3>' + roleUser.roleName + '</h3>'
+                + '      </div>'
+                + '    </li>'
+                + '  </ul>'
+                + '</div>')
+                .data(roleUser)
+                .on('click', function() {
+                  loginSys($(this).data());
+                }).appendTo($rolePane);
+            }
+          }
+
+          $signForm.hide();
+          $rolePane.show();
+        }).always(function() {
+          setTimeout(function() {
+            $bground.remove();
+          }, 1000);
+        });
+      };
+
+      var loginSys = function(role) {
+        $.postJson(api.login.secondStepUrl, role).then(json => {
+          var code = json.code;
+          var msg = json.message;
+          if(code != 0) {
+            loginError(code, msg);
+          } else {
+            window.location.href = './index.html';
+          }
+        }).always(function() {
+          setTimeout(function() {
+
+          }, 2000);
+        });
+      };
+
+      var loginError = function(code, msg) {
+        switch(code) {
+          case 1:
+            msg = '对不起,您输入的用户名或密码有误!';
+            break;
+          case 2:
+            msg = '对不起,当前用户没有使用系统的权限,或请联系系统管理员!';
+            break;
+          case 3:
+            msg = '对不起,当前用户已被停用,或请联系系统管理员!';
+            break;
+          case 4:
+            msg = '对不起,当前用户已过有效期,或请联系系统管理员!';
+            break;
+        }
+
+        layer.open({title: '提示', content: msg});
+      };
+
+      // end
+    });
+  </script>
+</body>
+</html>

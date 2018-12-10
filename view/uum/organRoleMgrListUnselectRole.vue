@@ -94,7 +94,7 @@ export default {
     save() {
       let $vue = this;
       if($vue.selectData.length == 0) {
-        MyCuckoo.showMsg({state: 'danger', title: '提示', msg: '请选择一条或多条记录!'});
+        MyCuckoo.msg({state: 'danger', title: '提示', msg: '请选择一条或多条记录!'});
         return;
       }
 
@@ -105,7 +105,7 @@ export default {
 
       let params = {id : $vue.config.organ.id, roleIdList : roleIdList};
       this.api.organRoleMgr.save(params).then(data => {
-        MyCuckoo.showMsg({state: 'success', title: '提示', msg: data});
+        MyCuckoo.msg({state: 'success', title: '提示', msg: data});
 
         $vue.$emit('refresh');
         $vue.config.view = '';

@@ -1,216 +1,269 @@
-MyCuckoo = (function($) {
-  
-  return {
-    modalTemplate : '<div class="modal fade" tabindex="-1" role="dialog" aria-hidden="true">' + 
-        '<div class="modal-dialog">' + 
-          '<div class="modal-content">' + 
-            '<div class="modal-header">' + 
-              '<button type="button" class="close" data-dismiss="modal" aria-hidden="true">×</button>' + 
-              '<h3>提示</h3>' + 
-            '</div>' + 
-            '<div class="modal-body">' + 
-              
-            '</div>' + 
-            '<div class="modal-footer">' + 
-              '<button class="btn btn-primary" data-loading-text="处理中...">保存</button>' + 
-              '<button class="btn btn-default" data-dismiss="modal" aria-hidden="true">关闭</button>' + 
-            '</div>' + 
-          '</div>' + 
-        '</div>' + 
-      '</div>',
-    
+layui.use(['jquery', 'layer'], function() {
+  let $ = layui.jquery;
+  let MyCuckoo = {
+    modalTemplate: '<div class="modal fade" tabindex="-1" role="dialog" aria-hidden="true">' +
+    '<div class="modal-dialog">' +
+    '<div class="modal-content">' +
+    '<div class="modal-header">' +
+    '<button type="button" class="close" data-dismiss="modal" aria-hidden="true">×</button>' +
+    '<h3>提示</h3>' +
+    '</div>' +
+    '<div class="modal-body">' +
+
+    '</div>' +
+    '<div class="modal-footer">' +
+    '<button class="btn btn-primary" data-loading-text="处理中...">保存</button>' +
+    '<button class="btn btn-default" data-dismiss="modal" aria-hidden="true">关闭</button>' +
+    '</div>' +
+    '</div>' +
+    '</div>' +
+    '</div>',
+
+    /**
+     * 获取当前页链接查询字符串的对象表示：http://localhost?search=word => {search: 'word'}
+     *
+     * @return json对象
+     */
+    resolvePlaceholder: function (uri, obj) {
+      var path = uri;
+      for (var p in obj) {
+        var witch = typeof p;
+        if ("string" == witch || 'number' == witch) {
+          path = path.replace('{' + p + '}', obj[p]);
+        }
+      }
+
+      return path;
+    },
+
     /**
      * 转换查询字符串为json对象, 如: width=1680&height=1050 => {width : "1680", height : "1050"}
-     * 
+     *
      * @param queryString 查询字符串
      * @return json对象
      */
-    fromQueryString : function(queryString) {
-      if(!queryString) return {};
-      if(queryString.charAt(0) == '?') {
+    fromQueryString: function (queryString) {
+      if (!queryString) return {};
+      if (queryString.charAt(0) == '?') {
         queryString = queryString.substring(1);
       }
       queryString = decodeURIComponent(queryString);
-      
+
       var obj = {};
       var arr = queryString.split('&');
-      for(var i = 0, len = arr.length; i < len; i++) {
+      for (var i = 0, len = arr.length; i < len; i++) {
         var nameValues = arr[i].split('=');
         obj[nameValues[0]] = nameValues[1];
       }
-      
+
       return obj;
     },
-    
+
+    /**
+     * 获取当前页链接查询字符串的对象表示：http://localhost?search=word => {search: 'word'}
+     *
+     * @return json对象
+     */
+    getQueryObject: function (url) {
+      return this.fromQueryString(url);
+    },
+
     /**
      * 将json对象转换为json字符串, 请参看jQuery.serializeArray()返回的数据格式
-     * 
+     *
      * @param obj 对象
      * @returns json 字符串
      * @deprecated
      */
-    toJSON : function(obj) {
+    toJSON: function (obj) {
       var json = null;
-      if(typeof obj == 'object') { // 对象
+      if (typeof obj == 'object') { // 对象
         json = '{'; // 开始
-        if($.isArray(obj)) { // jQuery.serializeArray() 方法得到的form表单数组对象
-          for(var i = 0, len = obj.length; i < len; i++) {
-            if(i > 0) json += ',';
+        if ($.isArray(obj)) { // jQuery.serializeArray() 方法得到的form表单数组对象
+          for (var i = 0, len = obj.length; i < len; i++) {
+            if (i > 0) json += ',';
             json += '"' + obj[i].name + '":"' + (obj[i].value ? obj[i].value : '') + '"';
           }
         } else {
           var flag = false;
-          for(var p in obj) {
+          for (var p in obj) {
             flag ? (json += ',') : (flag = true);
             json += '"' + p + '":"' + obj[p] + '"';
           }
         }
         json += '}'; // 结束
       }
-      
+
       return json;
     },
 
     /**
      * 将源对象的'属性-值'复制到目标对象
-     * 
+     *
      * @param destObj 目标对象
      * @param srcObj 源对象
      */
-    apply : function(destObj, srcObj) {
-        if(destObj && typeof srcObj == 'object') {
-          for(var p in srcObj) {
-            destObj[p] = srcObj[p];
-          }
+    apply: function (destObj, srcObj) {
+      if (destObj && typeof srcObj == 'object') {
+        for (var p in srcObj) {
+          destObj[p] = srcObj[p];
         }
-        return destObj;
+      }
+      return destObj;
     },
-    
+
     /**
      * 深度克隆对象
-     * 
+     *
      * @param obj 对象
      * @return cloneObj 克隆对象
      */
-    cloneObject : function(obj) {
+    cloneObject: function (obj) {
       var o = obj.constructor === Array ? [] : {};
-      for ( var i in obj) {
+      for (var i in obj) {
         if (obj.hasOwnProperty(i)) {
           o[i] = typeof obj[i] === 'object' ? MyCuckoo.cloneObject(obj[i]) : obj[i];
         }
       }
-      
+
       return o;
     },
-    
+
     /**
      * 复选框绑定<code>click</code>事件
-     * 
+     *
      * @param 复选框所在的容器元素, 非必须
      */
-    checkbox : function(container) {
+    checkbox: function (container) {
       var $table = container ? $(container).find('table.table') : $('table.table');
       $table.off('click', 'input[name=all]:checkbox');
       $table.off('click', 'tr:has(input[name=single]:checkbox)');
-      $table.on('click', 'input[name=all]:checkbox', function() {
+      $table.on('click', 'input[name=all]:checkbox', function () {
         var $singleCheckboxes = $table.find('input[name=single]:checkbox');
-        if(this.checked) {
+        if (this.checked) {
           $singleCheckboxes.prop('checked', 'checked');
         } else {
           $singleCheckboxes.prop('checked', null);
         }
       });
-      // $table.on('click', 'tr:has(input[name=single]:checkbox)', function(e) {
-      //   e.stopPropagation();
-      //   var $singleCheckbox = $(this).find('input[name=single]:checkbox');
-      // });
+    },
+
+    /**
+     * 提示信息
+     * @param config对象: {title: 'youTitle', msg: 'youMsg', duration: 1000}
+     *    duration 表示信息多久后消失, 单位毫秒
+     *
+     * @param config  json对象
+     */
+    msg: function (config) {
+      if (typeof config != 'object') {
+        config = {msg: '正在处理中, 请稍等...'};
+      }
+
+      layer.msg(config.msg);
     },
 
     /**
      * 信息提示框, config对象应提供 'title' 和 'msg' 两个属性
-     * 
+     *
      * @param config  json对象
      */
-    alertMsg: function(config) {
-      this.showDialog({title : config.title || '提示', msg : config.msg || '', cancelBtn : '关闭'});
+    alert: function (config) {
+      config.title = config.title || '提示';
+
+      var index = layer.alert(config.msg, config);
+      setTimeout(function () {
+        layer.close(index);
+      }, (config.duration || 2000));
     },
-    
-    /**
-     * 提示信息
-     * @param config对象: {state: 'info', title: 'youTitle', msg: 'youMsg', duration: 1000}
-     *    state 取值范围 [success, info, warning, danger]
-     *    duration 表示信息多久后消失, 单位毫秒
-     * 
-     * @param config  json对象
-     */
-    showMsg: function(config) {
-      if(typeof config != 'object') {
-        config = {state: 'info', title: '提示', msg: '正在处理中, 请稍等...', duration: 2000};
-      }
-      
-      var $oldAlert = $('.alert.navbar-fixed-top');
-      var top = ($oldAlert.offset() ? $oldAlert.offset().top : 0) + ($oldAlert.outerHeight() + 1);
-      
-      var $alert =  $('<div class="alert alert-' + (config.state || 'info') + 
-                  ' navbar-fixed-top center-block" style="display:none; max-width:320px;z-index:1051;">' + 
-                '<button type="button" class="close" data-dismiss="alert">×</button>' + 
-                '<strong>' + (config.title || '提示') + '</strong> ' + (config.msg || '正在处理中...') + 
-              '</div>');
-      $alert.prependTo($(window.top.document.body));
-      $alert.animate({top : top, opacity : 'show'}, 300);
-      setTimeout(function() { $alert.alert('close'); }, (config.duration || 2000));
-    },
-    
+
     /**
      * 弹出dialog
-     * 
+     *
      * @param config  json对象
      * {title : '提示', msg: '确定要执行当前操作吗?', okBtn: '确定', cancelBtn: '取消', ok: function() {}, cancel: function() {}}
      */
-    showDialog : function(config) {
-      if(typeof config != 'object') {
-        config = {title : '提示', msg: '确定要执行当前操作吗?', okBtn: '确定', cancelBtn: '取消', ok: function() {}, cancel: function() {}};
+    confirm: function (config) {
+      if (typeof config != 'object') {
+        config = {
+          title: '提示', msg: '确定要执行当前操作吗?', okBtn: '确定', cancelBtn: '取消', ok: function () {
+          }, cancel: function () {
+          }
+        };
       }
-      var title = config.title || "提示";
-      var msg = config.msg || "确定要执行当前操作吗";
-      var okBtn = config.okBtn || "";
-      var cancelBtn = config.cancelBtn || "";
-      var hasBtn = (okBtn != "" || cancelBtn != "");
-      var dialog = '<div class="modal fade" tabindex="-1" role="dialog" aria-hidden="true">' + 
-        '<div class="modal-dialog modal-sm">' + 
-          '<div class="modal-content">' + 
-            '<div class="modal-header">' + 
-              '<button type="button" class="close" data-dismiss="modal" aria-hidden="true">×</button>' + 
-              '<h4>' + title + '</h4>' + 
-            '</div>' + 
-            '<div class="modal-body">' + msg + '</div>' + 
-            '<div class="modal-footer">' + 
-              (okBtn != '' ? '<button class="btn btn-primary" data-loading-text="处理中...">' + okBtn + '</button>' : '') + 
-              (cancelBtn != '' ? '<button class="btn btn-default" data-dismiss="modal" aria-hidden="true">' + cancelBtn + '</button>' : '') + 
-              (!hasBtn ? '<button class="btn btn-primary" data-dismiss="modal" aria-hidden="true">确定</button>' : '') + 
-            '</div>' + 
-          '</div>' + 
-        '</div>' + 
-      '</div>';
-      var $dialog = $(dialog);
-      $dialog.one('show.bs.modal', function() {
-        if(okBtn) {
-          $(this).off('click', '.modal-footer > .btn:first');
-          $(this).on('click', '.modal-footer > .btn:first', function() {
-            $dialog.modal('hide');
-            try { 
-              config.ok();
-            } catch(e) {
-              // do something...
-            }
-          });
+      var title = config.title || '提示';
+      var msg = config.msg || '确定要执行当前操作吗';
+      var okBtn = config.okBtn || '确定';
+      var cancelBtn = config.cancelBtn || '';
+      var options = {
+        title: title,
+        content: msg,
+        btn: [okBtn],
+        yes: function (index, layero) {
+          try {
+            config.ok();
+          } catch (e) {
+            // do something...
+          }
+
+          layer.close(index);
+        },
+      }
+      if (cancelBtn != '') {
+        options.btn.push(cancelBtn);
+        options.btn2 = function (index, layero) {
+          try {
+            config.cancel();
+          } catch (e) {
+            // do something...
+          }
+
+          layer.close(index);
+        }
+      }
+
+      layer.open(options);
+    },
+
+    /**
+     * 参数解释：
+     * title   标题
+     * url     请求的url
+     * w       弹出层宽度（缺省调默认值）
+     * h       弹出层高度（缺省调默认值）
+     */
+    dialog: function (title, url, w, h) {
+      if (title == null || title == '') {
+        title = false;
+      }
+      if (url == null || url == '') {
+        url = '404.html';
+      }
+      if (w == null || w == '') {
+        w = ($(window).width() * 0.65);
+      }
+      if (h == null || h == '') {
+        h = ($(window).height() - 120);
+      }
+      layer.open({
+        type: 2,
+        area: [w + 'px', h + 'px'],
+        fix: false, //不固定
+        maxmin: true,
+        shadeClose: true,
+        shade: 0.4,
+        title: title,
+        content: url,
+        success: function (layero, index) {
+
+        },
+        error: function (layero, index) {
+          alert('aaa');
         }
       });
-      $dialog.one('hidden.bs.modal', function() {
-        $(this).off().find('.btn').off().end().remove();
-      });
-      $dialog.modal();
     }
     //
-  };
-})(jQuery);
+  }
+
+  window.MyCuckoo = MyCuckoo;
+});

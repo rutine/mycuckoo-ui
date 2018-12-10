@@ -151,7 +151,7 @@ export default {
     //检查选中
     checkSelect() {
       if(this.selectData.length != 1) {
-        MyCuckoo.showMsg({state: 'warning', title: '提示', msg: '请选择一条件记录!'});
+        MyCuckoo.msg({state: 'warning', title: '提示', msg: '请选择一条件记录!'});
         throw new Error('请选择一条件记录');
       }
     },
@@ -168,7 +168,7 @@ export default {
     roleassign() {
       let nodes = this.zTree.getSelectedNodes();
       if(nodes.length != 1) {
-        MyCuckoo.showMsg({ state : 'warning', title : '提示', msg : '请选择要分配角色的机构' });
+        MyCuckoo.msg({ state : 'warning', title : '提示', msg : '请选择要分配角色的机构' });
         return;
       }
 
@@ -183,7 +183,7 @@ export default {
       this.checkSelect();
 
       let $vue = this;
-      MyCuckoo.showDialog({
+      MyCuckoo.confirm({
         title: '警告提示',
         msg: '您确认删除此记录吗?',
         okBtn: '是',
@@ -192,7 +192,7 @@ export default {
           let orgId = $vue.zTree.getSelectedNodes()[0].id;
           let params = {id :  orgId, roleIdList : $vue.selectData[0].roleId};
           $vue.api.organRoleMgr.del(params).then(data => {
-            MyCuckoo.showMsg({state: 'success', title: '提示', msg: data});
+            MyCuckoo.msg({state: 'success', title: '提示', msg: data});
 
             $vue.list(); // 刷新列表
           });

@@ -1,377 +1,382 @@
-const host = 'http://localhost:8080';
+layui.use(['jquery'], function () {
+  const $ = layui.jquery;
+  const host = 'http://localhost:8080';
 
-const mycuckoo = {
-  login: {
-    firstStepUrl: host + '/login/step/first',
-    secondStepUrl: host + '/login/step/second',
-    thirdStepUrl: host + '/login/step/third',
-  }
-}
-
-if(exports) {
-  const axios = require('axios');
-  axios.defaults.baseURL = host;
-  axios.defaults.withCredentials = true
-  axios.defaults.headers.post['Content-Type'] = 'application/json; charset=UTF-8';
-
-  //返回状态判断(添加响应拦截器)
-  axios.interceptors.response.use((res) => {
-    if(res.data.code == 405) {//未登录
-      window.location = '/view/login.html';
+  $.ajaxSetup({
+    type: 'POST',
+    //contentType: 'application/json',
+    dataType: 'json',
+    xhrFields: { withCredentials: true },
+    statusCode: {
+      401: function(xhr) {
+        layer.closeAll();
+        layer.open({title: '未登录', content: xhr.responseJSON.message});
+      },
+      500: function(xhr) {
+        layer.closeAll();
+        layer.open({title: '错误', content: xhr.responseJSON.message});
+      }
+    },
+    error: function(xhr, status, thrown) {
+      console.log(xhr);
     }
-    // else if(res.data.code != 200) {
-    //   MyCuckoo.showMsg({state: 'danger', title: '提示', msg: res.data.message});
-    // }
-
-    return res;
-  }, (error) => {
-    MyCuckoo.showMsg({state: 'danger', title: '提示', msg: error.response.data.message});
-    return Promise.reject(error);
   });
-  
-  module.exports = {
+
+  let placeholder = /\{(\w+)\}/;
+  let resolvePlaceholder = function(uri, obj) {
+    var path = uri;
+    for (var p in obj) {
+      var witch = typeof p;
+      if ("string" == witch || 'number' == witch) {
+        path = path.replace('{' + p + '}', obj[p]);
+      }
+    }
+
+    return path;
+  }
+
+  let $get = $.get;
+  $.get = function (url, params) {
+    url = placeholder.test(url) ? resolvePlaceholder(url, params) : url;
+
+    return $get(url, params);
+  }
+
+  $.postJson = function (url, params) {
+    url = placeholder.test(url) ? resolvePlaceholder(url, params) : url;
+
+    return $.ajax({
+      url: url,
+      contentType: 'application/json;charset=UTF-8',
+      data: JSON.stringify(params)
+    });
+  }
+
+  $.put = function (url, params) {
+    url = placeholder.test(url) ? resolvePlaceholder(url, params) : url;
+
+    return $.ajax({
+      url: url,
+      type: 'PUT',
+      contentType: 'application/json;charset=UTF-8',
+      data: JSON.stringify(params)
+    });
+  }
+
+  $.delete = function (url, params) {
+    url = placeholder.test(url) ? resolvePlaceholder(url, params) : url;
+
+    return $.ajax({
+      url: url,
+      type: 'DELETE',
+      data: params
+    });
+  }
+
+  var api = {
     host: host,
     download: host + '/file/download',
     postFile: host + '/file',
 
-    getLogout: function() {
-      return axios.post('/login/logout').then(res => res.data.data);
+    login: {
+      firstStepUrl: host + '/login/step/first',
+      secondStepUrl: host + '/login/step/second',
+      thirdStepUrl: host + '/login/step/third'
+    },
+
+    postFirstStep: function(params) {
+      return $.post(host + '/login/step/first', params).then(res => res.data);
+    },
+    postSecondStep: function(params) {
+      return $.postJson(host + '/login/step/second', params).then(res => res.data);
     },
     postMenu: function(params) {
-      return axios.post('/login/step/third', params).then(res => res.data.data);
+      return $.post(host + '/login/step/third', params).then(res => res.data);
+    },
+    getLogout: function() {
+      return $.post(host + '/login/logout').then(res => res.data);
     },
 
     organMgr: {
-      getChildNodes: function(params) {
-        return axios.get('/uum/organ/mgr/get/child/nodes', {params: params}).then(res => res.data.data);
-      },
-      list: function(params) {
-        return axios.get('/uum/organ/mgr/list', {params: params}).then(res => res.data.data);
-      },
-      create: function(params) {
-        return axios.put('/uum/organ/mgr/create', params).then(res => res.data.data);
-      },
-      update: function(params) {
-        return axios.put('/uum/organ/mgr/update', params).then(res => res.data.data);
-      },
-      view: function(params) {
-        return axios.get('/uum/organ/mgr/view', {params: params}).then(res => res.data.data);
-      },
-      del: function(params) {
-        return axios.delete('/uum/organ/mgr/delete', {params: params}).then(res => res.data.data);
-      },
-      disEnable: function(params) {
-        return axios.get('/uum/organ/mgr/disEnable', {params: params}).then(res => res.data.data);
-      },
+      url: host + '/uum/organ/mgr',
+      childNodesUrl: host + '/uum/organ/mgr/{id}/child/nodes',
+      disEnableUrl: host + '/uum/organ/mgr/{id}/disEnable/{disEnableFlag}',
     },
     organRoleMgr: {
       list: function(params) {
-        return axios.get('/uum/role/assign/mgr/list', {params: params}).then(res => res.data.data);
+        return $.get('/uum/role/assign/mgr/list', {params: params}).then(res => res.data);
       },
       listUnselectRole: function(params) {
-        return axios.get('/uum/role/assign/mgr/list/unselect/role', {params: params}).then(res => res.data.data);
+        return $.get('/uum/role/assign/mgr/list/unselect/role', {params: params}).then(res => res.data);
       },
       save: function(params) {
-        return axios.put('/uum/role/assign/mgr/save', params).then(res => res.data.data);
+        return $.put('/uum/role/assign/mgr/save', params).then(res => res.data);
       },
       del: function(params) {
-        return axios.delete('/uum/role/assign/mgr/delete', {params: params}).then(res => res.data.data);
+        return $.delete('/uum/role/assign/mgr/delete', {params: params}).then(res => res.data);
       },
     },
     roleMgr: {
       list: function(params) {
-        return axios.get('/uum/role/mgr/list', {params: params}).then(res => res.data.data);
+        return $.get('/uum/role/mgr/list', {params: params}).then(res => res.data);
       },
       listRowPrivilege: function(params) {
-        return axios.get('/uum/role/mgr/list/row/privilege', {params: params}).then(res => res.data.data);
+        return $.get('/uum/role/mgr/list/row/privilege', {params: params}).then(res => res.data);
       },
       create: function(params) {
-        return axios.put('/uum/role/mgr/create', params).then(res => res.data.data);
+        return $.put('/uum/role/mgr/create', params).then(res => res.data);
       },
       update: function(params) {
-        return axios.put('/uum/role/mgr/update', params).then(res => res.data.data);
+        return $.put('/uum/role/mgr/update', params).then(res => res.data);
       },
       view: function(params) {
-        return axios.get('/uum/role/mgr/view', {params: params}).then(res => res.data.data);
+        return $.get('/uum/role/mgr/view', {params: params}).then(res => res.data);
       },
       del: function(params) {
-        return axios.delete('/uum/role/mgr/delete', {params: params}).then(res => res.data.data);
+        return $.delete('/uum/role/mgr/delete', {params: params}).then(res => res.data);
       },
       disEnable: function(params) {
-        return axios.get('/uum/role/mgr/disEnable', {params: params}).then(res => res.data.data);
+        return $.get('/uum/role/mgr/disEnable', {params: params}).then(res => res.data);
       },
       saveOperationPrivilege: function(params) {
-        return axios.get('/uum/role/mgr/save/operation/privilege', {params: params}).then(res => res.data.data);
+        return $.get('/uum/role/mgr/save/operation/privilege', {params: params}).then(res => res.data);
       },
       saveRowPrivilege: function(params) {
-        return axios.get('/uum/role/mgr/save/row/privilege', {params: params}).then(res => res.data.data);
+        return $.get('/uum/role/mgr/save/row/privilege', {params: params}).then(res => res.data);
       },
     },
     userMgr: {
       getChildNodes: function(params) {
-        return axios.get('/uum/user/mgr/get/child/nodes', {params: params}).then(res => res.data.data);
+        return $.get('/uum/user/mgr/get/child/nodes', {params: params}).then(res => res.data);
       },
       list: function(params) {
-        return axios.get('/uum/user/mgr/list', {params: params}).then(res => res.data.data);
+        return $.get('/uum/user/mgr/list', {params: params}).then(res => res.data);
       },
       create: function(params) {
-        return axios.put('/uum/user/mgr/create', params).then(res => res.data.data);
+        return $.put('/uum/user/mgr/create', params).then(res => res.data);
       },
       update: function(params) {
-        return axios.put('/uum/user/mgr/update', params).then(res => res.data.data);
+        return $.put('/uum/user/mgr/update', params).then(res => res.data);
       },
       view: function(params) {
-        return axios.get('/uum/user/mgr/view', {params: params}).then(res => res.data.data);
+        return $.get('/uum/user/mgr/view', {params: params}).then(res => res.data);
       },
       del: function(params) {
-        return axios.delete('/uum/user/mgr/delete', {params: params}).then(res => res.data.data);
+        return $.delete('/uum/user/mgr/delete', {params: params}).then(res => res.data);
       },
       disEnable: function(params) {
-        return axios.get('/uum/user/mgr/disEnable', {params: params}).then(res => res.data.data);
+        return $.get('/uum/user/mgr/disEnable', {params: params}).then(res => res.data);
       },
       resetPwd: function(params) {
-        return axios.get('/uum/user/mgr/reset/password', {params: params}).then(res => res.data.data);
+        return $.get('/uum/user/mgr/reset/password', {params: params}).then(res => res.data);
       },
       listRolePrivilege: function(params) {
-        return axios.get('/uum/user/mgr/list/role/privilege', {params: params}).then(res => res.data.data);
+        return $.get('/uum/user/mgr/list/role/privilege', {params: params}).then(res => res.data);
       },
       listUserPrivilege: function(params) {
-        return axios.get('/uum/user/mgr/list/user/privilege', {params: params}).then(res => res.data.data);
+        return $.get('/uum/user/mgr/list/user/privilege', {params: params}).then(res => res.data);
       },
       listRowPrivilege: function(params) {
-        return axios.get('/uum/user/mgr/list/row/privilege', {params: params}).then(res => res.data.data);
+        return $.get('/uum/user/mgr/list/row/privilege', {params: params}).then(res => res.data);
       },
       saveRolePrivilege: function(params) {
-        return axios.get('/uum/user/mgr/save/role/privilege', {params: params}).then(res => res.data.data);
+        return $.get('/uum/user/mgr/save/role/privilege', {params: params}).then(res => res.data);
       },
       saveOperationPrivilege: function(params) {
-        return axios.get('/uum/user/mgr/save/operation/privilege', {params: params}).then(res => res.data.data);
+        return $.get('/uum/user/mgr/save/operation/privilege', {params: params}).then(res => res.data);
       },
       saveRowPrivilege: function(params) {
-        return axios.get('/uum/user/mgr/save/row/privilege', {params: params}).then(res => res.data.data);
+        return $.get('/uum/user/mgr/save/row/privilege', {params: params}).then(res => res.data);
       },
       queryUsers: function(params) {
-        return axios.get('/uum/user/mgr/query/users', {params: params}).then(res => res.data.data);
+        return $.get('/uum/user/mgr/query/users', {params: params}).then(res => res.data);
       },
       updatePhoto: function(params) {
-        return axios.put('/uum/user/mgr/update/photo', params).then(res => res.data.data);
+        return $.put('/uum/user/mgr/update/photo', params).then(res => res.data);
       },
       updatePassword: function(params) {
-        return axios.put('/uum/user/mgr/update/password', params).then(res => res.data.data);
+        return $.put('/uum/user/mgr/update/password', params).then(res => res.data);
       }
     },
 
 
     moduleMgr: {
       getChildNodes: function(params) {
-        return axios.get('/platform/module/mgr/get/child/nodes', {params: params}).then(res => res.data.data);
+        return $.get('/platform/module/mgr/get/child/nodes', {params: params}).then(res => res.data);
       },
       list: function(params) {
-        return axios.get('/platform/module/mgr/list', {params: params}).then(res => res.data.data);
+        return $.get('/platform/module/mgr/list', {params: params}).then(res => res.data);
       },
       listOperation: function(params) {
-        return axios.get('/platform/module/mgr/list/operation', {params: params}).then(res => res.data.data);
+        return $.get('/platform/module/mgr/list/operation', {params: params}).then(res => res.data);
       },
       create: function(params) {
-        return axios.put('/platform/module/mgr/create', params).then(res => res.data.data);
+        return $.put('/platform/module/mgr/create', params).then(res => res.data);
       },
       createModuleOptRefs: function(params) {
-        return axios.get('/platform/module/mgr/create/module/operation/ref', {params: params}).then(res => res.data.data);
+        return $.get('/platform/module/mgr/create/module/operation/ref', {params: params}).then(res => res.data);
       },
       update: function(params) {
-        return axios.put('/platform/module/mgr/update', params).then(res => res.data.data);
+        return $.put('/platform/module/mgr/update', params).then(res => res.data);
       },
       view: function(params) {
-        return axios.get('/platform/module/mgr/view', {params: params}).then(res => res.data.data);
+        return $.get('/platform/module/mgr/view', {params: params}).then(res => res.data);
       },
       del: function(params) {
-        return axios.delete('/platform/module/mgr/delete', {params: params}).then(res => res.data.data);
+        return $.delete('/platform/module/mgr/delete', {params: params}).then(res => res.data);
       },
     },
     operateMgr: {
       list: function(params) {
-        return axios.get('/platform/operate/mgr/list', {params: params}).then(res => res.data.data);
+        return $.get('/platform/operate/mgr/list', {params: params}).then(res => res.data);
       },
       create: function(params) {
-        return axios.put('/platform/operate/mgr/create', params).then(res => res.data.data);
+        return $.put('/platform/operate/mgr/create', params).then(res => res.data);
       },
       update: function(params) {
-        return axios.put('/platform/operate/mgr/update', params).then(res => res.data.data);
+        return $.put('/platform/operate/mgr/update', params).then(res => res.data);
       },
       view: function(params) {
-        return axios.get('/platform/operate/mgr/view', {params: params}).then(res => res.data.data);
+        return $.get('/platform/operate/mgr/view', {params: params}).then(res => res.data);
       },
       disEnable: function(params) {
-        return axios.get('/platform/operate/mgr/disEnable', {params: params}).then(res => res.data.data);
+        return $.get('/platform/operate/mgr/disEnable', {params: params}).then(res => res.data);
       },
     },
     afficheMgr: {
       list: function(params) {
-        return axios.get('/platform/affiche/mgr/list', {params: params}).then(res => res.data.data);
+        return $.get('/platform/affiche/mgr/list', {params: params}).then(res => res.data);
       },
       create: function(params) {
-        return axios.put('/platform/affiche/mgr/create', params).then(res => res.data.data);
+        return $.put('/platform/affiche/mgr/create', params).then(res => res.data);
       },
       update: function(params) {
-        return axios.put('/platform/affiche/mgr/update', params).then(res => res.data.data);
+        return $.put('/platform/affiche/mgr/update', params).then(res => res.data);
       },
       view: function(params) {
-        return axios.get('/platform/affiche/mgr/view', {params: params}).then(res => res.data.data);
+        return $.get('/platform/affiche/mgr/view', {params: params}).then(res => res.data);
       },
       del: function(params) {
-        return axios.delete('/platform/affiche/mgr/delete', {params: params}).then(res => res.data.data);
+        return $.delete('/platform/affiche/mgr/delete', {params: params}).then(res => res.data);
       },
     },
     accessoryMgr: {
       del: function(params) {
-        return axios.delete('/platform/accessory/mgr/delete', {params: params}).then(res => res.data.data);
+        return $.delete('/platform/accessory/mgr/delete', {params: params}).then(res => res.data);
       },
     },
     fileMgr: {
       del: function(params) {
-        return axios.delete('/file/delete', {params: params}).then(res => res.data.data);
+        return $.delete('/file/delete', {params: params}).then(res => res.data);
       },
     },
     codeMgr: {
       list: function(params) {
-        return axios.get('/platform/code/mgr/list', {params: params}).then(res => res.data.data);
+        return $.get('/platform/code/mgr/list', {params: params}).then(res => res.data);
       },
       create: function(params) {
-        return axios.put('/platform/code/mgr/create', params).then(res => res.data.data);
+        return $.put('/platform/code/mgr/create', params).then(res => res.data);
       },
       update: function(params) {
-        return axios.put('/platform/code/mgr/update', params).then(res => res.data.data);
+        return $.put('/platform/code/mgr/update', params).then(res => res.data);
       },
       view: function(params) {
-        return axios.get('/platform/code/mgr/view', {params: params}).then(res => res.data.data);
+        return $.get('/platform/code/mgr/view', {params: params}).then(res => res.data);
       },
       del: function(params) {
-        return axios.delete('/platform/code/mgr/delete', {params: params}).then(res => res.data.data);
+        return $.delete('/platform/code/mgr/delete', {params: params}).then(res => res.data);
       },
       disEnable: function(params) {
-        return axios.get('/platform/code/mgr/disEnable', {params: params}).then(res => res.data.data);
+        return $.get('/platform/code/mgr/disEnable', {params: params}).then(res => res.data);
       },
     },
     districtMgr: {
-      getChildNodes: function(params) {
-        return axios.get('/platform/district/mgr/get/child/nodes', {params: params}).then(res => res.data.data);
-      },
-      list: function(params) {
-        return axios.get('/platform/district/mgr/list', {params: params}).then(res => res.data.data);
-      },
-      create: function(params) {
-        return axios.put('/platform/district/mgr/create', params).then(res => res.data.data);
-      },
-      update: function(params) {
-        return axios.put('/platform/district/mgr/update', params).then(res => res.data.data);
-      },
-      view: function(params) {
-        return axios.get('/platform/district/mgr/view', {params: params}).then(res => res.data.data);
-      },
-      del: function(params) {
-        return axios.delete('/platform/district/mgr/delete', {params: params}).then(res => res.data.data);
-      },
-      disEnable: function(params) {
-        return axios.get('/platform/district/mgr/disEnable', {params: params}).then(res => res.data.data);
-      },
+      url: host + '/platform/district/mgr',
+      childNodesUrl: host + '/platform/district/mgr/{id}/child/nodes',
+      disEnableUrl: host + '/platform/district/mgr/{id}/disEnable/{disEnableFlag}'
     },
     dictionaryMgr: {
-      getSmallType: function (params) {
-        return axios.get('/platform/system/dictionary/mgr/get/small/type', {params: params}).then(res => res.data.data);
-      },
-      list: function(params) {
-        return axios.get('/platform/system/dictionary/mgr/list', {params: params}).then(res => res.data.data);
-      },
-      create: function(params) {
-        return axios.put('/platform/system/dictionary/mgr/create', params).then(res => res.data.data);
-      },
-      update: function(params) {
-        return axios.put('/platform/system/dictionary/mgr/update', params).then(res => res.data.data);
-      },
-      view: function(params) {
-        return axios.get('/platform/system/dictionary/mgr/view', {params: params}).then(res => res.data.data);
-      },
-      disEnable: function(params) {
-        return axios.get('/platform/system/dictionary/mgr/disEnable', {params: params}).then(res => res.data.data);
-      },
+      url: host + '/platform/system/dictionary/mgr/',
+      smallTypeUrl: host + '/platform/system/dictionary/mgr/{bigTypeCode}/small/type',
+      disEnableUrl: host + '/platform/system/dictionary/mgr/{id}/disEnable/{disEnableFlag}'
     },
     schedulerMgr: {
       list: function(params) {
-        return axios.get('/platform/system/scheduler/mgr/list', {params: params}).then(res => res.data.data);
+        return $.get('/platform/system/scheduler/mgr/list', {params: params}).then(res => res.data);
       },
       create: function(params) {
-        return axios.put('/platform/system/scheduler/mgr/create', params).then(res => res.data.data);
+        return $.put('/platform/system/scheduler/mgr/create', params).then(res => res.data);
       },
       update: function(params) {
-        return axios.put('/platform/system/scheduler/mgr/update', params).then(res => res.data.data);
+        return $.put('/platform/system/scheduler/mgr/update', params).then(res => res.data);
       },
       view: function(params) {
-        return axios.get('/platform/system/scheduler/mgr/view', {params: params}).then(res => res.data.data);
+        return $.get('/platform/system/scheduler/mgr/view', {params: params}).then(res => res.data);
       },
       startScheduler: function(params) {
-        return axios.get('/platform/system/scheduler/mgr/start/scheduler').then(res => res.data.data);
+        return $.get('/platform/system/scheduler/mgr/start/scheduler').then(res => res.data);
       },
       stopScheduler: function(params) {
-        return axios.get('/platform/system/scheduler/mgr/stop/scheduler').then(res => res.data.data);
+        return $.get('/platform/system/scheduler/mgr/stop/scheduler').then(res => res.data);
       },
       startJob: function(params) {
-        return axios.get('/platform/system/scheduler/mgr/start/job', {params: params}).then(res => res.data.data);
+        return $.get('/platform/system/scheduler/mgr/start/job', {params: params}).then(res => res.data);
       },
       stopJob: function(params) {
-        return axios.get('/platform/system/scheduler/mgr/stop/job', {params: params}).then(res => res.data.data);
+        return $.get('/platform/system/scheduler/mgr/stop/job', {params: params}).then(res => res.data);
       },
       schedulerStatus: function(params) {
-        return axios.get('/platform/system/scheduler/mgr/scheduler/status', {params: params}).then(res => res.data.data);
+        return $.get('/platform/system/scheduler/mgr/scheduler/status', {params: params}).then(res => res.data);
       },
     },
     systemConfigMgr: {
       list: function(params) {
-        return axios.get('/platform/system/config/mgr/list', {params: params}).then(res => res.data.data);
+        return $.get('/platform/system/config/mgr/list', {params: params}).then(res => res.data);
       },
       update: function(params) {
-        return axios.put('/platform/system/config/mgr/update', params).then(res => res.data.data);
+        return $.put('/platform/system/config/mgr/update', params).then(res => res.data);
       },
       view: function(params) {
-        return axios.get('/platform/system/config/mgr/view', {params: params}).then(res => res.data.data);
+        return $.get('/platform/system/config/mgr/view', {params: params}).then(res => res.data);
       },
       startJConsole: function(params) {
-        return axios.get('/platform/system/config/mgr/start/jconsole').then(res => res.data.data);
+        return $.get('/platform/system/config/mgr/start/jconsole').then(res => res.data);
       },
     },
     systemLogMgr: {
       list: function(params) {
-        return axios.get('/platform/system/log/mgr/list', {params: params}).then(res => res.data.data);
+        return $.get('/platform/system/log/mgr/list', {params: params}).then(res => res.data);
       },
       view: function(params) {
-        return axios.get('/platform/system/log/mgr/view', {params: params}).then(res => res.data.data);
+        return $.get('/platform/system/log/mgr/view', {params: params}).then(res => res.data);
       }
     },
     systemLogMgr: {
       list: function(params) {
-        return axios.get('/platform/system/log/mgr/list', {params: params}).then(res => res.data.data);
+        return $.get('/platform/system/log/mgr/list', {params: params}).then(res => res.data);
       },
       view: function(params) {
-        return axios.get('/platform/system/log/mgr/view', {params: params}).then(res => res.data.data);
+        return $.get('/platform/system/log/mgr/view', {params: params}).then(res => res.data);
       }
     },
     systemParameterMgr: {
       list: function(params) {
-        return axios.get('/platform/system/parameter/mgr/list', {params: params}).then(res => res.data.data);
+        return $.get('/platform/system/parameter/mgr/list', {params: params}).then(res => res.data);
       },
       create: function(params) {
-        return axios.put('/platform/system/parameter/mgr/create', params).then(res => res.data.data);
+        return $.put('/platform/system/parameter/mgr/create', params).then(res => res.data);
       },
       update: function(params) {
-        return axios.put('/platform/system/parameter/mgr/update', params).then(res => res.data.data);
+        return $.put('/platform/system/parameter/mgr/update', params).then(res => res.data);
       },
       view: function(params) {
-        return axios.get('/platform/system/parameter/mgr/view', {params: params}).then(res => res.data.data);
+        return $.get('/platform/system/parameter/mgr/view', {params: params}).then(res => res.data);
       },
       disEnable: function(params) {
-        return axios.get('/platform/system/parameter/mgr/disEnable', {params: params}).then(res => res.data.data);
+        return $.get('/platform/system/parameter/mgr/disEnable', {params: params}).then(res => res.data);
       },
     }
-
-    //the end
   }
-}
+
+  window.api = api;
+});

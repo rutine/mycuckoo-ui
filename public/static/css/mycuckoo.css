@@ -1,23 +1,65 @@
 @charset "utf-8";
 /* CSS Document */
+/*--------------------------------公共-----------------------------------*/
+.left { float: left; }
+.right { float: right; }
+.site-doc-icon {margin-bottom: 50px; font-size: 0;}
+.site-doc-icon li {display: inline-block; vertical-align: middle; width: 200px; height: auto; line-height: 25px; padding: 20px 0; margin-right: -1px; margin-bottom: -1px; border: 1px solid #e2e2e2; font-size: 14px; text-align: center; color: #666; transition: all .3s; -webkit-transition: all .3s;}
+.site-doc-icon li:hover {background-color: #f2f2f2; color: #000;}
+.site-doc-icon li .layui-anim {width: 150px; height: 150px; line-height: 150px; margin: 0 auto 10px; text-align: center; background-color: #009688; cursor: pointer; color: #fff; border-radius: 50%;}
+
 /*提示、背景*/
 .background {position:fixed; bottom:0; left:0; right:0; top:0; opacity:0.8; background:url("../images/login/wait.gif") no-repeat scroll center 30% #000000; z-index:1060;}
-.main .page-header {margin-top: 0;}
+
+.tab-popup-menu { position: absolute; width: 120px; line-height: 24px; z-index: 999; background: #FFF; border: 1px solid #F2F2F2; border-bottom: none; border-radius: 3px; display: none; }
+.tab-popup-menu li { display: block; padding: 4px 10px; color: #666; border-bottom: 1px solid #F2F2F2; }
+.tab-popup-menu li:hover { background: #EEE; color: #222; }
+
 /*--------------------------------菜单-----------------------------------*/
-.mycuckoo-header {height:35px; background:#0099FF;}
-.mycuckoo-sidebar {font-family:"Microsoft Yahei","SimHei"; font-size:13px;}
-.mycuckoo-sidenav {margin: 20px 0;}
-.mycuckoo-sidebar .nav .nav {display:none; padding-left:10px;}
-.mycuckoo-sidebar .nav > li > a {display:block; padding:4px 18px; -color:#999; font-size:16px; font-weight:500; cursor:pointer;}
-.mycuckoo-sidebar .nav .nav > li > a {padding-bottom:1px; padding-top:1px; margin-left:10px; font-size:13px; font-weight:400;}
-.mycuckoo-sidebar .nav > li > a:hover, .mycuckoo-sidebar  .nav > li > a:focus { padding-left:17px; border-left:1px solid #563d7c; -color:#563d7c; color:#0099FF; text-decoration:none; background-color:transparent;}
-.mycuckoo-sidebar .nav > .active > a, .mycuckoo-sidebar .nav > .active:hover > a, .mycuckoo-sidebar .nav > .active:focus > a {border-left:2px solid #563d7c; padding-left:18px;-color:#563d7c; color:#0099FF; font-weight:700; background-color:transparent;}
-.mycuckoo-sidebar .nav .nav > li > a:hover, .mycuckoo-sidebar .nav .nav > li > a:focus {margin-left:10px}
-.mycuckoo-sidebar .nav .nav > .active > a, .mycuckoo-sidebar .nav .nav > .active:hover > a, .mycuckoo-sidebar .nav .nav > .active:focus > a {font-weight:500; margin-left:9px;}
-.mycuckoo-sidebar .glyphicon-chevron-down, .mycuckoo-sidebar .glyphicon-chevron-up {float:right; margin-right:8px; margin-top:2px; opacity:0.8;}
-.mycuckoo-sidebar .glyphicon-chevron-left, .mycuckoo-sidebar .glyphicon-chevron-right {float:right; margin-right:10px; margin-top:2px; opacity:0.25;}
-.mycuckoo-sidebar .active .glyphicon-chevron-left, .mycuckoo-sidebar .active .glyphicon-chevron-right, .mycuckoo-sidebar .active a:hover .glyphicon-chevron-left, .mycuckoo-sidebar .active a:hover .glyphicon-chevron-right {opacity: 1;}
+.mycuckoo-container .layui-header { background-color: #563d7c; }
+.mycuckoo-container .sidebar-open { height: 45px; float: left; }
+.mycuckoo-container .sidebar-open i { display: block; background: rgba(255, 255, 255, 0.1) 0 0 no-repeat; color: #fff; width: 32px; height: 32px; line-height: 32px; border-radius: 3px; text-align: center; margin: 15px; cursor: pointer; }
+.mycuckoo-container .sidebar-open i:hover { background: rgba(255, 255, 255, 0.3) 0 0 no-repeat; }
+.mycuckoo-container .layui-side { width: 220px; }
+.layui-side .layui-nav { position: absolute; top: 0px; bottom: 42px; left: 0; z-index: 2; padding-top: 10px; background-color: #EEE; width: 220px; max-width: 220px; overflow: auto; overflow-x: hidden; border-right: 1px solid #e5e5e5; }
+.layui-side .layui-nav .layui-nav-item a { color: #555; }
+.layui-side .layui-nav .layui-nav-item a:hover, .layui-side .layui-nav .layui-this a { color:#000; }
+.layui-side .layui-nav .layui-nav-item { border-bottom: 1px solid #ddd; }
+.layui-side .layui-nav .layui-nav-item:hover > a { color: #333; }
+.layui-side .layui-nav .layui-nav-item a { font-size: 14px; padding: 4px 15px 4px 20px; display: block; cursor: pointer; }
+.layui-side .layui-nav .layui-nav-item > a:hover { background-color: #999; }
+.layui-side .layui-nav .layui-nav-itemed > a { color: #444 !important; }
+.layui-side .layui-nav .layui-nav-itemed:hover { background: #fff 0 0 no-repeat; }
+.layui-side .layui-nav .layui-nav-item > .layui-nav-child { background-color: rgba(255, 255, 255, 0.3) !important; }
+.layui-side .layui-nav .layui-nav-item > .layui-nav-child:hover { color: blue; background: #fff 0 0 no-repeat; }
+.layui-side .layui-nav .layui-nav-item > .layui-nav-child a { padding: 12px 15px 12px 30px; font-size: 14px; color: #333; cursor: pointer; }
+.layui-side .layui-nav .layui-nav-item > .layui-nav-child a:hover { color: #999; }
+
+/*--------------------------------tab-----------------------------------*/
+.mycuckoo-container .layui-body { position: absolute; top: 60px; right: 0; bottom: 42px; left: 221px; overflow: hidden; z-index: 1; }
+.mycuckoo-body-bg { position: absolute; top: 46px; right: 0; bottom: 42px; left: 221px; background: rgba(0, 0, 0, 0.5) 0 0 no-repeat; overflow: hidden; z-index: 100; display: none; }
+.mycuckoo-body .layui-tab { height: 100%; width: 100%; background: #EFEEF0 0 0 no-repeat; margin: 0px; }
+.mycuckoo-body .layui-tab-title { height: 35px; background: #EFEEF0 0 0 no-repeat; position: relative; z-index: 100; }
+.mycuckoo-body .layui-tab-title li { line-height: 35px; }
+.mycuckoo-body .layui-tab-title li .layui-tab-close { border-radius: 50%; }
+.mycuckoo-body .layui-tab-title .layui-this { background: #fff 0 0 no-repeat; }
+.mycuckoo-body .layui-tab-title .layui-this:after { height: 36px; }
+.mycuckoo-body .layui-tab-content { position: absolute; top: 36px; bottom: 0px; width: 100%; background: #fff 0 0 no-repeat; padding: 0px; overflow: hidden; }
+.mycuckoo-body .layui-tab-content .layui-tab-item { width: 100%; height: 100%; }
+.mycuckoo-body .layui-tab-content .layui-tab-item iframe { width: 100%; height: 100%; }
+@media screen and (max-width: 768px) {
+  .mycuckoo-body { left: 0px; }
+  .mycuckoo-body .layui-tab-content .layui-tab-item { -webkit-overflow-scrolling: touch; overflow-y: scroll; }
+  .mycuckoo-search .layui-input { width: 100%; margin: 6px; }
+}
+
+/*--------------------------------站内导航-----------------------------------*/
+.mycuckoo-site-nav { position: relative; padding: 0 20px; z-index: 99; border-bottom: 1px solid #e5e5e5; height: 39px; line-height: 39px; overflow: hidden; }
+
 /*--------------------------------内容-----------------------------------*/
+.mycuckoo-main { padding: 8px; }
+.mycuckoo-search { margin-bottom: 8px; }
+.mycuckoo-search .layui-input { width: 190px; }
 /*图片居中*/
 .middle {vertical-align: middle;}
 /*双向选择列表*/
@@ -26,20 +68,20 @@
 .select-opt {float:left; width:40px; height:100%; margin-top:46px;} 
 .select-opt p {width:26px; height:26px; margin-top:6px; background:url(../images/form/arr.gif) no-repeat; cursor:pointer; text-indent:-999em;} 
 .select-opt p.to-right {background-position:2px 0;} 
-.select-opt p.to-left {background-position:2px -22px;} 
-/*--------------------------------导航-----------------------------------*/
-.currPosition {padding-left:25px; background:url(../images/navigate/currPosition.png) no-repeat scroll 0 50% transparent;}
+.select-opt p.to-left {background-position:2px -22px;}
+
+/*--------------------------------导航条-----------------------------------*/
 .help {background:url(../images/navigate/help.png) no-repeat scroll 0 50% transparent;}
-.change_skin {background:url(../images/navigate/change_skin.png) no-repeat scroll 0 50% transparent;}
-.user_edit {background:url(../images/navigate/user_edit.png) no-repeat scroll 0 50% transparent;}
-.logout {background:url(../images/navigate/logout.png) no-repeat scroll 0 50% transparent;}
+.change-skin {background:url(../images/navigate/change-skin.png) no-repeat scroll 0 50% transparent;}
+.skin-selected-icon {background:url(../images/navigate/skin-selected.png) no-repeat scroll 0 50% transparent;}
+.user-edit {background:url(../images/navigate/user-edit.png) no-repeat scroll 0 50% transparent;}
 .platform {background:url(../images/navigate/platform.png) no-repeat scroll 0 50% transparent;}
-.uum {background:url(../images/navigate/uus.png) no-repeat scroll 0 50% transparent;}
+.uum {background:url(../images/navigate/uum.png) no-repeat scroll 0 50% transparent;}
 .portal {background:url(../images/navigate/portal.png) no-repeat scroll 0 50% transparent;}
-.skin_selected_icon {background:url(../images/navigate/skinSelected.png) no-repeat scroll 0 50% transparent;}
-.qq_icon {background:url(../images/navigate/qq.png) no-repeat scroll 0 50% transparent;}
+.qq-icon {background:url(../images/navigate/qq.png) no-repeat scroll 0 50% transparent;}
+.logout {background:url(../images/navigate/logout.png) no-repeat scroll 0 50% transparent;}
 
-
+/*--------------------------------菜单栏-----------------------------------*/
 .home-icon {background:url(../images/menu/home.png) no-repeat scroll 0 50% transparent;}
 .platform-icon {background:url(../images/menu/platform.png) no-repeat scroll 0 50% transparent;}
 .uum-icon {background:url(../images/menu/uum.png) no-repeat scroll 0 50% transparent;}
@@ -57,7 +99,7 @@
 .district-mgr-title-icon {background:url(../images/menu/district-mgr.png) no-repeat scroll 0 50% transparent;}
 .district-mgr-icon {background:url(../images/menu/district-mgr.png) no-repeat scroll 0 50% transparent;}
 .system-parameter-mgr-icon {background:url(../images/menu/system-parameter-mgr.png) no-repeat scroll 0 50% transparent;}
-.db-backup-mgr-title-icon {background:url(../images/menu/db-backup-mgr-title.png) no-repeat scroll 0 50% transparent;}
+.db-backup-mgr-title-icon {background:url(../images/menu/db-backup-mgr.png) no-repeat scroll 0 50% transparent;}
 .db-backup-mgr-icon {background:url(../images/menu/db-backup-mgr.png) no-repeat scroll 0 50% transparent;}
 .log-mgr-icon {background:url(../images/menu/log-mgr.png) no-repeat scroll 0 50% transparent;}
 .system-log-mgr-icon {background:url(../images/menu/system-log-mgr.png) no-repeat scroll 0 50% transparent;}
@@ -67,6 +109,7 @@
 .module-mgr-icon {background:url(../images/menu/module-mgr.png) no-repeat scroll 0 50% transparent;}
 .operate-mgr-icon {background:url(../images/menu/operate-mgr.png) no-repeat scroll 0 50% transparent;}
 .right-key-close-tab-icon {background:url(../images/menu/right-key-close-tab.png) no-repeat scroll 0 50% transparent;}
+
 /*-------------------------操作按钮---------------------------------------*/
 .table-add-icon {background:url(../images/button/table-add.png) no-repeat scroll 0 50% transparent;}
 .table-edit-icon {background:url(../images/button/table-edit.png) no-repeat scroll 0 50% transparent;}
@@ -95,7 +138,7 @@
 .job-start-icon {background:url(../images/button/job-start.png) no-repeat scroll 0 50% transparent;}
 .job-stop-icon {background:url(../images/button/job-stop.png) no-repeat scroll 0 50% transparent;}
 /*---------------------------------统一用户-----------------------------------*/
-.organ-mgr-title-icon {background:url(../images/menu/organ-mgr-title.png) no-repeat scroll 0 50% transparent;}
+.organ-mgr-title-icon {background:url(../images/menu/organ-mgr.png) no-repeat scroll 0 50% transparent;}
 .organ-mgr-icon {background:url(../images/menu/organ-mgr.png) no-repeat scroll 0 50% transparent;}
 .role-mgr-title-icon {background:url(../images/menu/role-mgr.png) no-repeat scroll 0 50% transparent;}
 .role-mgr-icon {background:url(../images/menu/role-mgr.png) no-repeat scroll 0 50% transparent;}
@@ -107,77 +150,8 @@
 .user-group-mgr-icon {background:url(../images/menu/user-group-mgr.png) no-repeat scroll 0 50% transparent;}
 .general-group-mgr-icon {background:url(../images/menu/general-group-mgr.png) no-repeat scroll 0 50% transparent;}
 .role-group-mgr-icon {background:url(../images/menu/role-group-mgr.png) no-repeat scroll 0 50% transparent;}
-.password-icon {background:url(../images/menu/privialmgr.png) no-repeat scroll 0 50% transparent; background-color:#FFFFFF; padding-left:20px; font-weight:bold; color:#000033;}
+.password-icon {background:url(../images/menu/privial-mgr.png) no-repeat scroll 0 50% transparent; background-color:#FFFFFF; padding-left:20px; font-weight:bold; color:#000033;}
 .reset-pwd-icon {background:url(../images/menu/reset-pwd.png) no-repeat scroll 0 50% transparent;}
 .row-privilege-mgr-icon {background:url(../images/menu/row-privilege-mgr.png) no-repeat scroll 0 50% transparent;}
 .user-delete-icon {background:url(../images/menu/user-delete.png) no-repeat scroll 0 50% transparent;}
 .email-go-icon {background:url(../images/menu/email-go.png) no-repeat scroll 0 50% transparent;}
-
-/*--------------------------------tree-----------------------------------*/
-.ztree li span.button.platform-icon_ico_open, .ztree li span.button.platform-icon_ico_close {background:url(../images/menu/platform.png) no-repeat scroll 0 50% transparent;}
-.ztree li span.button.uum-icon_ico_open, .ztree li span.button.uum-icon_ico_close {background:url(../images/menu/uum.png) no-repeat scroll 0 50% transparent;}
-.ztree li span.button.affiche-mgr-icon_ico_open, .ztree li span.button.affiche-mgr-icon_ico_close {background:url(../images/menu/affiche-mgr.png) no-repeat scroll 0 50% transparent;}
-.ztree li span.button.module-operate-icon_ico_open, .ztree li span.button.module-operate-icon_ico_close {background:url(../images/menu/module-operate.png) no-repeat scroll 0 50% transparent;}
-.ztree li span.button.dictionary-mgr-icon_ico_open, .ztree li span.button.dictionary-mgr-icon_ico_close {background:url(../images/menu/dictionary-mgr.png) no-repeat scroll 0 50% transparent;}
-.ztree li span.button.type-dictionary-mgr-icon_ico_open, .ztree li span.button.type-dictionary-mgr-icon_ico_close {background:url(../images/menu/type-dictionary-mgr.png) no-repeat scroll 0 50% transparent;}
-.ztree li span.button.system-mgr-icon_ico_open, .ztree li span.button.system-mgr-icon_ico_close {background:url(../images/menu/system-mgr.png) no-repeat scroll 0 50% transparent;}
-.ztree li span.button.code-mgr-icon_ico_open, .ztree li span.button.code-mgr-icon_ico_close {background:url(../images/menu/code-mgr.png) no-repeat scroll 0 50% transparent;}
-.ztree li span.button.scheduler-mgr-icon_ico_open, .ztree li span.button.scheduler-mgr-icon_ico_close {background:url(../images/menu/scheduler-mgr.png) no-repeat scroll 0 50% transparent;}
-.ztree li span.button.district-mgr-icon_ico_open, .ztree li span.button.district-mgr-icon_ico_close {background:url(../images/menu/district-mgr.png) no-repeat scroll 0 50% transparent;}
-.ztree li span.button.district-mgr-title-icon_ico_open, .ztree li span.button.district-mgr-title-icon_ico_close {background:url(../images/menu/district-mgr.png) no-repeat scroll 0 50% transparent;}
-.ztree li span.button.system-parameter-mgr-icon_ico_open, .ztree li span.button.system-parameter-mgr-icon_ico_close {background:url(../images/menu/system-parameter-mgr.png) no-repeat scroll 0 50% transparent;}
-.ztree li span.button.log-mgr-icon_ico_open, .ztree li span.button.log-mgr-icon_ico_close {background:url(../images/menu/log-mgr.png) no-repeat scroll 0 50% transparent;}
-.ztree li span.button.system-log-mgr-icon_ico_open, .ztree li span.button.system-log-mgr-icon_ico_close {background:url(../images/menu/system-log-mgr.png) no-repeat scroll 0 50% transparent;}
-.ztree li span.button.system-config-mgr-icon_ico_open, .ztree li span.button.system-config-mgr-icon_ico_close {background:url(../images/menu/system-config-mgr.png) no-repeat scroll 0 50% transparent;}
-.ztree li span.button.module-mgr-icon_ico_open, .ztree li span.button.module-mgr-icon_ico_close {background:url(../images/menu/module-mgr.png) no-repeat scroll 0 50% transparent;}
-.ztree li span.button.operate-mgr-icon_ico_open, .ztree li span.button.operate-mgr-icon_ico_close {background:url(../images/menu/operate-mgr.png) no-repeat scroll 0 50% transparent;}
-/*-------------------------操作按钮---------------------------------------*/
-.ztree li span.button.table-add-icon_ico_docu {background:url(../images/button/table-add.png) no-repeat scroll 0 50% transparent;}
-.ztree li span.button.table-edit-icon_ico_docu {background:url(../images/button/table-edit.png) no-repeat scroll 0 50% transparent;}
-.ztree li span.button.table-delete-icon_ico_docu {background:url(../images/button/table-delete.png) no-repeat scroll 0 50% transparent;}
-.ztree li span.button.table-icon_ico_docu {background:url(../images/button/table.png) no-repeat scroll 0 50% transparent; margin: 0;}
-.ztree li span.button.table-save-icon_ico_docu {background:url(../images/button/table-save.png) no-repeat scroll 0 50% transparent;}
-.ztree li span.button.table-close-icon_ico_docu {background:url(../images/button/table-close.png) no-repeat scroll 0 50% transparent;}
-.ztree li span.button.table-multiple-icon_ico_docu {background:url(../images/button/table-multiple.png) no-repeat scroll 0 50% transparent;}
-.ztree li span.button.table-find-icon_ico_docu {background:url(../images/button/table-find.png) no-repeat scroll 0 50% transparent;}
-.ztree li span.button.enable-icon_ico_docu {background:url(../images/button/enable.png) no-repeat scroll 0 50% transparent;}
-.ztree li span.button.disable-icon_ico_docu {background:url(../images/button/disable.png) no-repeat scroll 0 50% transparent;}
-.ztree li span.button.assign-icon_ico_docu {background:url(../images/button/assign.png) no-repeat scroll 0 50% transparent;}
-.ztree li span.button.module-label-icon_ico_docu {background:url(../images/button/module-label.png) no-repeat scroll 0 50% transparent;}
-.ztree li span.button.scheduler-start-icon_ico_docu {background:url(../images/button/scheduler-start.png) no-repeat scroll 0 50% transparent;}
-.ztree li span.button.scheduler-stop-icon_ico_docu {background:url(../images/button/scheduler-stop.png) no-repeat scroll 0 50% transparent;}
-.ztree li span.button.job-start-icon_ico_docu {background:url(../images/button/job-start.png) no-repeat scroll 0 50% transparent;}
-.ztree li span.button.job-stop-icon_ico_docu {background:url(../images/button/job-stop.png) no-repeat scroll 0 50% transparent;}
-.ztree li span.button.reset-pwd-icon_ico_docu {background:url(../images/menu/reset-pwd.png) no-repeat scroll 0 50% transparent;}
-.ztree li span.button.role-mgr-icon_ico_docu {background:url(../images/menu/role-mgr.png) no-repeat scroll 0 50% transparent;}
-
-.ztree li span.button.system-log-mgr-icon_ico_docu {background:url(../images/menu/system-log-mgr.png) no-repeat scroll 0 50% transparent;}
-.ztree li span.button.system-config-mgr-icon_ico_docu {background:url(../images/menu/system-config-mgr.png) no-repeat scroll 0 50% transparent;}
-.ztree li span.button.system-parameter-mgr-icon_ico_docu {background:url(../images/menu/system-parameter-mgr.png) no-repeat scroll 0 50% transparent;}
-.ztree li span.button.operate-mgr-icon_ico_docu {background:url(../images/menu/operate-mgr.png) no-repeat scroll 0 50% transparent;}
-.ztree li span.button.module-mgr-icon_ico_docu {background:url(../images/menu/module-mgr.png) no-repeat scroll 0 50% transparent;}
-.ztree li span.button.scheduler-mgr-icon_ico_docu {background:url(../images/menu/scheduler-mgr.png) no-repeat scroll 0 50% transparent;}
-.ztree li span.button.affiche-mgr-icon_ico_docu {background:url(../images/menu/affiche-mgr.png) no-repeat scroll 0 50% transparent;}
-.ztree li span.button.role-group-mgr-icon_ico_docu {background:url(../images/menu/role-group-mgr.png) no-repeat scroll 0 50% transparent;}
-.ztree li span.button.role-assign-mgr-icon_ico_docu {background:url(../images/menu/role-assign-mgr.png) no-repeat scroll 0 50% transparent;}
-.ztree li span.button.role-mgr-icon_ico_docu {background:url(../images/menu/role-mgr.png) no-repeat scroll 0 50% transparent;}
-.ztree li span.button.user-mgr-icon_ico_docu {background:url(../images/menu/user-mgr.png) no-repeat scroll 0 50% transparent;}
-.ztree li span.button.organ-mgr-icon_ico_docu {background:url(../images/menu/organ-mgr.png) no-repeat scroll 0 50% transparent;}
-.ztree li span.button.user-group-mgr-icon_ico_docu {background:url(../images/menu/user-group-mgr.png) no-repeat scroll 0 50% transparent;}
-.ztree li span.button.general-group-mgr-icon_ico_docu {background:url(../images/menu/general-group-mgr.png) no-repeat scroll 0 50% transparent;}
-.ztree li span.button.type-dictionary-mgr-icon_ico_docu {background:url(../images/menu/type-dictionary-mgr.png) no-repeat scroll 0 50% transparent;}
-.ztree li span.button.district-mgr-icon_ico_docu {background:url(../images/menu/district-mgr.png) no-repeat scroll 0 50% transparent;}
-.ztree li span.button.code-mgr-icon_ico_docu {background:url(../images/menu/code-mgr.png) no-repeat scroll 0 50% transparent;}
-/*---------------------------------统一用户-----------------------------------*/
-.ztree li span.button.organ-mgr-icon_ico_open, .ztree li span.button.organ-mgr-icon_ico_close {background:url(../images/menu/organ-mgr.png) no-repeat scroll 0 50% transparent;}
-.ztree li span.button.organ-mgr-title-icon_ico_open, .ztree li span.button.organ-mgr-title-icon_ico_close {background:url(../images/menu/organ-mgr.png) no-repeat scroll 0 50% transparent;}
-.ztree li span.button.role-mgr-icon_ico_open, .ztree li span.button.role-mgr-icon_ico_close {background:url(../images/menu/role-mgr.png) no-repeat scroll 0 50% transparent;}
-.ztree li span.button.role-mgr-title-icon_ico_open, .ztree li span.button.role-mgr-title-icon_ico_close {background:url(../images/menu/role-mgr.png) no-repeat scroll 0 50% transparent;}
-.ztree li span.button.role-assign-mgr-icon_ico_open, .ztree li span.button.role-assign-mgr-icon_ico_close {background:url(../images/menu/role-assign-mgr.png) no-repeat scroll 0 50% transparent;}
-.ztree li span.button.user-mgr-icon_ico_open, .ztree li span.button.user-mgr-icon_ico_close {background:url(../images/menu/user-mgr.png) no-repeat scroll 0 50% transparent;}
-.ztree li span.button.user-mgr-title-icon_ico_open, .ztree li span.button.user-mgr-title-icon_ico_close {background:url(../images/menu/user-mgr.png) no-repeat scroll 0 50% transparent;}
-.ztree li span.button.username-icon_ico_open, .ztree li span.button.username-icon_ico_close { background:url(../images/menu/user-mgr.png) no-repeat scroll 0 50% transparent; background-color:#FFFFFF; padding-left:20px; font-weight:bold; color:#000033;}
-.ztree li span.button.group-mgr-icon_ico_open, .ztree li span.button.group-mgr-icon_ico_close {background:url(../images/menu/group-mgr.png) no-repeat scroll 0 50% transparent;}
-.ztree li span.button.user-group-mgr-icon_ico_open, .ztree li span.button.user-group-mgr-icon_ico_close {background:url(../images/menu/user-group-mgr.png) no-repeat scroll 0 50% transparent;}
-.ztree li span.button.general-group-mgr-icon_ico_open, .ztree li span.button.general-group-mgr-icon_ico_close {background:url(../images/menu/general-group-mgr.png) no-repeat scroll 0 50% transparent;}
-.ztree li span.button.role-group-mgr-icon_ico_open, .ztree li span.button.role-group-mgr-icon_ico_close {background:url(../images/menu/role-group-mgr.png) no-repeat scroll 0 50% transparent;}

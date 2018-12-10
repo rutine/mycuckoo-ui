@@ -90,7 +90,7 @@ export default {
         }
 
         this.api.moduleMgr.createModuleOptRefs(params).then(data => {
-          MyCuckoo.showMsg({state:'success', title: '提示', msg: data});
+          MyCuckoo.msg({state:'success', title: '提示', msg: data});
 
           this.$emit('refresh');
           this.config.view = '';

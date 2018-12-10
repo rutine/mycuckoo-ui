@@ -58,20 +58,20 @@
       saveNewPassword() {
         console.log(this.formData.password)
         if(!this.formData.password) {
-          MyCuckoo.showMsg({state: 'warning', title: '提示', msg: '密码不能为空'});
+          MyCuckoo.msg({state: 'warning', title: '提示', msg: '密码不能为空'});
           return;
         }
         if(!this.formData.newPassword) {
-          MyCuckoo.showMsg({state: 'warning', title: '提示', msg: '新的密码不能为空'});
+          MyCuckoo.msg({state: 'warning', title: '提示', msg: '新的密码不能为空'});
           return;
         }
         if(!this.formData.confirmPassword) {
-          MyCuckoo.showMsg({state: 'warning', title: '提示', msg: '确认密码不能为空'});
+          MyCuckoo.msg({state: 'warning', title: '提示', msg: '确认密码不能为空'});
           return;
         }
 
         this.api.userMgr.updatePassword(this.formData).then(data => {
-          MyCuckoo.showMsg({state: 'success', title: '提示', msg: data});
+          MyCuckoo.msg({state: 'success', title: '提示', msg: data});
         });
       }
     }

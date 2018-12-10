@@ -210,14 +210,14 @@ export default {
           }
         });
 
-        MyCuckoo.showMsg({state: 'success', title: '提示', msg: data});
+        MyCuckoo.msg({state: 'success', title: '提示', msg: data});
       });
     },
     // 下载附件
     download(accessoryName) {
       let $vue = this;
       this.api.fileMgr.download({business: 'document', fileName: accessoryName}).then(data => {
-        MyCuckoo.showMsg({state: 'success', title: '提示', msg: data});
+        MyCuckoo.msg({state: 'success', title: '提示', msg: data});
       });
     },
     // 上传
@@ -242,7 +242,7 @@ export default {
       });
 
       this.api.afficheMgr.create(params).then(data => {
-        MyCuckoo.showMsg({state: 'success', title: '提示', msg: data});
+        MyCuckoo.msg({state: 'success', title: '提示', msg: data});
 
         $vue.$emit('refresh');
         this.reback();
@@ -258,7 +258,7 @@ export default {
         }
       });
       this.api.afficheMgr.update(params).then(data => {
-        MyCuckoo.showMsg({state: 'success', title: '提示', msg: data});
+        MyCuckoo.msg({state: 'success', title: '提示', msg: data});
 
         $vue.$emit('refresh');
         this.reback();

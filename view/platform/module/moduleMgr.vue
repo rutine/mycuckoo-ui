@@ -174,7 +174,7 @@ export default {
     //检查选中
     checkSelect() {
       if(this.selectData.length != 1) {
-        MyCuckoo.showMsg({state: 'warning', title: '提示', msg: '请选择一条件记录!'});
+        MyCuckoo.msg({state: 'warning', title: '提示', msg: '请选择一条件记录!'});
         throw new Error('请选择一条件记录');
       }
     },
@@ -219,14 +219,14 @@ export default {
       this.checkSelect();
 
       let $vue = this;
-      MyCuckoo.showDialog({
+      MyCuckoo.confirm({
         title: '警告提示',
         msg: '您确认删除此记录吗?',
         okBtn: '是',
         cancelBtn: '否',
         ok: function() {
           $vue.api.moduleMgr.del({id: $vue.selectData[0].moduleId}).then(data => {
-            MyCuckoo.showMsg({state: 'success', title: '提示', msg: data});
+            MyCuckoo.msg({state: 'success', title: '提示', msg: data});
 
             $vue.list(); // 刷新列表
           });
@@ -240,16 +240,16 @@ export default {
       let $vue = this;
       let item = this.retrieve();
       if(item.status == 'enable') {
-        MyCuckoo.showMsg({ state: 'info', title : '提示', msg : '此菜单已经启用' });
+        MyCuckoo.msg({ state: 'info', title : '提示', msg : '此菜单已经启用' });
         return;
       }
       if (item.modLevel != 3) {
-        MyCuckoo.showMsg({ state: 'warning', title : '提示', msg : '请您选择第三级菜单!' });
+        MyCuckoo.msg({ state: 'warning', title : '提示', msg : '请您选择第三级菜单!' });
         return;
       }
 
       $vue.api.moduleMgr.disEnable({id: item.moduleId, disEnableFlag: 'enable'}).then(data => {
-        MyCuckoo.showMsg({state: 'success', title: '提示', msg: '菜单启用成功'});
+        MyCuckoo.msg({state: 'success', title: '提示', msg: '菜单启用成功'});
 
         $vue.list(); // 刷新列表
       });
@@ -261,21 +261,21 @@ export default {
       let $vue = this;
       let item = this.retrieve();
       if(item.status == 'disable') {
-        MyCuckoo.showMsg({ state: 'info', title : '提示', msg : '此菜单已经停用' });
+        MyCuckoo.msg({ state: 'info', title : '提示', msg : '此菜单已经停用' });
         return;
       }
       if (item.modLevel != 3) {
-        MyCuckoo.showMsg({ state: 'warning', title : '提示', msg : '请您选择第三级菜单!' });
+        MyCuckoo.msg({ state: 'warning', title : '提示', msg : '请您选择第三级菜单!' });
         return;
       }
 
-      MyCuckoo.showDialog({
+      MyCuckoo.confirm({
         msg : '您确认停用此菜单吗?如果停用,此菜单下的操作将自动清除,并重登生效.',
         okBtn: '是',
         cancelBtn: '否',
         ok : function() {
           $vue.api.moduleMgr.disEnable({id: item.moduleId, disEnableFlag: 'disable'}).then(data => {
-            MyCuckoo.showMsg({state: 'success', title: '提示', msg: '菜单启用成功'});
+            MyCuckoo.msg({state: 'success', title: '提示', msg: '菜单启用成功'});
 
             $vue.list(); // 刷新列表
           });
@@ -288,7 +288,7 @@ export default {
 
       let item = this.retrieve();
       if(item.modLevel != 3) {
-        MyCuckoo.showMsg({state: 'info', title: '提示', msg: '请您选择第三级模块菜单'});
+        MyCuckoo.msg({state: 'info', title: '提示', msg: '请您选择第三级模块菜单'});
         return;
       }
 

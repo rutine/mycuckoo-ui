@@ -137,7 +137,7 @@ export default {
     //检查选中
     checkSelect() {
       if (this.selectData.length != 1) {
-        MyCuckoo.showMsg({state: 'warning', title: '提示', msg: '请选择一条件记录!'});
+        MyCuckoo.msg({state: 'warning', title: '提示', msg: '请选择一条件记录!'});
         throw new Error('请选择一条件记录');
       }
     },
@@ -184,12 +184,12 @@ export default {
       let $vue = this;
       let item = this.retrieve();
       if(item.status == 'enable') {
-        MyCuckoo.showMsg({ state: 'info', title : '提示', msg : '此编码已经启用' });
+        MyCuckoo.msg({ state: 'info', title : '提示', msg : '此编码已经启用' });
         return;
       }
 
       $vue.api.codeMgr.disEnable({id: item.codeId, disEnableFlag: 'enable'}).then(data => {
-        MyCuckoo.showMsg({state: 'success', title: '提示', msg: '编码启用成功'});
+        MyCuckoo.msg({state: 'success', title: '提示', msg: '编码启用成功'});
 
         $vue.list(); // 刷新列表
       });
@@ -201,17 +201,17 @@ export default {
       let $vue = this;
       let item = this.retrieve();
       if(item.status == 'disable') {
-        MyCuckoo.showMsg({ state: 'info', title : '提示', msg : '此编码已经停用' });
+        MyCuckoo.msg({ state: 'info', title : '提示', msg : '此编码已经停用' });
         return;
       }
 
-      MyCuckoo.showDialog({
+      MyCuckoo.confirm({
         msg : '您确认停用此编码?',
         okBtn: '是',
         cancelBtn: '否',
         ok : function() {
           $vue.api.codeMgr.disEnable({id: item.codeId, disEnableFlag: 'disable'}).then(data => {
-            MyCuckoo.showMsg({state: 'success', title: '提示', msg: '编码停用成功'});
+            MyCuckoo.msg({state: 'success', title: '提示', msg: '编码停用成功'});
 
             $vue.list(); // 刷新列表
           });

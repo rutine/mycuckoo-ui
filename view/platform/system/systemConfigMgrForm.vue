@@ -264,7 +264,7 @@ export default {
     //检查选中
     checkSelect() {
       if(this.selectData.length != 1) {
-        MyCuckoo.showMsg({state: 'warning', title: '提示', msg: '请选择一条件记录!'});
+        MyCuckoo.msg({state: 'warning', title: '提示', msg: '请选择一条件记录!'});
         throw new Error('请选择一条件记录');
       }
     },
@@ -294,7 +294,7 @@ export default {
     // 系统名称设置
     saveName() {
       this.api.systemConfigMgr.update({systemName: this.formData.systemName}).then(data => {
-        MyCuckoo.showMsg({state: 'success', title: '提示', msg: data});
+        MyCuckoo.msg({state: 'success', title: '提示', msg: data});
         this.refresh();
       });
     },
@@ -311,35 +311,35 @@ export default {
             userAddDelFlag :  this.formData.userAddDelFlag,
             systemMgr : userCodes
           }).then(data => {
-        MyCuckoo.showMsg({state: 'success', title: '提示', msg: data});
+        MyCuckoo.msg({state: 'success', title: '提示', msg: data});
         this.refresh();
       });
     },
     // 系统日志级别设置
     saveLogLevel() {
       this.api.systemConfigMgr.update({loggerLevel: this.formData.loggerLevel}).then(data => {
-        MyCuckoo.showMsg({state: 'success', title: '提示', msg: data});
+        MyCuckoo.msg({state: 'success', title: '提示', msg: data});
         this.refresh();
       });
     },
     // 系统日志保留天数设置
     saveLogKeepDays() {
       this.api.systemConfigMgr.update({logRecordKeepDays: this.formData.logRecordKeepDays}).then(data => {
-        MyCuckoo.showMsg({state: 'success', title: '提示', msg: data});
+        MyCuckoo.msg({state: 'success', title: '提示', msg: data});
         this.refresh();
       });
     },
     // 系统监控设置
     startJConsole() {
       this.api.systemConfigMgr.startJConsole(null).then(data => {
-        MyCuckoo.showMsg({state: 'success', title: '提示', msg: data})
+        MyCuckoo.msg({state: 'success', title: '提示', msg: data})
         this.refresh();
       });
     },
     //系统行权限设置
     saveRowPrivilege() {
       this.api.systemConfigMgr.update({rowPrivilegeLevel: this.formData.rowPrivilegeLevel}).then(data => {
-        MyCuckoo.showMsg({state: 'success', title: '提示', msg: data});
+        MyCuckoo.msg({state: 'success', title: '提示', msg: data});
         this.refresh();
       });
     }

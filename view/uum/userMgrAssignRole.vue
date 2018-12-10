@@ -218,7 +218,7 @@
           }
 
           this.api.userMgr.saveRolePrivilege(params).then(data => {
-            MyCuckoo.showMsg({state:'success', title: '提示', msg: data});
+            MyCuckoo.msg({state:'success', title: '提示', msg: data});
           });
         }
       }

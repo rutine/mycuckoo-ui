@@ -138,7 +138,7 @@ export default {
     //检查选中
     checkSelect() {
       if (this.selectData.length != 1) {
-        MyCuckoo.showMsg({state: 'warning', title: '提示', msg: '请选择一条件记录!'});
+        MyCuckoo.msg({state: 'warning', title: '提示', msg: '请选择一条件记录!'});
         throw new Error('请选择一条件记录');
       }
     },
@@ -183,14 +183,14 @@ export default {
       this.checkSelect();
 
       let $vue = this;
-      MyCuckoo.showDialog({
+      MyCuckoo.confirm({
         title: '警告提示',
         msg: '您确认删除此记录吗?',
         okBtn: '是',
         cancelBtn: '否',
         ok: function () {
           $vue.api.userMgr.del({id: $vue.selectData[0].jobId}).then(data => {
-            MyCuckoo.showMsg({state: 'success', title: '提示', msg: data});
+            MyCuckoo.msg({state: 'success', title: '提示', msg: data});
 
             $vue.list(); // 刷新列表
           });
@@ -201,7 +201,7 @@ export default {
     schedulerStart() {
       let $vue = this;
       $vue.api.schedulerMgr.startScheduler(null).then(data => {
-        MyCuckoo.showMsg({state: 'success', title: '提示', msg: data});
+        MyCuckoo.msg({state: 'success', title: '提示', msg: data});
         $vue.list(); // 刷新列表
       });
     },
@@ -209,7 +209,7 @@ export default {
     schedulerStop() {
       let $vue = this;
       $vue.api.schedulerMgr.stopScheduler(null).then(data => {
-        MyCuckoo.showMsg({state: 'success', title: '提示', msg: data});
+        MyCuckoo.msg({state: 'success', title: '提示', msg: data});
         $vue.list(); // 刷新列表
       });
     },
@@ -220,12 +220,12 @@ export default {
       let $vue = this;
       let item = this.retrieve();
       if (item.status == 'enable') {
-        MyCuckoo.showMsg({state: 'info', title: '提示', msg: '此任务已经启用'});
+        MyCuckoo.msg({state: 'info', title: '提示', msg: '此任务已经启用'});
         return;
       }
 
       $vue.api.schedulerMgr.startJob({jobId: item.jobId, jobName: item.jobName}).then(data => {
-        MyCuckoo.showMsg({state: 'success', title: '提示', msg: '任务启用成功'});
+        MyCuckoo.msg({state: 'success', title: '提示', msg: '任务启用成功'});
 
         $vue.list(); // 刷新列表
       });
@@ -237,12 +237,12 @@ export default {
       let $vue = this;
       let item = this.retrieve();
       if (item.status == 'disable') {
-        MyCuckoo.showMsg({state: 'info', title: '提示', msg: '此任务已经停止'});
+        MyCuckoo.msg({state: 'info', title: '提示', msg: '此任务已经停止'});
         return;
       }
 
       $vue.api.schedulerMgr.stopJob({jobId: item.jobId, jobName: item.jobName}).then(data => {
-        MyCuckoo.showMsg({state: 'success', title: '提示', msg: '任务停止成功'});
+        MyCuckoo.msg({state: 'success', title: '提示', msg: '任务停止成功'});
 
         $vue.list(); // 刷新列表
       });

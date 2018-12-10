@@ -124,7 +124,7 @@ export default {
     //检查选中
     checkSelect() {
       if (this.selectData.length != 1) {
-        MyCuckoo.showMsg({state: 'warning', title: '提示', msg: '请选择一条件记录!'});
+        MyCuckoo.msg({state: 'warning', title: '提示', msg: '请选择一条件记录!'});
         throw new Error('请选择一条件记录');
       }
     },
@@ -143,7 +143,7 @@ export default {
       this.checkSelect();
 
       this.api.systemLogMgr.view({id: this.selectData[0].optId}).then(data => {
-        MyCuckoo.showDialog({
+        MyCuckoo.confirm({
           title : '日志内容查看',
           msg : data
         });

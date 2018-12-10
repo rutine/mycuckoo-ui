@@ -203,7 +203,7 @@ export default {
         operationIds: optIds.join(',')
       }
       this.api.roleMgr.saveOperationPrivilege(params).then(data => {
-        MyCuckoo.showMsg({state: 'success', title: '提示', msg: data});
+        MyCuckoo.msg({state: 'success', title: '提示', msg: data});
       });
     },
     //保存行权限
@@ -218,7 +218,7 @@ export default {
         rowPrivilege: this.rowPrivilege
       }
       this.api.roleMgr.saveRowPrivilege(params).then(data => {
-        MyCuckoo.showMsg({state: 'success', title: '提示', msg: data});
+        MyCuckoo.msg({state: 'success', title: '提示', msg: data});
       });
     }
     //end

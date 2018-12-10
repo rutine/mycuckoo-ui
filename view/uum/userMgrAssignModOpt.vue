@@ -360,7 +360,7 @@
           operationIds: optIds.join(',')
         }
         this.api.userMgr.saveOperationPrivilege(params).then(data => {
-          MyCuckoo.showMsg({state: 'success', title: '提示', msg: data});
+          MyCuckoo.msg({state: 'success', title: '提示', msg: data});
         });
       },
       //保存行权限
@@ -389,7 +389,7 @@
           rowIds: rowIds.join(',')
         }
         this.api.userMgr.saveRowPrivilege(params).then(data => {
-          MyCuckoo.showMsg({state: 'success', title: '提示', msg: data});
+          MyCuckoo.msg({state: 'success', title: '提示', msg: data});
         });
       }
       //end

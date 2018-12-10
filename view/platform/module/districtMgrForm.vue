@@ -138,7 +138,7 @@
       create() {
         let $vue = this;
         this.api.districtMgr.create(this.formData).then(data => {
-          MyCuckoo.showMsg({state: 'success', title: '提示', msg: data});
+          MyCuckoo.msg({state: 'success', title: '提示', msg: data});
 
           $vue.$emit('refresh');
           this.reback();
@@ -147,7 +147,7 @@
       update() {
         let $vue = this;
         this.api.districtMgr.update(this.formData).then(data => {
-          MyCuckoo.showMsg({state: 'success', title: '提示', msg: data});
+          MyCuckoo.msg({state: 'success', title: '提示', msg: data});
 
           $vue.$emit('refresh');
           this.reback();

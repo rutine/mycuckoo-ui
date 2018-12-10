@@ -196,7 +196,7 @@ export default {
     //检查选中
     checkSelect() {
       if(this.selectData.length != 1) {
-        MyCuckoo.showMsg({state: 'warning', title: '提示', msg: '请选择一条件记录!'});
+        MyCuckoo.msg({state: 'warning', title: '提示', msg: '请选择一条件记录!'});
         throw new Error('请选择一条件记录');
       }
     },
@@ -242,14 +242,14 @@ export default {
       this.checkSelect();
 
       let $vue = this;
-      MyCuckoo.showDialog({
+      MyCuckoo.confirm({
         title: '警告提示',
         msg: '您确认删除此记录吗?',
         okBtn: '是',
         cancelBtn: '否',
         ok: function() {
           $vue.api.userMgr.del({id: $vue.selectData[0].userId}).then(data => {
-            MyCuckoo.showMsg({state: 'success', title: '提示', msg: data});
+            MyCuckoo.msg({state: 'success', title: '提示', msg: data});
 
             $vue.list(); // 刷新列表
           });
@@ -263,12 +263,12 @@ export default {
       let $vue = this;
       let user = this.retrieve();
       if(user.status == 'enable') {
-        MyCuckoo.showMsg({ state: 'info', title : '提示', msg : '此用户已经启用' });
+        MyCuckoo.msg({ state: 'info', title : '提示', msg : '此用户已经启用' });
         return;
       }
 
       $vue.api.userMgr.disEnable({id: user.userId, disEnableFlag: 'enable'}).then(data => {
-        MyCuckoo.showMsg({state: 'success', title: '提示', msg: '用户启用成功'});
+        MyCuckoo.msg({state: 'success', title: '提示', msg: '用户启用成功'});
 
         $vue.list(); // 刷新列表
       });
@@ -280,17 +280,17 @@ export default {
       let $vue = this;
       let item = this.retrieve();
       if(item.status == 'disable') {
-        MyCuckoo.showMsg({ state: 'info', title : '提示', msg : '此用户已经停用' });
+        MyCuckoo.msg({ state: 'info', title : '提示', msg : '此用户已经停用' });
         return;
       }
 
-      MyCuckoo.showDialog({
+      MyCuckoo.confirm({
         msg : '您确认停用此用户?如停用,此用户将归入无角色用户并自动清除所有权限.',
         okBtn: '是',
         cancelBtn: '否',
         ok : function() {
           $vue.api.userMgr.disEnable({id: item.userId, disEnableFlag: 'disable'}).then(data => {
-            MyCuckoo.showMsg({state: 'success', title: '提示', msg: '用户停用成功!此用户将不能在使用本系统'});
+            MyCuckoo.msg({state: 'success', title: '提示', msg: '用户停用成功!此用户将不能在使用本系统'});
 
             $vue.list(); // 刷新列表
           });
@@ -304,7 +304,7 @@ export default {
       let $vue = this;
       let item = this.retrieve();
       $vue.api.userMgr.resetPwd({id: item.userId, userName: item.userName}).then(data => {
-        MyCuckoo.showMsg({state: 'success', title: '提示', msg: data});
+        MyCuckoo.msg({state: 'success', title: '提示', msg: data});
 
         $vue.list(); // 刷新列表
       });
@@ -315,7 +315,7 @@ export default {
 
       let item = this.retrieve();
       if(item.status == 'disable') {
-        MyCuckoo.showMsg({state: 'info', title: '提示', msg: '请先启用此用户'});
+        MyCuckoo.msg({state: 'info', title: '提示', msg: '请先启用此用户'});
         return;
       }
 
@@ -330,10 +330,10 @@ export default {
 
       let item = this.retrieve();
       if (item.status == 'disable') {
-        MyCuckoo.showMsg({ state : 'danger', title : '提示', msg : '请先启用此用户！' });
+        MyCuckoo.msg({ state : 'danger', title : '提示', msg : '请先启用此用户！' });
         return;
       } else if(item.orgRoleId == 0) {
-        MyCuckoo.showMsg({ state : 'danger', title : '提示', msg : '请先为此用户分配有效角色！' });
+        MyCuckoo.msg({ state : 'danger', title : '提示', msg : '请先为此用户分配有效角色！' });
         return;
       }
 

@@ -8,7 +8,7 @@
         <span class="icon-bar"></span>
         <span class="icon-bar"></span>
       </button>
-      <a class="navbar-brand" href="index.html">MyCuckoo</a>
+      <a class="navbar-brand" href="../index.html">MyCuckoo</a>
     </div>
     <div class="navbar-collapse collapse">
       <ul class="nav navbar-nav">
@@ -154,7 +154,7 @@ export default {
           photo: $vue.api.host + '/' + json.data.url
         }
         $vue.api.userMgr.updatePhoto(params).then(data => {
-          MyCuckoo.showMsg({state: 'success', title: '提示', msg: '更换头像成功'});
+          MyCuckoo.msg({state: 'success', title: '提示', msg: '更换头像成功'});
         });
       });
       uploader.on('uploadError', function(file) {
@@ -186,7 +186,7 @@ export default {
     },
     doLogout: function() {
       this.api.getLogout().then(data => {
-        window.location = '/view/login.html';
+        window.location = '/login.html';
       });
     }
   }
