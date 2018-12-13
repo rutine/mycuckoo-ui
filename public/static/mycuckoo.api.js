@@ -69,7 +69,8 @@ layui.use(['jquery'], function () {
     return $.ajax({
       url: url,
       type: 'DELETE',
-      data: params
+      contentType: 'application/json;charset=UTF-8',
+      data: JSON.stringify(params)
     });
   }
 
@@ -103,18 +104,8 @@ layui.use(['jquery'], function () {
       disEnableUrl: host + '/uum/organ/mgr/{id}/disEnable/{disEnableFlag}',
     },
     organRoleMgr: {
-      list: function(params) {
-        return $.get('/uum/role/assign/mgr/list', {params: params}).then(res => res.data);
-      },
-      listUnselectRole: function(params) {
-        return $.get('/uum/role/assign/mgr/list/unselect/role', {params: params}).then(res => res.data);
-      },
-      save: function(params) {
-        return $.put('/uum/role/assign/mgr/save', params).then(res => res.data);
-      },
-      del: function(params) {
-        return $.delete('/uum/role/assign/mgr/delete', {params: params}).then(res => res.data);
-      },
+      url: host + '/uum/role/assign/mgr',
+      unSelectRoleUrl: host + '/uum/role/assign/mgr/{orgId}/unselect/role'
     },
     roleMgr: {
       list: function(params) {

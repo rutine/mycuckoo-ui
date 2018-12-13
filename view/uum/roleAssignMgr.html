@@ -1,0 +1,206 @@
+<!DOCTYPE html>
+<html>
+<head>
+  <meta http-equiv="Content-Type" content="text/html; charset=utf-8" />
+  <title>统一用户</title>
+  <link type="image/x-icon" href="../../public/static/images/favicon.ico" rel="shortcut icon" />
+  <link type="text/css" href="../../public/static/layui/2.4.3/css/layui.css" rel="stylesheet" />
+  <link type="text/css" href="../../public/static/css/mycuckoo.css" rel="stylesheet" />
+  <link type="text/css" href="../../public/static/css/eleTree.css" rel="stylesheet" />
+</head>
+<body>
+<div class="mycuckoo-site-nav">
+    <span class="layui-breadcrumb">
+      <a href="javascript:;">我的桌面</a>
+      <a><cite>机构角色</cite></a>
+    </span>
+  <span class="right">
+      <a class="layui-btn layui-btn-sm" href="javascript:location.replace(location.href);" title="刷新">
+        <i class="layui-icon layui-icon-refresh"></i>
+      </a>
+    </span>
+</div>
+
+<div class="mycuckoo-main">
+  <div class="layui-row">
+    <form class="layui-col-md12 layui-form mycuckoo-search">
+      <div class="layui-inline">
+        <label class="layui-form-label">搜索：</label>
+        <div class="layui-input-inline">
+          <input class="layui-input" name="roleName" placeholder="角色名称">
+        </div>
+        <div class="layui-input-inline">
+          <button class="layui-btn" lay-filter="search" lay-submit>
+            <i class="layui-icon">&#xe615;</i>
+          </button>
+        </div>
+      </div>
+    </form>
+  </div>
+
+  <div class="layui-row">
+    <div class="layui-col-md2">
+      <div id="tree" lay-filter="tree"></div>
+    </div>
+
+    <div class="layui-col-md10">
+      <table id="table" class="layui-hide" lay-filter="table"></table>
+    </div>
+  </div>
+</div>
+</body>
+<script type="text/javascript" src="../../public/static/layui/2.4.3/layui.js" charset="UTF-8"></script>
+<script type="text/javascript" src="../../public/static/mycuckoo.js" charset="UTF-8"></script>
+<script type="text/javascript" src="../../public/static/mycuckoo.api.js" charset="UTF-8"></script>
+<script type="text/html" id="toolbar">
+  <div class="layui-btn-group btn-toolbar">
+    {{# layui.each(d.operator, function(index, item){ }}
+    <button class="layui-btn layui-btn-sm" lay-event="{{ item.optFunLink }}">
+      <i class="layui-icon layui-icon-{{ item.modImgCls }}"></i> {{ item.modName }}
+    </button>
+    {{# }); }}
+  </div>
+</script>
+<script type="text/javascript">
+  layui.config({
+    base: '../../public/static/extend/',
+    version: '101100'
+  });
+
+  layui.use(['jquery', 'form', 'table', 'eleTree'], function() {
+    let $ = layui.jquery,
+      form = layui.form,
+      eleTree = layui.eleTree,
+      table = layui.table;
+
+    //本地缓存数据
+    let menu = JSON.parse(sessionStorage.getItem('myMenu'));
+    let queryObj = MyCuckoo.getQueryObject(location.search);
+    let operator = menu.fourth[queryObj.id];
+
+    //搜索
+    form.on('submit(search)', function(data) {
+      table.reload('table', {
+        page: { pageNo: 1 },
+        where: data.field
+      });
+
+      return false;
+    });
+
+    //初始化结构树
+    let $tree = $('#tree');
+    let selectNode = null;
+    let myTree = eleTree.render({
+      elem: $tree,
+      url: MyCuckoo.resolvePlaceholder(api.organMgr.childNodesUrl, {id: 0}),
+      defaultExpandAll: true,
+      highlightCurrent: true,
+      request: { key: 'id', name: 'text' },
+      done: function() {
+
+      }
+    });
+    eleTree.on('nodeClick(tree)', function(d) {
+      let data = d.data.currentData;
+      selectNode = data;
+      table.reload('table', {
+        page: { pageNo: 1 },
+        where: {
+          treeId: data.id
+        }
+      });
+    });
+
+    table.render({
+      id: 'table',
+      elem: '#table',
+      url: api.organRoleMgr.url,
+      method: 'get',
+      cellMinWidth: 100,
+      toolbar: '#toolbar',
+      operator: operator,
+      cols: [[
+        {type: 'numbers'},
+        {type: 'checkbox'},
+        {field: 'roleName', dialog: 'text', title: '角色名称'},
+        {field: 'status', title: '角色状态',
+          templet: function(d) {
+            if(d.status == 'enable') {
+              return '启用';
+            } else if(d.status == 'disable') {
+              return '停用';
+            }
+          }
+        },
+        {field: 'creator', title: '创建人'},
+        {field: 'createDate', title: '创建日期', sort: true}
+      ]],
+      page: true,
+      request: {
+        pageName: 'pageNo',
+        limitName: 'pageSize'
+      },
+      parseData: function(res) {
+        return {
+          code: res.code,
+          msg: res.message,
+          count: res.data.totalElements,
+          data: res.data.content
+        }
+      }
+    });
+
+    table.on('toolbar(table)', function (obj) {
+      let data = table.checkStatus(obj.config.id).data;
+      if (obj.event == 'roleassign') {
+        active[obj.event].call(data);
+        return;
+      }
+
+      if (!data.length) {
+        MyCuckoo.alert({title : '提示', msg : '请选择记录' });
+        return;
+      }
+      active[obj.event] ? active[obj.event].call(data) : '';
+    });
+
+    function reload() {
+      table.reload('table', { page: { pageNo: 1 } });
+    }
+
+    let active = {
+      //分配角色
+      roleassign() {
+        let nodes = selectNode;
+        if(nodes == null) {
+          MyCuckoo.alert({ title : '提示', msg : '请选择要分配角色的机构' });
+          return;
+        }
+
+        MyCuckoo.dialog('选择角色信息', 'roleAssignMgrSelectRole.html?orgId=' + nodes.id);
+      },
+      //删除角色
+      roledel() {
+        let item = this;
+        MyCuckoo.confirm({title: '警告提示', msg: '您确认删除此记录吗?',
+          okBtn: '是', cancelBtn: '否', ok: function() {
+            let roleIdList = [];
+            for (let index in item) {
+              roleIdList.push(item[index].roleId);
+            }
+            let orgId = selectNode.id;
+            let params = roleIdList;
+            $.delete(api.organRoleMgr.url + '/' + orgId, params).then(data => {
+              MyCuckoo.msg({ msg: data.data });
+
+              reload(); // 刷新列表
+            });
+          }
+        });
+      }
+    }
+
+  });
+</script>
+</html>
