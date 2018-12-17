@@ -87,19 +87,22 @@
         data.forEach(item => {
           roleIdList.push(item.roleId);
         });
-
         let params = {id : queryObj.orgId, roleIdList : roleIdList};
         $.put(api.organRoleMgr.url, params).then(data => {
           MyCuckoo.msg({msg: data.data});
 
-          //刷新父窗
-          parent.location.reload();
-
-          this.reback();
+          this.refresh();
         });
       },
+      //刷新父窗
+      refresh() {
+        setTimeout(function() {
+          parent.location.reload();
+          this.reback();
+        }, 2000);
+      },
+      //关闭当前iframe页
       reback() {
-        //关闭当前iframe页
         let index = parent.layer.getFrameIndex(window.name);
         parent.layer.close(index);
       }
@@ -108,7 +111,7 @@
     //操作按钮触发事件
     $('form a.layui-btn').on('click', function() {
       var type = $(this).data('type');
-      active[type] ? active[type].call($.extend({}, active, this)) : '';
+      active[type] && active[type].call($.extend({}, active, this));
     });
   });
 </script>

@@ -10,13 +10,13 @@
 </head>
 <body>
   <div class="mycuckoo-main">
-    <form class="layui-form layui-form-pane" name="editForm" lay-filter="editForm" action="">
+    <form class="layui-form layui-form-pane" name="editForm" lay-filter="editForm">
       <input type="hidden" name="orgId" />
       <div class="layui-form-item">
         <div class="layui-inline">
           <label class="layui-form-label">机构简称</label>
           <div class="layui-input-inline">
-            <input type="text" id="dataId" name="orgSimpleName" class="layui-input" autocomplete="off" />
+            <input type="text" name="orgSimpleName" class="layui-input" autocomplete="off" />
           </div>
         </div>
         <div class="layui-inline">
@@ -195,7 +195,7 @@
       $('.toolbar').html(html);
     });
 
-
+    //初始化
     $.get(api.dictionaryMgr.smallTypeUrl, {bigTypeCode: 'organType'}).then(json => {
       let $select = $('select[name=orgType]');
       $select.empty();
@@ -206,8 +206,8 @@
       }
 
       form.render('select');
+      //表单初始赋值
       if (queryObj.id) {
-        //表单初始赋值
         $.get(api.organMgr.url + '/' + queryObj.id).then(json => {
           form.val('editForm', json.data);
         });
@@ -262,43 +262,44 @@
         $.postJson(api.organMgr.url, this.data).then(data => {
           MyCuckoo.msg({msg: data.data});
 
-          //刷新父窗
-          parent.location.reload();
-
-          this.reback();
+          this.refresh();
         });
       },
       update() {
         $.put(api.organMgr.url, this.data).then(data => {
           MyCuckoo.msg({msg: data.data});
 
-          //刷新父窗
-          parent.location.reload();
-
-          this.reback();
+          this.refresh();
         });
       },
+      //刷新父窗
+      refresh() {
+        setTimeout(function() {
+          parent.location.reload();
+          this.reback();
+        }, 2000);
+      },
+      //关闭当前iframe页
       reback() {
-        //关闭当前iframe页
         let index = parent.layer.getFrameIndex(window.name);
         parent.layer.close(index);
       }
     }
 
     //操作按钮触发事件
-    $('form[name=editForm] a.layui-btn[lay-submit!=submit]').on('click', function() {
+    $('form a.layui-btn[lay-submit!=submit]').on('click', function() {
       var type = $(this).data('type');
-      active[type] ? active[type].call($.extend({}, active, this)) : '';
+      active[type] && active[type].call($.extend({}, active, this));
     });
-
 
     //监听提交
     form.on('submit', function(data) {
       var type = $(this).data('type');
-      active[type] ? active[type].call($.extend({}, active, {data: data.field})) : '';
+      active[type] && active[type].call($.extend({}, active, {data: data.field}));
 
       return false;
     });
+    //end
   });
 </script>
 </html>

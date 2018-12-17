@@ -48,7 +48,7 @@ layui.use(['jquery'], function () {
     return $.ajax({
       url: url,
       contentType: 'application/json;charset=UTF-8',
-      data: JSON.stringify(params)
+      data: (typeof params == 'string') ? params : JSON.stringify(params)
     });
   }
 
@@ -59,7 +59,7 @@ layui.use(['jquery'], function () {
       url: url,
       type: 'PUT',
       contentType: 'application/json;charset=UTF-8',
-      data: JSON.stringify(params)
+      data: (typeof params == 'string') ? params : JSON.stringify(params)
     });
   }
 
@@ -70,7 +70,7 @@ layui.use(['jquery'], function () {
       url: url,
       type: 'DELETE',
       contentType: 'application/json;charset=UTF-8',
-      data: JSON.stringify(params)
+      data: (typeof params == 'string') ? params : JSON.stringify(params)
     });
   }
 
@@ -108,33 +108,11 @@ layui.use(['jquery'], function () {
       unSelectRoleUrl: host + '/uum/role/assign/mgr/{orgId}/unselect/role'
     },
     roleMgr: {
-      list: function(params) {
-        return $.get('/uum/role/mgr/list', {params: params}).then(res => res.data);
-      },
-      listRowPrivilege: function(params) {
-        return $.get('/uum/role/mgr/list/row/privilege', {params: params}).then(res => res.data);
-      },
-      create: function(params) {
-        return $.put('/uum/role/mgr/create', params).then(res => res.data);
-      },
-      update: function(params) {
-        return $.put('/uum/role/mgr/update', params).then(res => res.data);
-      },
-      view: function(params) {
-        return $.get('/uum/role/mgr/view', {params: params}).then(res => res.data);
-      },
-      del: function(params) {
-        return $.delete('/uum/role/mgr/delete', {params: params}).then(res => res.data);
-      },
-      disEnable: function(params) {
-        return $.get('/uum/role/mgr/disEnable', {params: params}).then(res => res.data);
-      },
-      saveOperationPrivilege: function(params) {
-        return $.get('/uum/role/mgr/save/operation/privilege', {params: params}).then(res => res.data);
-      },
-      saveRowPrivilege: function(params) {
-        return $.get('/uum/role/mgr/save/row/privilege', {params: params}).then(res => res.data);
-      },
+      url: host + '/uum/role/mgr',
+      disEnableUrl: host + '/uum/role/mgr/{id}/disEnable/{disEnableFlag}',
+      rowPrivilegeUrl: host + '/uum/role/mgr/{id}/row/privilege',
+      saveOperationPrivilegeUrl: host + '/uum/role/mgr/{id}/save/operation/privilege/{privilegeScope}',
+      saveRowPrivilegeUrl: host + '/uum/role/mgr/{id}/save/row/privilege',
     },
     userMgr: {
       getChildNodes: function(params) {
