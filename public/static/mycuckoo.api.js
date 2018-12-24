@@ -36,14 +36,20 @@ layui.use(['jquery'], function () {
   }
 
   let $get = $.get;
-  $.get = function (url, params) {
+  $.get = function (url, properties, params) {
+    if (!params) {
+      params = properties;
+    }
     url = placeholder.test(url) ? resolvePlaceholder(url, params) : url;
 
     return $get(url, params);
   }
 
-  $.postJson = function (url, params) {
-    url = placeholder.test(url) ? resolvePlaceholder(url, params) : url;
+  $.postJson = function (url, properties, params) {
+    if (!params) {
+      params = properties;
+    }
+    url = placeholder.test(url) ? resolvePlaceholder(url, properties) : url;
 
     return $.ajax({
       url: url,
@@ -52,7 +58,10 @@ layui.use(['jquery'], function () {
     });
   }
 
-  $.put = function (url, params) {
+  $.put = function (url, properties, params) {
+    if (!params) {
+      params = properties;
+    }
     url = placeholder.test(url) ? resolvePlaceholder(url, params) : url;
 
     return $.ajax({
@@ -63,7 +72,10 @@ layui.use(['jquery'], function () {
     });
   }
 
-  $.delete = function (url, params) {
+  $.delete = function (url, properties, params) {
+    if (!params) {
+      params = properties;
+    }
     url = placeholder.test(url) ? resolvePlaceholder(url, params) : url;
 
     return $.ajax({
@@ -110,62 +122,24 @@ layui.use(['jquery'], function () {
     roleMgr: {
       url: host + '/uum/role/mgr',
       disEnableUrl: host + '/uum/role/mgr/{id}/disEnable/{disEnableFlag}',
-      rowPrivilegeUrl: host + '/uum/role/mgr/{id}/row/privilege',
-      saveOperationPrivilegeUrl: host + '/uum/role/mgr/{id}/save/operation/privilege/{privilegeScope}',
-      saveRowPrivilegeUrl: host + '/uum/role/mgr/{id}/save/row/privilege',
+      rolePrivilegeUrl: host + '/uum/role/mgr/{id}/role-privilege',
+      saveOperationPrivilegeUrl: host + '/uum/role/mgr/{id}/operation-privilege/{privilegeScope}',
+      saveRowPrivilegeUrl: host + '/uum/role/mgr/{id}/row-privilege',
     },
     userMgr: {
-      getChildNodes: function(params) {
-        return $.get('/uum/user/mgr/get/child/nodes', {params: params}).then(res => res.data);
-      },
-      list: function(params) {
-        return $.get('/uum/user/mgr/list', {params: params}).then(res => res.data);
-      },
-      create: function(params) {
-        return $.put('/uum/user/mgr/create', params).then(res => res.data);
-      },
-      update: function(params) {
-        return $.put('/uum/user/mgr/update', params).then(res => res.data);
-      },
-      view: function(params) {
-        return $.get('/uum/user/mgr/view', {params: params}).then(res => res.data);
-      },
-      del: function(params) {
-        return $.delete('/uum/user/mgr/delete', {params: params}).then(res => res.data);
-      },
-      disEnable: function(params) {
-        return $.get('/uum/user/mgr/disEnable', {params: params}).then(res => res.data);
-      },
-      resetPwd: function(params) {
-        return $.get('/uum/user/mgr/reset/password', {params: params}).then(res => res.data);
-      },
-      listRolePrivilege: function(params) {
-        return $.get('/uum/user/mgr/list/role/privilege', {params: params}).then(res => res.data);
-      },
-      listUserPrivilege: function(params) {
-        return $.get('/uum/user/mgr/list/user/privilege', {params: params}).then(res => res.data);
-      },
-      listRowPrivilege: function(params) {
-        return $.get('/uum/user/mgr/list/row/privilege', {params: params}).then(res => res.data);
-      },
-      saveRolePrivilege: function(params) {
-        return $.get('/uum/user/mgr/save/role/privilege', {params: params}).then(res => res.data);
-      },
-      saveOperationPrivilege: function(params) {
-        return $.get('/uum/user/mgr/save/operation/privilege', {params: params}).then(res => res.data);
-      },
-      saveRowPrivilege: function(params) {
-        return $.get('/uum/user/mgr/save/row/privilege', {params: params}).then(res => res.data);
-      },
-      queryUsers: function(params) {
-        return $.get('/uum/user/mgr/query/users', {params: params}).then(res => res.data);
-      },
-      updatePhoto: function(params) {
-        return $.put('/uum/user/mgr/update/photo', params).then(res => res.data);
-      },
-      updatePassword: function(params) {
-        return $.put('/uum/user/mgr/update/password', params).then(res => res.data);
-      }
+      url: host + '/uum/user/mgr',
+      queryUsersUrl: host + '/uum/user/mgr/query/users',
+      updatePhoto: host + '/uum/user/mgr/update/photo',
+      updatePassword: host + '/uum/user/mgr/update/password',
+      resetPwdUrl: host + '/uum/user/mgr/{id}/reset-password',
+      disEnableUrl: host + '/uum/user/mgr/{id}/disEnable/{disEnableFlag}',
+      childNodesUrl: host + '/uum/user/mgr/{id}/child/nodes',
+      userPrivilegeUrl: host + '/uum/user/mgr/{id}/user-privilege',
+      rolePrivilegeUrl: host + '/uum/user/mgr/{id}/role-privilege',
+      rowPrivilegeUrl: host + '/uum/user/mgr/{id}/row-privilege',
+      saveOperationPrivilegeUrl: host + '/uum/user/mgr/{id}/operation-privilege/{privilegeScope}',
+      saveRolePrivilegeUrl: host + '/uum/user/mgr/{id}/role-privilege/{defaultRoleId}',
+      saveRowPrivilegeUrl: host + '/uum/user/mgr/{id}/row-privilege/{privilegeScope}'
     },
 
 

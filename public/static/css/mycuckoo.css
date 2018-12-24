@@ -63,11 +63,11 @@
 /*图片居中*/
 .middle {vertical-align: middle;}
 /*双向选择列表*/
-.select-side {float:left; width:300px; }
-.select-side .select-side-body {width: 280px; height:510px; /*border: 1px solid #0088CC; */ border: 1px solid #dddddd; overflow-y: auto;}
-.select-opt {float:left; width:40px; height:100%; margin-top:46px;} 
-.select-opt p {width:26px; height:26px; margin-top:6px; background:url(../images/form/arr.gif) no-repeat; cursor:pointer; text-indent:-999em;} 
-.select-opt p.to-right {background-position:2px 0;} 
+.select-side {float:left; width:240px; }
+.select-side .select-side-body {width: 220px; height:320px; /*border: 1px solid #0088CC; */ border: 1px solid #dddddd; overflow-y: auto;}
+.select-opt {float:left; width:30px; height:100%; margin-top:46px;}
+.select-opt p {width:26px; height:26px; margin-top:6px; background:url(../images/form/arr.gif) no-repeat; cursor:pointer; text-indent:-999em;}
+.select-opt p.to-right {background-position:2px 0;}
 .select-opt p.to-left {background-position:2px -22px;}
 
 /*--------------------------------导航条-----------------------------------*/

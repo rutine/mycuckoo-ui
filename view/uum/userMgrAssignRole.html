@@ -1,0 +1,289 @@
+<!DOCTYPE html>
+<html>
+<head>
+  <meta http-equiv="Content-Type" content="text/html; charset=utf-8" />
+  <title>分配角色</title>
+  <link type="image/x-icon" href="../../public/static/images/favicon.ico" rel="shortcut icon" />
+  <link type="text/css" href="../../public/static/layui/2.4.3/css/layui.css" rel="stylesheet" />
+  <link type="text/css" href="../../public/static/css/mycuckoo.css" rel="stylesheet" />
+  <link type="text/css" href="../../public/static/dtree/css/dtree.css" rel="stylesheet" />
+  <link type="text/css" href="../../public/static/dtree/css/font/dtreefont.css" rel="stylesheet" />
+</head>
+<body>
+<div class="mycuckoo-main">
+  <form class="layui-form" name="editForm" lay-filter="editForm">
+    <div class="layui-form-item">
+      <div class="layui-inline">
+        <label class="layui-form-label">用户名称</label>
+        <div class="layui-input-inline">
+          <input type="text" name="userName" class="layui-input" readonly/>
+        </div>
+      </div>
+      <div class="layui-inline">
+        <label class="layui-form-label">默认角色</label>
+        <div class="layui-input-inline">
+          <input type="hidden" name="orgRoleId" lay-verify="required" />
+          <input type="text" name="roleName" class="layui-input" lay-verify="required" readonly/>
+        </div>
+      </div>
+    </div>
+
+    <div class="layui-form-item">
+      <div class="layui-inline">
+        <label class="layui-form-label"></label>
+        <div class="layui-input-block">
+          <table>
+            <tr>
+              <td>
+                <div class="select-side">
+                  <span>未选角色</span>
+                  <ul id="left_role_tree" class="select-side-body" data-id="orgId_0"></ul>
+                </div>
+              </td>
+              <td>
+                <div class="select-opt">
+                  <p class="to-right" title="添加" data-type="selected">&lt;&lt;</p>
+                  <p class="to-left" title="移除" data-type="unselected">&gt;&gt;</p>
+                </div>
+              </td>
+              <td>
+                <div class="select-side">
+                  <span>已选角色</span>
+                  <div id="right_role_multi_select" class="select-side-body" lay-filter="multiple"></div>
+                </div>
+              </td>
+            </tr>
+          </table>
+        </div>
+      </div>
+    </div>
+
+    <div class="layui-form-item">
+      <div class="layui-input-block">
+        <div class="layui-btn-group">
+          <a href="javascript:" class="layui-btn layui-btn-sm" data-type="setDefaultRole">默认角色
+            <i class="layui-icon glyphicon-hdd"></i>
+          </a>
+          <a href="javascript:" class="layui-btn layui-btn-sm" data-type="save" lay-submit="submit">保存
+            <i class="layui-icon glyphicon-hdd"></i>
+          </a>
+          <a href="javascript:" class="layui-btn layui-btn-sm" data-type="reback">返回
+            <i class="layui-icon glyphicon-circle-arrow-left"></i>
+          </a>
+        </div>
+      </div>
+    </div>
+  </form>
+</div>
+</body>
+<script type="text/javascript" src="../../public/static/layui/2.4.3/layui.js" charset="UTF-8"></script>
+<script type="text/javascript" src="../../public/static/mycuckoo.js" charset="UTF-8"></script>
+<script type="text/javascript" src="../../public/static/mycuckoo.api.js" charset="UTF-8"></script>
+<script type="text/javascript">
+  layui.config({
+    base: '../../public/static/extend/',
+    version: '101100'
+  });
+
+  layui.use(['jquery', 'form', 'dtree', 'selectM'], function() {
+    let $ = layui.jquery,
+      form = layui.form,
+      tree = layui.dtree,
+      select = layui.selectM;
+
+    let queryObj = MyCuckoo.getQueryObject(location.search);
+    let treeObj;
+    let multiSelectObj;
+
+    let reloadMultiSelect = function (roles) {
+      $('#right_role_multi_select').off().empty();
+
+      let names = [];
+      roles.forEach(item => {
+        item.name = (item.orgName ? item.orgName + '-' + item.roleName : item.roleName);
+        names.push(item.name);
+      });
+
+      multiSelectObj = select({
+        elem: '#right_role_multi_select',
+        data: roles,
+        field: {idName: 'orgRoleId', titleName: 'name'},
+        delimiter: ', '
+      });
+    }
+
+    //表单初始赋值
+    if (queryObj.id) {
+      $.get(api.userMgr.url + '/' + queryObj.id).then(json => {
+        form.val('editForm', json.data);
+      });
+
+      $.get(api.userMgr.rolePrivilegeUrl, queryObj).then(json => {
+        //初始化结构树
+        treeObj = tree.render({
+          elem: '#left_role_tree',
+          method: 'get',
+          data: json.data.orgRoles,
+          dataStyle: 'layuiStyle',
+          response: { statusCode: 0, treeId: 'id', title: 'text', isLast: 'isLeaf', checkArr: 'checkBox'},
+          checkbar: true,
+          dot: false,
+          icon: ['-1', '1']
+        });
+
+        //已选角色
+        reloadMultiSelect(json.data.userRoles);
+      });
+    } else {
+      MyCuckoo.alert({title: '提示', msg: '请关闭后选择用户!'});
+      return;
+    }
+
+    let active = {
+      /**
+       * 选择添加角色
+       *
+       * @param 多选角色框
+       * @param 机构角色树
+       */
+      selected(multiSelectObj, treeObj) {
+        let selectedNodes = treeObj.getCheckbarNodesParam();
+        if(selectedNodes.length == 0) {
+          MyCuckoo.alert({ title : '提示', msg : '请您选择相应角色!' });
+          return;
+        }
+
+        let selectedData = multiSelectObj.config.data;
+        for (let i = 0; i < selectedNodes.length; i++) {
+          let selectedNode = selectedNodes[i];
+          let parentNode = treeObj.getParentParam(selectedNode.nodeId);
+          let orgRoleId = selectedNode.nodeId.substr(selectedNode.nodeId.indexOf('_') + 1);
+
+          let exits = false;
+          selectedData.forEach((item,index) => {
+            exits = item.orgRoleId == orgRoleId;
+          });
+
+          if (!exits) {
+            let obj = {
+              orgRoleId: orgRoleId,
+              orgName: parentNode ? parentNode.context : '',
+              roleName: selectedNode.context
+            }
+            selectedData.push(obj);
+
+            reloadMultiSelect(selectedData);
+          }
+        }
+
+        if(selectedData.length == 1) {
+          let obj = selectedData;
+          form.val('editForm', {orgRoleId: obj.orgRoleId, roleName: obj.name});
+        }
+        form.render('select');
+      },
+      /**
+       * 选择移除角色
+       *
+       * @param 多选角色框
+       * @param 机构角色树
+       */
+      unselected(multiSelectObj, treeObj) {
+        let selectedData = multiSelectObj.selected;
+        if (!selectedData.length) {
+          MyCuckoo.alert({ title : '提示', msg : '请您选择角色列表!' });
+          return;
+        }
+
+        let allData = multiSelectObj.config.data;
+        selectedData.forEach((item, index) => {
+          let obj = item;
+          treeObj.chooseDataInit('orgRoleId_' + obj.orgRoleId);
+
+          if($('input[name=orgRoleId]').val() == obj.orgRoleId) {
+            form.val('editForm', {orgRoleId: '', roleName: ''});
+          }
+
+          allData.forEach((item2, index) => {
+            if(item2.orgRoleId == item.orgRoleId) {
+              allData.splice(index, 1);
+            }
+          });
+        });
+        reloadMultiSelect(allData);
+
+        if(allData.length == 1) {
+          let obj = allData[0];
+          form.val('editForm', {orgRoleId: obj.orgRoleId, roleName: obj.name});
+        } else {
+          form.val('editForm', {orgRoleId: '', roleName: ''});
+        }
+      },
+      //设置默认角色
+      setDefaultRole() {
+        let selectedData = multiSelectObj.selected;
+        if(selectedData.length != 1) {
+          MyCuckoo.alert({ title : '提示', msg : '请您在右边列表选择一个角色!' });
+          return;
+        }
+
+        let obj = selectedData[0];
+        form.val('editForm', {orgRoleId: obj.orgRoleId, roleName: obj.name});
+      },
+      //保存角色
+      save() {
+        let selectedData = multiSelectObj.config.data;
+        this.data.defaultRoleId = this.data.orgRoleId;
+        if(!this.data.defaultRoleId) {
+          MyCuckoo.alert({ title : '提示', msg : '请为用户选择一个默认角色!' });
+        } else if(!selectedData.length) {
+          MyCuckoo.alert({ title : '提示', msg : '请为用户分配一个角色!' });
+        } else {
+          let roleIds = [];
+          selectedData.forEach(item => roleIds.push(item.orgRoleId));
+          $.postJson(api.userMgr.saveRolePrivilegeUrl, this.data, roleIds).then(data => {
+            MyCuckoo.msg({msg: data.data});
+
+            this.refresh();
+          });
+        }
+      },
+      //刷新父窗
+      refresh() {
+        setTimeout(function() {
+          parent.location.reload();
+          this.reback();
+        }, 2000);
+      },
+      //关闭当前iframe页
+      reback() {
+        let index = parent.layer.getFrameIndex(window.name);
+        parent.layer.close(index);
+      }
+      //end
+    }
+
+    //操作按钮触发事件
+    $('.select-opt p').on('click', function() {
+      let type = $(this).data('type');
+      active[type](multiSelectObj, treeObj);
+    });
+
+    //操作按钮触发事件
+    $('form a.layui-btn[lay-submit!=submit]').on('click', function() {
+      let type = $(this).data('type');
+      active[type] && active[type].call($.extend({}, active, this));
+    });
+
+    //监听提交
+    form.on('submit', function(data) {
+      let type = $(this).data('type');
+      active[type] && active[type].call($.extend({}, active, {data: $.extend({}, data.field, queryObj)}));
+
+      return false;
+    });
+    //end
+  });
+
+</script>
+</html>

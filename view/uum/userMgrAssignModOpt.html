@@ -1,0 +1,321 @@
+<!DOCTYPE html>
+<html>
+<head>
+  <meta http-equiv="Content-Type" content="text/html; charset=utf-8" />
+  <title>分配权限</title>
+  <link type="image/x-icon" href="../../public/static/images/favicon.ico" rel="shortcut icon" />
+  <link type="text/css" href="../../public/static/layui/2.4.3/css/layui.css" rel="stylesheet" />
+  <link type="text/css" href="../../public/static/css/mycuckoo.css" rel="stylesheet" />
+  <link type="text/css" href="../../public/static/dtree/css/dtree.css" rel="stylesheet" />
+  <link type="text/css" href="../../public/static/dtree/css/font/dtreefont.css" rel="stylesheet" />
+</head>
+<body>
+<div class="mycuckoo-main">
+  <fieldset class="layui-elem-field layui-field-title" style="margin-top: 30px;">
+    <legend>用户名称</legend>
+  </fieldset>
+
+  <div class="layui-tab">
+    <ul class="layui-tab-title">
+      <li class="layui-this">模块操作权限分配</li>
+      <li>行权限分配</li>
+    </ul>
+    <div class="layui-tab-content">
+      <div class="layui-tab-item layui-show">
+        <form class="layui-form layui-form-pane" name="userAssignModOpt" lay-filter="userAssignModOpt">
+          <div class="layui-form-item">
+            <label class="layui-form-label">权限范围</label>
+            <div class="layui-input-block">
+              <input type="radio" name="privilegeScope" value="inc" title="包含操作">
+              <input type="radio" name="privilegeScope" value="exc" title="不包含操作">
+              <input type="radio" name="privilegeScope" value="all" title="全部(无需分配操作)">
+            </div>
+          </div>
+
+          <div class="layui-form-item">
+            <label class="layui-form-label">模块</label>
+            <div class="layui-input-block select-side" style="max-height: 310px;">
+              <ul id="tree" class="select-side-body" data-id="0" lay-filter="tree"></ul>
+            </div>
+          </div>
+
+          <div class="layui-btn-group">
+            <a href="javascript:" class="layui-btn layui-btn-sm" data-type="saveOperationPrivilege" lay-submit="submit">保存
+              <i class="layui-icon glyphicon-hdd"></i>
+            </a>
+            <a href="javascript:" class="layui-btn layui-btn-sm" data-type="reback">返回
+              <i class="layui-icon glyphicon-circle-arrow-left"></i>
+            </a>
+          </div>
+        </form>
+      </div>
+
+      <div class="layui-tab-item">
+        <form class="layui-form layui-form-pane" name="userAssignRowPriv" lay-filter="userAssignRowPriv">
+          <div class="layui-form-item">
+            <label class="layui-form-label">权限范围</label>
+            <div class="layui-input-block">
+              <input type="radio" name="privilegeScope" value="org" title="机构" lay-filter="rowPrivilege">
+              <input type="radio" name="privilegeScope" value="rol" title="角色" lay-filter="rowPrivilege">
+              <input type="radio" name="privilegeScope" value="usr" title="用户" lay-filter="rowPrivilege">
+            </div>
+          </div>
+
+          <div id="orgScope" class="layui-hide scope">
+            <div class="layui-form-item">
+              <label class="layui-form-label">机构</label>
+              <div class="layui-input-block select-side">
+                <ul id="orgScopeTree" class="select-side-body" data-id="0" lay-filter="row-tree"></ul>
+              </div>
+            </div>
+          </div>
+
+          <div id="rolScope" class="layui-hide scope">
+            <div class="layui-form-item">
+              <label class="layui-form-label">角色</label>
+              <div class="layui-input-block select-side">
+                <ul id="rolScopeTree" class="select-side-body" data-id="0" lay-filter="row-tree"></ul>
+              </div>
+            </div>
+          </div>
+
+          <div id="usrScope" class="layui-hide scope">
+            <div class="layui-form-item">
+              <label class="layui-form-label">搜索</label>
+              <div class="layui-input-inline">
+                <input type="text" name="searchUsr" class="layui-input" placeholder="请输入用户名称">
+              </div>
+              <a class="layui-btn layui-btn-primary layui-btn-sm layui-btn-radius" data-type="queryUsers">
+                <i class="layui-icon layui-icon-search"></i>
+              </a>
+            </div>
+            <div class="layui-form-item">
+              <label class="layui-form-label">用户</label>
+              <div class="layui-input-block select-side">
+                <ul id="usrScopeTree" class="select-side-body" data-id="0" lay-filter="row-tree"></ul>
+              </div>
+            </div>
+          </div>
+
+          <div class="layui-btn-group">
+            <a href="javascript:" class="layui-btn layui-btn-sm" data-type="saveRowPrivilege" lay-submit="submit">保存
+              <i class="layui-icon glyphicon-hdd"></i>
+            </a>
+            <a href="javascript:" class="layui-btn layui-btn-sm" data-type="reback">返回
+              <i class="layui-icon glyphicon-circle-arrow-left"></i>
+            </a>
+          </div>
+        </form>
+      </div>
+    </div>
+  </div>
+</div>
+</body>
+<script type="text/javascript" src="../../public/static/layui/2.4.3/layui.js" charset="UTF-8"></script>
+<script type="text/javascript" src="../../public/static/mycuckoo.js" charset="UTF-8"></script>
+<script type="text/javascript" src="../../public/static/mycuckoo.api.js" charset="UTF-8"></script>
+<script type="text/javascript">
+  layui.config({
+    base: '../../public/static/extend/',
+    version: '101100'
+  });
+
+  layui.use(['jquery', 'element', 'form', 'dtree'], function() {
+    let $ = layui.jquery,
+      element = layui.element,
+      form = layui.form,
+      tree = layui.dtree;
+
+    let queryObj = MyCuckoo.getQueryObject(location.search);
+    let treeObj;
+
+    //表单初始赋值
+    if (queryObj.id) {
+      $('fieldset > legend').text(queryObj.userName);
+      $.get(api.userMgr.userPrivilegeUrl, queryObj).then(json => {
+        form.val('userAssignModOpt', json.data);
+        form.val('userAssignRowPriv', json.data);
+
+        //菜单操作权限树
+        treeObj = tree.render({
+          elem: '#tree',
+          method: 'get',
+          data: json.data.assign,
+          dataStyle: 'layuiStyle',
+          response: { statusCode: 0, treeId: 'id', title: 'text', isLast: 'isLeaf', checkArr: 'checkBox'},
+          checkbar: true,
+          nodeIconArray:{'1': {'open': 'dtree-icon-move-up', 'close': 'dtree-icon-move-down'}},
+          icon: ['1', '5']
+        });
+
+        active.selectRowPrivilege('');
+      });
+    } else {
+      MyCuckoo.alert({ title : '提示', msg : '请关闭后选择用户!' });
+      return;
+    }
+
+    let active = {
+      rowTreeObj: null,
+      openTree(url, config) {
+        let that = this;
+        this.rowTreeObj = tree.render({
+          elem: '#' + config.id,
+          method: 'get',
+          url: MyCuckoo.resolvePlaceholder(url, {id: 0}),
+          request: {isCheckbox: 'Y'},
+          dataStyle: 'layuiStyle',
+          response: { statusCode: 0, treeId: 'id', title: 'text', isLast: 'isLeaf', checkArr: 'checkBox'},
+          checkbar: true,
+          dot: false,
+          icon: ['-1', '5'],
+          done: function() {
+            that.rowTreeObj.chooseDataInit(config.data.join(','));
+          }
+        });
+      },
+      selectRowPrivilege(privilegeType) {
+        let that = this;
+        $.get(api.userMgr.rowPrivilegeUrl, queryObj).then(json => {
+          let data = json.data;
+          let selectedPrivilegeType = data.privilegeScope;
+
+          if(!privilegeType) {
+            form.val('userAssignRowPriv', data);
+            privilegeType = selectedPrivilegeType || 'org';
+          }
+          let id = privilegeType + 'ScopeTree';
+          $('.scope').addClass('layui-hide');
+          $('#' + privilegeType + 'Scope').removeClass('layui-hide');
+
+          if(privilegeType == 'org') {
+            let checkNodes = [];
+            data.privileges.forEach(item => {
+              checkNodes.push(item.id);
+            });
+            that.openTree(api.organMgr.childNodesUrl, {id: id, data: checkNodes});
+          }
+          else if(privilegeType == 'rol') {
+            let checkNodes = [];
+            data.privileges.forEach(item => {
+              checkNodes.push('orgRoleId_' + item.id);
+            });
+            that.openTree(api.userMgr.childNodesUrl, {id: id, data: checkNodes});
+          }
+          else {
+            let nodes = data.privileges;
+            if(privilegeType == selectedPrivilegeType) {
+              nodes.forEach(item => {
+                item.parentId = 0;
+                item.isLeaf = true;
+                item.checkBox = {type: 0, isChecked: 1};
+              });
+            }
+
+            that.rowTreeObj = tree.render({
+              elem: '#' + id,
+              data: nodes,
+              dataStyle: 'layuiStyle',
+              response: { treeId: 'id', title: 'name', isLast: 'isLeaf', checkArr: 'checkBox'},
+              checkbar: true,
+              dot: false,
+              icon: ['-1', '5']
+            });
+          }
+        });
+      },
+      //查询用户
+      queryUsers() {
+        $.get(api.userMgr.queryUsersUrl, {userName: $('input[name=searchUsr]').val()}).then(json => {
+          let nodes = [];
+          json.data.forEach(item => nodes.push({
+            id: item.userId,
+            parentId: 0,
+            name: item.userName,
+            isLeaf: true,
+            checkBox: {type: 0, isChecked: 1}
+          }));
+
+          this.rowTreeObj.reload({data: nodes});
+        });
+      },
+      //保存用户权限
+      saveOperationPrivilege() {
+        if(!this.data.privilegeScope) {
+          MyCuckoo.alert({ title : '提示', msg : '请选择权限范围!' });
+          return;
+        }
+        let selectedNodes = treeObj.getCheckbarNodesParam();
+        if(!selectedNodes.length) {
+          MyCuckoo.alert({ title : '提示', msg : '请选择权限!' });
+          return;
+        }
+
+        let optIds = [];
+        selectedNodes.forEach(item => item.isLeaf && optIds.push(Number(item.nodeId)));
+        $.postJson(api.userMgr.saveOperationPrivilegeUrl, this.data, optIds).then(data => {
+          MyCuckoo.msg({msg: data.data});
+
+          this.refresh();
+        });
+      },
+      //保存行权限
+      saveRowPrivilege() {
+        if(!this.data.privilegeScope) {
+          MyCuckoo.alert({ title : '提示', msg : '请选择行权限类别!' });
+          return;
+        }
+        let selectedNodes = this.rowTreeObj.getCheckbarNodesParam();
+        if(!selectedNodes.length) {
+          MyCuckoo.alert({ title : '提示', msg : '请选择权限!' });
+          return;
+        }
+
+        let rowIds = [];
+        selectedNodes.forEach(item => {
+          let id = item.nodeId;
+          let index = !isNaN(id) ? -1 : id.indexOf('_');
+          rowIds.push(item.isLeaf && index != -1 ? id.substr(index + 1) : id);
+        });
+        $.postJson(api.userMgr.saveRowPrivilegeUrl, this.data, rowIds).then(data => {
+          MyCuckoo.msg({msg: data.data});
+
+          this.refresh();
+        });
+      },
+      //刷新父窗
+      refresh() {
+        setTimeout(function() {
+          parent.location.reload();
+          this.reback();
+        }, 2000);
+      },
+      //关闭当前iframe页
+      reback() {
+        let index = parent.layer.getFrameIndex(window.name);
+        parent.layer.close(index);
+      }
+    }
+
+    //行权限选择
+    form.on('radio(rowPrivilege)', function(data) {
+     active.selectRowPrivilege(data.value);
+    });
+
+    //操作按钮触发事件
+    $('form a.layui-btn[lay-submit!=submit]').on('click', function() {
+      var type = $(this).data('type');
+      active[type] && active[type].call($.extend({}, active, this));
+    });
+
+    //监听提交
+    form.on('submit', function(data) {
+      var type = $(this).data('type');
+      active[type] && active[type].call($.extend({}, active, {data: $.extend({}, data.field, queryObj)}));
+
+      return false;
+    });
+    //end
+  });
+</script>
+</html>

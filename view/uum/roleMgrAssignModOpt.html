@@ -90,18 +90,18 @@
       eleTree = layui.eleTree;
 
     let queryObj = MyCuckoo.getQueryObject(location.search);
-    let myTree;
+    let treeObj;
 
     //表单初始赋值
     if (queryObj.id) {
       $('fieldset > legend').text(queryObj.roleName);
-      $.get(api.roleMgr.rowPrivilegeUrl, queryObj).then(json => {
+      $.get(api.roleMgr.rolePrivilegeUrl, queryObj).then(json => {
         form.val('roleAssignModOpt', json.data);
         form.val('roleAssignRowPriv', json.data);
 
         //初始化结构树
         let $tree = $('#tree');
-        myTree = eleTree.render({
+        treeObj = eleTree.render({
           elem: $tree,
           data: json.data.privileges,
           defaultCheckedKeys: json.data.assign,
@@ -126,12 +126,15 @@
           MyCuckoo.alert({ title : '提示', msg : '请选择权限范围!' });
           return;
         }
+        let selectedNodes = treeObj.getChecked(true, false);
+        if(!selectedNodes.length) {
+          MyCuckoo.alert({ title : '提示', msg : '请选择权限!' });
+          return;
+        }
 
         let optIds = [];
-        let selectedNodes = myTree.getChecked(true, false);
         selectedNodes.forEach(item => optIds.push(Number(item.key)));
-        let url = MyCuckoo.resolvePlaceholder(api.roleMgr.saveOperationPrivilegeUrl, this.data);
-        $.postJson(url, optIds).then(data => {
+        $.postJson(api.roleMgr.saveOperationPrivilegeUrl, this.data, optIds).then(data => {
           MyCuckoo.msg({msg: data.data});
 
           this.refresh();
@@ -144,8 +147,7 @@
           return;
         }
 
-        let url = MyCuckoo.resolvePlaceholder(api.roleMgr.saveRowPrivilegeUrl, this.data);
-        $.postJson(url, this.data.rowPrivilege).then(data => {
+        $.postJson(api.roleMgr.saveRowPrivilegeUrl, this.data, this.data.rowPrivilege).then(data => {
           MyCuckoo.msg({msg: data.data});
 
           this.refresh();
