@@ -1,0 +1,261 @@
+<!DOCTYPE html>
+<html>
+<head>
+  <meta http-equiv="Content-Type" content="text/html; charset=utf-8" />
+  <title>统一用户</title>
+  <link type="image/x-icon" href="../../public/static/images/favicon.ico" rel="shortcut icon" />
+  <link type="text/css" href="../../public/static/layui/2.4.3/css/layui.css" rel="stylesheet" />
+  <link type="text/css" href="../../public/static/css/mycuckoo.css" rel="stylesheet" />
+</head>
+<body>
+<div class="mycuckoo-site-nav">
+    <span class="layui-breadcrumb">
+      <a href="javascript:;">我的桌面</a>
+      <a><cite>模块</cite></a>
+    </span>
+    <span class="right">
+      <a class="layui-btn layui-btn-sm" href="javascript:location.replace(location.href);" title="刷新">
+        <i class="layui-icon layui-icon-refresh"></i>
+      </a>
+    </span>
+</div>
+
+<div class="mycuckoo-main">
+  <div class="layui-row">
+    <form class="layui-col-md12 layui-form mycuckoo-search">
+      <div class="layui-inline">
+        <label class="layui-form-label">搜索：</label>
+        <div class="layui-input-inline">
+          <input class="layui-input" name="modEnId" placeholder="模块代码">
+        </div>
+        <div class="layui-input-inline">
+          <input class="layui-input" name="modName" placeholder="模块名称">
+        </div>
+        <div class="layui-input-inline">
+          <button class="layui-btn" lay-filter="search" lay-submit>
+            <i class="layui-icon">&#xe615;</i>
+          </button>
+        </div>
+      </div>
+    </form>
+  </div>
+
+  <table id="table" class="layui-hide" lay-filter="table"></table>
+</div>
+</body>
+<script type="text/javascript" src="../../public/static/layui/2.4.3/layui.js" charset="UTF-8"></script>
+<script type="text/javascript" src="../../public/static/mycuckoo.js" charset="UTF-8"></script>
+<script type="text/javascript" src="../../public/static/mycuckoo.api.js" charset="UTF-8"></script>
+<script type="text/html" id="toolbar">
+  <div class="layui-btn-group btn-toolbar">
+    {{# layui.each(d.operator, function(index, item){ }}
+    <button class="layui-btn layui-btn-sm" lay-event="{{ item.optFunLink }}">
+      <i class="layui-icon layui-icon-{{ item.modImgCls }}"></i> {{ item.modName }}
+    </button>
+    {{# }); }}
+  </div>
+</script>
+<script type="text/javascript">
+  layui.config({
+    base: '../../public/static/extend/',
+    version: '101100'
+  });
+
+  layui.use(['jquery', 'form', 'treeGrid'], function() {
+    let $ = layui.jquery,
+      form = layui.form,
+      table = layui.treeGrid;
+
+    //本地缓存数据
+    let menu = JSON.parse(sessionStorage.getItem('myMenu'));
+    let queryObj = MyCuckoo.getQueryObject(location.search);
+    let operator = menu.fourth[queryObj.id];
+
+    form.on('submit(search)', function(data) {
+      //执行重载
+      table.reload('table', {
+        page: {
+          pageNo: 1 //重新从第 1 页开始
+        },
+        where: data.field
+      });
+
+      return false;
+    });
+
+    let treeTable = table.render({
+      id: 'table',
+      elem: '#table',
+      url: api.moduleMgr.url,
+      method: 'get',
+      cellMinWidth: 100,
+      toolbar: '#toolbar',
+      idField: 'moduleId',
+      treeId: 'moduleId', //树形id字段名称,
+      treeUpId: 'parentId', //树形父id字段名称
+      treeShowName: 'modName', //以树形式显示的字段
+      iconOpen: false, //是否显示图标【默认显示】
+      isOpenDefault: true, //节点默认是展开还是折叠【默认展开】
+      operator: operator,
+      cols: [[
+        {type: 'numbers'},
+        {type: 'radio'},
+        {field: 'modName', dialog: 'text', title: '模块名称'},
+        {field: 'modEnId', dialog: 'text', title: '模块代码'},
+        {field: 'modImgCls', title: '模块图片样式'},
+        {field: 'modLevel', title: '模块级别',
+          templet: function(d) {
+            if(d.modLevel == '1') {
+              return '第一';
+            } else if(d.modLevel == '2') {
+              return '第二';
+            } else if(d.modLevel == '3') {
+              return '第三';
+            }
+          }
+        },
+        {field: 'modOrder', title: '模块顺序'},
+        {field: 'belongToSys', title: '所属系统',
+          templet: function(d) {
+            if(d.belongToSys == 'platform') {
+              return '系统平台';
+            } else if(d.belongToSys == 'uum') {
+              return '统一用户';
+            }
+          }
+        },
+        {field: 'modPageType', title: '页面类型'},
+        {field: 'status', title: '机构状态',
+          templet: function(d) {
+            if(d.status == 'enable') {
+              return '启用';
+            } else if(d.status == 'disable') {
+              return '停用';
+            }
+          }
+        },
+        {field: 'creator', title: '创建人'},
+        {field: 'createDate', title: '创建日期', sort: true}
+      ]],
+      page: true,
+      request: {
+        pageName: 'pageNo',
+        limitName: 'pageSize'
+      },
+      where: {
+        pageSize: 1000,
+      },
+      parseData: function(res) {
+        return {
+          code: res.code,
+          msg: res.message,
+          count: res.data.totalElements,
+          data: res.data.content
+        }
+      }
+    });
+
+    table.on('toolbar(table)', function (obj) {
+      if (obj.event == 'add') {
+        active[obj.event].call(this);
+        return;
+      }
+
+      let data = table.radioStatus(obj.config.id);
+      if (!data.moduleId) {
+        MyCuckoo.alert({title : '提示', msg : '请选择一条记录' });
+        return;
+      }
+
+      active[obj.event] ? active[obj.event].call(data) : '';
+    });
+
+    function reload() {
+      table.reload('table', { page: { pageNo: 1 } });
+    }
+
+    let active = {
+      //增加
+      add() {
+        MyCuckoo.dialog('模块信息', 'moduleMgrForm.html?action=create');
+      },
+      //修改
+      modify() {
+        MyCuckoo.dialog('模块信息', 'moduleMgrForm.html?action=modify&id=' + this.moduleId);
+      },
+      //查看
+      view() {
+        MyCuckoo.dialog('模块信息', 'moduleMgrForm.html?action=view&id=' + this.moduleId);
+      },
+      //删除
+      delete() {
+        let item = this;
+        MyCuckoo.confirm({msg : '您确认删除此记录吗?', ok : function() {
+          $.delete(api.moduleMgr + '/' + item.moduleId).then(data => {
+            MyCuckoo.msg({ msg: '菜单停用成功' });
+
+            reload(); // 刷新列表
+          });
+        }});
+      },
+      //启用
+      enable() {
+        let item = this;
+        if(item.status == 'enable') {
+          MyCuckoo.msg({ msg : '此菜单已经启用' });
+          return;
+        }
+        if (item.modLevel != 3) {
+          MyCuckoo.msg({ msg : '请您选择第三级菜单!' });
+          return;
+        }
+
+        $.put(api.moduleMgr.disEnableUrl, {id: item.moduleId, disEnableFlag: 'enable'}).then(data => {
+          MyCuckoo.msg({ msg: '菜单启用成功' });
+
+          reload(); // 刷新列表
+        });
+      },
+      //停用
+      disable() {
+        let item = this;
+        if(item.status == 'disable') {
+          MyCuckoo.alert({ title : '提示', msg : '此菜单已经停用' });
+          return;
+        }
+        if (item.modLevel != 3) {
+          MyCuckoo.alert({ msg : '请您选择第三级菜单!' });
+          return;
+        }
+
+        MyCuckoo.confirm({msg : '您确认停用此菜单吗?如果停用,此菜单下的操作将自动清除,并重登生效.', ok : function() {
+          $.put(api.moduleMgr.disEnableUrl, {id: item.moduleId, disEnableFlag: 'disable'}).then(data => {
+            MyCuckoo.msg({ msg: '菜单停用成功' });
+
+            reload(); // 刷新列表
+          });
+        }});
+      },
+      //分配菜单操作
+      optassign() {
+        let item = this;
+        if(item.modLevel != 3) {
+          MyCuckoo.alert({ msg: '请您选择第三级模块菜单'});
+          return;
+        }
+
+        MyCuckoo.dialog('模块信息', 'moduleMgrAssignOpts.html?id=' + this.moduleId + '&name=' + this.modName);
+      },
+      //
+      optpri() {
+        MyCuckoo.alert({ msg: '开发中...'});
+      },
+      //
+      moduleLabel() {
+        MyCuckoo.alert({ msg: '开发中...'});
+      }
+    }
+    //end
+  });
+</script>
+</html>

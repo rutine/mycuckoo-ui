@@ -1,0 +1,133 @@
+<!DOCTYPE html>
+<html>
+<head>
+  <meta http-equiv="Content-Type" content="text/html; charset=utf-8" />
+  <title>分配角色</title>
+  <link type="image/x-icon" href="../../public/static/images/favicon.ico" rel="shortcut icon" />
+  <link type="text/css" href="../../public/static/layui/2.4.3/css/layui.css" rel="stylesheet" />
+  <link type="text/css" href="../../public/static/css/mycuckoo.css" rel="stylesheet" />
+  <link type="text/css" href="../../public/static/dtree/css/dtree.css" rel="stylesheet" />
+  <link type="text/css" href="../../public/static/dtree/css/font/dtreefont.css" rel="stylesheet" />
+</head>
+<body>
+<div class="mycuckoo-main">
+  <fieldset class="layui-elem-field layui-field-title" style="margin-top: 30px;">
+    <legend>模块名称</legend>
+  </fieldset>
+
+  <form class="layui-form layui-form-pane">
+    <div class="layui-form-item">
+      <label class="layui-form-label">操作</label>
+      <div class="layui-input-block">
+        <ul id="tree" lay-filter="tree"></ul>
+      </div>
+    </div>
+
+    <div class="layui-form-item">
+      <div class="layui-input-block">
+        <div class="layui-btn-group">
+          <a href="javascript:" class="layui-btn layui-btn-sm" data-type="save" lay-submit="submit">保存
+            <i class="layui-icon glyphicon-hdd"></i>
+          </a>
+          <a href="javascript:" class="layui-btn layui-btn-sm" data-type="reback">返回
+            <i class="layui-icon glyphicon-circle-arrow-left"></i>
+          </a>
+        </div>
+      </div>
+    </div>
+  </form>
+</div>
+</body>
+<script type="text/javascript" src="../../public/static/layui/2.4.3/layui.js" charset="UTF-8"></script>
+<script type="text/javascript" src="../../public/static/mycuckoo.js" charset="UTF-8"></script>
+<script type="text/javascript" src="../../public/static/mycuckoo.api.js" charset="UTF-8"></script>
+<script type="text/javascript">
+  layui.config({
+    base: '../../public/static/extend/',
+    version: '101100'
+  });
+
+  layui.use(['jquery', 'form', 'dtree'], function() {
+    let $ = layui.jquery,
+      form = layui.form,
+      tree = layui.dtree;
+
+    let queryObj = MyCuckoo.getQueryObject(location.search);
+    let treeObj;
+
+    //表单初始赋值
+    if (!queryObj.id) {
+      MyCuckoo.alert({title: '提示', msg: '请选择模块!'});
+      return;
+    } else {
+      $('legend').text(queryObj.name);
+
+      $.get(api.moduleMgr.operationUrl, queryObj).then(json => {
+        //初始化结构树
+        treeObj = tree.render({
+          elem: '#tree',
+          method: 'get',
+          data: json.data.source,
+          dataStyle: 'layuiStyle',
+          response: { statusCode: 0, treeId: 'id', title: 'text', isLast: 'isLeaf', checkArr: 'checkBox'},
+          checkbar: true,
+          dot: false,
+          icon: ['-1', '1'],
+//          done: function() {
+//            treeObj.chooseDataInit(json.data.assign.join(','));
+//          }
+        });
+        console.log(treeObj)
+      });
+    }
+
+    let active = {
+      //保存模块操作
+      save() {
+        let selectedNodes = treeObj.getCheckbarNodesParam();
+        if(!selectedNodes.length) {
+          MyCuckoo.alert({ title : '提示', msg : '请选择操作!' });
+          return;
+        }
+
+        let optIds = [];
+        selectedNodes.forEach(item => item.isLeaf && optIds.push(Number(item.nodeId)));
+        $.postJson(api.moduleMgr.saveModuleOptRefsUrl, this.data, optIds).then(data => {
+          MyCuckoo.msg({msg: data.data});
+
+          this.refresh();
+        });
+      },
+      //刷新父窗
+      refresh() {
+        setTimeout(function() {
+          parent.location.reload();
+          this.reback();
+        }, 2000);
+      },
+      //关闭当前iframe页
+      reback() {
+        let index = parent.layer.getFrameIndex(window.name);
+        parent.layer.close(index);
+      }
+      //end
+    }
+
+    //操作按钮触发事件
+    $('form a.layui-btn[lay-submit!=submit]').on('click', function() {
+      let type = $(this).data('type');
+      active[type] && active[type].call($.extend({}, active, this));
+    });
+
+    //监听提交
+    form.on('submit', function(data) {
+      let type = $(this).data('type');
+      active[type] && active[type].call($.extend({}, active, {data: $.extend({}, data.field, queryObj)}));
+
+      return false;
+    });
+    //end
+  });
+
+</script>
+</html>

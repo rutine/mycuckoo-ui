@@ -6,7 +6,8 @@
   <link type="image/x-icon" href="../../public/static/images/favicon.ico" rel="shortcut icon" />
   <link type="text/css" href="../../public/static/layui/2.4.3/css/layui.css" rel="stylesheet" />
   <link type="text/css" href="../../public/static/css/mycuckoo.css" rel="stylesheet" />
-  <link type="text/css" href="../../public/static/css/eleTree.css" rel="stylesheet" />
+  <link type="text/css" href="../../public/static/dtree/css/dtree.css" rel="stylesheet" />
+  <link type="text/css" href="../../public/static/dtree/css/font/dtreefont.css" rel="stylesheet" />
 </head>
 <body>
 <div class="mycuckoo-site-nav">
@@ -67,10 +68,10 @@
     version: '101100'
   });
 
-  layui.use(['jquery', 'form', 'table', 'eleTree'], function() {
+  layui.use(['jquery', 'form', 'table', 'dtree'], function() {
     let $ = layui.jquery,
       form = layui.form,
-      eleTree = layui.eleTree,
+      tree = layui.dtree,
       table = layui.table;
 
     //本地缓存数据
@@ -89,25 +90,25 @@
     });
 
     //初始化结构树
-    let $tree = $('#tree');
     let selectNode = null;
-    let myTree = eleTree.render({
-      elem: $tree,
+    let treeObj = tree.render({
+      elem: '#tree',
+      method: 'get',
       url: MyCuckoo.resolvePlaceholder(api.organMgr.childNodesUrl, {id: 0}),
-      defaultExpandAll: true,
-      highlightCurrent: true,
-      request: { key: 'id', name: 'text' },
-      done: function() {
-
-      }
+      request: {isCheckbox: 'N'},
+      dataStyle: 'layuiStyle',
+      response: { statusCode: 0, treeId: 'id', title: 'text', isLast: 'isLeaf', checkArr: 'checkBox'},
+      checkbar: true,
+      dot: false,
+      //icon: ['-1', '1']
     });
-    eleTree.on('nodeClick(tree)', function(d) {
-      let data = d.data.currentData;
+    tree.on('node(tree)', function(obj) {
+      let data = obj.param;
       selectNode = data;
       table.reload('table', {
         page: { pageNo: 1 },
         where: {
-          treeId: data.id
+          treeId: data.nodeId
         }
       });
     });
@@ -178,7 +179,7 @@
           return;
         }
 
-        MyCuckoo.dialog('选择角色信息', 'roleAssignMgrSelectRole.html?orgId=' + nodes.id);
+        MyCuckoo.dialog('选择角色信息', 'roleAssignMgrSelectRole.html?orgId=' + nodes.nodeId);
       },
       //删除角色
       roledel() {
@@ -189,7 +190,7 @@
             for (let index in item) {
               roleIdList.push(item[index].roleId);
             }
-            let orgId = selectNode.id;
+            let orgId = selectNode.nodeId;
             let params = roleIdList;
             $.delete(api.organRoleMgr.url + '/' + orgId, params).then(data => {
               MyCuckoo.msg({ msg: data.data });

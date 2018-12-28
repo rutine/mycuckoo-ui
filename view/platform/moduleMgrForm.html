@@ -1,0 +1,285 @@
+<!DOCTYPE html>
+<html>
+<head>
+  <meta http-equiv="Content-Type" content="text/html; charset=utf-8" />
+  <title>机构信息</title>
+  <link type="image/x-icon" href="../../public/static/images/favicon.ico" rel="shortcut icon" />
+  <link type="text/css" href="../../public/static/layui/2.4.3/css/layui.css" rel="stylesheet" />
+  <link type="text/css" href="../../public/static/css/mycuckoo.css" rel="stylesheet" />
+  <link type="text/css" href="../../public/static/dtree/css/dtree.css" rel="stylesheet" />
+  <link type="text/css" href="../../public/static/dtree/css/font/dtreefont.css" rel="stylesheet" />
+</head>
+<body>
+  <div class="mycuckoo-main">
+    <form class="layui-form layui-form-pane" name="editForm" lay-filter="editForm">
+      <input type="hidden" name="moduleId" />
+      <div class="layui-form-item">
+        <div class="layui-inline">
+          <label class="layui-form-label">模块名称</label>
+          <div class="layui-input-inline">
+            <input type="text" name="modName" class="layui-input" autocomplete="off" lay-verify="required" maxlength="10" />
+          </div>
+        </div>
+        <div class="layui-inline">
+          <label class="layui-form-label">模块代码</label>
+          <div class="layui-input-inline">
+            <input type="text" name="modEnId" class="layui-input" autocomplete="off" lay-verify="required" maxlength="40" />
+          </div>
+        </div>
+      </div>
+
+      <div class="layui-form-item">
+        <div class="layui-inline">
+          <label class="layui-form-label">模块图片样式</label>
+          <div class="layui-input-inline">
+            <input type="text" name="modImgCls" class="layui-input" autocomplete="off" />
+          </div>
+        </div>
+        <div class="layui-inline">
+          <label class="layui-form-label">模块级别</label>
+          <div class="layui-input-inline">
+            <select name="modLevel" lay-verify="required">
+              <option value="1">第一</option>
+              <option value="2">第二</option>
+              <option value="3">第三</option>
+            </select>
+          </div>
+        </div>
+      </div>
+
+      <div class="layui-form-item">
+        <div class="layui-inline">
+          <label class="layui-form-label">模块顺序</label>
+          <div class="layui-input-inline">
+            <select name="modOrder" lay-verify="required">
+              <option value="1">1</option>
+              <option value="2">2</option>
+              <option value="3">3</option>
+              <option value="4">4</option>
+              <option value="5">5</option>
+              <option value="6">6</option>
+              <option value="7">7</option>
+              <option value="8">8</option>
+              <option value="9">9</option>
+            </select>
+          </div>
+        </div>
+        <div class="layui-inline">
+          <label class="layui-form-label">所属系统</label>
+          <div class="layui-input-inline">
+            <select name="belongToSys" lay-verify="required">
+              <option value=""></option>
+            </select>
+          </div>
+        </div>
+      </div>
+
+      <div class="layui-form-item">
+        <div class="layui-inline">
+          <label class="layui-form-label">页面类型</label>
+          <div class="layui-input-inline">
+            <select name="modPageType" lay-verify="required">
+              <option value=""></option>
+            </select>
+          </div>
+        </div>
+        <div class="layui-inline">
+          <label class="layui-form-label">上级模块名称</label>
+          <div class="layui-input-inline">
+            <input type="hidden" name="parentId" />
+            <input type="text" name="parentName" class="layui-input" autocomplete="off" lay-verify="required" />
+          </div>
+          <a class="layui-btn layui-btn-primary layui-btn-sm layui-btn-radius" data-type="selectModule">
+            <i class="layui-icon layui-icon-search"></i>
+          </a>
+        </div>
+      </div>
+
+      <div class="layui-form-item layui-form-text">
+        <label class="layui-form-label">备注</label>
+        <div class="layui-input-block">
+          <textarea name="memo" class="layui-textarea" placeholder="请输入内容" maxlength="50" ></textarea>
+        </div>
+      </div>
+
+      <div class="toolbar"></div>
+    </form>
+  </div>
+</body>
+<script type="text/javascript" src="../../public/static/layui/2.4.3/layui.js" charset="UTF-8"></script>
+<script type="text/javascript" src="../../public/static/mycuckoo.js" charset="UTF-8"></script>
+<script type="text/javascript" src="../../public/static/mycuckoo.api.js" charset="UTF-8"></script>
+<script type="text/html" id="operator">
+  <div class="layui-btn-group">
+    {{# if(d.action == 'create') { }}
+    <a href="javascript: " class="layui-btn layui-btn-sm" data-type="create" lay-submit="submit">保存
+      <span class="layui-icon glyphicon-hdd"></span>
+    </a>
+    <a href="javascript: " class="layui-btn layui-btn-sm" data-type="reback">返回
+      <span class="layui-icon glyphicon-circle-arrow-left"></span>
+    </a>
+    {{# } else if(d.action == 'modify') { }}
+    <a href="javascript:" class="layui-btn layui-btn-sm" data-type="update" lay-submit="submit">保存
+      <span class="layui-icon glyphicon-hdd"></span>
+    </a>
+    <a href="javascript:" class="layui-btn layui-btn-sm" data-type="reback">返回
+      <span class="layui-icon glyphicon-circle-arrow-left"></span>
+    </a>
+    {{# } else if(d.action == 'view') { }}
+    <a href="javascript:" class="layui-btn layui-btn-sm" data-type="reback">返回
+      <span class="layui-icon glyphicon-circle-arrow-left"></span>
+    </a>
+    {{# } }}
+  </div>
+</script>
+<script type="text/javascript">
+  layui.config({
+    base: '../../public/static/extend/',
+    version: '101100'
+  });
+
+  layui.use(['jquery', 'laytpl', 'form', 'dtree'], function() {
+    let $ = layui.jquery,
+      laytpl = layui.laytpl,
+      form = layui.form,
+      layer = layui.layer,
+      tree = layui.dtree;
+
+    let queryObj = MyCuckoo.getQueryObject(location.search);
+
+    //渲染操作按钮
+    laytpl(operator.innerHTML).render(queryObj, function(html) {
+      $('.toolbar').html(html);
+    });
+
+    //初始化
+    $.get(api.dictionaryMgr.smallTypeUrl, {bigTypeCode: 'systemType'}).then(json => {
+      let $select = $('select[name=belongToSys]');
+      $select.empty();
+
+      for (let i = 0; i < json.data.length; i++) {
+        let item = json.data[i];
+        $select.append('<option value="' + item.smallTypeCode + '">' + item.smallTypeName + '</option>');
+      }
+      form.render('select');
+
+      $.get(api.dictionaryMgr.smallTypeUrl, {bigTypeCode: 'modPageType'}).then(json => {
+        let $select = $('select[name=modPageType]');
+        $select.empty();
+
+        for (let i = 0; i < json.data.length; i++) {
+          let item = json.data[i];
+          $select.append('<option value="' + item.smallTypeCode + '">' + item.smallTypeName + '</option>');
+        }
+        form.render('select');
+
+        //表单初始赋值
+        if (queryObj.id) {
+          $.get(api.moduleMgr.url + '/' + queryObj.id).then(json => {
+            form.val('editForm', json.data);
+          });
+        }
+      });
+    });
+
+    let active = {
+      openTree(url, config) {
+        let fillForm = function(data) {
+          let valObj =  {};
+          for (let p in config) {
+            if (typeof p == 'string') {
+              valObj[config[p]] = data[p];
+            }
+          }
+          form.val('editForm', valObj);
+        }
+
+        layer.open({
+          type: 1,
+          title: "选择上级模块",
+          area: ['400px', '80%'],
+          content: '<ul id="tree" class="dtree" data-id="0"></ul>',
+          btn: ['确认选择'],
+          success: function(layero, index){
+            let treeObj = tree.render({
+              elem: '#tree',
+              method: 'get',
+              type: 'all',
+              url: MyCuckoo.resolvePlaceholder(url, {id: 0}),
+              dataStyle: 'layuiStyle',
+              response: { statusCode: 0, treeId: 'id', title: 'text', isLast: 'isLeaf', checkArr: 'checkBox'},
+              checkbar: true,
+              dot: false,
+              icon: ['-1', '1']
+            });
+            tree.on('nodedblclick(tree)', function(obj) {
+              let data = obj.param;
+              if(data.isLeaf) {
+                return;
+              }
+
+              fillForm(data);
+              layer.close(index);
+            })
+          },
+          yes: function(index, layero) {
+            var param = tree.getNowParam('tree');
+
+            if(!param.nodeId) {
+              MyCuckoo.alert({msg: '请选择一个模块'});
+              return;
+            }
+
+            fillForm(param);
+            layer.close(index);
+          }
+        });
+      },
+      selectModule() {
+        this.openTree(api.moduleMgr.childNodesUrl, {nodeId: 'parentId', context: 'parentName'});
+      },
+      create() {
+        $.postJson(api.moduleMgr.url, this.data).then(data => {
+          MyCuckoo.msg({msg: data.data});
+
+          this.refresh();
+        });
+      },
+      update() {
+        $.put(api.moduleMgr.url, this.data).then(data => {
+          MyCuckoo.msg({msg: data.data});
+
+          this.refresh();
+        });
+      },
+      //刷新父窗
+      refresh() {
+        setTimeout(function() {
+          parent.location.reload();
+          this.reback();
+        }, 2000);
+      },
+      //关闭当前iframe页
+      reback() {
+        let index = parent.layer.getFrameIndex(window.name);
+        parent.layer.close(index);
+      }
+    }
+
+    //操作按钮触发事件
+    $('form a.layui-btn[lay-submit!=submit]').on('click', function() {
+      var type = $(this).data('type');
+      active[type] && active[type].call($.extend({}, active, this));
+    });
+
+    //监听提交
+    form.on('submit', function(data) {
+      var type = $(this).data('type');
+      active[type] && active[type].call($.extend({}, active, {data: data.field}));
+
+      return false;
+    });
+    //end
+  });
+</script>
+</html>

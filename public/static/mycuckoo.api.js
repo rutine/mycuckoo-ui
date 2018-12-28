@@ -142,49 +142,16 @@ layui.use(['jquery'], function () {
       saveRowPrivilegeUrl: host + '/uum/user/mgr/{id}/row-privilege/{privilegeScope}'
     },
 
-
     moduleMgr: {
-      getChildNodes: function(params) {
-        return $.get('/platform/module/mgr/get/child/nodes', {params: params}).then(res => res.data);
-      },
-      list: function(params) {
-        return $.get('/platform/module/mgr/list', {params: params}).then(res => res.data);
-      },
-      listOperation: function(params) {
-        return $.get('/platform/module/mgr/list/operation', {params: params}).then(res => res.data);
-      },
-      create: function(params) {
-        return $.put('/platform/module/mgr/create', params).then(res => res.data);
-      },
-      createModuleOptRefs: function(params) {
-        return $.get('/platform/module/mgr/create/module/operation/ref', {params: params}).then(res => res.data);
-      },
-      update: function(params) {
-        return $.put('/platform/module/mgr/update', params).then(res => res.data);
-      },
-      view: function(params) {
-        return $.get('/platform/module/mgr/view', {params: params}).then(res => res.data);
-      },
-      del: function(params) {
-        return $.delete('/platform/module/mgr/delete', {params: params}).then(res => res.data);
-      },
+      url: host + '/platform/module/mgr',
+      disEnableUrl: host + '/platform/module/mgr/{id}/disEnable/{disEnableFlag}',
+      childNodesUrl: host + '/platform/module/mgr/{id}/child/nodes',
+      operationUrl: host + '/platform/module/mgr/{id}/operation',
+      saveModuleOptRefsUrl: host + '/platform/module/mgr/{id}/module-opt-ref',
     },
     operateMgr: {
-      list: function(params) {
-        return $.get('/platform/operate/mgr/list', {params: params}).then(res => res.data);
-      },
-      create: function(params) {
-        return $.put('/platform/operate/mgr/create', params).then(res => res.data);
-      },
-      update: function(params) {
-        return $.put('/platform/operate/mgr/update', params).then(res => res.data);
-      },
-      view: function(params) {
-        return $.get('/platform/operate/mgr/view', {params: params}).then(res => res.data);
-      },
-      disEnable: function(params) {
-        return $.get('/platform/operate/mgr/disEnable', {params: params}).then(res => res.data);
-      },
+      url: host + '/platform/operate/mgr/list',
+      disEnableUrl: host + '/platform/operate/mgr/{id}/disEnable/{disEnableFlag}',
     },
     afficheMgr: {
       list: function(params) {

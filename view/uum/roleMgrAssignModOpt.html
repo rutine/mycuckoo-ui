@@ -6,7 +6,8 @@
   <link type="image/x-icon" href="../../public/static/images/favicon.ico" rel="shortcut icon" />
   <link type="text/css" href="../../public/static/layui/2.4.3/css/layui.css" rel="stylesheet" />
   <link type="text/css" href="../../public/static/css/mycuckoo.css" rel="stylesheet" />
-  <link type="text/css" href="../../public/static/css/eleTree.css" rel="stylesheet" />
+  <link type="text/css" href="../../public/static/dtree/css/dtree.css" rel="stylesheet" />
+  <link type="text/css" href="../../public/static/dtree/css/font/dtreefont.css" rel="stylesheet" />
 </head>
 <body>
   <div class="mycuckoo-main">
@@ -34,16 +35,16 @@
             <div class="layui-form-item">
               <label class="layui-form-label">模块</label>
               <div class="layui-input-block">
-                <div id="tree" lay-filter="tree"></div>
+                <ul id="tree" lay-filter="tree"></ul>
               </div>
             </div>
 
             <div class="layui-btn-group">
-              <a href="javascript:" class="layui-btn layui-btn-sm" data-type="saveOperationPrivilege" lay-submit="submit" lay-filter="saveOperationPrivilege">保存
-                <span class="layui-icon glyphicon-hdd"></span>
+              <a href="javascript:" class="layui-btn layui-btn-sm" data-type="saveOperationPrivilege" lay-submit="submit">保存
+                <i class="layui-icon glyphicon-hdd"></i>
               </a>
               <a href="javascript:" class="layui-btn layui-btn-sm" data-type="reback">返回
-                <span class="layui-icon glyphicon-circle-arrow-left"></span>
+                <i class="layui-icon glyphicon-circle-arrow-left"></i>
               </a>
             </div>
           </form>
@@ -61,11 +62,11 @@
             </div>
 
             <div class="layui-btn-group">
-              <a href="javascript:" class="layui-btn layui-btn-sm" data-type="saveRowPrivilege" lay-submit="submit" lay-filter="saveRowPrivilege">保存
-                <span class="layui-icon glyphicon-hdd"></span>
+              <a href="javascript:" class="layui-btn layui-btn-sm" data-type="saveRowPrivilege" lay-submit="submit">保存
+                <i class="layui-icon glyphicon-hdd"></i>
               </a>
               <a href="javascript:" class="layui-btn layui-btn-sm" data-type="reback">返回
-                <span class="layui-icon glyphicon-circle-arrow-left"></span>
+                <i class="layui-icon glyphicon-circle-arrow-left"></i>
               </a>
             </div>
           </form>
@@ -83,11 +84,11 @@
     version: '101100'
   });
 
-  layui.use(['jquery', 'element', 'form', 'eleTree'], function() {
+  layui.use(['jquery', 'element', 'form', 'dtree'], function() {
     let $ = layui.jquery,
       element = layui.element,
       form = layui.form,
-      eleTree = layui.eleTree;
+      tree = layui.dtree;
 
     let queryObj = MyCuckoo.getQueryObject(location.search);
     let treeObj;
@@ -100,18 +101,18 @@
         form.val('roleAssignRowPriv', json.data);
 
         //初始化结构树
-        let $tree = $('#tree');
-        treeObj = eleTree.render({
-          elem: $tree,
+        treeObj = tree.render({
+          elem: '#tree',
+          method: 'get',
           data: json.data.privileges,
-          defaultCheckedKeys: json.data.assign,
-          defaultExpandAll: true,
-          highlightCurrent: true,
-          showCheckbox: true,
-          request: { key: 'id', name: 'text' },
-          done: function() {
-
-          }
+          dataStyle: 'layuiStyle',
+          response: { statusCode: 0, treeId: 'id', title: 'text', isLast: 'isLeaf', checkArr: 'checkBox'},
+          checkbar: true,
+          dot: false,
+          icon: ['-1', '1'],
+//          done: function() {
+//            treeObj.chooseDataInit(json.data.assign.join(','));
+//          }
         });
       });
     } else {
@@ -126,14 +127,15 @@
           MyCuckoo.alert({ title : '提示', msg : '请选择权限范围!' });
           return;
         }
-        let selectedNodes = treeObj.getChecked(true, false);
+
+        let selectedNodes = treeObj.getCheckbarNodesParam();
         if(!selectedNodes.length) {
           MyCuckoo.alert({ title : '提示', msg : '请选择权限!' });
           return;
         }
 
         let optIds = [];
-        selectedNodes.forEach(item => optIds.push(Number(item.key)));
+        selectedNodes.forEach(item => item.isLeaf && optIds.push(Number(item.nodeId)));
         $.postJson(api.roleMgr.saveOperationPrivilegeUrl, this.data, optIds).then(data => {
           MyCuckoo.msg({msg: data.data});
 
@@ -174,15 +176,7 @@
     });
 
     //监听提交
-    form.on('submit(saveOperationPrivilege)', function(data) {
-      var type = $(this).data('type');
-      active[type] && active[type].call($.extend({}, active, {data: $.extend({}, data.field, queryObj)}));
-
-      return false;
-    });
-
-    //监听提交
-    form.on('submit(saveRowPrivilege)', function(data) {
+    form.on('submit', function(data) {
       var type = $(this).data('type');
       active[type] && active[type].call($.extend({}, active, {data: $.extend({}, data.field, queryObj)}));
 
