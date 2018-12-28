@@ -2,50 +2,84 @@
 <html>
 <head>
   <meta http-equiv="Content-Type" content="text/html; charset=utf-8" />
-  <title>角色信息</title>
+  <title>操作信息</title>
   <link type="image/x-icon" href="../../public/static/images/favicon.ico" rel="shortcut icon" />
   <link type="text/css" href="../../public/static/layui/2.4.3/css/layui.css" rel="stylesheet" />
   <link type="text/css" href="../../public/static/css/mycuckoo.css" rel="stylesheet" />
 </head>
 <body>
-  <div class="mycuckoo-main">
-    <form class="layui-form layui-form-pane" name="editForm" lay-filter="editForm">
-      <input type="hidden" name="roleId" />
-      <div class="layui-form-item">
-        <div class="layui-inline">
-          <label class="layui-form-label">角色名称</label>
-          <div class="layui-input-inline">
-            <input type="text" name="roleName" class="layui-input" autocomplete="off" lay-verify="required" maxlength="10" />
-          </div>
-        </div>
-        <div class="layui-inline">
-          <label class="layui-form-label">角色级别</label>
-          <div class="layui-input-inline">
-            <select name="roleLevel" lay-verify="required">
-              <option value="1">1</option>
-              <option value="2">2</option>
-              <option value="3">3</option>
-              <option value="4">4</option>
-              <option value="5">5</option>
-              <option value="6">6</option>
-              <option value="7">7</option>
-              <option value="8">8</option>
-              <option value="9">9</option>
-            </select>
-          </div>
+<div class="mycuckoo-main">
+  <form class="layui-form layui-form-pane" name="editForm" lay-filter="editForm">
+    <input type="hidden" name="operateId" />
+    <div class="layui-form-item">
+      <div class="layui-inline">
+        <label class="layui-form-label">操作名称</label>
+        <div class="layui-input-inline">
+          <input type="text" name="operateName" class="layui-input" autocomplete="off" lay-verify="required" maxlength="10" />
         </div>
       </div>
-
-      <div class="layui-form-item layui-form-text">
-        <label class="layui-form-label">备注</label>
-        <div class="layui-input-block">
-          <textarea name="memo" class="layui-textarea" placeholder="请输入内容" maxlength="50" ></textarea>
+      <div class="layui-inline">
+        <label class="layui-form-label">图片链接</label>
+        <div class="layui-input-inline">
+          <input type="text" name="optImgLink" class="layui-input" autocomplete="off" lay-verify="required|alphanumeric" maxlength="20" />
         </div>
       </div>
+    </div>
 
-      <div class="toolbar"></div>
-    </form>
-  </div>
+    <div class="layui-form-item">
+      <div class="layui-inline">
+        <label class="layui-form-label">功能链接</label>
+        <div class="layui-input-inline">
+          <input type="text" name="optFunLink" class="layui-input" autocomplete="off" lay-verify="required" maxlength="10" />
+        </div>
+      </div>
+      <div class="layui-inline">
+        <label class="layui-form-label">操作顺序</label>
+        <div class="layui-input-inline">
+          <select name="optOrder" lay-verify="required">
+            <option value="1">1</option>
+            <option value="2">2</option>
+            <option value="3">3</option>
+            <option value="4">4</option>
+            <option value="5">5</option>
+            <option value="6">6</option>
+            <option value="7">7</option>
+            <option value="8">8</option>
+            <option value="9">9</option>
+          </select>
+        </div>
+      </div>
+    </div>
+
+    <div class="layui-form-item">
+      <div class="layui-inline">
+        <label class="layui-form-label">操作组</label>
+        <div class="layui-input-inline">
+          <select name="optGroup" lay-verify="required">
+            <option value="1">1</option>
+            <option value="2">2</option>
+            <option value="3">3</option>
+            <option value="4">4</option>
+            <option value="5">5</option>
+            <option value="6">6</option>
+            <option value="7">7</option>
+            <option value="8">8</option>
+            <option value="9">9</option>
+          </select>
+        </div>
+      </div>
+    </div>
+
+    <div class="layui-form-item layui-form-text">
+      <label class="layui-form-label">备注</label>
+      <div class="layui-input-block">
+        <textarea name="memo" class="layui-textarea" placeholder="请输入内容" maxlength="50" ></textarea>
+      </div>
+    </div>
+
+    <div class="toolbar"></div>
+  </form>
+</div>
 </body>
 <script type="text/javascript" src="../../public/static/layui/2.4.3/layui.js" charset="UTF-8"></script>
 <script type="text/javascript" src="../../public/static/mycuckoo.js" charset="UTF-8"></script>
@@ -93,21 +127,21 @@
 
     //表单初始赋值
     if (queryObj.id) {
-      $.get(api.roleMgr.url + '/' + queryObj.id).then(json => {
+      $.get(api.operateMgr.url + '/' + queryObj.id).then(json => {
         form.val('editForm', json.data);
       });
     }
 
     let active = {
       create() {
-        $.postJson(api.roleMgr.url, this.data).then(data => {
+        $.postJson(api.operateMgr.url, this.data).then(data => {
           MyCuckoo.msg({msg: data.data});
 
           this.refresh();
         });
       },
       update() {
-        $.put(api.roleMgr.url, this.data).then(data => {
+        $.put(api.operateMgr.url, this.data).then(data => {
           MyCuckoo.msg({msg: data.data});
 
           this.refresh();

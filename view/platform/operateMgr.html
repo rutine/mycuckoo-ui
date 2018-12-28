@@ -1,0 +1,191 @@
+<!DOCTYPE html>
+<html>
+<head>
+  <meta http-equiv="Content-Type" content="text/html; charset=utf-8" />
+  <title>统一用户</title>
+  <link type="image/x-icon" href="../../public/static/images/favicon.ico" rel="shortcut icon" />
+  <link type="text/css" href="../../public/static/layui/2.4.3/css/layui.css" rel="stylesheet" />
+  <link type="text/css" href="../../public/static/css/mycuckoo.css" rel="stylesheet" />
+</head>
+<body>
+<div class="mycuckoo-site-nav">
+    <span class="layui-breadcrumb">
+      <a href="javascript:;">我的桌面</a>
+      <a><cite>操作按钮</cite></a>
+    </span>
+  <span class="right">
+      <a class="layui-btn layui-btn-sm" href="javascript:location.replace(location.href);" title="刷新">
+        <i class="layui-icon layui-icon-refresh"></i>
+      </a>
+    </span>
+</div>
+
+<div class="mycuckoo-main">
+  <div class="layui-row">
+    <form class="layui-col-md12 layui-form mycuckoo-search">
+      <div class="layui-inline">
+        <label class="layui-form-label">搜索：</label>
+        <div class="layui-input-inline">
+          <input class="layui-input" name="operateName" placeholder="操作名称">
+        </div>
+        <div class="layui-input-inline">
+          <button class="layui-btn" lay-filter="search" lay-submit>
+            <i class="layui-icon">&#xe615;</i>
+          </button>
+        </div>
+      </div>
+    </form>
+  </div>
+
+  <table id="table" class="layui-hide" lay-filter="table"></table>
+</div>
+</body>
+<script type="text/javascript" src="../../public/static/layui/2.4.3/layui.js" charset="UTF-8"></script>
+<script type="text/javascript" src="../../public/static/mycuckoo.js" charset="UTF-8"></script>
+<script type="text/javascript" src="../../public/static/mycuckoo.api.js" charset="UTF-8"></script>
+<script type="text/html" id="toolbar">
+  <div class="layui-btn-group btn-toolbar">
+    {{# layui.each(d.operator, function(index, item){ }}
+    <button class="layui-btn layui-btn-sm" lay-event="{{ item.optFunLink }}">
+      <i class="layui-icon layui-icon-{{ item.modImgCls }}"></i> {{ item.modName }}
+    </button>
+    {{# }); }}
+  </div>
+</script>
+<script type="text/javascript">
+  layui.config({
+    base: '../../public/static/extend/',
+    version: '101100'
+  });
+
+  layui.use(['jquery', 'form', 'table'], function() {
+    let $ = layui.jquery,
+      form = layui.form,
+      table = layui.table;
+
+    //本地缓存数据
+    let menu = JSON.parse(sessionStorage.getItem('myMenu'));
+    let queryObj = MyCuckoo.getQueryObject(location.search);
+    let operator = menu.fourth[queryObj.id];
+
+    form.on('submit(search)', function(data) {
+      //执行重载
+      table.reload('table', {
+        page: {
+          pageNo: 1 //重新从第 1 页开始
+        },
+        where: data.field
+      });
+
+      return false;
+    });
+
+    table.render({
+      id: 'table',
+      elem: '#table',
+      url: api.operateMgr.url,
+      method: 'get',
+      cellMinWidth: 100,
+      toolbar: '#toolbar',
+      operator: operator,
+      cols: [[
+        {type: 'numbers'},
+        {type: 'radio'},
+        {field: 'operateName', title: '操作名称'},
+        {field: 'optImgLink', title: '图片链接'},
+        {field: 'optFunLink', title: '功能链接'},
+        {field: 'optOrder', title: '操作顺序'},
+        {field: 'optGroup', title: '操作组'},
+        {field: 'status', title: '角色状态',
+          templet: function(d) {
+            if(d.status == 'enable') {
+              return '启用';
+            } else if(d.status == 'disable') {
+              return '停用';
+            }
+          }
+        },
+        {field: 'creator', title: '创建人'},
+        {field: 'createDate', title: '创建日期', sort: true},
+      ]],
+      page: true,
+      request: {
+        pageName: 'pageNo',
+        limitName: 'pageSize'
+      },
+      parseData: function(res) {
+        return {
+          code: res.code,
+          msg: res.message,
+          count: res.data.totalElements,
+          data: res.data.content
+        }
+      }
+    });
+
+    table.on('toolbar(table)', function (obj) {
+      if (obj.event == 'add') {
+        active[obj.event].call(this);
+        return;
+      }
+
+      let data = table.checkStatus(obj.config.id).data;
+      if (data.length != 1) {
+        MyCuckoo.alert({title : '提示', msg : '请选择一条记录' });
+        return;
+      }
+
+      active[obj.event] ? active[obj.event].call(data[0]) : '';
+    });
+
+    function reload() {
+      table.reload('table', { page: { pageNo: 1 } });
+    }
+
+    let active = {
+      //增加
+      add() {
+        MyCuckoo.dialog('角色信息', 'operateMgrForm.html?action=create');
+      },
+      //修改
+      modify() {
+        MyCuckoo.dialog('角色信息', 'operateMgrForm.html?action=modify&id=' + this.operateId);
+      },
+      //查看
+      view() {
+        MyCuckoo.dialog('角色信息', 'operateMgrForm.html?action=view&id=' + this.operateId);
+      },
+      //启用
+      enable() {
+        let item = this;
+        if(item.status == 'enable') {
+          MyCuckoo.msg({ msg : '此操作已经启用' });
+          return;
+        }
+
+        $.put(api.operateMgr.disEnableUrl, {id: item.operateId, disEnableFlag: 'enable'}).then(data => {
+          MyCuckoo.msg({ msg: '操作启用成功' });
+
+          reload(); // 刷新列表
+        });
+      },
+      //停用
+      disable() {
+        let item = this;
+        if(item.status == 'disable') {
+          MyCuckoo.alert({ title : '提示', msg : '此操作已经停用' });
+          return;
+        }
+
+        MyCuckoo.confirm({msg : '您确认停用此操作吗? 如果停用,相应模块下的此操作将自动清除,并重登生效.', ok : function() {
+          $.put(api.operateMgr.disEnableUrl, {id: item.operateId, disEnableFlag: 'disable'}).then(data => {
+            MyCuckoo.msg({ msg: '操作停用成功' });
+
+            reload(); // 刷新列表
+          });
+        }});
+      },
+      //end
+    }
+  });
+</script>

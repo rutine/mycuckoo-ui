@@ -150,7 +150,7 @@ layui.use(['jquery'], function () {
       saveModuleOptRefsUrl: host + '/platform/module/mgr/{id}/module-opt-ref',
     },
     operateMgr: {
-      url: host + '/platform/operate/mgr/list',
+      url: host + '/platform/operate/mgr',
       disEnableUrl: host + '/platform/operate/mgr/{id}/disEnable/{disEnableFlag}',
     },
     afficheMgr: {
