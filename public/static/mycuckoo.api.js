@@ -88,8 +88,6 @@ layui.use(['jquery'], function () {
 
   var api = {
     host: host,
-    download: host + '/file/download',
-    postFile: host + '/file',
 
     login: {
       firstStepUrl: host + '/login/step/first',
@@ -154,31 +152,13 @@ layui.use(['jquery'], function () {
       disEnableUrl: host + '/platform/operate/mgr/{id}/disEnable/{disEnableFlag}',
     },
     afficheMgr: {
-      list: function(params) {
-        return $.get('/platform/affiche/mgr/list', {params: params}).then(res => res.data);
-      },
-      create: function(params) {
-        return $.put('/platform/affiche/mgr/create', params).then(res => res.data);
-      },
-      update: function(params) {
-        return $.put('/platform/affiche/mgr/update', params).then(res => res.data);
-      },
-      view: function(params) {
-        return $.get('/platform/affiche/mgr/view', {params: params}).then(res => res.data);
-      },
-      del: function(params) {
-        return $.delete('/platform/affiche/mgr/delete', {params: params}).then(res => res.data);
-      },
+      url: host + '/platform/affiche/mgr'
     },
     accessoryMgr: {
-      del: function(params) {
-        return $.delete('/platform/accessory/mgr/delete', {params: params}).then(res => res.data);
-      },
+      url: host + '/platform/accessory/mgr'
     },
     fileMgr: {
-      del: function(params) {
-        return $.delete('/file/delete', {params: params}).then(res => res.data);
-      },
+      url: host + '/file'
     },
     codeMgr: {
       list: function(params) {

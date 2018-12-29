@@ -1,0 +1,300 @@
+<!DOCTYPE html>
+<html>
+<head>
+  <meta http-equiv="Content-Type" content="text/html; charset=utf-8" />
+  <title>系统公告信息</title>
+  <link type="image/x-icon" href="../../public/static/images/favicon.ico" rel="shortcut icon" />
+  <link type="text/css" href="../../public/static/layui/2.4.3/css/layui.css" rel="stylesheet" />
+  <link type="text/css" href="../../public/static/css/mycuckoo.css" rel="stylesheet" />
+</head>
+<body>
+<div class="mycuckoo-main">
+  <form class="layui-form layui-form-pane" name="editForm" lay-filter="editForm">
+    <input type="hidden" name="afficheId" />
+
+    <div class="layui-form-item">
+      <div class="layui-inline">
+        <label class="layui-form-label">公告标题</label>
+        <div class="layui-input-inline">
+          <input type="text" name="afficheTitle" class="layui-input" lay-verify="required" maxlength="100" />
+        </div>
+      </div>
+      <div class="layui-inline">
+        <label class="layui-form-label">有效日期</label>
+        <div class="layui-input-inline">
+          <input type="text" id="afficheInvalidate" name="afficheInvalidate" class="layui-input" lay-verify="required"/>
+        </div>
+      </div>
+    </div>
+
+
+    <div class="layui-form-item">
+      <label class="layui-form-label">是否发布</label>
+      <div class="layui-input-block">
+        <input type="radio" name="affichePulish" value="0" title="是" checked="">
+        <input type="radio" name="affichePulish" value="1" title="否">
+      </div>
+    </div>
+
+    <div class="layui-form-item layui-form-text">
+      <label class="layui-form-label">公告正文</label>
+      <div class="layui-input-block">
+        <textarea name="afficheContent" class="layui-textarea" placeholder="请输入内容" maxlength="50" ></textarea>
+      </div>
+    </div>
+
+
+    <fieldset class="layui-elem-field layui-field-title" style="margin-top: 30px;">
+      <legend>公告附件</legend>
+    </fieldset>
+
+    <div class="layui-upload">
+      <button type="button" class="layui-btn layui-btn-sm layui-btn-normal" id="filePicker">添加文件</button>
+      <button type="button" class="layui-btn layui-btn-sm" id="uploadStart">开始上传</button>
+      <div class="layui-upload-list">
+        <table class="layui-table">
+          <thead>
+          <tr>
+            <th>文件名</th>
+            <th>大小</th>
+            <th>状态</th>
+            <th>操作</th>
+          </tr>
+          </thead>
+          <tbody id="fileList"></tbody>
+        </table>
+      </div>
+    </div>
+
+
+    <div class="toolbar"></div>
+  </form>
+</div>
+</body>
+<script type="text/javascript" src="../../public/static/layui/2.4.3/layui.js" charset="UTF-8"></script>
+<script type="text/javascript" src="../../public/static/mycuckoo.js" charset="UTF-8"></script>
+<script type="text/javascript" src="../../public/static/mycuckoo.api.js" charset="UTF-8"></script>
+<script type="text/html" id="operator">
+  <div class="layui-btn-group">
+    {{# if(d.action == 'create') { }}
+    <a href="javascript: " class="layui-btn layui-btn-sm" data-type="create" lay-submit="submit">保存
+      <span class="layui-icon glyphicon-hdd"></span>
+    </a>
+    <a href="javascript: " class="layui-btn layui-btn-sm" data-type="reback">返回
+      <span class="layui-icon glyphicon-circle-arrow-left"></span>
+    </a>
+    {{# } else if(d.action == 'modify') { }}
+    <a href="javascript:" class="layui-btn layui-btn-sm" data-type="update" lay-submit="submit">保存
+      <span class="layui-icon glyphicon-hdd"></span>
+    </a>
+    <a href="javascript:" class="layui-btn layui-btn-sm" data-type="reback">返回
+      <span class="layui-icon glyphicon-circle-arrow-left"></span>
+    </a>
+    {{# } else if(d.action == 'view') { }}
+    <a href="javascript:" class="layui-btn layui-btn-sm" data-type="reback">返回
+      <span class="layui-icon glyphicon-circle-arrow-left"></span>
+    </a>
+    {{# } }}
+  </div>
+</script>
+<script type="text/javascript">
+  layui.config({
+    base: '../../public/static/extend/',
+    version: '101100'
+  });
+
+  layui.use(['jquery', 'laytpl', 'form', 'laydate', 'upload'], function() {
+    let $ = layui.jquery,
+      laytpl = layui.laytpl,
+      form = layui.form,
+      layDate = layui.laydate,
+      upload = layui.upload;
+
+    let queryObj = MyCuckoo.getQueryObject(location.search);
+    let $fileList = $('#fileList');
+
+    //渲染操作按钮
+    laytpl(operator.innerHTML).render(queryObj, function(html) {
+      $('.toolbar').html(html);
+    });
+
+    //表单初始赋值
+    if (queryObj.id) {
+      if(queryObj.action == 'view') {
+        $('#filePicker').addClass('layui-hide');
+        $('#uploadStart').addClass('layui-hide');
+      }
+      $.get(api.afficheMgr.url + '/' + queryObj.id).then(json => {
+        form.val('editForm', json.data);
+
+        json.data.accessories.forEach((item, index) => {
+          let tr = $([
+            '<tr>',
+            '<td>',
+            ' <input type="hidden" name="accessoryName" value="' + item.accessoryName + '">',
+            ' <a href="' + api.fileMgr.url + '?business=document&filename=' + item.accessoryName + '" target="_blank">',
+            ' <img src="' + active.getThumbnail(item.accessoryName) + '">&nbsp;&nbsp;',
+            ' <span>' + item.accessoryName + '</span>',
+            ' </a>',
+            '</td>',
+            '<td></td>',
+            '<td></td>',
+            queryObj.action == 'view' ? '<td></td>' : '<td><button class="layui-btn layui-btn-xs layui-btn-danger btn-delete">删除</button></td>',
+            '</tr>'
+          ].join(''));
+
+          //删除
+          tr.find('.btn-delete').on('click', function () {
+            active.deleteAccessory(item.accessoryId);
+            tr.remove();
+          });
+
+          $fileList.append(tr);
+        });
+      });
+    }
+
+    //日期
+    layDate.render({
+      elem: '#afficheInvalidate'
+    });
+
+    let accessories = [];
+    (function init() {
+      //多文件列表示例
+      let uploader = upload.render({
+          elem: '#filePicker',
+          url: api.fileMgr.url,
+          accept: 'file',
+          multiple: true,
+          auto: false,
+          data: {business: 'document'},
+          bindAction: '#uploadStart',
+          choose: function(obj) {
+            let files = this.files = obj.pushFile(); //将每次选择的文件追加到文件队列
+            //读取本地文件
+            obj.preview(function(index, file, result) {
+              let tr = $([
+                '<tr id="upload-'+ index +'">',
+                '<td>',
+                ' <img src="' + active.getThumbnail(file.name) + '">&nbsp;&nbsp;',
+                ' <span>' + file.name + '</span>',
+                '</td>',
+                '<td>' + (file.size / 1014).toFixed(1) + 'kb</td>',
+                '<td>等待上传</td>',
+                '<td>',
+                ' <button class="layui-btn layui-btn-xs btn-upload layui-hide">上传</button>',
+                ' <button class="layui-btn layui-btn-xs layui-btn-danger btn-delete">删除</button>',
+                '</td>',
+                '</tr>'
+              ].join(''));
+
+              //单个上传
+              tr.find('.btn-upload').on('click', function(){
+                obj.upload(index, file);
+              });
+
+              //删除
+              tr.find('.btn-delete').on('click', function() {
+                // files.splice(index, 1);
+                delete files[index]; //删除对应的文件
+                tr.remove();
+                uploader.config.elem.next()[0].value = ''; //清空 input file 值，以免删除后出现同名文件不可选
+              });
+
+              $fileList.append(tr);
+            });
+        },
+        done: function(res, index, upload) {
+          if(res.code == 0) { //上传成功
+            accessories.push({accessoryName: this.files[index].name});
+
+            let tr = $fileList.find('tr#upload-'+ index),
+              tds = tr.children();
+            tds.eq(2).html('<span style="color: #5FB878;">上传成功</span>');
+            tds.eq(3).html(''); //清空操作
+            return delete this.files[index]; //删除文件队列已经上传成功的文件
+          }
+          this.error(index, upload);
+        },
+        error: function(index, upload) {
+          var tr = $fileList.find('tr#upload-'+ index),
+            tds = tr.children();
+          tds.eq(2).html('<span style="color: #FF5722;">上传失败</span>');
+          tds.eq(3).find('.btn-upload').removeClass('layui-hide'); //显示重传
+        }
+      });
+    })()
+
+    let active = {
+      // 附件图标
+      getThumbnail(filename) {
+        let baseUrl = '../../public/static/images/button/';
+        let splitFlag = filename.indexOf('_');
+        filename = filename.substr(splitFlag + 1);
+        let suffixName = filename.substr(filename.lastIndexOf('.') + 1);
+        let imgPictureUrl = baseUrl + 'no-format.png';
+        if (suffixName == 'docx' || suffixName == 'doc') {
+          imgPictureUrl = baseUrl + 'word.png';
+        } else if (suffixName == 'pdf') {
+          imgPictureUrl = baseUrl + 'pdf.png';
+        } else if (suffixName == 'pptx' || suffixName == 'ppt') {
+          imgPictureUrl = baseUrl + 'powerpoint.png';
+        } else if (suffixName == 'xlsx' || suffixName == 'xls') {
+          imgPictureUrl = baseUrl + 'excel.png';
+        }
+        return imgPictureUrl;
+      },
+      create() {
+        this.data.accessories = accessories;
+        $.postJson(api.afficheMgr.url, this.data).then(data => {
+          MyCuckoo.msg({msg: data.data});
+
+          this.refresh();
+        });
+      },
+      update() {
+        this.data.accessories = accessories;
+        $.put(api.afficheMgr.url, this.data).then(data => {
+          MyCuckoo.msg({msg: data.data});
+
+          this.refresh();
+        });
+      },
+      // 删除附件
+      deleteAccessory(accessoryId) {
+        $.delete(api.accessoryMgr.url + '/' + accessoryId, {}).then(data => {
+          MyCuckoo.msg({msg: data.data});
+        });
+      },
+      //刷新父窗
+      refresh() {
+        setTimeout(function() {
+          parent.location.reload();
+          this.reback();
+        }, 2000);
+      },
+      //关闭当前iframe页
+      reback() {
+        let index = parent.layer.getFrameIndex(window.name);
+        parent.layer.close(index);
+      }
+    }
+
+    //操作按钮触发事件
+    $('form a.layui-btn[lay-submit!=submit]').on('click', function() {
+      var type = $(this).data('type');
+      active[type] && active[type].call($.extend({}, active, this));
+    });
+
+    //监听提交
+    form.on('submit', function(data) {
+      var type = $(this).data('type');
+      active[type] && active[type].call($.extend({}, active, {data: data.field}));
+
+      return false;
+    });
+    //end
+  });
+</script>
+</html>
