@@ -161,24 +161,8 @@ layui.use(['jquery'], function () {
       url: host + '/file'
     },
     codeMgr: {
-      list: function(params) {
-        return $.get('/platform/code/mgr/list', {params: params}).then(res => res.data);
-      },
-      create: function(params) {
-        return $.put('/platform/code/mgr/create', params).then(res => res.data);
-      },
-      update: function(params) {
-        return $.put('/platform/code/mgr/update', params).then(res => res.data);
-      },
-      view: function(params) {
-        return $.get('/platform/code/mgr/view', {params: params}).then(res => res.data);
-      },
-      del: function(params) {
-        return $.delete('/platform/code/mgr/delete', {params: params}).then(res => res.data);
-      },
-      disEnable: function(params) {
-        return $.get('/platform/code/mgr/disEnable', {params: params}).then(res => res.data);
-      },
+      url: host + '/platform/code/mgr',
+      disEnableUrl: host + '/platform/code/mgr/{id}/disEnable/{disEnableFlag}'
     },
     districtMgr: {
       url: host + '/platform/district/mgr',
