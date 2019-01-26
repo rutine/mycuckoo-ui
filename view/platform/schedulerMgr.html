@@ -11,7 +11,7 @@
 <div class="mycuckoo-site-nav">
     <span class="layui-breadcrumb">
       <a href="javascript:;">我的桌面</a>
-      <a><cite>地区</cite></a>
+      <a><cite>任务调度</cite></a>
     </span>
   <span class="right">
       <a class="layui-btn layui-btn-sm" href="javascript:location.replace(location.href);" title="刷新">
@@ -26,7 +26,11 @@
       <div class="layui-inline">
         <label class="layui-form-label">搜索：</label>
         <div class="layui-input-inline">
-          <input class="layui-input" name="districtName" placeholder="地区名称">
+          <input class="layui-input" name="jobName" placeholder="任务名称">
+        </div>
+        <div class="layui-input-inline">
+          <input type="radio" name="triggerType" value="Simple" title="简单调度">
+          <input type="radio" name="triggerType" value="Cron" title="表达式">
         </div>
         <div class="layui-input-inline">
           <button class="layui-btn" lay-filter="search" lay-submit>
@@ -83,7 +87,7 @@
     table.render({
       id: 'table',
       elem: '#table',
-      url: api.districtMgr.url,
+      url: api.schedulerMgr.url,
       method: 'get',
       cellMinWidth: 100,
       toolbar: '#toolbar',
@@ -91,11 +95,9 @@
       cols: [[
         {type: 'numbers'},
         {type: 'radio'},
-        {field: 'districtName', title: '地区名称'},
-        {field: 'districtCode', title: '地区代码'},
-        {field: 'districtPostal', title: '地区邮编'},
-        {field: 'districtTelcode', title: '电话区号'},
-        {field: 'districtLevel', title: '地区级别'},
+        {field: 'jobName', title: '任务名称'},
+        {field: 'jobClass', title: '任务类描述'},
+        {field: 'triggerType', title: '触发器类型'},
         {field: 'status', title: '状态',
           templet: function(d) {
             if(d.status == 'enable') {
@@ -124,7 +126,7 @@
     });
 
     table.on('toolbar(table)', function (obj) {
-      if (obj.event == 'add') {
+      if (obj.event == 'add' || obj.event == 'schedulerStart' || obj.event == 'schedulerStop') {
         active[obj.event](this);
         return;
       }
@@ -144,46 +146,73 @@
       },
       //增加
       add(ele) {
-        MyCuckoo.dialog('地区信息', 'districtMgrForm.html?action=create');
+        MyCuckoo.dialog('任务调度信息', 'schedulerMgrForm.html?action=create');
       },
       //修改
       modify(data) {
-        MyCuckoo.dialog('地区信息', 'districtMgrForm.html?action=modify&id=' + data.districtId);
+        MyCuckoo.dialog('任务调度信息', 'schedulerMgrForm.html?action=modify&id=' + data.jobId);
       },
       //查看
       view(data) {
-        MyCuckoo.dialog('地区信息', 'districtMgrForm.html?action=view&id=' + data.districtId);
+        MyCuckoo.dialog('任务调度信息', 'schedulerMgrForm.html?action=view&id=' + data.jobId);
       },
-      //启用
-      enable(data) {
-        if(data.status == 'enable') {
-          MyCuckoo.msg({ msg : '此地区已经启用' });
-          return;
-        }
-
+      //删除
+      delete(data) {
         let _this = this;
-        $.put(api.districtMgr.disEnableUrl, {id: data.districtId, disEnableFlag: 'enable'}).then(data => {
-          MyCuckoo.msg({ msg: '地区启用成功' });
-
-          _this.reload(); // 刷新列表
-        });
-      },
-      //停用
-      disable(data) {
-        if(data.status == 'disable') {
-          MyCuckoo.alert({ title : '提示', msg : '此地区已经停用' });
-          return;
-        }
-
-        let _this = this;
-        MyCuckoo.confirm({msg : '您确认停用此地区?', ok : function() {
-          $.put(api.districtMgr.disEnableUrl, {id: data.districtId, disEnableFlag: 'disable'}).then(data => {
-            MyCuckoo.msg({ msg: '地区停用成功' });
+        MyCuckoo.confirm({msg : '您确认删除此记录吗?', ok : function() {
+          $.delete(api.schedulerMgr.url + '/' + data.jobId, {}).then(data => {
+            MyCuckoo.msg({ msg: data.data });
 
             _this.reload(); // 刷新列表
           });
         }});
-      }
+      },
+      //启动任务
+      jobStart(data) {
+        if (data.status == 'enable') {
+          MyCuckoo.msg({state: 'info', title: '提示', msg: '此任务已经启用'});
+          return;
+        }
+
+        let _this = this;
+        $.put(api.schedulerMgr.startJobUrl, {id: data.jobId}).then(data => {
+          MyCuckoo.msg({state: 'success', title: '提示', msg: data.data});
+
+          _this.reload(); // 刷新列表
+        });
+      },
+      //停止任务
+      jobStop(data) {
+        if (data.status == 'disable') {
+          MyCuckoo.msg({state: 'info', title: '提示', msg: '此任务已经停止'});
+          return;
+        }
+
+        let _this = this;
+        $.put(api.schedulerMgr.stopJobUrl, {id: data.jobId}).then(data => {
+          MyCuckoo.msg({state: 'success', title: '提示', msg: data.data});
+
+          _this.reload(); // 刷新列表
+        });
+      },
+      //启动调度器
+      schedulerStart(ele) {
+        let _this = this;
+        $.postJson(api.schedulerMgr.startSchedulerUrl, {}).then(data => {
+          MyCuckoo.msg({ msg: data.data });
+
+          _this.reload(); // 刷新列表
+        });
+      },
+      //停止调度器
+      schedulerStart(ele) {
+        let _this = this;
+        $.postJson(api.schedulerMgr.stopSchedulerUrl, {}).then(data => {
+          MyCuckoo.msg({ msg: data.data });
+
+          _this.reload(); // 刷新列表
+        });
+      },
     }
     //the end
 

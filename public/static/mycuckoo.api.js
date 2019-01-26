@@ -23,12 +23,12 @@ layui.use(['jquery'], function () {
   });
 
   let placeholder = /\{(\w+)\}/;
-  let resolvePlaceholder = function(uri, obj) {
+  let resolvePlaceholder = function(uri, uriVariables) {
     var path = uri;
-    for (var p in obj) {
-      var witch = typeof p;
+    for (var variable in uriVariables) {
+      var witch = typeof variable;
       if ("string" == witch || 'number' == witch) {
-        path = path.replace('{' + p + '}', obj[p]);
+        path = path.replace('{' + variable + '}', uriVariables[variable]);
       }
     }
 
@@ -36,20 +36,20 @@ layui.use(['jquery'], function () {
   }
 
   let $get = $.get;
-  $.get = function (url, properties, params) {
+  $.get = function (url, uriVariables, params) {
     if (!params) {
-      params = properties;
+      params = uriVariables;
     }
-    url = placeholder.test(url) ? resolvePlaceholder(url, params) : url;
+    url = placeholder.test(url) ? resolvePlaceholder(url, uriVariables) : url;
 
     return $get(url, params);
   }
 
-  $.postJson = function (url, properties, params) {
+  $.postJson = function (url, uriVariables, params) {
     if (!params) {
-      params = properties;
+      params = uriVariables;
     }
-    url = placeholder.test(url) ? resolvePlaceholder(url, properties) : url;
+    url = placeholder.test(url) ? resolvePlaceholder(url, uriVariables) : url;
 
     return $.ajax({
       url: url,
@@ -58,11 +58,11 @@ layui.use(['jquery'], function () {
     });
   }
 
-  $.put = function (url, properties, params) {
+  $.put = function (url, uriVariables, params) {
     if (!params) {
-      params = properties;
+      params = uriVariables;
     }
-    url = placeholder.test(url) ? resolvePlaceholder(url, params) : url;
+    url = placeholder.test(url) ? resolvePlaceholder(url, uriVariables) : url;
 
     return $.ajax({
       url: url,
@@ -72,11 +72,11 @@ layui.use(['jquery'], function () {
     });
   }
 
-  $.delete = function (url, properties, params) {
+  $.delete = function (url, uriVariables, params) {
     if (!params) {
-      params = properties;
+      params = uriVariables;
     }
-    url = placeholder.test(url) ? resolvePlaceholder(url, params) : url;
+    url = placeholder.test(url) ? resolvePlaceholder(url, uriVariables) : url;
 
     return $.ajax({
       url: url,
@@ -175,33 +175,13 @@ layui.use(['jquery'], function () {
       disEnableUrl: host + '/platform/system/dictionary/mgr/{id}/disEnable/{disEnableFlag}'
     },
     schedulerMgr: {
-      list: function(params) {
-        return $.get('/platform/system/scheduler/mgr/list', {params: params}).then(res => res.data);
-      },
-      create: function(params) {
-        return $.put('/platform/system/scheduler/mgr/create', params).then(res => res.data);
-      },
-      update: function(params) {
-        return $.put('/platform/system/scheduler/mgr/update', params).then(res => res.data);
-      },
-      view: function(params) {
-        return $.get('/platform/system/scheduler/mgr/view', {params: params}).then(res => res.data);
-      },
-      startScheduler: function(params) {
-        return $.get('/platform/system/scheduler/mgr/start/scheduler').then(res => res.data);
-      },
-      stopScheduler: function(params) {
-        return $.get('/platform/system/scheduler/mgr/stop/scheduler').then(res => res.data);
-      },
-      startJob: function(params) {
-        return $.get('/platform/system/scheduler/mgr/start/job', {params: params}).then(res => res.data);
-      },
-      stopJob: function(params) {
-        return $.get('/platform/system/scheduler/mgr/stop/job', {params: params}).then(res => res.data);
-      },
-      schedulerStatus: function(params) {
-        return $.get('/platform/system/scheduler/mgr/scheduler/status', {params: params}).then(res => res.data);
-      },
+      url: host + '/platform/system/scheduler/mgr',
+      disEnableUrl: host + '/platform/system/scheduler/mgr/{id}/disEnable/{disEnableFlag}',
+      startJobUrl: host + '/platform/system/scheduler/mgr/{id}/start-job',
+      stopJobUrl: host + '/platform/system/scheduler/mgr/{id}/stop-job',
+      startSchedulerUrl: host + '/platform/system/scheduler/mgr/start-scheduler',
+      stopSchedulerUrl: host + '/platform/system/scheduler/mgr/stop-scheduler',
+      schedulerStatusUrl: host + '/platform/system/scheduler/mgr/scheduler-status'
     },
     systemConfigMgr: {
       list: function(params) {
@@ -216,14 +196,6 @@ layui.use(['jquery'], function () {
       startJConsole: function(params) {
         return $.get('/platform/system/config/mgr/start/jconsole').then(res => res.data);
       },
-    },
-    systemLogMgr: {
-      list: function(params) {
-        return $.get('/platform/system/log/mgr/list', {params: params}).then(res => res.data);
-      },
-      view: function(params) {
-        return $.get('/platform/system/log/mgr/view', {params: params}).then(res => res.data);
-      }
     },
     systemLogMgr: {
       list: function(params) {
