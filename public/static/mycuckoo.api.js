@@ -171,7 +171,7 @@ layui.use(['jquery'], function () {
     },
     dictionaryMgr: {
       url: host + '/platform/system/dictionary/mgr/',
-      smallTypeUrl: host + '/platform/system/dictionary/mgr/{bigTypeCode}/small/type',
+      smallTypeUrl: host + '/platform/system/dictionary/mgr/{bigTypeCode}/small-type',
       disEnableUrl: host + '/platform/system/dictionary/mgr/{id}/disEnable/{disEnableFlag}'
     },
     schedulerMgr: {

@@ -295,16 +295,14 @@
   });
 
   let $ = null;
-  layui.use(['jquery', 'laytpl', 'form', 'laydate', 'upload', 'dtree'], function() {
+  layui.use(['jquery', 'laytpl', 'form', 'laydate', 'dtree'], function() {
     $ = layui.jquery;
     let laytpl = layui.laytpl,
       form = layui.form,
       layDate = layui.laydate,
-      upload = layui.upload,
       tree = layui.dtree;
 
     let queryObj = MyCuckoo.getQueryObject(location.search);
-    let $fileList = $('#fileList');
 
     //渲染操作按钮
     laytpl(operator.innerHTML).render(queryObj, function(html) {
@@ -313,10 +311,6 @@
 
     //表单初始赋值
     if (queryObj.id) {
-      if(queryObj.action == 'view') {
-        $('#filePicker').addClass('layui-hide');
-        $('#uploadStart').addClass('layui-hide');
-      }
       $.get(api.codeMgr.url + '/' + queryObj.id).then(json => {
         new PartSelector().render({elem: '#selector', data: json.data, form: form});
 
