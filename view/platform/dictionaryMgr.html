@@ -32,9 +32,6 @@
           <input class="layui-input" name="bigTypeCode" placeholder="字典代码">
         </div>
         <div class="layui-input-inline">
-          <input class="layui-input" name="moduleName" placeholder="模块名称">
-        </div>
-        <div class="layui-input-inline">
           <button class="layui-btn" lay-filter="search" lay-submit>
             <i class="layui-icon">&#xe615;</i>
           </button>
@@ -99,7 +96,7 @@
         {type: 'radio'},
         {field: 'bigTypeName', title: '字典名称'},
         {field: 'bigTypeCode', title: '字典代码'},
-        {field: 'status', title: '机构状态',
+        {field: 'status', title: '状态',
           templet: function(d) {
             if(d.status == 'enable') {
               return '启用';

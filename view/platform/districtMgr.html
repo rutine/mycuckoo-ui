@@ -11,7 +11,7 @@
 <div class="mycuckoo-site-nav">
     <span class="layui-breadcrumb">
       <a href="javascript:;">我的桌面</a>
-      <a><cite>系统编码</cite></a>
+      <a><cite>地区</cite></a>
     </span>
   <span class="right">
       <a class="layui-btn layui-btn-sm" href="javascript:location.replace(location.href);" title="刷新">
@@ -26,13 +26,7 @@
       <div class="layui-inline">
         <label class="layui-form-label">搜索：</label>
         <div class="layui-input-inline">
-          <input class="layui-input" name="codeName" placeholder="中文编码">
-        </div>
-        <div class="layui-input-inline">
-          <input class="layui-input" name="codeEngName" placeholder="英文编码">
-        </div>
-        <div class="layui-input-inline">
-          <input class="layui-input" name="moduleName" placeholder="模块名称">
+          <input class="layui-input" name="districtName" placeholder="地区名称">
         </div>
         <div class="layui-input-inline">
           <button class="layui-btn" lay-filter="search" lay-submit>
@@ -70,8 +64,8 @@
       table = layui.table;
 
     //本地缓存数据
-    let menu = JSON.parse(sessionStorage.getItem('myMenu'));
     let queryObj = MyCuckoo.getQueryObject(location.search);
+    let menu = JSON.parse(sessionStorage.getItem('myMenu'));
     let operator = menu.fourth[queryObj.id];
 
     form.on('submit(search)', function(data) {
@@ -89,7 +83,7 @@
     table.render({
       id: 'table',
       elem: '#table',
-      url: api.codeMgr.url,
+      url: api.districtMgr.url,
       method: 'get',
       cellMinWidth: 100,
       toolbar: '#toolbar',
@@ -97,13 +91,12 @@
       cols: [[
         {type: 'numbers'},
         {type: 'radio'},
-        {field: 'codeEngName', title: '英文编码名称'},
-        {field: 'codeName', title: '中文编码名称'},
-        {field: 'moduleName', title: '模块名称'},
-        {field: 'delimite', title: '分隔符'},
-        {field: 'partNum', title: '段数'},
-        {field: 'codeEffect', title: '编码效果'},
-        {field: 'status', title: '状态',
+        {field: 'districtName', title: '地区名称'},
+        {field: 'districtCode', title: '地区代码'},
+        {field: 'districtPostal', title: '地区邮编'},
+        {field: 'districtTelcode', title: '电话区号'},
+        {field: 'districtLevel', title: '地区级别'},
+        {field: 'status', title: '机构状态',
           templet: function(d) {
             if(d.status == 'enable') {
               return '启用';
@@ -132,7 +125,7 @@
 
     table.on('toolbar(table)', function (obj) {
       if (obj.event == 'add') {
-        active[obj.event].call(this);
+        active[obj.event](this);
         return;
       }
 
@@ -142,58 +135,58 @@
         return;
       }
 
-      active[obj.event] ? active[obj.event].call(data[0]) : '';
+      active[obj.event] && active[obj.event](data[0]);
     });
 
-    function reload() {
-      table.reload('table', { page: { pageNo: 1 } });
-    }
-
     let active = {
+      reload() {
+        table.reload('table', { page: { pageNo: 1 } });
+      },
       //增加
-      add() {
-        MyCuckoo.dialog('系统编码信息', 'codeMgrForm.html?action=create');
+      add(ele) {
+        MyCuckoo.dialog('地区信息', 'districtMgrForm.html?action=create');
       },
       //修改
-      modify() {
-        MyCuckoo.dialog('系统编码信息', 'codeMgrForm.html?action=modify&id=' + this.codeId);
+      modify(data) {
+        MyCuckoo.dialog('地区信息', 'districtMgrForm.html?action=modify&id=' + data.districtId);
       },
       //查看
-      view() {
-        MyCuckoo.dialog('系统编码信息', 'codeMgrForm.html?action=view&id=' + this.codeId);
+      view(data) {
+        MyCuckoo.dialog('地区信息', 'districtMgrForm.html?action=view&id=' + data.districtId);
       },
       //启用
-      enable() {
-        let item = this;
-        if(item.status == 'enable') {
-          MyCuckoo.msg({ msg : '此编码已经启用' });
+      enable(data) {
+        if(data.status == 'enable') {
+          MyCuckoo.msg({ msg : '此地区已经启用' });
           return;
         }
 
-        $.put(api.codeMgr.disEnableUrl, {id: item.codeId, disEnableFlag: 'enable'}).then(data => {
-          MyCuckoo.msg({ msg: '编码启用成功' });
+        let _this = this;
+        $.put(api.districtMgr.disEnableUrl, {id: data.districtId, disEnableFlag: 'enable'}).then(data => {
+          MyCuckoo.msg({ msg: '地区启用成功' });
 
-          reload(); // 刷新列表
+          _this.reload(); // 刷新列表
         });
       },
       //停用
-      disable() {
-        let item = this;
-        if(item.status == 'disable') {
-          MyCuckoo.alert({ title : '提示', msg : '此编码已经停用' });
+      disable(data) {
+        if(data.status == 'disable') {
+          MyCuckoo.alert({ title : '提示', msg : '此地区已经停用' });
           return;
         }
 
-        MyCuckoo.confirm({msg : '您确认停用此编码.', ok : function() {
-          $.put(api.codeMgr.disEnableUrl, {id: item.codeId, disEnableFlag: 'disable'}).then(data => {
-            MyCuckoo.msg({ msg: '编码停用成功' });
+        let _this = this;
+        MyCuckoo.confirm({msg : '您确认停用此地区?', ok : function() {
+          $.put(api.districtMgr.disEnableUrl, {id: data.districtId, disEnableFlag: 'disable'}).then(data => {
+            MyCuckoo.msg({ msg: '地区停用成功' });
 
-            reload(); // 刷新列表
+            _this.reload(); // 刷新列表
           });
         }});
-      },
-      //end
+      }
     }
+    //the end
+
   });
 </script>
 </html>
