@@ -189,12 +189,7 @@ layui.use(['jquery'], function () {
       startJConsoleUrl: host + '/platform/system/config/mgr/start-jconsole',
     },
     systemLogMgr: {
-      list: function(params) {
-        return $.get('/platform/system/log/mgr/list', {params: params}).then(res => res.data);
-      },
-      view: function(params) {
-        return $.get('/platform/system/log/mgr/view', {params: params}).then(res => res.data);
-      }
+      url: host + '/platform/system/log/mgr',
     },
     systemParameterMgr: {
       list: function(params) {
