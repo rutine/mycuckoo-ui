@@ -184,18 +184,9 @@ layui.use(['jquery'], function () {
       schedulerStatusUrl: host + '/platform/system/scheduler/mgr/scheduler-status'
     },
     systemConfigMgr: {
-      list: function(params) {
-        return $.get('/platform/system/config/mgr/list', {params: params}).then(res => res.data);
-      },
-      update: function(params) {
-        return $.put('/platform/system/config/mgr/update', params).then(res => res.data);
-      },
-      view: function(params) {
-        return $.get('/platform/system/config/mgr/view', {params: params}).then(res => res.data);
-      },
-      startJConsole: function(params) {
-        return $.get('/platform/system/config/mgr/start/jconsole').then(res => res.data);
-      },
+      url: host + '/platform/system/config/mgr',
+      userUrl: host + '/platform/system/config/mgr/users',
+      startJConsoleUrl: host + '/platform/system/config/mgr/start-jconsole',
     },
     systemLogMgr: {
       list: function(params) {
