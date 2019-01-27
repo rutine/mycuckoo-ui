@@ -16,19 +16,21 @@
         <span class="sidebar-open">
           <i title="展开左侧栏" class="icon-sidebar">&#xe699;</i>
         </span>
-        <a href="./login.html">MyCuckoo</a>
+        <a href="./index.html">MyCuckoo</a>
       </div>
+
       <ul class="layui-nav layui-layout-left" lay-filter="mycuckoo-nav">
         <li class="layui-nav-item"><a href="javascript:;">用户</a></li>
         <li class="layui-nav-item"><a href="javascript:;">系统</a></li>
       </ul>
+
       <ul class="layui-nav layui-layout-right" lay-filter="">
         <li class="layui-nav-item">
           <a href="javascript:;">
-            <img src="http://t.cn/RCzsdCq" class="layui-nav-img">Tine
+            <img src="public/static/images/form/blank_userphoto.gif" class="layui-nav-img">Tine
           </a>
           <dl class="layui-nav-child">
-            <dd><a href="">设置密码</a></dd>
+            <dd><a href="javascript: MyCuckoo.dialog('设置新密码', 'userInfoSetting.html', 480, 450);">设置密码</a></dd>
             <dd><a href="">个人中心</a></dd>
           </dl>
         </li>
@@ -41,11 +43,10 @@
         <div class="layui-side-scroll">
           <ul class="layui-nav layui-nav-tree" lay-filter="mycuckoo-side-nav">
             <li class="layui-nav-item layui-nav-itemed">
-              <a href="javascript:;">所有商品</a>
+              <a href="javascript:;">菜单管理</a>
               <dl class="layui-nav-child">
-                <dd><a href="javascript:;">列表一</a></dd>
-                <dd><a href="javascript:;">列表二</a></dd>
-                <dd><a href="javascript:;">列表三</a></dd>
+                <dd><a href="javascript:;">菜单</a></dd>
+                <dd><a href="javascript:;">按钮</a></dd>
               </dl>
             </li>
           </ul>
@@ -78,7 +79,7 @@
 </ul>
 </body>
 <script type="text/javascript" src="public/static/layui/2.4.3/layui.js" charset="UTF-8"></script>
-<script type="text/javascript" src="public/static/constants.js" charset="UTF-8"></script>
+<script type="text/javascript" src="public/static/mycuckoo.js" charset="UTF-8"></script>
 <script type="text/javascript" src="public/static/mycuckoo.api.js" charset="UTF-8"></script>
 <script type="text/javascript">
   layui.config({
@@ -87,72 +88,49 @@
   });
 
   layui.use(['jquery', 'element', 'admin'], function(){
-    var $ = layui.jquery;
-    var element = layui.element;
-    var tab = layui.admin.tab;
+    let $ = layui.jquery,
+      element = layui.element,
+      tab = layui.admin.tab;
 
-    /**
-     *  todo 导航条事件
-     */
-    var activeMenu = function (el) {
-      var sidebarIdForShow = $(el).attr('href');
-      $(sidebarIdForShow).siblings(':not(.layui-hide)').addClass('layui-hide');
-      $(sidebarIdForShow).removeClass('layui-hide');
+    let MenuMgr = function() {
+      api.postMenu(null).then(json => {
+        var menu = json.menu;
+        this.renderNavBar(menu);
+        this.renderSideNav(menu);
+
+        sessionStorage.setItem('myMenu', JSON.stringify(menu));
+        sessionStorage.setItem('userInfo', JSON.stringify(json.user));
+      });
     }
 
-    api.postMenu(null).then(data => {
-      var menu = data.menu;
+    MenuMgr.prototype = {
+      constructor: MenuMgr,
+      activeMenu (el) {
+        var sidebarIdForShow = $(el).attr('href');
+        $(sidebarIdForShow).siblings(':not(.layui-hide)').addClass('layui-hide');
+        $(sidebarIdForShow).removeClass('layui-hide');
+      },
       //顶部导航条
-      var lis = '';
-      for (var i = 0; i < menu.first.length; i++) {
-        var first = menu.first[i];
-        lis += '<li class="layui-nav-item ' + (i == 0 ? 'layui-this' : '') + '">' +
-          '     <a href="#side_nav_' + first.moduleId + '" class="' + first.modImgCls + '-hide">' + first.modName + '</a>' +
-          '   </li>';
-      }
-      $('.layui-nav[lay-filter=mycuckoo-nav]').html(lis);
-      //重新渲染导航
-      element.render('nav', 'mycuckoo-nav');
-      element.on('nav(mycuckoo-nav)', activeMenu);
-
-      //左侧导航栏
-      var div = '';
-      for (var i = 0; i < menu.first.length; i++) {
-        var first = menu.first[i];
-        div += '<div id="side_nav_' + first.moduleId + '" class="' + (i !=0 ? 'layui-hide' : '') + '">' +
-          '          <ul class="layui-nav layui-nav-tree" lay-filter="mycuckoo-side-nav">';
-
-        for (var ii = 0; ii < menu.second[first.moduleId].length; ii++) {
-          var second = menu.second[first.moduleId][ii];
-          div += '<li class="layui-nav-item">' +
-            '       <a class="' + second.modImgCls + '-hide" href="javascript:;">' + second.modName + '</a>' +
-            '       <dl class="layui-nav-child">';
-
-          for (var iii = 0; iii < menu.third[second.moduleId].length; iii++) {
-            var third = menu.third[second.moduleId][iii];
-            var href = 'view/' + third.belongToSys + '/' + third.modEnId + '.html?id=' + third.moduleId;
-            div += '<dd><a data-url="' + href + '" class="' + third.modImgCls + '-hide">' + third.modName + '</a></dd>';
-          }
-          div += '</dl>';
-          div += '</li>';
+      renderNavBar(menu) {
+        var lis = '';
+        for (var i = 0; i < menu.first.length; i++) {
+          var first = menu.first[i];
+          lis += '<li class="layui-nav-item ' + (i == 0 ? 'layui-this' : '') + '">' +
+            '     <a href="#side_nav_' + first.moduleId + '" class="' + first.modImgCls + '-hide">' + first.modName + '</a>' +
+            '   </li>';
         }
-        div += '</ul>';
-        div += '</div>';
-      }
-      $('.layui-side-scroll').html(div);
-      element.render('nav', 'mycuckoo-side-nav');
-      element.on('nav(mycuckoo-side-nav)', function (el) {
+        $('.layui-nav[lay-filter=mycuckoo-nav]').html(lis);
+        //重新渲染导航
+        element.render('nav', 'mycuckoo-nav');
+        element.on('nav(mycuckoo-nav)', this.activeMenu);
+      },
+      activeTab(el) {
         if (el.siblings('.layui-nav-child').length) {
 
         } else {
           var url = el.data('url');
           var title = el.html();
           var index = $('.mycuckoo-sidebar a').index(el);
-
-          if (url.indexOf('.html?') == -1) {
-            url = './login.html';
-          }
-
           for (var i = 0; i < $('.mycuckoo-frame').length; i++) {
             if ($('.mycuckoo-frame').eq(i).attr('tab-id') == index + 1) {
               tab.tabChange(index + 1);
@@ -163,10 +141,41 @@
           tab.tabAdd(title, url, index + 1);
           tab.tabChange(index + 1);
         }
-      });
+      },
+      //左侧导航栏
+      renderSideNav(menu) {
+        //左侧导航栏
+        var div = '';
+        for (var i = 0; i < menu.first.length; i++) {
+          var first = menu.first[i];
+          div += '<div id="side_nav_' + first.moduleId + '" class="' + (i !=0 ? 'layui-hide' : '') + '">' +
+            '          <ul class="layui-nav layui-nav-tree" lay-filter="mycuckoo-side-nav">';
 
-      sessionStorage.setItem('myMenu', JSON.stringify(menu));
-    });
+          for (var ii = 0; ii < menu.second[first.moduleId].length; ii++) {
+            var second = menu.second[first.moduleId][ii];
+            div += '<li class="layui-nav-item">' +
+              '       <a class="' + second.modImgCls + '-hide" href="javascript:;">' + second.modName + '</a>' +
+              '       <dl class="layui-nav-child">';
+
+            for (var iii = 0; iii < menu.third[second.moduleId].length; iii++) {
+              var third = menu.third[second.moduleId][iii];
+              var href = 'view/' + third.belongToSys + '/' + third.modEnId + '.html?id=' + third.moduleId;
+              div += '<dd><a data-url="' + href + '" class="' + third.modImgCls + '-hide">' + third.modName + '</a></dd>';
+            }
+            div += '</dl>';
+            div += '</li>';
+          }
+          div += '</ul>';
+          div += '</div>';
+        }
+        $('.layui-side-scroll').html(div);
+        element.render('nav', 'mycuckoo-side-nav');
+        element.on('nav(mycuckoo-side-nav)', this.activeTab);
+      }
+    }
+
+    new MenuMgr();
+    //the end
   });
 </script>
 </html>

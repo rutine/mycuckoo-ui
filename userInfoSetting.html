@@ -1,0 +1,96 @@
+<!DOCTYPE html>
+<html>
+<head>
+  <meta http-equiv="Content-Type" content="text/html; charset=utf-8" />
+  <title>设置新密码</title>
+  <link type="image/x-icon" href="public/static/images/favicon.ico" rel="shortcut icon" />
+  <link type="text/css" href="public/static/layui/2.4.3/css/layui.css" rel="stylesheet" />
+  <link type="text/css" href="public/static/css/mycuckoo.css" rel="stylesheet" />
+</head>
+<body>
+  <div class="mycuckoo-main">
+    <form class="layui-form layui-form-pane" name="editForm" lay-filter="editForm">
+      <div class="layui-form-item">
+        <div class="layui-inline">
+          <label class="layui-form-label">用户号</label>
+          <div class="layui-form-mid layui-word-aux" id="userCode"></div>
+        </div>
+      </div>
+
+      <div class="layui-form-item">
+        <div class="layui-inline">
+          <label class="layui-form-label">用户名</label>
+          <div class="layui-form-mid layui-word-aux" id="userName"></div>
+        </div>
+      </div>
+
+      <div class="layui-form-item">
+        <div class="layui-inline">
+          <label class="layui-form-label">密&nbsp;码</label>
+          <div class="layui-input-inline">
+            <input type="password" name="password" class="layui-input" lay-verify="required" />
+          </div>
+        </div>
+      </div>
+
+      <div class="layui-form-item">
+        <div class="layui-inline">
+          <label class="layui-form-label">新的密码</label>
+          <div class="layui-input-inline">
+            <input type="password" name="newPassword" class="layui-input" lay-verify="required" />
+          </div>
+        </div>
+      </div>
+
+      <div class="layui-form-item">
+        <div class="layui-inline">
+          <label class="layui-form-label">确认密码</label>
+          <div class="layui-input-inline">
+            <input type="password" name="confirmPassword" class="layui-input" lay-verify="required" />
+          </div>
+        </div>
+      </div>
+
+      <div class="layui-form-item">
+        <div class="layui-input-block">
+          <button class="layui-btn" lay-submit lay-filter="submit">确认</button>
+        </div>
+      </div>
+    </form>
+  </div>
+</body>
+<script type="text/javascript" src="public/static/layui/2.4.3/layui.js" charset="UTF-8"></script>
+<script type="text/javascript" src="public/static/mycuckoo.js" charset="UTF-8"></script>
+<script type="text/javascript" src="public/static/mycuckoo.api.js" charset="UTF-8"></script>
+<script type="text/javascript">
+  layui.config({
+    base: '../../public/static/extend/',
+    version: '101100'
+  });
+
+  layui.use(['jquery', 'form'], function() {
+    let $ = layui.jquery,
+      form = layui.form,
+      queryObj = MyCuckoo.getQueryObject(location.search);
+
+    let userInfo = JSON.parse(sessionStorage.getItem('userInfo'));
+
+    $('#userCode').text(userInfo.userCode);
+    $('#userName').text(userInfo.userName);
+
+    //监听提交
+    form.on('submit', function(data) {
+      $.put(api.userMgr.updatePwdUrl, data.field).then(json => {
+        MyCuckoo.confirm({
+          msg: json.data,
+          end: function() {
+            parent.location.href = parent.location.href.replace('index.html', 'login.html');
+          }
+        });
+      });
+      return false;
+    });
+    //end
+  });
+</script>
+</html>

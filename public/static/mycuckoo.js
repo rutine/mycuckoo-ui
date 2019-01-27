@@ -1,35 +1,17 @@
 layui.use(['jquery', 'layer'], function() {
   let $ = layui.jquery;
   let MyCuckoo = {
-    modalTemplate: '<div class="modal fade" tabindex="-1" role="dialog" aria-hidden="true">' +
-    '<div class="modal-dialog">' +
-    '<div class="modal-content">' +
-    '<div class="modal-header">' +
-    '<button type="button" class="close" data-dismiss="modal" aria-hidden="true">×</button>' +
-    '<h3>提示</h3>' +
-    '</div>' +
-    '<div class="modal-body">' +
-
-    '</div>' +
-    '<div class="modal-footer">' +
-    '<button class="btn btn-primary" data-loading-text="处理中...">保存</button>' +
-    '<button class="btn btn-default" data-dismiss="modal" aria-hidden="true">关闭</button>' +
-    '</div>' +
-    '</div>' +
-    '</div>' +
-    '</div>',
-
     /**
      * 获取当前页链接查询字符串的对象表示：http://localhost?search=word => {search: 'word'}
      *
      * @return json对象
      */
-    resolvePlaceholder: function (uri, obj) {
+    resolvePlaceholder: function(uri, uriVariables) {
       var path = uri;
-      for (var p in obj) {
-        var witch = typeof p;
+      for (var variable in uriVariables) {
+        var witch = typeof variable;
         if ("string" == witch || 'number' == witch) {
-          path = path.replace('{' + p + '}', obj[p]);
+          path = path.replace('{' + variable + '}', uriVariables[variable]);
         }
       }
 
@@ -130,25 +112,6 @@ layui.use(['jquery', 'layer'], function() {
     },
 
     /**
-     * 复选框绑定<code>click</code>事件
-     *
-     * @param 复选框所在的容器元素, 非必须
-     */
-    checkbox: function (container) {
-      var $table = container ? $(container).find('table.table') : $('table.table');
-      $table.off('click', 'input[name=all]:checkbox');
-      $table.off('click', 'tr:has(input[name=single]:checkbox)');
-      $table.on('click', 'input[name=all]:checkbox', function () {
-        var $singleCheckboxes = $table.find('input[name=single]:checkbox');
-        if (this.checked) {
-          $singleCheckboxes.prop('checked', 'checked');
-        } else {
-          $singleCheckboxes.prop('checked', null);
-        }
-      });
-    },
-
-    /**
      * 提示信息
      * @param config对象: {title: 'youTitle', msg: 'youMsg', duration: 1000}
      *    duration 表示信息多久后消失, 单位毫秒
@@ -220,6 +183,9 @@ layui.use(['jquery', 'layer'], function() {
 
           layer.close(index);
         }
+      }
+      if (config.end) {
+        options.end = config.end;
       }
 
       layer.open(options);

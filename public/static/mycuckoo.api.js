@@ -10,7 +10,13 @@ layui.use(['jquery'], function () {
     statusCode: {
       401: function(xhr) {
         layer.closeAll();
-        layer.open({title: '未登录', content: xhr.responseJSON.message});
+        layer.open({
+          title: '未登录',
+          content: xhr.responseJSON.message,
+          end: function () {
+            parent.location.href = parent.location.href.replace('index.html', 'login.html');
+          },
+        });
       },
       500: function(xhr) {
         layer.closeAll();
@@ -128,7 +134,7 @@ layui.use(['jquery'], function () {
       url: host + '/uum/user/mgr',
       queryUsersUrl: host + '/uum/user/mgr/query/users',
       updatePhoto: host + '/uum/user/mgr/update/photo',
-      updatePassword: host + '/uum/user/mgr/update/password',
+      updatePwdUrl: host + '/uum/user/mgr/update/password',
       resetPwdUrl: host + '/uum/user/mgr/{id}/reset-password',
       disEnableUrl: host + '/uum/user/mgr/{id}/disEnable/{disEnableFlag}',
       childNodesUrl: host + '/uum/user/mgr/{id}/child/nodes',
