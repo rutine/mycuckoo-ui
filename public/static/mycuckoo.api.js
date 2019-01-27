@@ -192,21 +192,8 @@ layui.use(['jquery'], function () {
       url: host + '/platform/system/log/mgr',
     },
     systemParameterMgr: {
-      list: function(params) {
-        return $.get('/platform/system/parameter/mgr/list', {params: params}).then(res => res.data);
-      },
-      create: function(params) {
-        return $.put('/platform/system/parameter/mgr/create', params).then(res => res.data);
-      },
-      update: function(params) {
-        return $.put('/platform/system/parameter/mgr/update', params).then(res => res.data);
-      },
-      view: function(params) {
-        return $.get('/platform/system/parameter/mgr/view', {params: params}).then(res => res.data);
-      },
-      disEnable: function(params) {
-        return $.get('/platform/system/parameter/mgr/disEnable', {params: params}).then(res => res.data);
-      },
+      url: host + '/platform/system/parameter/mgr',
+      disEnableUrl: host + '/platform/system/parameter/mgr/{id}/disEnable/{disEnableFlag}',
     }
   }
 
