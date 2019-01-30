@@ -216,8 +216,7 @@
       resetpwd() {
         let item = this;
         MyCuckoo.confirm({msg : '您确认要重置此用户密码?', ok : function() {
-          let url = MyCuckoo.resolvePlaceholder(api.userMgr.resetPwdUrl, {id: item.userId});
-          $.put(url, item.userName).then(data => {
+          $.put(api.userMgr.resetPwdUrl, {id: item.userId}, item.userName).then(data => {
             MyCuckoo.msg({ msg: data.data });
           });
         }});

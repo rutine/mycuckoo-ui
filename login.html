@@ -112,6 +112,7 @@
       var preLogin = function() {
         $bground.appendTo(($('body')));
         layer.msg('预登录中,请稍候... ');
+
         var userCode = $userCode.val();
         var password = $password.val();
         var params = {
@@ -153,9 +154,8 @@
           $signForm.hide();
           $rolePane.show();
         }).always(function() {
-          setTimeout(function() {
-            $bground.remove();
-          }, 1000);
+          $bground.remove();
+          layer.closeAll();
         });
       };
 
@@ -168,10 +168,6 @@
           } else {
             window.location.href = './index.html';
           }
-        }).always(function() {
-          setTimeout(function() {
-
-          }, 2000);
         });
       };
 

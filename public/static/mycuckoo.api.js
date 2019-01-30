@@ -111,7 +111,7 @@ layui.use(['jquery'], function () {
       return $.post(host + '/login/step/third', params).then(res => res.data);
     },
     getLogout: function() {
-      return $.post(host + '/login/logout').then(res => res.data);
+      return $.get(host + '/login/logout').then(res => res.data);
     },
 
     organMgr: {

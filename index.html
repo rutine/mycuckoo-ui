@@ -24,14 +24,16 @@
         <li class="layui-nav-item"><a href="javascript:;">系统</a></li>
       </ul>
 
-      <ul class="layui-nav layui-layout-right" lay-filter="">
+      <ul class="layui-nav layui-layout-right" lay-filter="mycuckoo-nav-right">
         <li class="layui-nav-item">
-          <a href="javascript:;">
-            <img src="public/static/images/form/blank_userphoto.gif" class="layui-nav-img">Tine
+          <a id="user" href="javascript:;">
+            <img id="filePicker" src="public/static/images/form/blank_userphoto.gif" class="layui-nav-img">
+            <span>Tine</span>
           </a>
           <dl class="layui-nav-child">
-            <dd><a href="javascript: MyCuckoo.dialog('设置新密码', 'userInfoSetting.html', 480, 450);">设置密码</a></dd>
-            <dd><a href="">个人中心</a></dd>
+            <dd><a href="javascript: " data-type="setPwd">设置密码</a></dd>
+            <dd><a href="javascript: " data-type="userInfo">个人中心</a></dd>
+            <dd><a href="javascript: " data-type="logout">退出登录</a></dd>
           </dl>
         </li>
         <li class="layui-nav-item"><a href=""></a></li>
@@ -55,9 +57,9 @@
     </section>
 
     <div class="layui-body mycuckoo-body">
-      <div id="mycuckooTab" class="layui-tab" lay-filter="mycuckoo-tab" lay-allowclose="true">
+      <div class="layui-tab mycuckoo-tab" lay-filter="mycuckoo-tab" lay-allowclose="true">
         <ul id="tabName" class="layui-tab-title">
-          <li class="layui-this">我的桌面</li>
+          <li class="layui-this welcome">我的桌面</li>
         </ul>
         <div class="layui-tab-content">
           <div class="layui-tab-item layui-show">
@@ -71,7 +73,7 @@
   </div>
 </div>
 <!--Tab菜单右键弹出菜单-->
-<ul id="tabPopupMenu" class="tab-popup-menu">
+<ul class="tab-popup-menu">
   <li data-type="refresh">刷新</li>
   <li data-type="close">关闭当前</li>
   <li data-type="closeOther">关闭其它</li>
@@ -87,24 +89,71 @@
     version: '101100'
   });
 
-  layui.use(['jquery', 'element', 'admin'], function(){
+  layui.use(['jquery', 'element', 'admin', 'upload'], function(){
     let $ = layui.jquery,
       element = layui.element,
-      tab = layui.admin.tab;
+      tab = layui.admin.tab,
+      upload = layui.upload;
 
     let MenuMgr = function() {
       api.postMenu(null).then(json => {
         var menu = json.menu;
         this.renderNavBar(menu);
         this.renderSideNav(menu);
+        this.user = json.user;
 
         sessionStorage.setItem('myMenu', JSON.stringify(menu));
         sessionStorage.setItem('userInfo', JSON.stringify(json.user));
+
+        var menuMgr = this;
+        element.on('nav(mycuckoo-nav-right)', function(data) {
+          var type = $(this).data('type');
+          menuMgr[type] && menuMgr[type](this);
+        });
+
+        $('a#user').find('span').text(this.user.userName);
+        if(this.user.userPhotoUrl) {
+          $('a#user').find('img').attr('src', this.user.userPhotoUrl)
+        }
+
+        //更换头像
+        upload.render({
+          elem: '#filePicker',
+          url: api.fileMgr.url,
+          accept: 'images',
+          data: {business: 'photo'},
+          done: function(res, index, upload) {
+            if(res.code == 0) { //上传成功
+              $.put(api.userMgr.updatePhoto, {photo: res.data.url}).then(json => {
+                $('a#user').find('img').attr('src', res.data.url)
+                MyCuckoo.msg({ msg: '成功更换头像' });
+              });
+              return;
+            }
+            this.error(index, upload);
+          },
+          error: function(index, upload) {
+            MyCuckoo.alert({title : '提示', msg : '上传头像失败!' });
+          }
+        });
       });
     }
 
     MenuMgr.prototype = {
       constructor: MenuMgr,
+      //设置密码
+      setPwd(el) {
+        MyCuckoo.dialog('设置新密码', './userInfoSetting.html', 480, 450);
+      },
+      //查看用户信息
+      userInfo(el) {
+        MyCuckoo.dialog('用户信息', './view/uum/userMgrForm.html?action=view&id=' + this.user.userId);
+      },
+      //注销登录
+      logout(el) {
+        api.getLogout().then(json => {  window.location.href = './login.html'; });
+      },
+
       activeMenu (el) {
         var sidebarIdForShow = $(el).attr('href');
         $(sidebarIdForShow).siblings(':not(.layui-hide)').addClass('layui-hide');
