@@ -21,12 +21,12 @@
         </div>
       </div>
       <div class="layui-inline">
-        <div class="layui-input-inline">
+        <div class="layui-input-block">
           <div class="layui-upload">
+            <input type="hidden" name="userPhotoUrl" />
             <div class="layui-upload-list">
-              <img id="demo" class="layui-upload-img" src="../../public/static/images/form/blank_userphoto.gif" value="userPhotoUrl" title="用户照片" />
+              <img id="filePicker" style="max-height: 120px; max-width: 120px;" class="layui-upload-img" src="../../public/static/images/form/blank_userphoto.gif" title="用户照片" />
             </div>
-            <button id="test1" class="layui-btn">上传图片</button>
           </div>
         </div>
       </div>
@@ -36,13 +36,13 @@
       <div class="layui-inline">
         <label class="layui-form-label">用户名</label>
         <div class="layui-input-inline">
-          <input type="text" name="userName" class="layui-input" autocomplete="off" lay-verify="required" maxlength="60" />
+          <input type="text" name="userName" class="layui-input" lay-verify="required" maxlength="60" />
         </div>
       </div>
       <div class="layui-inline">
         <label class="layui-form-label">密码</label>
         <div class="layui-input-inline">
-          <input type="text" name="userPassword" class="layui-input" autocomplete="off" lay-verify="required|alphanumeric" maxlength="20" />
+          <input type="password" name="userPassword" class="layui-input" lay-verify="required|alphanumeric" maxlength="20" />
         </div>
       </div>
     </div>
@@ -58,7 +58,7 @@
       <div class="layui-inline">
         <label class="layui-form-label">职位</label>
         <div class="layui-input-inline">
-          <input type="text" name="userPosition" class="layui-input" autocomplete="off" maxlength="20" />
+          <input type="text" name="userPosition" class="layui-input" maxlength="20" />
         </div>
       </div>
     </div>
@@ -67,28 +67,13 @@
       <div class="layui-inline">
         <label class="layui-form-label">用户QQ</label>
         <div class="layui-input-inline">
-          <input type="text" name="userQq" class="layui-input" autocomplete="off" lay-verify="number" maxlength="20" />
+          <input type="text" name="userQq" class="layui-input" lay-verify="number" maxlength="20" />
         </div>
       </div>
-      <div class="layui-inline">
-        <label class="layui-form-label">用户MSN</label>
-        <div class="layui-input-inline">
-          <input type="text" name="userMsn" class="layui-input" autocomplete="off" lay-verify="email" maxlength="30" />
-        </div>
-      </div>
-    </div>
-
-    <div class="layui-form-item">
       <div class="layui-inline">
         <label class="layui-form-label">用户手机</label>
         <div class="layui-input-inline">
-          <input type="text" name="userMobile" class="layui-input" autocomplete="off" lay-verify="phone" maxlength="20" />
-        </div>
-      </div>
-      <div class="layui-inline">
-        <label class="layui-form-label">用户手机2</label>
-        <div class="layui-input-inline">
-          <input type="text" name="userMobile2" class="layui-input" autocomplete="off" lay-verify="phone" maxlength="30" />
+          <input type="text" name="userMobile" class="layui-input" lay-verify="phone" maxlength="20" />
         </div>
       </div>
     </div>
@@ -97,28 +82,28 @@
       <div class="layui-inline">
         <label class="layui-form-label">办公电话</label>
         <div class="layui-input-inline">
-          <input type="text" name="userOfficeTel" class="layui-input" autocomplete="off" lay-verify="phone" maxlength="20" />
+          <input type="text" name="userOfficeTel" class="layui-input" lay-verify="phone" maxlength="20" />
         </div>
       </div>
       <div class="layui-inline">
         <label class="layui-form-label">家庭电话</label>
         <div class="layui-input-inline">
-          <input type="text" name="userFamilyTel" class="layui-input" autocomplete="off" lay-verify="phone" maxlength="30" />
+          <input type="text" name="userFamilyTel" class="layui-input" lay-verify="phone" maxlength="30" />
         </div>
       </div>
     </div>
 
     <div class="layui-form-item">
       <div class="layui-inline">
-        <label class="layui-form-label">家庭住址</label>
+        <label class="layui-form-label">用户邮件</label>
         <div class="layui-input-inline">
-          <input type="text" name="userAddress" class="layui-input" autocomplete="off" maxlength="100" />
+          <input type="text" name="userFamilyTel" class="layui-input" lay-verify="email" maxlength="30" />
         </div>
       </div>
       <div class="layui-inline">
-        <label class="layui-form-label">用户邮件</label>
+        <label class="layui-form-label">家庭住址</label>
         <div class="layui-input-inline">
-          <input type="text" name="userFamilyTel" class="layui-input" autocomplete="off" lay-verify="email" maxlength="30" />
+          <input type="text" name="userAddress" class="layui-input" maxlength="100" />
         </div>
       </div>
     </div>
@@ -127,14 +112,14 @@
       <div class="layui-inline">
         <label class="layui-form-label">用户有效期</label>
         <div class="layui-input-inline">
-          <input type="text" id="userAvidate" name="userAvidate" class="layui-input" placeholder="yyyy-MM-dd" autocomplete="off" lay-verify="date" />
+          <input type="text" name="userAvidate" class="layui-input" placeholder="yyyy-MM-dd" lay-verify="date" readonly />
         </div>
       </div>
       <div class="layui-inline">
         <label class="layui-form-label">所属角色</label>
         <div class="layui-input-inline">
           <input type="hidden" name="orgRoleId" lay-verify="required" />
-          <input type="text" name="roleName" class="layui-input" autocomplete="off" lay-verify="required" />
+          <input type="text" name="roleName" class="layui-input" lay-verify="required" readonly/>
         </div>
         <a class="layui-btn layui-btn-primary layui-btn-sm layui-btn-radius" data-type="selectRole">
           <i class="layui-icon layui-icon-search"></i>
@@ -185,34 +170,79 @@
     version: '101100'
   });
 
-  layui.use(['jquery', 'laytpl', 'form', 'laydate', 'dtree'], function() {
+  layui.use(['jquery', 'laytpl', 'form', 'laydate', 'dtree', 'upload'], function() {
     let $ = layui.jquery,
       laytpl = layui.laytpl,
       form = layui.form,
       layer = layui.layer,
       layDate = layui.laydate,
-      tree = layui.dtree;
+      tree = layui.dtree,
+      upload = layui.upload,
+      queryObj = MyCuckoo.getQueryObject(location.search);
 
-    let queryObj = MyCuckoo.getQueryObject(location.search);
+    let FormMgr = function() {
+      //渲染操作按钮
+      laytpl(operator.innerHTML).render(queryObj, function(html) {
+        $('.toolbar').html(html);
+      });
 
-    //渲染操作按钮
-    laytpl(operator.innerHTML).render(queryObj, function(html) {
-      $('.toolbar').html(html);
-    });
+      //表单初始赋值
+      if (queryObj.id) {
+        if(queryObj.action != 'create') {
+          $('input[name=userCode]').attr('readonly', true);
+        }
 
-    //表单初始赋值
-    if (queryObj.id) {
-      $.get(api.userMgr.url + '/' + queryObj.id).then(json => {
-        form.val('editForm', json.data);
+        $.get(api.userMgr.url + '/' + queryObj.id).then(json => {
+          form.val('editForm', json.data);
+
+          if(json.data.userPhotoUrl) {
+            $('img#filePicker').attr('src', json.data.userPhotoUrl)
+          }
+        });
+      }
+
+      //日期
+      layDate.render({
+        elem: 'input[name=userAvidate]'
+      });
+
+      //更换头像
+      upload.render({
+        elem: '#filePicker',
+        url: api.fileMgr.url,
+        accept: 'images',
+        data: {business: 'photo'},
+        done: function(res, index, upload) {
+          if(res.code == 0) { //上传成功
+            $('img#filePicker').attr('src', res.data.url);
+            $('input[name=userPhotoUrl]').val(res.data.url);
+            return;
+          }
+          this.error(index, upload);
+        },
+        error: function(index, upload) {
+          MyCuckoo.alert({title : '提示', msg : '上传头像失败!' });
+        }
+      });
+
+      let formMgr = this;
+      //操作按钮触发事件
+      $('form a.layui-btn[lay-submit!=submit]').on('click', function() {
+        var type = $(this).data('type');
+        formMgr[type] && formMgr[type](this);
+      });
+
+      //监听提交
+      form.on('submit', function(data) {
+        var type = $(this).data('type');
+        formMgr[type] && formMgr[type](data.field);
+
+        return false;
       });
     }
 
-    //日期
-    layDate.render({
-      elem: '#userAvidate'
-    });
-
-    let active = {
+    FormMgr.prototype = {
+      constructor: FormMgr,
       openTree(url, config) {
         let fillForm = function(data) {
           let valObj =  {};
@@ -267,19 +297,19 @@
           }
         });
       },
-      selectRole() {
+      selectRole(ele) {
         this.openTree(api.userMgr.childNodesUrl, {nodeId: 'orgRoleId', context: 'roleName'});
       },
-      create() {
-        $.postJson(api.userMgr.url, this.data).then(data => {
-          MyCuckoo.msg({msg: data.data});
+      create(data) {
+        $.postJson(api.userMgr.url, data).then(json => {
+          MyCuckoo.msg({msg: json.data});
 
           this.refresh();
         });
       },
-      update() {
-        $.put(api.userMgr.url, this.data).then(data => {
-          MyCuckoo.msg({msg: data.data});
+      update(data) {
+        $.put(api.userMgr.url, data).then(json => {
+          MyCuckoo.msg({msg: json.data});
 
           this.refresh();
         });
@@ -292,25 +322,13 @@
         }, 2000);
       },
       //关闭当前iframe页
-      reback() {
+      reback(ele) {
         let index = parent.layer.getFrameIndex(window.name);
         parent.layer.close(index);
       }
     }
 
-    //操作按钮触发事件
-    $('form a.layui-btn[lay-submit!=submit]').on('click', function() {
-      var type = $(this).data('type');
-      active[type] && active[type].call($.extend({}, active, this));
-    });
-
-    //监听提交
-    form.on('submit', function(data) {
-      var type = $(this).data('type');
-      active[type] && active[type].call($.extend({}, active, {data: data.field}));
-
-      return false;
-    });
+    new FormMgr();
     //end
   });
 </script>

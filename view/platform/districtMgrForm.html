@@ -382,15 +382,15 @@
         this.openTree(api.districtMgr.childNodesUrl, {nodeId: 'parentId', context: 'parentName'});
       },
       create(data) {
-        $.postJson(api.districtMgr.url, data).then(data => {
-          MyCuckoo.msg({msg: data.data});
+        $.postJson(api.districtMgr.url, data).then(json => {
+          MyCuckoo.msg({msg: json.data});
 
           this.refresh();
         });
       },
       update(data) {
-        $.put(api.districtMgr.url, data).then(data => {
-          MyCuckoo.msg({msg: data.data});
+        $.put(api.districtMgr.url, data).then(json => {
+          MyCuckoo.msg({msg: json.data});
 
           this.refresh();
         });

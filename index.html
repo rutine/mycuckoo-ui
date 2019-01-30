@@ -26,7 +26,7 @@
 
       <ul class="layui-nav layui-layout-right" lay-filter="mycuckoo-nav-right">
         <li class="layui-nav-item">
-          <a id="user" href="javascript:;">
+          <a href="javascript:;">
             <img id="filePicker" src="public/static/images/form/blank_userphoto.gif" class="layui-nav-img">
             <span>Tine</span>
           </a>
@@ -111,9 +111,9 @@
           menuMgr[type] && menuMgr[type](this);
         });
 
-        $('a#user').find('span').text(this.user.userName);
+        $('img#filePicker').siblings('span').text(this.user.userName);
         if(this.user.userPhotoUrl) {
-          $('a#user').find('img').attr('src', this.user.userPhotoUrl)
+          $('img#filePicker').attr('src', this.user.userPhotoUrl)
         }
 
         //更换头像
@@ -125,7 +125,7 @@
           done: function(res, index, upload) {
             if(res.code == 0) { //上传成功
               $.put(api.userMgr.updatePhoto, {photo: res.data.url}).then(json => {
-                $('a#user').find('img').attr('src', res.data.url)
+                $('img#filePicker').attr('src', res.data.url);
                 MyCuckoo.msg({ msg: '成功更换头像' });
               });
               return;
