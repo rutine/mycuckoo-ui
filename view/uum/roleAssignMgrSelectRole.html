@@ -11,11 +11,11 @@
 <div class="mycuckoo-main">
   <form class="layui-form">
     <div class="layui-btn-group">
-      <a href="javascript:" class="layui-btn layui-btn-sm" data-type="save" lay-submit="submit">保存
-        <i class="layui-icon glyphicon-hdd"></i>
+      <a href="javascript:" class="layui-btn layui-btn-sm" data-type="save" lay-submit="submit">
+        <i class="layui-icon layui-icon-ok-circle"></i>保存
       </a>
-      <a href="javascript:" class="layui-btn layui-btn-sm" data-type="reback">返回
-        <i class="layui-icon glyphicon-circle-arrow-left"></i>
+      <a href="javascript:" class="layui-btn layui-btn-sm" data-type="reback">
+        <i class="layui-icon layui-icon-return"></i>返回
       </a>
     </div>
   </form>
@@ -35,9 +35,9 @@
   layui.use(['jquery', 'form', 'table'], function() {
     let $ = layui.jquery,
       form = layui.form,
-      table = layui.table;
+      table = layui.table,
+      queryObj = MyCuckoo.getQueryObject(location.search);
 
-    let queryObj = MyCuckoo.getQueryObject(location.search);
     table.render({
       id: 'table',
       elem: '#table',
@@ -75,8 +75,19 @@
       }
     });
 
-    let active = {
-      save() {
+
+    let FormMgr = function () {
+      let formMgr = this;
+      //操作按钮触发事件
+      $('form a.layui-btn').on('click', function() {
+        var type = $(this).data('type');
+        formMgr[type] && formMgr[type](this);
+      });
+    }
+
+    FormMgr.prototype = {
+      constructor: FormMgr,
+      save(ele) {
         var data = table.checkStatus('table').data;
         if(data.length == 0) {
           MyCuckoo.alert({title: '提示', msg: '请选择一条或多条记录!'});
@@ -88,8 +99,8 @@
           roleIdList.push(item.roleId);
         });
         let params = {id : queryObj.orgId, roleIdList : roleIdList};
-        $.put(api.organRoleMgr.url, params).then(data => {
-          MyCuckoo.msg({msg: data.data});
+        $.put(api.organRoleMgr.url, params).then(json => {
+          MyCuckoo.msg({msg: json.data});
 
           this.refresh();
         });
@@ -102,17 +113,14 @@
         }, 2000);
       },
       //关闭当前iframe页
-      reback() {
+      reback(ele) {
         let index = parent.layer.getFrameIndex(window.name);
         parent.layer.close(index);
       }
     }
 
-    //操作按钮触发事件
-    $('form a.layui-btn').on('click', function() {
-      var type = $(this).data('type');
-      active[type] && active[type].call($.extend({}, active, this));
-    });
+    new FormMgr();
+    //the end
   });
 </script>
 </html>

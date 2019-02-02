@@ -172,7 +172,7 @@
         }
 
         let _this = this;
-        $.put(api.systemParameterMgr.disEnableUrl, {id: data.paraId, disEnableFlag: 'enable'}).then(data => {
+        $.put(api.systemParameterMgr.disEnableUrl, {id: data.paraId, disEnableFlag: 'enable'}).then(json => {
           MyCuckoo.msg({ msg: '参数启用成功' });
 
           _this.reload(); // 刷新列表
@@ -187,7 +187,7 @@
 
         let _this = this;
         MyCuckoo.confirm({msg : '您确认停用此参数?', ok : function() {
-          $.put(api.systemParameterMgr.disEnableUrl, {id: data.paraId, disEnableFlag: 'disable'}).then(data => {
+          $.put(api.systemParameterMgr.disEnableUrl, {id: data.paraId, disEnableFlag: 'disable'}).then(json => {
             MyCuckoo.msg({ msg: '参数停用成功' });
 
             _this.reload(); // 刷新列表

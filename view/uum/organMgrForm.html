@@ -6,7 +6,8 @@
   <link type="image/x-icon" href="../../public/static/images/favicon.ico" rel="shortcut icon" />
   <link type="text/css" href="../../public/static/layui/2.4.3/css/layui.css" rel="stylesheet" />
   <link type="text/css" href="../../public/static/css/mycuckoo.css" rel="stylesheet" />
-  <link type="text/css" href="../../public/static/css/eleTree.css" rel="stylesheet" />
+  <link type="text/css" href="../../public/static/dtree/css/dtree.css" rel="stylesheet" />
+  <link type="text/css" href="../../public/static/dtree/css/font/dtreefont.css" rel="stylesheet" />
 </head>
 <body>
   <div class="mycuckoo-main">
@@ -16,13 +17,13 @@
         <div class="layui-inline">
           <label class="layui-form-label">机构简称</label>
           <div class="layui-input-inline">
-            <input type="text" name="orgSimpleName" class="layui-input" autocomplete="off" />
+            <input type="text" name="orgSimpleName" class="layui-input" />
           </div>
         </div>
         <div class="layui-inline">
           <label class="layui-form-label">机构全称</label>
           <div class="layui-input-inline">
-            <input type="text" name="orgFullName" class="layui-input" autocomplete="off" />
+            <input type="text" name="orgFullName" class="layui-input" />
           </div>
         </div>
       </div>
@@ -38,7 +39,7 @@
           <label class="layui-form-label">所属地区</label>
           <div class="layui-input-inline">
             <input type="hidden" name="orgBelongDist" />
-            <input type="text" name="orgBelongDistName" class="layui-input" autocomplete="off" />
+            <input type="text" name="orgBelongDistName" class="layui-input" readonly/>
           </div>
           <a class="layui-btn layui-btn-primary layui-btn-sm layui-btn-radius" data-type="selectBelongDist">
             <i class="layui-icon layui-icon-search"></i>
@@ -50,13 +51,13 @@
         <div class="layui-inline">
           <label class="layui-form-label">联系地址1</label>
           <div class="layui-input-inline">
-            <input type="text" name="orgAddress1" class="layui-input" autocomplete="off" maxlength="100" />
+            <input type="text" name="orgAddress1" class="layui-input" maxlength="100" />
           </div>
         </div>
         <div class="layui-inline">
           <label class="layui-form-label">联系地址2</label>
           <div class="layui-input-inline">
-            <input type="text" name="orgAddress2" class="layui-input" autocomplete="off" maxlength="100" />
+            <input type="text" name="orgAddress2" class="layui-input" maxlength="100" />
           </div>
         </div>
       </div>
@@ -65,13 +66,13 @@
         <div class="layui-inline">
           <label class="layui-form-label">联系电话1</label>
           <div class="layui-input-inline">
-            <input type="text" name="orgTel1" class="layui-input" autocomplete="off" lay-verify="phone" />
+            <input type="text" name="orgTel1" class="layui-input" lay-verify="phone" />
           </div>
         </div>
         <div class="layui-inline">
           <label class="layui-form-label">联系电话2</label>
           <div class="layui-input-inline">
-            <input type="text" name="orgTel2" class="layui-input" autocomplete="off" lay-verify="phone" />
+            <input type="text" name="orgTel2" class="layui-input" lay-verify="phone" />
           </div>
         </div>
       </div>
@@ -80,7 +81,7 @@
         <div class="layui-inline">
           <label class="layui-form-label">成立日期</label>
           <div class="layui-input-inline">
-            <input type="text" id="orgBeginDate" name="orgBeginDate" class="layui-input" placeholder="yyyy-MM-dd" autocomplete="off" lay-verify="date" />
+            <input type="text" name="orgBeginDate" class="layui-input" placeholder="yyyy-MM-dd" lay-verify="date" readonly />
           </div>
         </div>
         <div class="layui-inline">
@@ -97,13 +98,13 @@
         <div class="layui-inline">
           <label class="layui-form-label">机构邮编</label>
           <div class="layui-input-inline">
-            <input type="text" name="orgPostal" class="layui-input" autocomplete="off" lay-verify="number" maxlength="6" />
+            <input type="text" name="orgPostal" class="layui-input" lay-verify="number" maxlength="6" />
           </div>
         </div>
         <div class="layui-inline">
           <label class="layui-form-label">法人代表</label>
           <div class="layui-input-inline">
-            <input type="text" name="orgLegal" class="layui-input" autocomplete="off" maxlength="10" />
+            <input type="text" name="orgLegal" class="layui-input" maxlength="10" />
           </div>
         </div>
       </div>
@@ -112,13 +113,13 @@
         <div class="layui-inline">
           <label class="layui-form-label">税务号</label>
           <div class="layui-input-inline">
-            <input type="text" name="orgTaxNo" class="layui-input" autocomplete="off" lay-verify="alphanumeric" maxlength="25" />
+            <input type="text" name="orgTaxNo" class="layui-input" lay-verify="alphanumeric" maxlength="25" />
           </div>
         </div>
         <div class="layui-inline">
           <label class="layui-form-label">注册登记号</label>
           <div class="layui-input-inline">
-            <input type="text" name="orgRegNo" class="layui-input" autocomplete="off" lay-verify="alphanumeric" maxlength="25" />
+            <input type="text" name="orgRegNo" class="layui-input" lay-verify="alphanumeric" maxlength="25" />
           </div>
         </div>
       </div>
@@ -128,7 +129,7 @@
           <label class="layui-form-label">上级机构</label>
           <div class="layui-input-inline">
             <input type="hidden" name="parentId" />
-            <input type="text" name="parentName" class="layui-input" autocomplete="off" lay-verify="required" />
+            <input type="text" name="parentName" class="layui-input" lay-verify="required" readonly />
           </div>
           <a class="layui-btn layui-btn-primary layui-btn-sm layui-btn-radius" data-type="selectOrgan">
             <i class="layui-icon layui-icon-search"></i>
@@ -147,29 +148,28 @@
     </form>
   </div>
 </body>
-<div id="tree" class="layui-hide" lay-filter="tree"></div>
 <script type="text/javascript" src="../../public/static/layui/2.4.3/layui.js" charset="UTF-8"></script>
 <script type="text/javascript" src="../../public/static/mycuckoo.js" charset="UTF-8"></script>
 <script type="text/javascript" src="../../public/static/mycuckoo.api.js" charset="UTF-8"></script>
 <script type="text/html" id="operator">
   <div class="layui-btn-group">
     {{# if(d.action == 'create') { }}
-    <a href="javascript: " class="layui-btn layui-btn-sm" data-type="create" lay-submit="submit">保存
-      <span class="layui-icon glyphicon-hdd"></span>
+    <a href="javascript: " class="layui-btn layui-btn-sm" data-type="create" lay-submit="submit">
+      <i class="layui-icon layui-icon-ok-circle"></i>保存
     </a>
-    <a href="javascript: " class="layui-btn layui-btn-sm" data-type="reback">返回
-      <span class="layui-icon glyphicon-circle-arrow-left"></span>
+    <a href="javascript: " class="layui-btn layui-btn-sm" data-type="reback">
+      <i class="layui-icon layui-icon-return"></i>返回
     </a>
     {{# } else if(d.action == 'modify') { }}
-    <a href="javascript:" class="layui-btn layui-btn-sm" data-type="update" lay-submit="submit">保存
-      <span class="layui-icon glyphicon-hdd"></span>
+    <a href="javascript:" class="layui-btn layui-btn-sm" data-type="update" lay-submit="submit">
+      <i class="layui-icon layui-icon-ok-circle"></i>保存
     </a>
-    <a href="javascript:" class="layui-btn layui-btn-sm" data-type="reback">返回
-      <span class="layui-icon glyphicon-circle-arrow-left"></span>
+    <a href="javascript:" class="layui-btn layui-btn-sm" data-type="reback">
+      <i class="layui-icon layui-icon-return"></i>返回
     </a>
     {{# } else if(d.action == 'view') { }}
-    <a href="javascript:" class="layui-btn layui-btn-sm" data-type="reback">返回
-      <span class="layui-icon glyphicon-circle-arrow-left"></span>
+    <a href="javascript:" class="layui-btn layui-btn-sm" data-type="reback">
+      <i class="layui-icon layui-icon-return"></i>返回
     </a>
     {{# } }}
   </div>
@@ -180,66 +180,66 @@
     version: '101100'
   });
 
-  layui.use(['jquery', 'laytpl', 'form', 'laydate', 'eleTree'], function() {
+  layui.use(['jquery', 'laytpl', 'form', 'laydate', 'dtree'], function() {
     let $ = layui.jquery,
       laytpl = layui.laytpl,
       form = layui.form,
       layer = layui.layer,
       layDate = layui.laydate,
-      eleTree = layui.eleTree;
+      tree = layui.dtree,
+      queryObj = MyCuckoo.getQueryObject(location.search);
 
-    let queryObj = MyCuckoo.getQueryObject(location.search);
 
-    //渲染操作按钮
-    laytpl(operator.innerHTML).render(queryObj, function(html) {
-      $('.toolbar').html(html);
-    });
+    let FormMgr = function() {
+      //渲染操作按钮
+      laytpl(operator.innerHTML).render(queryObj, function(html) {
+        $('.toolbar').html(html);
+      });
 
-    //初始化
-    $.get(api.dictionaryMgr.smallTypeUrl, {bigTypeCode: 'organType'}).then(json => {
-      let $select = $('select[name=orgType]');
-      $select.empty();
+      //初始化
+      $.get(api.dictionaryMgr.smallTypeUrl, {bigTypeCode: 'organType'}).then(json => {
+        let $select = $('select[name=orgType]');
+        $select.empty();
+        for (let i = 0; i < json.data.length; i++) {
+          let item = json.data[i];
+          $select.append('<option value="' + item.smallTypeCode + '">' + item.smallTypeName + '</option>');
+        }
+        form.render('select');
 
-      for (let i = 0; i < json.data.length; i++) {
-        let item = json.data[i];
-        $select.append('<option value="' + item.smallTypeCode + '">' + item.smallTypeName + '</option>');
-      }
+        //表单初始赋值
+        if (queryObj.id) {
+          $.get(api.organMgr.url + '/' + queryObj.id).then(json => {
+            form.val('editForm', json.data);
+          });
+        }
+      });
 
-      form.render('select');
-      //表单初始赋值
-      if (queryObj.id) {
-        $.get(api.organMgr.url + '/' + queryObj.id).then(json => {
-          form.val('editForm', json.data);
-        });
-      }
-    });
+      //日期
+      layDate.render({
+        elem: 'input[name=orgBeginDate]'
+      });
 
-    //日期
-    layDate.render({
-      elem: '#orgBeginDate'
-    });
+      let formMgr = this;
+      //操作按钮触发事件
+      $('form a.layui-btn[lay-submit!=submit]').on('click', function() {
+        var type = $(this).data('type');
+        formMgr[type] && formMgr[type](this);
+      });
 
-    let active = {
+      //监听提交
+      form.on('submit', function(data) {
+        var type = $(this).data('type');
+        formMgr[type] && formMgr[type](data.field);
+
+        return false;
+      });
+    }
+
+
+    FormMgr.prototype = {
+      constructor: FormMgr,
       openTree(url, config) {
-        let $tree = $('#tree');
-        eleTree.render({
-          elem: $tree,
-          url: MyCuckoo.resolvePlaceholder(url, {id: 0}),
-          defaultExpandAll: true,
-          request: { key: 'id', name: 'text' },
-          done: function() {
-            layer.open({
-              type: 1,
-              skin: 'layui-layer-rim', //加上边框
-              area: ['240px', '320px'], //宽高
-              content: $tree
-            });
-            $tree.removeClass('layui-hide');
-          }
-        });
-
-        eleTree.on('nodeClick(tree)', function(d) {
-          let data = d.data.currentData;
+        let fillForm = function(data) {
           let valObj =  {};
           for (let p in config) {
             if (typeof p == 'string') {
@@ -247,27 +247,57 @@
             }
           }
           form.val('editForm', valObj);
+        }
 
-          layer.close(layer.index);
-          $tree.addClass('layui-hide').off().empty();
-        })
+        layer.open({
+          type: 1,
+          title: "请选择",
+          area: ["400px", "80%"],
+          content: '<ul id="tree" class="dtree" data-id="0"></ul>',
+          btn: ['确认选择'],
+          success: function(layero, index){
+            let treeObj = tree.render({
+              elem: '#tree',
+              method: 'get',
+              type: 'all',
+              url: MyCuckoo.resolvePlaceholder(url, {id: 0, isCheckbox: 'Y'}),
+              dataStyle: 'layuiStyle',
+              response: { statusCode: 0, treeId: 'id', title: 'text'}
+            });
+            tree.on('nodedblclick(tree)', function(obj) {
+              let data = obj.param;
+              fillForm(data);
+              layer.close(index);
+            })
+          },
+          yes: function(index, layero) {
+            var param = tree.getNowParam('tree');
+            if(!param.nodeId) {
+              MyCuckoo.alert({msg: '请选择一个'});
+              return;
+            }
+
+            fillForm(param);
+            layer.close(index);
+          }
+        });
       },
-      selectBelongDist() {
-        this.openTree(api.districtMgr.childNodesUrl, {id: 'orgBelongDist', text: 'orgBelongDistName'});
+      selectBelongDist(ele) {
+        this.openTree(api.districtMgr.childNodesUrl, {nodeId: 'orgBelongDist', context: 'orgBelongDistName'});
       },
-      selectOrgan() {
-        this.openTree(api.organMgr.childNodesUrl, {id: 'parentId', text: 'parentName'});
+      selectOrgan(ele) {
+        this.openTree(api.organMgr.childNodesUrl, {nodeId: 'parentId', context: 'parentName'});
       },
-      create() {
-        $.postJson(api.organMgr.url, this.data).then(data => {
-          MyCuckoo.msg({msg: data.data});
+      create(data) {
+        $.postJson(api.organMgr.url, data).then(json => {
+          MyCuckoo.msg({msg: json.data});
 
           this.refresh();
         });
       },
-      update() {
-        $.put(api.organMgr.url, this.data).then(data => {
-          MyCuckoo.msg({msg: data.data});
+      update(data) {
+        $.put(api.organMgr.url, data).then(json => {
+          MyCuckoo.msg({msg: json.data});
 
           this.refresh();
         });
@@ -280,25 +310,13 @@
         }, 2000);
       },
       //关闭当前iframe页
-      reback() {
+      reback(ele) {
         let index = parent.layer.getFrameIndex(window.name);
         parent.layer.close(index);
       }
     }
 
-    //操作按钮触发事件
-    $('form a.layui-btn[lay-submit!=submit]').on('click', function() {
-      var type = $(this).data('type');
-      active[type] && active[type].call($.extend({}, active, this));
-    });
-
-    //监听提交
-    form.on('submit', function(data) {
-      var type = $(this).data('type');
-      active[type] && active[type].call($.extend({}, active, {data: data.field}));
-
-      return false;
-    });
+    new FormMgr();
     //end
   });
 </script>

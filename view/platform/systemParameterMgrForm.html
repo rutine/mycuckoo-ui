@@ -61,192 +61,25 @@
 <script type="text/html" id="operator">
   <div class="layui-btn-group">
     {{# if(d.action == 'create') { }}
-    <a href="javascript: " class="layui-btn layui-btn-sm" data-type="create" lay-submit="submit">保存
-      <span class="layui-icon glyphicon-hdd"></span>
+    <a href="javascript: " class="layui-btn layui-btn-sm" data-type="create" lay-submit="submit">
+      <i class="layui-icon layui-icon-ok-circle"></i>保存
     </a>
-    <a href="javascript: " class="layui-btn layui-btn-sm" data-type="reback">返回
-      <span class="layui-icon glyphicon-circle-arrow-left"></span>
+    <a href="javascript: " class="layui-btn layui-btn-sm" data-type="reback">
+      <i class="layui-icon layui-icon-return"></i>返回
     </a>
     {{# } else if(d.action == 'modify') { }}
-    <a href="javascript:" class="layui-btn layui-btn-sm" data-type="update" lay-submit="submit">保存
-      <span class="layui-icon glyphicon-hdd"></span>
+    <a href="javascript:" class="layui-btn layui-btn-sm" data-type="update" lay-submit="submit">
+      <i class="layui-icon layui-icon-ok-circle"></i>保存
     </a>
-    <a href="javascript:" class="layui-btn layui-btn-sm" data-type="reback">返回
-      <span class="layui-icon glyphicon-circle-arrow-left"></span>
+    <a href="javascript:" class="layui-btn layui-btn-sm" data-type="reback">
+      <i class="layui-icon layui-icon-return"></i>返回
     </a>
     {{# } else if(d.action == 'view') { }}
-    <a href="javascript:" class="layui-btn layui-btn-sm" data-type="reback">返回
-      <span class="layui-icon glyphicon-circle-arrow-left"></span>
+    <a href="javascript:" class="layui-btn layui-btn-sm" data-type="reback">
+      <i class="layui-icon layui-icon-return"></i>返回
     </a>
     {{# } }}
   </div>
-</script>
-<script type="text/javascript">
-  function formatDate(format) {
-    if (!format) return '';
-    let d = new Date();
-    if (format == 'yyyy') {
-      return d.getFullYear();
-    } else if (format == 'yyyyMM') {
-      let month = d.getMonth() + 1;
-      var monthStr = month < 10 ? '0' + month : month + '';
-      return d.getFullYear() + '' + monthStr;
-    } else if (format == 'yyyyMMdd') {
-      let month = d.getMonth() + 1;
-      var monthStr = month < 10 ? '0' + month : month + '';
-      return d.getFullYear() + '' + monthStr + '' + d.getDate();
-    } else if (format == 'userName') {
-      return 'zhangsan';
-    } else if (format == 'roleUser') {
-      return '管理员~zhangsan';
-    } else if (format == 'organRoleUser') {
-      return '广州~管理员~zhangsan';
-    } else {
-      return format;
-    }
-  }
-
-  //编码效果
-  function calcCodeEffect() {
-    let partNum = parseInt($('select[name=partNum]').val());
-    let delimite = $('select[name=delimite]').val();
-    let codePart1 = formatDate($('select[name=part1Con], input[name=part1Con]').val());
-    let codePart2 = formatDate($('select[name=part2Con], input[name=part2Con]').val());
-    let codePart3 = formatDate($('select[name=part3Con], input[name=part3Con]').val());
-    let codePart4 = formatDate($('select[name=part4Con], input[name=part4Con]').val());
-
-    let value;
-    switch (partNum) {
-      case 2:
-        value = [codePart1, codePart2].join(delimite);
-        break;
-      case 3:
-        value = [codePart1, codePart2, codePart3].join(delimite);
-        break;
-      case 4:
-        value = [codePart1, codePart2, codePart3, codePart4].join(delimite);
-        break;
-      default:
-        value = codePart1;
-    }
-
-    $('input[name=codeEffect]').val(value);
-  }
-
-  function PartSelector() {
-    this.commonSelector = [
-      '<select name="{placeholder}" lay-verify="required" lay-filter="calcSelector" target="{target}">',
-      '<option value="char">字符</option>',
-      '<option value="date">日期</option>',
-      '<option value="number">序号</option>',
-      '<option value="sysPara">系统参数</option>',
-      '</select>'
-    ].join('');
-
-    this.dateSelector = [
-      '<select name="{placeholder}" lay-verify="required" lay-filter="calcCodeEffect">',
-      '<option value="yyyy">年(yyyy)</option>',
-      '<option value="yyyyMM">年月(yyyyMM)</option>',
-      '<option value="yyyyMMdd">年月日(yyyyMMdd)</option>',
-      '</select>'
-    ].join('');
-
-    this.numberSelector = [
-      '<select name="{placeholder}" lay-verify="required" lay-filter="calcCodeEffect">',
-      '<option value="01">两位(01)</option>',
-      '<option value="001">三位(001)</option>',
-      '<option value="0001">四位(0001)</option>',
-      '<option value="00001">五位(00001)</option>',
-      '<option value="000001">六位(000001)</option>',
-      '</select>'
-    ].join('');
-
-    this.sysParaSelector = [
-      '<select name="{placeholder}" lay-verify="required" lay-filter="calcCodeEffect">',
-      '<option value="userName">用户名</option>',
-      '<option value="roleUser">角色+用户名</option>',
-      '<option value="organRoleUser">机构+角色+用户名</option>',
-      '</select>'
-    ].join('');
-
-    this.charSelector = '<input type="text" name="{placeholder}" class="layui-input" lay-verify="required" onchange="calcCodeEffect()"/>';
-  }
-  PartSelector.prototype.render = function (config) {
-    if(!config.elem) {
-      MyCuckoo.alert({title: '没有指定元素属性[elem]'});
-      return;
-    }
-
-    let $wrapper = $(config.elem);
-    if ($(config.elem).length === 0) {
-      MyCuckoo.alert({title: '找不到元素: ' + config.elem});
-      return;
-    }
-
-    [1, 2, 3, 4].forEach((item, index) => {
-      let partName = 'part1',
-        partTitle = '段一格式',
-        partConName = 'part1Con',
-        partConTitle = '段一内容';
-      switch (item) {
-        case 1:
-          partName = 'part1';
-          partTitle = '段一格式';
-          partConName = 'part1Con';
-          partConTitle = '段一内容';
-          break;
-        case 2:
-          partName = 'part2';
-          partTitle = '段二格式';
-          partConName = 'part2Con';
-          partConTitle = '段二内容';
-          break;
-        case 3:
-          partName = 'part3';
-          partTitle = '段三格式';
-          partConName = 'part3Con';
-          partConTitle = '段三内容';
-          break;
-        case 4:
-          partName = 'part4';
-          partTitle = '段四格式';
-          partConName = 'part4Con';
-          partConTitle = '段四内容';
-          break;
-      }
-
-      let selector = [
-        '<div class="layui-form-item">',
-        '<div class="layui-inline">',
-        '<label class="layui-form-label">' + partTitle + '</label>',
-        '<div class="layui-input-inline">',
-        this.commonSelector.replace('{placeholder}', partName).replace('{target}', partConName),
-        '</div>',
-        '</div>',
-        '<div class="layui-inline">',
-        '<label class="layui-form-label">' + partConTitle + '</label>',
-        '<div class="layui-input-inline" >',
-        this[(config.data && config.data[partName]) ? (config.data[partName] + 'Selector') : 'charSelector'].replace('{placeholder}', partConName),
-        '</div>',
-        '</div>',
-        '</div>'
-      ].join('');
-      $wrapper.append(selector);
-
-      let that = this;
-      config.form.render('select');
-      config.form.on('select(calcSelector)', function (data) {
-        let target = $(data.elem).attr('target');
-        $('[name=' + target + ']').parent().children().off().parent().empty()
-          .html(that[data.value + 'Selector'].replace('{placeholder}', data.elem.name + 'Con'));
-        config.form.render('select');
-        calcCodeEffect();
-      });
-      config.form.on('select(calcCodeEffect)', function (data) {
-        calcCodeEffect();
-      });
-    });
-  }
 </script>
 <script type="text/javascript">
   layui.config({
@@ -310,15 +143,15 @@
     FormMgr.prototype = {
       constructor: FormMgr,
       create(data) {
-        $.postJson(api.systemParameterMgr.url, data).then(data => {
-          MyCuckoo.msg({msg: data.data});
+        $.postJson(api.systemParameterMgr.url, data).then(json => {
+          MyCuckoo.msg({msg: json.data});
 
           this.refresh();
         });
       },
       update(data) {
-        $.put(api.systemParameterMgr.url, data).then(data => {
-          MyCuckoo.msg({msg: data.data});
+        $.put(api.systemParameterMgr.url, data).then(json => {
+          MyCuckoo.msg({msg: json.data});
 
           this.refresh();
         });

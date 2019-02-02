@@ -140,8 +140,8 @@
     let active = {
       //查看
       view(data) {
-        $.get(api.systemLogMgr.url + '/' + data.optId).then(data => {
-          MyCuckoo.alert({title : '日志内容查看', msg : data.data });
+        $.get(api.systemLogMgr.url + '/' + data.optId).then(json => {
+          MyCuckoo.alert({title : '日志内容查看', msg : json.data });
         });
       },
     }

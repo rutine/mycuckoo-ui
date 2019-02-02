@@ -157,7 +157,7 @@
 
     table.on('toolbar(table)', function (obj) {
       if (obj.event == 'add') {
-        active[obj.event].call(this);
+        active[obj.event](this);
         return;
       }
 
@@ -167,7 +167,7 @@
         return;
       }
 
-      active[obj.event] ? active[obj.event].call(data) : '';
+      active[obj.event] && active[obj.event](data);
     });
 
     function reload() {
@@ -176,22 +176,21 @@
 
     let active = {
       //增加
-      add() {
+      add(ele) {
         MyCuckoo.dialog('模块信息', 'moduleMgrForm.html?action=create');
       },
       //修改
-      modify() {
-        MyCuckoo.dialog('模块信息', 'moduleMgrForm.html?action=modify&id=' + this.moduleId);
+      modify(data) {
+        MyCuckoo.dialog('模块信息', 'moduleMgrForm.html?action=modify&id=' + data.moduleId);
       },
       //查看
-      view() {
-        MyCuckoo.dialog('模块信息', 'moduleMgrForm.html?action=view&id=' + this.moduleId);
+      view(data) {
+        MyCuckoo.dialog('模块信息', 'moduleMgrForm.html?action=view&id=' + data.moduleId);
       },
       //删除
-      delete() {
-        let item = this;
+      delete(data) {
         MyCuckoo.confirm({msg : '您确认删除此记录吗?', ok : function() {
-          $.delete(api.moduleMgr + '/' + item.moduleId).then(data => {
+          $.delete(api.moduleMgr + '/' + data.moduleId).then(json => {
             MyCuckoo.msg({ msg: '菜单停用成功' });
 
             reload(); // 刷新列表
@@ -199,37 +198,35 @@
         }});
       },
       //启用
-      enable() {
-        let item = this;
-        if(item.status == 'enable') {
+      enable(data) {
+        if(data.status == 'enable') {
           MyCuckoo.msg({ msg : '此菜单已经启用' });
           return;
         }
-        if (item.modLevel != 3) {
+        if (data.modLevel != 3) {
           MyCuckoo.msg({ msg : '请您选择第三级菜单!' });
           return;
         }
 
-        $.put(api.moduleMgr.disEnableUrl, {id: item.moduleId, disEnableFlag: 'enable'}).then(data => {
+        $.put(api.moduleMgr.disEnableUrl, {id: data.moduleId, disEnableFlag: 'enable'}).then(json => {
           MyCuckoo.msg({ msg: '菜单启用成功' });
 
           reload(); // 刷新列表
         });
       },
       //停用
-      disable() {
-        let item = this;
-        if(item.status == 'disable') {
+      disable(data) {
+        if(data.status == 'disable') {
           MyCuckoo.alert({ title : '提示', msg : '此菜单已经停用' });
           return;
         }
-        if (item.modLevel != 3) {
+        if (data.modLevel != 3) {
           MyCuckoo.alert({ msg : '请您选择第三级菜单!' });
           return;
         }
 
         MyCuckoo.confirm({msg : '您确认停用此菜单吗?如果停用,此菜单下的操作将自动清除,并重登生效.', ok : function() {
-          $.put(api.moduleMgr.disEnableUrl, {id: item.moduleId, disEnableFlag: 'disable'}).then(data => {
+          $.put(api.moduleMgr.disEnableUrl, {id: data.moduleId, disEnableFlag: 'disable'}).then(json => {
             MyCuckoo.msg({ msg: '菜单停用成功' });
 
             reload(); // 刷新列表
@@ -237,21 +234,20 @@
         }});
       },
       //分配菜单操作
-      optassign() {
-        let item = this;
-        if(item.modLevel != 3) {
+      optassign(data) {
+        if(data.modLevel != 3) {
           MyCuckoo.alert({ msg: '请您选择第三级模块菜单'});
           return;
         }
 
-        MyCuckoo.dialog('模块信息', 'moduleMgrAssignOpts.html?id=' + this.moduleId + '&name=' + this.modName);
+        MyCuckoo.dialog('模块信息', 'moduleMgrAssignOpts.html?id=' + data.moduleId + '&name=' + data.modName);
       },
       //
-      optpri() {
+      optpri(data) {
         MyCuckoo.alert({ msg: '开发中...'});
       },
       //
-      moduleLabel() {
+      moduleLabel(data) {
         MyCuckoo.alert({ msg: '开发中...'});
       }
     }

@@ -67,8 +67,8 @@
       table = layui.treeGrid;
 
     //本地缓存数据
-    let menu = JSON.parse(sessionStorage.getItem('myMenu'));
     let queryObj = MyCuckoo.getQueryObject(location.search);
+    let menu = JSON.parse(sessionStorage.getItem('myMenu'));
     let operator = menu.fourth[queryObj.id];
 
     form.on('submit(search)', function(data) {
@@ -137,7 +137,7 @@
 
     table.on('toolbar(table)', function (obj) {
       if (obj.event == 'add') {
-        active[obj.event].call(this);
+        active[obj.event](this);
         return;
       }
 
@@ -147,58 +147,57 @@
         return;
       }
 
-      active[obj.event] ? active[obj.event].call(data) : '';
+      active[obj.event] && active[obj.event](data);
     });
 
-    function reload() {
-      table.reload('table', { page: { pageNo: 1 } });
-    }
-
     let active = {
+      reload() {
+        table.reload('table', { page: { pageNo: 1 } });
+      },
       //增加
-      add() {
+      add(ele) {
         MyCuckoo.dialog('机构信息', 'organMgrForm.html?action=create');
       },
       //修改
-      modify() {
-        MyCuckoo.dialog('机构信息', 'organMgrForm.html?action=modify&id=' + this.orgId);
+      modify(data) {
+        MyCuckoo.dialog('机构信息', 'organMgrForm.html?action=modify&id=' + data.orgId);
       },
       //查看
-      view() {
-        MyCuckoo.dialog('机构信息', 'organMgrForm.html?action=view&id=' + this.orgId);
+      view(data) {
+        MyCuckoo.dialog('机构信息', 'organMgrForm.html?action=view&id=' + data.orgId);
       },
       //启用
-      enable() {
-        let item = this;
-        if(item.status == 'enable') {
+      enable(data) {
+        if(data.status == 'enable') {
           MyCuckoo.msg({ msg : '此机构已经启用' });
           return;
         }
 
-        $.put(api.organMgr.disEnableUrl, {id: item.orgId, disEnableFlag: 'enable'}).then(data => {
+        let _this = this;
+        $.put(api.organMgr.disEnableUrl, {id: data.orgId, disEnableFlag: 'enable'}).then(json => {
           MyCuckoo.msg({ msg: '机构启用成功' });
 
-          reload(); // 刷新列表
+          _this.reload(); // 刷新列表
         });
       },
       //停用
-      disable() {
-        let item = this;
-        if(item.status == 'disable') {
+      disable(data) {
+        if(data.status == 'disable') {
           MyCuckoo.alert({ title : '提示', msg : '此机构已经停用' });
           return;
         }
 
+        let _this = this;
         MyCuckoo.confirm({msg : '您确认停用此机构吗.', ok : function() {
-          $.put(api.organMgr.disEnableUrl, {id: item.orgId, disEnableFlag: 'disable'}).then(data => {
+          $.put(api.organMgr.disEnableUrl, {id: data.orgId, disEnableFlag: 'disable'}).then(json => {
             MyCuckoo.msg({ msg: '机构停用成功' });
 
-            reload(); // 刷新列表
+            _this.reload(); // 刷新列表
           });
         }});
       }
     }
-
+    // the end
   });
 </script>
 </html>

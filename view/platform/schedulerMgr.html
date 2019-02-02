@@ -160,8 +160,8 @@
       delete(data) {
         let _this = this;
         MyCuckoo.confirm({msg : '您确认删除此记录吗?', ok : function() {
-          $.delete(api.schedulerMgr.url + '/' + data.jobId, {}).then(data => {
-            MyCuckoo.msg({ msg: data.data });
+          $.delete(api.schedulerMgr.url + '/' + data.jobId, {}).then(json => {
+            MyCuckoo.msg({ msg: json.data });
 
             _this.reload(); // 刷新列表
           });
@@ -175,8 +175,8 @@
         }
 
         let _this = this;
-        $.put(api.schedulerMgr.startJobUrl, {id: data.jobId}).then(data => {
-          MyCuckoo.msg({state: 'success', title: '提示', msg: data.data});
+        $.put(api.schedulerMgr.startJobUrl, {id: data.jobId}).then(json => {
+          MyCuckoo.msg({state: 'success', title: '提示', msg: json.data});
 
           _this.reload(); // 刷新列表
         });
@@ -189,8 +189,8 @@
         }
 
         let _this = this;
-        $.put(api.schedulerMgr.stopJobUrl, {id: data.jobId}).then(data => {
-          MyCuckoo.msg({state: 'success', title: '提示', msg: data.data});
+        $.put(api.schedulerMgr.stopJobUrl, {id: data.jobId}).then(json => {
+          MyCuckoo.msg({state: 'success', title: '提示', msg: json.data});
 
           _this.reload(); // 刷新列表
         });
@@ -198,8 +198,8 @@
       //启动调度器
       schedulerStart(ele) {
         let _this = this;
-        $.postJson(api.schedulerMgr.startSchedulerUrl, {}).then(data => {
-          MyCuckoo.msg({ msg: data.data });
+        $.postJson(api.schedulerMgr.startSchedulerUrl, {}).then(json => {
+          MyCuckoo.msg({ msg: json.data });
 
           _this.reload(); // 刷新列表
         });
@@ -207,8 +207,8 @@
       //停止调度器
       schedulerStart(ele) {
         let _this = this;
-        $.postJson(api.schedulerMgr.stopSchedulerUrl, {}).then(data => {
-          MyCuckoo.msg({ msg: data.data });
+        $.postJson(api.schedulerMgr.stopSchedulerUrl, {}).then(json => {
+          MyCuckoo.msg({ msg: json.data });
 
           _this.reload(); // 刷新列表
         });

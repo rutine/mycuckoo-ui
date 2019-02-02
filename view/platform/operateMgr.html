@@ -64,8 +64,8 @@
       table = layui.table;
 
     //本地缓存数据
-    let menu = JSON.parse(sessionStorage.getItem('myMenu'));
     let queryObj = MyCuckoo.getQueryObject(location.search);
+    let menu = JSON.parse(sessionStorage.getItem('myMenu'));
     let operator = menu.fourth[queryObj.id];
 
     form.on('submit(search)', function(data) {
@@ -125,7 +125,7 @@
 
     table.on('toolbar(table)', function (obj) {
       if (obj.event == 'add') {
-        active[obj.event].call(this);
+        active[obj.event](this);
         return;
       }
 
@@ -135,7 +135,7 @@
         return;
       }
 
-      active[obj.event] ? active[obj.event].call(data[0]) : '';
+      active[obj.event] && active[obj.event](data[0]);
     });
 
     function reload() {
@@ -144,41 +144,39 @@
 
     let active = {
       //增加
-      add() {
+      add(ele) {
         MyCuckoo.dialog('角色信息', 'operateMgrForm.html?action=create');
       },
       //修改
-      modify() {
-        MyCuckoo.dialog('角色信息', 'operateMgrForm.html?action=modify&id=' + this.operateId);
+      modify(data) {
+        MyCuckoo.dialog('角色信息', 'operateMgrForm.html?action=modify&id=' + data.operateId);
       },
       //查看
-      view() {
-        MyCuckoo.dialog('角色信息', 'operateMgrForm.html?action=view&id=' + this.operateId);
+      view(data) {
+        MyCuckoo.dialog('角色信息', 'operateMgrForm.html?action=view&id=' + data.operateId);
       },
       //启用
-      enable() {
-        let item = this;
-        if(item.status == 'enable') {
+      enable(data) {
+        if(data.status == 'enable') {
           MyCuckoo.msg({ msg : '此操作已经启用' });
           return;
         }
 
-        $.put(api.operateMgr.disEnableUrl, {id: item.operateId, disEnableFlag: 'enable'}).then(data => {
+        $.put(api.operateMgr.disEnableUrl, {id: data.operateId, disEnableFlag: 'enable'}).then(json => {
           MyCuckoo.msg({ msg: '操作启用成功' });
 
           reload(); // 刷新列表
         });
       },
       //停用
-      disable() {
-        let item = this;
-        if(item.status == 'disable') {
+      disable(data) {
+        if(data.status == 'disable') {
           MyCuckoo.alert({ title : '提示', msg : '此操作已经停用' });
           return;
         }
 
         MyCuckoo.confirm({msg : '您确认停用此操作吗? 如果停用,相应模块下的此操作将自动清除,并重登生效.', ok : function() {
-          $.put(api.operateMgr.disEnableUrl, {id: item.operateId, disEnableFlag: 'disable'}).then(data => {
+          $.put(api.operateMgr.disEnableUrl, {id: data.operateId, disEnableFlag: 'disable'}).then(json => {
             MyCuckoo.msg({ msg: '操作停用成功' });
 
             reload(); // 刷新列表

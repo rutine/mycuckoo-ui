@@ -125,7 +125,7 @@
 
     table.on('toolbar(table)', function (obj) {
       if (obj.event == 'add') {
-        active[obj.event].call(this);
+        active[obj.event](this);
         return;
       }
 
@@ -135,7 +135,7 @@
         return;
       }
 
-      active[obj.event] ? active[obj.event].call(data[0]) : '';
+      active[obj.event] && active[obj.event](data[0]);
     });
 
     function reload() {
@@ -144,41 +144,39 @@
 
     let active = {
       //增加
-      add() {
+      add(ele) {
         MyCuckoo.dialog('字典信息', 'dictionaryMgrForm.html?action=create');
       },
       //修改
-      modify() {
-        MyCuckoo.dialog('字典信息', 'dictionaryMgrForm.html?action=modify&id=' + this.bigTypeId);
+      modify(data) {
+        MyCuckoo.dialog('字典信息', 'dictionaryMgrForm.html?action=modify&id=' + data.bigTypeId);
       },
       //查看
-      view() {
-        MyCuckoo.dialog('字典信息', 'dictionaryMgrForm.html?action=view&id=' + this.bigTypeId);
+      view(data) {
+        MyCuckoo.dialog('字典信息', 'dictionaryMgrForm.html?action=view&id=' + data.bigTypeId);
       },
       //启用
-      enable() {
-        let item = this;
-        if(item.status == 'enable') {
+      enable(data) {
+        if(data.status == 'enable') {
           MyCuckoo.msg({ msg : '此字典已经启用' });
           return;
         }
 
-        $.put(api.dictionaryMgr.disEnableUrl, {id: item.bigTypeId, disEnableFlag: 'enable'}).then(data => {
+        $.put(api.dictionaryMgr.disEnableUrl, {id: data.bigTypeId, disEnableFlag: 'enable'}).then(json => {
           MyCuckoo.msg({ msg: '字典启用成功' });
 
           reload(); // 刷新列表
         });
       },
       //停用
-      disable() {
-        let item = this;
-        if(item.status == 'disable') {
+      disable(data) {
+        if(data.status == 'disable') {
           MyCuckoo.alert({ title : '提示', msg : '此字典已经停用' });
           return;
         }
 
         MyCuckoo.confirm({msg : '您确认停用此字典?', ok : function() {
-          $.put(api.dictionaryMgr.disEnableUrl, {id: item.bigTypeId, disEnableFlag: 'disable'}).then(data => {
+          $.put(api.dictionaryMgr.disEnableUrl, {id: data.bigTypeId, disEnableFlag: 'disable'}).then(json => {
             MyCuckoo.msg({ msg: '字典停用成功' });
 
             reload(); // 刷新列表

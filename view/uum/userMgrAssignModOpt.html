@@ -34,17 +34,17 @@
 
           <div class="layui-form-item">
             <label class="layui-form-label">模块</label>
-            <div class="layui-input-block select-side" style="max-height: 310px;">
-              <ul id="tree" class="select-side-body" data-id="0" lay-filter="tree"></ul>
+            <div class="layui-input-block" style="max-height: 310px; overflow: auto;">
+              <ul id="tree" data-id="0" lay-filter="tree"></ul>
             </div>
           </div>
 
           <div class="layui-btn-group">
-            <a href="javascript:" class="layui-btn layui-btn-sm" data-type="saveOperationPrivilege" lay-submit="submit">保存
-              <i class="layui-icon glyphicon-hdd"></i>
+            <a href="javascript:" class="layui-btn layui-btn-sm" data-type="saveOperationPrivilege" lay-submit="submit">
+              <i class="layui-icon layui-icon-ok-circle"></i>保存
             </a>
-            <a href="javascript:" class="layui-btn layui-btn-sm" data-type="reback">返回
-              <i class="layui-icon glyphicon-circle-arrow-left"></i>
+            <a href="javascript:" class="layui-btn layui-btn-sm" data-type="reback">
+              <i class="layui-icon layui-icon-return"></i>返回
             </a>
           </div>
         </form>
@@ -64,8 +64,8 @@
           <div id="orgScope" class="layui-hide scope">
             <div class="layui-form-item">
               <label class="layui-form-label">机构</label>
-              <div class="layui-input-block select-side">
-                <ul id="orgScopeTree" class="select-side-body" data-id="0" lay-filter="row-tree"></ul>
+              <div class="layui-input-block" style="max-height: 310px; overflow: auto;">
+                <ul id="orgScopeTree" data-id="0" lay-filter="row-tree"></ul>
               </div>
             </div>
           </div>
@@ -73,8 +73,8 @@
           <div id="rolScope" class="layui-hide scope">
             <div class="layui-form-item">
               <label class="layui-form-label">角色</label>
-              <div class="layui-input-block select-side">
-                <ul id="rolScopeTree" class="select-side-body" data-id="0" lay-filter="row-tree"></ul>
+              <div class="layui-input-block" style="max-height: 310px; overflow: auto;">
+                <ul id="rolScopeTree" data-id="0" lay-filter="row-tree"></ul>
               </div>
             </div>
           </div>
@@ -91,18 +91,18 @@
             </div>
             <div class="layui-form-item">
               <label class="layui-form-label">用户</label>
-              <div class="layui-input-block select-side">
-                <ul id="usrScopeTree" class="select-side-body" data-id="0" lay-filter="row-tree"></ul>
+              <div class="layui-input-block" style="max-height: 310px; overflow: auto;">
+                <ul id="usrScopeTree" data-id="0" lay-filter="row-tree"></ul>
               </div>
             </div>
           </div>
 
           <div class="layui-btn-group">
-            <a href="javascript:" class="layui-btn layui-btn-sm" data-type="saveRowPrivilege" lay-submit="submit">保存
-              <i class="layui-icon glyphicon-hdd"></i>
+            <a href="javascript:" class="layui-btn layui-btn-sm" data-type="saveRowPrivilege" lay-submit="submit">
+              <i class="layui-icon layui-icon-ok-circle"></i>保存
             </a>
-            <a href="javascript:" class="layui-btn layui-btn-sm" data-type="reback">返回
-              <i class="layui-icon glyphicon-circle-arrow-left"></i>
+            <a href="javascript:" class="layui-btn layui-btn-sm" data-type="reback">
+              <i class="layui-icon layui-icon-return"></i>返回
             </a>
           </div>
         </form>
@@ -124,38 +124,62 @@
     let $ = layui.jquery,
       element = layui.element,
       form = layui.form,
-      tree = layui.dtree;
+      tree = layui.dtree,
+      queryObj = MyCuckoo.getQueryObject(location.search);
 
-    let queryObj = MyCuckoo.getQueryObject(location.search);
+
     let treeObj;
 
-    //表单初始赋值
-    if (queryObj.id) {
-      $('fieldset > legend').text(queryObj.userName);
-      $.get(api.userMgr.userPrivilegeUrl, queryObj).then(json => {
-        form.val('userAssignModOpt', json.data);
-        form.val('userAssignRowPriv', json.data);
+    let FormMgr = function () {
+      //表单初始赋值
+      if (queryObj.id) {
+        $('fieldset > legend').text(queryObj.userName);
+        $.get(api.userMgr.userPrivilegeUrl, queryObj).then(json => {
+          form.val('userAssignModOpt', json.data);
+          form.val('userAssignRowPriv', json.data);
 
-        //菜单操作权限树
-        treeObj = tree.render({
-          elem: '#tree',
-          method: 'get',
-          data: json.data.source,
-          dataStyle: 'layuiStyle',
-          response: { statusCode: 0, treeId: 'id', title: 'text', isLast: 'isLeaf', checkArr: 'checkBox'},
-          checkbar: true,
-          nodeIconArray:{'1': {'open': 'dtree-icon-move-up', 'close': 'dtree-icon-move-down'}},
-          icon: ['1', '5']
+          //菜单操作权限树
+          treeObj = tree.render({
+            elem: '#tree',
+            method: 'get',
+            data: json.data.source,
+            dataStyle: 'layuiStyle',
+            response: { statusCode: 0, treeId: 'id', title: 'text', isLast: 'isLeaf', checkArr: 'checkBox'},
+            checkbar: true,
+            nodeIconArray:{'1': {'open': 'dtree-icon-move-up', 'close': 'dtree-icon-move-down'}},
+            icon: ['1', '5']
+          });
+
+          this.selectRowPrivilege('');
         });
+      } else {
+        MyCuckoo.alert({ title : '提示', msg : '请关闭后选择用户!' });
+        return;
+      }
 
-        active.selectRowPrivilege('');
+      let formMgr = this;
+      //行权限选择
+      form.on('radio(rowPrivilege)', function(data) {
+        formMgr.selectRowPrivilege(data.value);
       });
-    } else {
-      MyCuckoo.alert({ title : '提示', msg : '请关闭后选择用户!' });
-      return;
+
+      //操作按钮触发事件
+      $('form a.layui-btn[lay-submit!=submit]').on('click', function() {
+        var type = $(this).data('type');
+        formMgr[type] && formMgr[type](this);
+      });
+
+      //监听提交
+      form.on('submit', function(data) {
+        var type = $(this).data('type');
+        formMgr[type] && formMgr[type]($.extend({}, data.field, queryObj));
+
+        return false;
+      });
     }
 
-    let active = {
+    FormMgr.prototype = {
+      constructor: FormMgr,
       rowTreeObj: null,
       openTree(url, config) {
         let that = this;
@@ -225,7 +249,7 @@
         });
       },
       //查询用户
-      queryUsers() {
+      queryUsers(ele) {
         $.get(api.userMgr.queryUsersUrl, {userName: $('input[name=searchUsr]').val()}).then(json => {
           let nodes = [];
           json.data.forEach(item => nodes.push({
@@ -240,8 +264,8 @@
         });
       },
       //保存用户权限
-      saveOperationPrivilege() {
-        if(!this.data.privilegeScope) {
+      saveOperationPrivilege(data) {
+        if(!data.privilegeScope) {
           MyCuckoo.alert({ title : '提示', msg : '请选择权限范围!' });
           return;
         }
@@ -253,15 +277,15 @@
 
         let optIds = [];
         selectedNodes.forEach(item => item.isLeaf && optIds.push(Number(item.nodeId)));
-        $.postJson(api.userMgr.saveOperationPrivilegeUrl, this.data, optIds).then(data => {
-          MyCuckoo.msg({msg: data.data});
+        $.postJson(api.userMgr.saveOperationPrivilegeUrl, data, optIds).then(json => {
+          MyCuckoo.msg({msg: json.data});
 
           this.refresh();
         });
       },
       //保存行权限
-      saveRowPrivilege() {
-        if(!this.data.privilegeScope) {
+      saveRowPrivilege(data) {
+        if(!data.privilegeScope) {
           MyCuckoo.alert({ title : '提示', msg : '请选择行权限类别!' });
           return;
         }
@@ -277,8 +301,8 @@
           let index = !isNaN(id) ? -1 : id.indexOf('_');
           rowIds.push(item.isLeaf && index != -1 ? id.substr(index + 1) : id);
         });
-        $.postJson(api.userMgr.saveRowPrivilegeUrl, this.data, rowIds).then(data => {
-          MyCuckoo.msg({msg: data.data});
+        $.postJson(api.userMgr.saveRowPrivilegeUrl, data, rowIds).then(json => {
+          MyCuckoo.msg({msg: json.data});
 
           this.refresh();
         });
@@ -291,30 +315,13 @@
         }, 2000);
       },
       //关闭当前iframe页
-      reback() {
+      reback(ele) {
         let index = parent.layer.getFrameIndex(window.name);
         parent.layer.close(index);
       }
     }
 
-    //行权限选择
-    form.on('radio(rowPrivilege)', function(data) {
-     active.selectRowPrivilege(data.value);
-    });
-
-    //操作按钮触发事件
-    $('form a.layui-btn[lay-submit!=submit]').on('click', function() {
-      var type = $(this).data('type');
-      active[type] && active[type].call($.extend({}, active, this));
-    });
-
-    //监听提交
-    form.on('submit', function(data) {
-      var type = $(this).data('type');
-      active[type] && active[type].call($.extend({}, active, {data: $.extend({}, data.field, queryObj)}));
-
-      return false;
-    });
+    new FormMgr();
     //end
   });
 </script>

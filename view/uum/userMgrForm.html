@@ -144,22 +144,22 @@
 <script type="text/html" id="operator">
   <div class="layui-btn-group">
     {{# if(d.action == 'create') { }}
-    <a href="javascript: " class="layui-btn layui-btn-sm" data-type="create" lay-submit="submit">保存
-      <span class="layui-icon glyphicon-hdd"></span>
+    <a href="javascript: " class="layui-btn layui-btn-sm" data-type="create" lay-submit="submit">
+      <i class="layui-icon layui-icon-ok-circle"></i>保存
     </a>
-    <a href="javascript: " class="layui-btn layui-btn-sm" data-type="reback">返回
-      <span class="layui-icon glyphicon-circle-arrow-left"></span>
+    <a href="javascript: " class="layui-btn layui-btn-sm" data-type="reback">
+      <i class="layui-icon layui-icon-return"></i>返回
     </a>
     {{# } else if(d.action == 'modify') { }}
-    <a href="javascript:" class="layui-btn layui-btn-sm" data-type="update" lay-submit="submit">保存
-      <span class="layui-icon glyphicon-hdd"></span>
+    <a href="javascript:" class="layui-btn layui-btn-sm" data-type="update" lay-submit="submit">
+      <i class="layui-icon layui-icon-ok-circle"></i>保存
     </a>
-    <a href="javascript:" class="layui-btn layui-btn-sm" data-type="reback">返回
-      <span class="layui-icon glyphicon-circle-arrow-left"></span>
+    <a href="javascript:" class="layui-btn layui-btn-sm" data-type="reback">
+      <i class="layui-icon layui-icon-return"></i>返回
     </a>
     {{# } else if(d.action == 'view') { }}
-    <a href="javascript:" class="layui-btn layui-btn-sm" data-type="reback">返回
-      <span class="layui-icon glyphicon-circle-arrow-left"></span>
+    <a href="javascript:" class="layui-btn layui-btn-sm" data-type="reback">
+      <i class="layui-icon layui-icon-return"></i>返回
     </a>
     {{# } }}
   </div>
@@ -332,3 +332,4 @@
     //end
   });
 </script>
+</html>

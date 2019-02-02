@@ -68,8 +68,8 @@
       table = layui.table;
 
     //本地缓存数据
-    let menu = JSON.parse(sessionStorage.getItem('myMenu'));
     let queryObj = MyCuckoo.getQueryObject(location.search);
+    let menu = JSON.parse(sessionStorage.getItem('myMenu'));
     let operator = menu.fourth[queryObj.id];
 
     form.on('submit(search)', function(data) {
@@ -124,7 +124,7 @@
 
     table.on('toolbar(table)', function (obj) {
       if (obj.event == 'add') {
-        active[obj.event].call(this);
+        active[obj.event](this);
         return;
       }
 
@@ -134,7 +134,7 @@
         return;
       }
 
-      active[obj.event] ? active[obj.event].call(data[0]) : '';
+      active[obj.event] && active[obj.event](data[0]);
     });
 
     function reload() {
@@ -143,23 +143,22 @@
 
     let active = {
       //增加
-      add() {
+      add(ele) {
         MyCuckoo.dialog('公告信息', 'afficheMgrForm.html?action=create');
       },
       //修改
-      modify() {
-        MyCuckoo.dialog('公告信息', 'afficheMgrForm.html?action=modify&id=' + this.afficheId);
+      modify(data) {
+        MyCuckoo.dialog('公告信息', 'afficheMgrForm.html?action=modify&id=' + data.afficheId);
       },
       //查看
-      view() {
-        MyCuckoo.dialog('公告信息', 'afficheMgrForm.html?action=view&id=' + this.afficheId);
+      view(data) {
+        MyCuckoo.dialog('公告信息', 'afficheMgrForm.html?action=view&id=' + data.afficheId);
       },
       //删除
-      delete() {
-        let item = this;
+      delete(data) {
         MyCuckoo.confirm({msg : '您确认删除此记录吗.', ok : function() {
-          $.put(api.afficheMgr + '/' + item.afficheId, {}).then(data => {
-            MyCuckoo.msg({ msg: data.data });
+          $.put(api.afficheMgr + '/' + data.afficheId, {}).then(json => {
+            MyCuckoo.msg({ msg: json.data });
 
             reload(); // 刷新列表
           });

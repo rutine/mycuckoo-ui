@@ -1,7 +1,7 @@
 /* html */
 html, body {
   color: rgba(255, 255, 255, 0.8);
-  background: url("../images/glow.png") no-repeat scroll center center ##0D7BD5;
+  background: url("../images/glow.png") no-repeat scroll center center #0D7BD5;
 }
 
 body {

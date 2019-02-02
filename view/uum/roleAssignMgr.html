@@ -71,12 +71,12 @@
   layui.use(['jquery', 'form', 'table', 'dtree'], function() {
     let $ = layui.jquery,
       form = layui.form,
-      tree = layui.dtree,
-      table = layui.table;
+      table = layui.table,
+      tree = layui.dtree;
 
     //本地缓存数据
-    let menu = JSON.parse(sessionStorage.getItem('myMenu'));
     let queryObj = MyCuckoo.getQueryObject(location.search);
+    let menu = JSON.parse(sessionStorage.getItem('myMenu'));
     let operator = menu.fourth[queryObj.id];
 
     //搜索
@@ -155,7 +155,7 @@
     table.on('toolbar(table)', function (obj) {
       let data = table.checkStatus(obj.config.id).data;
       if (obj.event == 'roleassign') {
-        active[obj.event].call(data);
+        active[obj.event](data);
         return;
       }
 
@@ -163,14 +163,14 @@
         MyCuckoo.alert({title : '提示', msg : '请选择记录' });
         return;
       }
-      active[obj.event] ? active[obj.event].call(data) : '';
+      active[obj.event] && active[obj.event](data);
     });
 
-    function reload() {
-      table.reload('table', { page: { pageNo: 1 } });
-    }
 
     let active = {
+      reload() {
+        table.reload('table', { page: { pageNo: 1 } });
+      },
       //分配角色
       roleassign() {
         let nodes = selectNode;
@@ -182,20 +182,21 @@
         MyCuckoo.dialog('选择角色信息', 'roleAssignMgrSelectRole.html?orgId=' + nodes.nodeId);
       },
       //删除角色
-      roledel() {
-        let item = this;
+      roledel(data) {
+        let _this = this;
         MyCuckoo.confirm({title: '警告提示', msg: '您确认删除此记录吗?',
           okBtn: '是', cancelBtn: '否', ok: function() {
             let roleIdList = [];
-            for (let index in item) {
-              roleIdList.push(item[index].roleId);
+            for (let index in data) {
+              roleIdList.push(data[index].roleId);
             }
+
             let orgId = selectNode.nodeId;
             let params = roleIdList;
-            $.delete(api.organRoleMgr.url + '/' + orgId, params).then(data => {
-              MyCuckoo.msg({ msg: data.data });
+            $.delete(api.organRoleMgr.url + '/' + orgId, params).then(json => {
+              MyCuckoo.msg({ msg: json.data });
 
-              reload(); // 刷新列表
+              _this.reload(); // 刷新列表
             });
           }
         });

@@ -239,8 +239,8 @@
 
       // 系统名称设置
       saveName(data) {
-        $.put(api.systemConfigMgr.url, data).then(data => {
-          MyCuckoo.msg({msg: data.data});
+        $.put(api.systemConfigMgr.url, data).then(json => {
+          MyCuckoo.msg({msg: json.data});
 
           this.reload();
         });
@@ -257,30 +257,30 @@
       },
       // 系统日志级别设置
       saveLogLevel(data) {
-        $.put(api.systemConfigMgr.url, data).then(data => {
-          MyCuckoo.msg({msg: data.data});
+        $.put(api.systemConfigMgr.url, data).then(json => {
+          MyCuckoo.msg({msg: json.data});
 
           this.reload();
         });
       },
       // 系统日志保留天数设置
       saveLogKeepDays(data) {
-        $.put(api.systemConfigMgr.url, data).then(data => {
-          MyCuckoo.msg({msg: data.data});
+        $.put(api.systemConfigMgr.url, data).then(json => {
+          MyCuckoo.msg({msg: json.data});
 
           this.reload();
         });
       },
       // 系统监控设置
       startJConsole(data) {
-        $.post(api.systemConfigMgr.startJConsoleUrl, {}).then(data => {
-          MyCuckoo.msg({msg: data.data});
+        $.post(api.systemConfigMgr.startJConsoleUrl, {}).then(json => {
+          MyCuckoo.msg({msg: json.data});
         });
       },
       // 系统行权限设置
       saveRowPrivilege(data) {
-        $.put(api.systemConfigMgr.url, data).then(data => {
-          MyCuckoo.msg({msg: data.data});
+        $.put(api.systemConfigMgr.url, data).then(json => {
+          MyCuckoo.msg({msg: json.data});
 
           this.reload();
         });

@@ -70,8 +70,8 @@
       table = layui.table;
 
     //本地缓存数据
-    let menu = JSON.parse(sessionStorage.getItem('myMenu'));
     let queryObj = MyCuckoo.getQueryObject(location.search);
+    let menu = JSON.parse(sessionStorage.getItem('myMenu'));
     let operator = menu.fourth[queryObj.id];
 
     form.on('submit(search)', function(data) {
@@ -132,7 +132,7 @@
 
     table.on('toolbar(table)', function (obj) {
       if (obj.event == 'add') {
-        active[obj.event].call(this);
+        active[obj.event](this);
         return;
       }
 
@@ -142,7 +142,7 @@
         return;
       }
 
-      active[obj.event] ? active[obj.event].call(data[0]) : '';
+      active[obj.event] && active[obj.event](data[0]);
     });
 
     function reload() {
@@ -151,41 +151,39 @@
 
     let active = {
       //增加
-      add() {
+      add(ele) {
         MyCuckoo.dialog('系统编码信息', 'codeMgrForm.html?action=create');
       },
       //修改
-      modify() {
-        MyCuckoo.dialog('系统编码信息', 'codeMgrForm.html?action=modify&id=' + this.codeId);
+      modify(data) {
+        MyCuckoo.dialog('系统编码信息', 'codeMgrForm.html?action=modify&id=' + data.codeId);
       },
       //查看
-      view() {
-        MyCuckoo.dialog('系统编码信息', 'codeMgrForm.html?action=view&id=' + this.codeId);
+      view(data) {
+        MyCuckoo.dialog('系统编码信息', 'codeMgrForm.html?action=view&id=' + data.codeId);
       },
       //启用
-      enable() {
-        let item = this;
-        if(item.status == 'enable') {
+      enable(data) {
+        if(data.status == 'enable') {
           MyCuckoo.msg({ msg : '此编码已经启用' });
           return;
         }
 
-        $.put(api.codeMgr.disEnableUrl, {id: item.codeId, disEnableFlag: 'enable'}).then(data => {
+        $.put(api.codeMgr.disEnableUrl, {id: data.codeId, disEnableFlag: 'enable'}).then(json => {
           MyCuckoo.msg({ msg: '编码启用成功' });
 
           reload(); // 刷新列表
         });
       },
       //停用
-      disable() {
-        let item = this;
-        if(item.status == 'disable') {
+      disable(data) {
+        if(data.status == 'disable') {
           MyCuckoo.alert({ title : '提示', msg : '此编码已经停用' });
           return;
         }
 
         MyCuckoo.confirm({msg : '您确认停用此编码.', ok : function() {
-          $.put(api.codeMgr.disEnableUrl, {id: item.codeId, disEnableFlag: 'disable'}).then(data => {
+          $.put(api.codeMgr.disEnableUrl, {id: data.codeId, disEnableFlag: 'disable'}).then(json => {
             MyCuckoo.msg({ msg: '编码停用成功' });
 
             reload(); // 刷新列表

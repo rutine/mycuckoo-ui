@@ -101,22 +101,22 @@
 <script type="text/html" id="operator">
   <div class="layui-btn-group">
     {{# if(d.action == 'create') { }}
-    <a href="javascript: " class="layui-btn layui-btn-sm" data-type="create" lay-submit="submit">保存
-      <span class="layui-icon glyphicon-hdd"></span>
+    <a href="javascript: " class="layui-btn layui-btn-sm" data-type="create" lay-submit="submit">
+      <i class="layui-icon layui-icon-ok-circle"></i>保存
     </a>
-    <a href="javascript: " class="layui-btn layui-btn-sm" data-type="reback">返回
-      <span class="layui-icon glyphicon-circle-arrow-left"></span>
+    <a href="javascript: " class="layui-btn layui-btn-sm" data-type="reback">
+      <i class="layui-icon layui-icon-return"></i>返回
     </a>
     {{# } else if(d.action == 'modify') { }}
-    <a href="javascript:" class="layui-btn layui-btn-sm" data-type="update" lay-submit="submit">保存
-      <span class="layui-icon glyphicon-hdd"></span>
+    <a href="javascript:" class="layui-btn layui-btn-sm" data-type="update" lay-submit="submit">
+      <i class="layui-icon layui-icon-ok-circle"></i>保存
     </a>
-    <a href="javascript:" class="layui-btn layui-btn-sm" data-type="reback">返回
-      <span class="layui-icon glyphicon-circle-arrow-left"></span>
+    <a href="javascript:" class="layui-btn layui-btn-sm" data-type="reback">
+      <i class="layui-icon layui-icon-return"></i>返回
     </a>
     {{# } else if(d.action == 'view') { }}
-    <a href="javascript:" class="layui-btn layui-btn-sm" data-type="reback">返回
-      <span class="layui-icon glyphicon-circle-arrow-left"></span>
+    <a href="javascript:" class="layui-btn layui-btn-sm" data-type="reback">
+      <i class="layui-icon layui-icon-return"></i>返回
     </a>
     {{# } }}
   </div>
@@ -295,37 +295,49 @@
   });
 
   let $ = null;
-  layui.use(['jquery', 'laytpl', 'form', 'laydate', 'dtree'], function() {
+  layui.use(['jquery', 'laytpl', 'form', 'dtree'], function() {
     $ = layui.jquery;
     let laytpl = layui.laytpl,
       form = layui.form,
-      layDate = layui.laydate,
-      tree = layui.dtree;
+      tree = layui.dtree,
+      queryObj = MyCuckoo.getQueryObject(location.search);
 
-    let queryObj = MyCuckoo.getQueryObject(location.search);
 
-    //渲染操作按钮
-    laytpl(operator.innerHTML).render(queryObj, function(html) {
-      $('.toolbar').html(html);
-    });
-
-    //表单初始赋值
-    if (queryObj.id) {
-      $.get(api.codeMgr.url + '/' + queryObj.id).then(json => {
-        new PartSelector().render({elem: '#selector', data: json.data, form: form});
-
-        form.val('editForm', json.data);
+    let FormMgr = function () {
+      //渲染操作按钮
+      laytpl(operator.innerHTML).render(queryObj, function(html) {
+        $('.toolbar').html(html);
       });
-    } else {
-      new PartSelector().render({elem: '#selector', form: form});
+
+      //表单初始赋值
+      if (queryObj.id) {
+        $.get(api.codeMgr.url + '/' + queryObj.id).then(json => {
+          new PartSelector().render({elem: '#selector', data: json.data, form: form});
+
+          form.val('editForm', json.data);
+        });
+      } else {
+        new PartSelector().render({elem: '#selector', form: form});
+      }
+
+      //操作按钮触发事件
+      let formMgr = this;
+      $('form a.layui-btn[lay-submit!=submit]').on('click', function() {
+        var type = $(this).data('type');
+        formMgr[type] && formMgr[type](this);
+      });
+
+      //监听提交
+      form.on('submit', function(data) {
+        var type = $(this).data('type');
+        formMgr[type] && formMgr[type](data.field);
+
+        return false;
+      });
     }
 
-    //日期
-    layDate.render({
-      elem: '#afficheInvalidate'
-    });
-
-    let active = {
+    FormMgr.prototype = {
+      constructor: FormMgr,
       openTree(url, config) {
         let fillForm = function(data) {
           let valObj =  {};
@@ -381,16 +393,16 @@
       selectModule() {
         this.openTree(api.moduleMgr.childNodesUrl, {context: 'moduleName'});
       },
-      create() {
-        $.postJson(api.codeMgr.url, this.data).then(data => {
-          MyCuckoo.msg({msg: data.data});
+      create(data) {
+        $.postJson(api.codeMgr.url, data).then(json => {
+          MyCuckoo.msg({msg: json.data});
 
           this.refresh();
         });
       },
-      update() {
-        $.put(api.codeMgr.url, this.data).then(data => {
-          MyCuckoo.msg({msg: data.data});
+      update(data) {
+        $.put(api.codeMgr.url, data).then(json => {
+          MyCuckoo.msg({msg: json.data});
 
           this.refresh();
         });
@@ -403,25 +415,13 @@
         }, 2000);
       },
       //关闭当前iframe页
-      reback() {
+      reback(ele) {
         let index = parent.layer.getFrameIndex(window.name);
         parent.layer.close(index);
       }
     }
 
-    //操作按钮触发事件
-    $('form a.layui-btn[lay-submit!=submit]').on('click', function() {
-      var type = $(this).data('type');
-      active[type] && active[type].call($.extend({}, active, this));
-    });
-
-    //监听提交
-    form.on('submit', function(data) {
-      var type = $(this).data('type');
-      active[type] && active[type].call($.extend({}, active, {data: data.field}));
-
-      return false;
-    });
+    new FormMgr();
     //end
   });
 </script>

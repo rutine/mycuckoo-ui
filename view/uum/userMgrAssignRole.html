@@ -61,14 +61,14 @@
     <div class="layui-form-item">
       <div class="layui-input-block">
         <div class="layui-btn-group">
-          <a href="javascript:" class="layui-btn layui-btn-sm" data-type="setDefaultRole">默认角色
-            <i class="layui-icon glyphicon-hdd"></i>
+          <a href="javascript:" class="layui-btn layui-btn-sm" data-type="setDefaultRole">
+            <i class="layui-icon layui-icon-rate"></i>默认角色
           </a>
-          <a href="javascript:" class="layui-btn layui-btn-sm" data-type="save" lay-submit="submit">保存
-            <i class="layui-icon glyphicon-hdd"></i>
+          <a href="javascript:" class="layui-btn layui-btn-sm" data-type="save" lay-submit="submit">
+            <i class="layui-icon layui-icon-ok-circle"></i>保存
           </a>
-          <a href="javascript:" class="layui-btn layui-btn-sm" data-type="reback">返回
-            <i class="layui-icon glyphicon-circle-arrow-left"></i>
+          <a href="javascript:" class="layui-btn layui-btn-sm" data-type="reback">
+            <i class="layui-icon layui-icon-return"></i>返回
           </a>
         </div>
       </div>
@@ -89,13 +89,12 @@
     let $ = layui.jquery,
       form = layui.form,
       tree = layui.dtree,
-      select = layui.selectM;
+      select = layui.selectM,
+      queryObj = MyCuckoo.getQueryObject(location.search);
 
-    let queryObj = MyCuckoo.getQueryObject(location.search);
     let treeObj;
     let multiSelectObj;
-
-    let reloadMultiSelect = function (roles) {
+    let reloadMultiSelect = function(roles) {
       $('#right_role_multi_select').off().empty();
 
       let names = [];
@@ -112,34 +111,59 @@
       });
     }
 
-    //表单初始赋值
-    if (queryObj.id) {
-      $.get(api.userMgr.url + '/' + queryObj.id).then(json => {
-        form.val('editForm', json.data);
-      });
-
-      $.get(api.userMgr.rolePrivilegeUrl, queryObj).then(json => {
-        //初始化结构树
-        treeObj = tree.render({
-          elem: '#left_role_tree',
-          method: 'get',
-          data: json.data.orgRoles,
-          dataStyle: 'layuiStyle',
-          response: { statusCode: 0, treeId: 'id', title: 'text', isLast: 'isLeaf', checkArr: 'checkBox'},
-          checkbar: true,
-          dot: false,
-          icon: ['-1', '1']
+    let FormMgr = function () {
+      //表单初始赋值
+      if (queryObj.id) {
+        $.get(api.userMgr.url + '/' + queryObj.id).then(json => {
+          form.val('editForm', json.data);
         });
 
-        //已选角色
-        reloadMultiSelect(json.data.userRoles);
+        $.get(api.userMgr.rolePrivilegeUrl, queryObj).then(json => {
+          //初始化结构树
+          treeObj = tree.render({
+            elem: '#left_role_tree',
+            method: 'get',
+            data: json.data.orgRoles,
+            dataStyle: 'layuiStyle',
+            response: { statusCode: 0, treeId: 'id', title: 'text', isLast: 'isLeaf', checkArr: 'checkBox'},
+            checkbar: true,
+            dot: false,
+            icon: ['-1', '1']
+          });
+
+          //已选角色
+          reloadMultiSelect(json.data.userRoles);
+        });
+      } else {
+        MyCuckoo.alert({title: '提示', msg: '请关闭后选择用户!'});
+        return;
+      }
+
+      let formMgr = this;
+      //操作按钮触发事件
+      $('.select-opt p').on('click', function() {
+        let type = $(this).data('type');
+        formMgr[type](multiSelectObj, treeObj);
       });
-    } else {
-      MyCuckoo.alert({title: '提示', msg: '请关闭后选择用户!'});
-      return;
+
+      //操作按钮触发事件
+      $('form a.layui-btn[lay-submit!=submit]').on('click', function() {
+        let type = $(this).data('type');
+        formMgr[type] && formMgr[type](this);
+      });
+
+      //监听提交
+      form.on('submit', function(data) {
+        let type = $(this).data('type');
+        formMgr[type] && formMgr[type]($.extend({}, data.field, queryObj));
+
+        return false;
+      });
     }
 
-    let active = {
+
+    FormMgr.prototype = {
+      constructor: FormMgr,
       /**
        * 选择添加角色
        *
@@ -220,7 +244,7 @@
         }
       },
       //设置默认角色
-      setDefaultRole() {
+      setDefaultRole(data) {
         let selectedData = multiSelectObj.selected;
         if(selectedData.length != 1) {
           MyCuckoo.alert({ title : '提示', msg : '请您在右边列表选择一个角色!' });
@@ -231,18 +255,18 @@
         form.val('editForm', {orgRoleId: obj.orgRoleId, roleName: obj.name});
       },
       //保存角色
-      save() {
+      save(data) {
         let selectedData = multiSelectObj.config.data;
-        this.data.defaultRoleId = this.data.orgRoleId;
-        if(!this.data.defaultRoleId) {
+        data.defaultRoleId = data.orgRoleId;
+        if(!data.defaultRoleId) {
           MyCuckoo.alert({ title : '提示', msg : '请为用户选择一个默认角色!' });
         } else if(!selectedData.length) {
           MyCuckoo.alert({ title : '提示', msg : '请为用户分配一个角色!' });
         } else {
           let roleIds = [];
           selectedData.forEach(item => roleIds.push(item.orgRoleId));
-          $.postJson(api.userMgr.saveRolePrivilegeUrl, this.data, roleIds).then(data => {
-            MyCuckoo.msg({msg: data.data});
+          $.postJson(api.userMgr.saveRolePrivilegeUrl, data, roleIds).then(json => {
+            MyCuckoo.msg({msg: json.data});
 
             this.refresh();
           });
@@ -256,32 +280,14 @@
         }, 2000);
       },
       //关闭当前iframe页
-      reback() {
+      reback(ele) {
         let index = parent.layer.getFrameIndex(window.name);
         parent.layer.close(index);
       }
       //end
     }
 
-    //操作按钮触发事件
-    $('.select-opt p').on('click', function() {
-      let type = $(this).data('type');
-      active[type](multiSelectObj, treeObj);
-    });
-
-    //操作按钮触发事件
-    $('form a.layui-btn[lay-submit!=submit]').on('click', function() {
-      let type = $(this).data('type');
-      active[type] && active[type].call($.extend({}, active, this));
-    });
-
-    //监听提交
-    form.on('submit', function(data) {
-      let type = $(this).data('type');
-      active[type] && active[type].call($.extend({}, active, {data: $.extend({}, data.field, queryObj)}));
-
-      return false;
-    });
+    new FormMgr();
     //end
   });
 

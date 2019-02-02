@@ -162,7 +162,7 @@
         }
 
         let _this = this;
-        $.put(api.districtMgr.disEnableUrl, {id: data.districtId, disEnableFlag: 'enable'}).then(data => {
+        $.put(api.districtMgr.disEnableUrl, {id: data.districtId, disEnableFlag: 'enable'}).then(json => {
           MyCuckoo.msg({ msg: '地区启用成功' });
 
           _this.reload(); // 刷新列表
@@ -177,7 +177,7 @@
 
         let _this = this;
         MyCuckoo.confirm({msg : '您确认停用此地区?', ok : function() {
-          $.put(api.districtMgr.disEnableUrl, {id: data.districtId, disEnableFlag: 'disable'}).then(data => {
+          $.put(api.districtMgr.disEnableUrl, {id: data.districtId, disEnableFlag: 'disable'}).then(json => {
             MyCuckoo.msg({ msg: '地区停用成功' });
 
             _this.reload(); // 刷新列表

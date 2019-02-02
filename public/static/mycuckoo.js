@@ -206,7 +206,7 @@ layui.use(['jquery', 'layer'], function() {
         url = '404.html';
       }
       if (w == null || w == '') {
-        w = ($(window).width() * 0.65);
+        w = ($(window).width() * 0.5);
       }
       if (h == null || h == '') {
         h = ($(window).height() - 120);

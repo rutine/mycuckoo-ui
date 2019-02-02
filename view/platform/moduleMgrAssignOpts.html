@@ -26,11 +26,11 @@
     <div class="layui-form-item">
       <div class="layui-input-block">
         <div class="layui-btn-group">
-          <a href="javascript:" class="layui-btn layui-btn-sm" data-type="save" lay-submit="submit">保存
-            <i class="layui-icon glyphicon-hdd"></i>
+          <a href="javascript:" class="layui-btn layui-btn-sm" data-type="save" lay-submit="submit">
+            <i class="layui-icon layui-icon-ok-circle"></i>保存
           </a>
-          <a href="javascript:" class="layui-btn layui-btn-sm" data-type="reback">返回
-            <i class="layui-icon glyphicon-circle-arrow-left"></i>
+          <a href="javascript:" class="layui-btn layui-btn-sm" data-type="reback">
+            <i class="layui-icon layui-icon-return"></i>返回
           </a>
         </div>
       </div>
@@ -50,40 +50,58 @@
   layui.use(['jquery', 'form', 'dtree'], function() {
     let $ = layui.jquery,
       form = layui.form,
-      tree = layui.dtree;
+      tree = layui.dtree,
+      queryObj = MyCuckoo.getQueryObject(location.search);
 
-    let queryObj = MyCuckoo.getQueryObject(location.search);
     let treeObj;
 
-    //表单初始赋值
-    if (!queryObj.id) {
-      MyCuckoo.alert({title: '提示', msg: '请选择模块!'});
-      return;
-    } else {
-      $('legend').text(queryObj.name);
+    let FormMgr = function () {
+      //表单初始赋值
+      if (!queryObj.id) {
+        MyCuckoo.alert({title: '提示', msg: '请选择模块!'});
+        return;
+      } else {
+        $('legend').text(queryObj.name);
 
-      $.get(api.moduleMgr.operationUrl, queryObj).then(json => {
-        //初始化结构树
-        treeObj = tree.render({
-          elem: '#tree',
-          method: 'get',
-          data: json.data.source,
-          dataStyle: 'layuiStyle',
-          response: { statusCode: 0, treeId: 'id', title: 'text', isLast: 'isLeaf', checkArr: 'checkBox'},
-          checkbar: true,
-          dot: false,
-          icon: ['-1', '1'],
+        $.get(api.moduleMgr.operationUrl, queryObj).then(json => {
+          //初始化结构树
+          treeObj = tree.render({
+            elem: '#tree',
+            method: 'get',
+            data: json.data.source,
+            dataStyle: 'layuiStyle',
+            response: { statusCode: 0, treeId: 'id', title: 'text', isLast: 'isLeaf', checkArr: 'checkBox'},
+            checkbar: true,
+            dot: false,
+            icon: ['-1', '1'],
 //          done: function() {
 //            treeObj.chooseDataInit(json.data.assign.join(','));
 //          }
+          });
+          console.log(treeObj)
         });
-        console.log(treeObj)
+      }
+
+      //操作按钮触发事件
+      let formMgr = this;
+      $('form a.layui-btn[lay-submit!=submit]').on('click', function() {
+        let type = $(this).data('type');
+        formMgr[type] && formMgr[type](this);
+      });
+
+      //监听提交
+      form.on('submit', function(data) {
+        let type = $(this).data('type');
+        formMgr[type] && formMgr[type]($.extend({}, data.field, queryObj));
+
+        return false;
       });
     }
 
-    let active = {
+    FormMgr.prototype = {
+      constructor: FormMgr,
       //保存模块操作
-      save() {
+      save(data) {
         let selectedNodes = treeObj.getCheckbarNodesParam();
         if(!selectedNodes.length) {
           MyCuckoo.alert({ title : '提示', msg : '请选择操作!' });
@@ -92,8 +110,8 @@
 
         let optIds = [];
         selectedNodes.forEach(item => item.isLeaf && optIds.push(Number(item.nodeId)));
-        $.postJson(api.moduleMgr.saveModuleOptRefsUrl, this.data, optIds).then(data => {
-          MyCuckoo.msg({msg: data.data});
+        $.postJson(api.moduleMgr.saveModuleOptRefsUrl, data, optIds).then(json => {
+          MyCuckoo.msg({msg: json.data});
 
           this.refresh();
         });
@@ -106,26 +124,14 @@
         }, 2000);
       },
       //关闭当前iframe页
-      reback() {
+      reback(ele) {
         let index = parent.layer.getFrameIndex(window.name);
         parent.layer.close(index);
       }
       //end
     }
 
-    //操作按钮触发事件
-    $('form a.layui-btn[lay-submit!=submit]').on('click', function() {
-      let type = $(this).data('type');
-      active[type] && active[type].call($.extend({}, active, this));
-    });
-
-    //监听提交
-    form.on('submit', function(data) {
-      let type = $(this).data('type');
-      active[type] && active[type].call($.extend({}, active, {data: $.extend({}, data.field, queryObj)}));
-
-      return false;
-    });
+    new FormMgr();
     //end
   });
 

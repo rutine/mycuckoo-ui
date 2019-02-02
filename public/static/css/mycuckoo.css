@@ -60,8 +60,6 @@
 .mycuckoo-main { padding: 8px; }
 .mycuckoo-search { margin-bottom: 8px; }
 .mycuckoo-search .layui-input { width: 190px; }
-/*图片居中*/
-.middle {vertical-align: middle;}
 /*双向选择列表*/
 .select-side {float:left; width:240px; }
 .select-side .select-side-body {width: 220px; height:320px; /*border: 1px solid #0088CC; */ border: 1px solid #dddddd; overflow-y: auto;}
@@ -82,6 +80,7 @@
 .logout {background:url(../images/navigate/logout.png) no-repeat scroll 0 50% transparent;}
 
 /*--------------------------------菜单栏-----------------------------------*/
+/*---------------------------------系统-----------------------------------*/
 .home-icon {background:url(../images/menu/home.png) no-repeat scroll 0 50% transparent;}
 .platform-icon {background:url(../images/menu/platform.png) no-repeat scroll 0 50% transparent;}
 .uum-icon {background:url(../images/menu/uum.png) no-repeat scroll 0 50% transparent;}
@@ -109,6 +108,24 @@
 .module-mgr-icon {background:url(../images/menu/module-mgr.png) no-repeat scroll 0 50% transparent;}
 .operate-mgr-icon {background:url(../images/menu/operate-mgr.png) no-repeat scroll 0 50% transparent;}
 .right-key-close-tab-icon {background:url(../images/menu/right-key-close-tab.png) no-repeat scroll 0 50% transparent;}
+/*---------------------------------统一用户-----------------------------------*/
+.organ-mgr-title-icon {background:url(../images/menu/organ-mgr.png) no-repeat scroll 0 50% transparent;}
+.organ-mgr-icon {background:url(../images/menu/organ-mgr.png) no-repeat scroll 0 50% transparent;}
+.role-mgr-title-icon {background:url(../images/menu/role-mgr.png) no-repeat scroll 0 50% transparent;}
+.role-mgr-icon {background:url(../images/menu/role-mgr.png) no-repeat scroll 0 50% transparent;}
+.role-assign-mgr-icon {background:url(../images/menu/role-assign-mgr.png) no-repeat scroll 0 50% transparent;}
+.user-mgr-title-icon {background:url(../images/menu/user-mgr.png) no-repeat scroll 0 50% transparent;}
+.user-mgr-icon {background:url(../images/menu/user-mgr.png) no-repeat scroll 0 50% transparent;}
+.user-name-icon {background:url(../images/menu/user-mgr.png) no-repeat scroll 0 50% transparent; background-color:#FFFFFF; padding-left:20px; font-weight:bold; color:#000033;}
+.group-mgr-icon {background:url(../images/menu/group-mgr.png) no-repeat scroll 0 50% transparent;}
+.user-group-mgr-icon {background:url(../images/menu/user-group-mgr.png) no-repeat scroll 0 50% transparent;}
+.general-group-mgr-icon {background:url(../images/menu/general-group-mgr.png) no-repeat scroll 0 50% transparent;}
+.role-group-mgr-icon {background:url(../images/menu/role-group-mgr.png) no-repeat scroll 0 50% transparent;}
+.password-icon {background:url(../images/menu/privial-mgr.png) no-repeat scroll 0 50% transparent; background-color:#FFFFFF; padding-left:20px; font-weight:bold; color:#000033;}
+.reset-pwd-icon {background:url(../images/menu/reset-pwd.png) no-repeat scroll 0 50% transparent;}
+.row-privilege-mgr-icon {background:url(../images/menu/row-privilege-mgr.png) no-repeat scroll 0 50% transparent;}
+.user-delete-icon {background:url(../images/menu/user-delete.png) no-repeat scroll 0 50% transparent;}
+.email-go-icon {background:url(../images/menu/email-go.png) no-repeat scroll 0 50% transparent;}
 
 /*-------------------------操作按钮---------------------------------------*/
 .table-add-icon {background:url(../images/button/table-add.png) no-repeat scroll 0 50% transparent;}
@@ -137,21 +154,3 @@
 .scheduler-stop-icon {background:url(../images/button/scheduler-stop.png) no-repeat scroll 0 50% transparent;}
 .job-start-icon {background:url(../images/button/job-start.png) no-repeat scroll 0 50% transparent;}
 .job-stop-icon {background:url(../images/button/job-stop.png) no-repeat scroll 0 50% transparent;}
-/*---------------------------------统一用户-----------------------------------*/
-.organ-mgr-title-icon {background:url(../images/menu/organ-mgr.png) no-repeat scroll 0 50% transparent;}
-.organ-mgr-icon {background:url(../images/menu/organ-mgr.png) no-repeat scroll 0 50% transparent;}
-.role-mgr-title-icon {background:url(../images/menu/role-mgr.png) no-repeat scroll 0 50% transparent;}
-.role-mgr-icon {background:url(../images/menu/role-mgr.png) no-repeat scroll 0 50% transparent;}
-.role-assign-mgr-icon {background:url(../images/menu/role-assign-mgr.png) no-repeat scroll 0 50% transparent;}
-.user-mgr-title-icon {background:url(../images/menu/user-mgr.png) no-repeat scroll 0 50% transparent;}
-.user-mgr-icon {background:url(../images/menu/user-mgr.png) no-repeat scroll 0 50% transparent;}
-.user-name-icon {background:url(../images/menu/user-mgr.png) no-repeat scroll 0 50% transparent; background-color:#FFFFFF; padding-left:20px; font-weight:bold; color:#000033;}
-.group-mgr-icon {background:url(../images/menu/group-mgr.png) no-repeat scroll 0 50% transparent;}
-.user-group-mgr-icon {background:url(../images/menu/user-group-mgr.png) no-repeat scroll 0 50% transparent;}
-.general-group-mgr-icon {background:url(../images/menu/general-group-mgr.png) no-repeat scroll 0 50% transparent;}
-.role-group-mgr-icon {background:url(../images/menu/role-group-mgr.png) no-repeat scroll 0 50% transparent;}
-.password-icon {background:url(../images/menu/privial-mgr.png) no-repeat scroll 0 50% transparent; background-color:#FFFFFF; padding-left:20px; font-weight:bold; color:#000033;}
-.reset-pwd-icon {background:url(../images/menu/reset-pwd.png) no-repeat scroll 0 50% transparent;}
-.row-privilege-mgr-icon {background:url(../images/menu/row-privilege-mgr.png) no-repeat scroll 0 50% transparent;}
-.user-delete-icon {background:url(../images/menu/user-delete.png) no-repeat scroll 0 50% transparent;}
-.email-go-icon {background:url(../images/menu/email-go.png) no-repeat scroll 0 50% transparent;}

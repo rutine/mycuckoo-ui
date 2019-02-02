@@ -67,8 +67,8 @@
       table = layui.table;
 
     //本地缓存数据
-    let menu = JSON.parse(sessionStorage.getItem('myMenu'));
     let queryObj = MyCuckoo.getQueryObject(location.search);
+    let menu = JSON.parse(sessionStorage.getItem('myMenu'));
     let operator = menu.fourth[queryObj.id];
 
     form.on('submit(search)', function(data) {
@@ -141,7 +141,7 @@
 
     table.on('toolbar(table)', function (obj) {
       if (obj.event == 'add') {
-        active[obj.event].call(this);
+        active[obj.event](this);
         return;
       }
 
@@ -151,7 +151,7 @@
         return;
       }
 
-      active[obj.event] ? active[obj.event].call(data[0]) : '';
+      active[obj.event] && active[obj.event](data[0]);
     });
 
     function reload() {
@@ -160,52 +160,50 @@
 
     let active = {
       //增加
-      add() {
+      add(ele) {
         MyCuckoo.dialog('用户信息', 'userMgrForm.html?action=create');
       },
       //修改
-      modify() {
-        MyCuckoo.dialog('用户信息', 'userMgrForm.html?action=modify&id=' + this.userId);
+      modify(data) {
+        MyCuckoo.dialog('用户信息', 'userMgrForm.html?action=modify&id=' + data.userId);
       },
       //查看
-      view() {
-        MyCuckoo.dialog('用户信息', 'userMgrForm.html?action=view&id=' + this.userId);
+      view(data) {
+        MyCuckoo.dialog('用户信息', 'userMgrForm.html?action=view&id=' + data.userId);
       },
       //删除
-      delete() {
+      delete(data) {
         MyCuckoo.confirm({title: '警告提示', msg: '您确认删除此记录吗?',
           okBtn: '是', cancelBtn: '否', ok: function() {
-            $.delete(api.userMgr.url + '/' + this.userId, {}).then(data => {
-              MyCuckoo.msg({ msg: data.data });
+            $.delete(api.userMgr.url + '/' + data.userId, {}).then(json => {
+              MyCuckoo.msg({ msg: json.data });
 
               reload(); // 刷新列表
             });
           }});
       },
       //启用
-      enable() {
-        let item = this;
-        if(item.status == 'enable') {
+      enable(data) {
+        if(data.status == 'enable') {
           MyCuckoo.msg({ msg : '此用户已经启用' });
           return;
         }
 
-        $.put(api.userMgr.disEnableUrl, {id: item.userId, disEnableFlag: 'enable'}).then(data => {
+        $.put(api.userMgr.disEnableUrl, {id: data.userId, disEnableFlag: 'enable'}).then(json => {
           MyCuckoo.msg({ msg: '用户启用成功' });
 
           reload(); // 刷新列表
         });
       },
       //停用
-      disable() {
-        let item = this;
-        if(item.status == 'disable') {
+      disable(data) {
+        if(data.status == 'disable') {
           MyCuckoo.alert({ title : '提示', msg : '此用户已经停用' });
           return;
         }
 
         MyCuckoo.confirm({msg : '您确认停用此用户?如停用,此用户将归入无角色用户并自动清除所有权限.', ok : function() {
-          $.put(api.userMgr.disEnableUrl, {id: item.userId, disEnableFlag: 'disable'}).then(data => {
+          $.put(api.userMgr.disEnableUrl, {id: data.userId, disEnableFlag: 'disable'}).then(json => {
             MyCuckoo.msg({ msg: '用户停用成功!此用户将不能在使用本系统' });
 
             reload(); // 刷新列表
@@ -213,36 +211,33 @@
         }});
       },
       //重置密码
-      resetpwd() {
-        let item = this;
+      resetpwd(data) {
         MyCuckoo.confirm({msg : '您确认要重置此用户密码?', ok : function() {
-          $.put(api.userMgr.resetPwdUrl, {id: item.userId}, item.userName).then(data => {
-            MyCuckoo.msg({ msg: data.data });
+          $.put(api.userMgr.resetPwdUrl, {id: data.userId}, item.userName).then(json => {
+            MyCuckoo.msg({ msg: json.data });
           });
         }});
       },
       //分配角色
-      assignrole() {
-        let item = this;
-        if(item.status == 'disable') {
+      assignrole(data) {
+        if(data.status == 'disable') {
           MyCuckoo.alert({title: '提示', msg: '请先启用此用户'});
           return;
         }
 
-        MyCuckoo.dialog('分配角色', 'userMgrAssignRole.html?&id=' + this.userId);
+        MyCuckoo.dialog('分配角色', 'userMgrAssignRole.html?&id=' + data.userId);
       },
       //分配权限
-      optpri() {
-        let item = this;
-        if (item.status == 'disable') {
+      optpri(data) {
+        if (data.status == 'disable') {
           MyCuckoo.alert({ title : '提示', msg : '请先启用此用户！' });
           return;
-        } else if(item.orgRoleId == 0) {
+        } else if(data.orgRoleId == 0) {
           MyCuckoo.alert({ title : '提示', msg : '请先为此用户分配有效角色！' });
           return;
         }
 
-        MyCuckoo.dialog('分配权限', 'userMgrAssignModOpt.html?&id=' + this.userId + '&userName=' + this.userName);
+        MyCuckoo.dialog('分配权限', 'userMgrAssignModOpt.html?&id=' + data.userId + '&userName=' + data.userName);
       }
       //end
     }
