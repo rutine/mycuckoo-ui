@@ -26,7 +26,7 @@
       <div class="layui-inline">
         <label class="layui-form-label">搜索：</label>
         <div class="layui-input-inline">
-          <input class="layui-input" name="operateName" placeholder="操作名称">
+          <input class="layui-input" name="optName" placeholder="操作名称">
         </div>
         <div class="layui-input-inline">
           <button class="layui-btn" lay-filter="search" lay-submit>
@@ -46,7 +46,7 @@
 <script type="text/html" id="toolbar">
   <div class="layui-btn-group btn-toolbar">
     {{# layui.each(d.operator, function(index, item){ }}
-    <button class="layui-btn layui-btn-sm" lay-event="{{ item.optFunLink }}">
+    <button class="layui-btn layui-btn-sm" lay-event="{{ item.optLink }}">
       <i class="layui-icon layui-icon-{{ item.modIconCls }}"></i> {{ item.modName }}
     </button>
     {{# }); }}
@@ -91,9 +91,9 @@
       cols: [[
         {type: 'numbers'},
         {type: 'radio'},
-        {field: 'operateName', title: '操作名称'},
-        {field: 'optImgLink', title: '图片链接'},
-        {field: 'optFunLink', title: '功能链接'},
+        {field: 'optName', title: '操作名称'},
+        {field: 'optIconCls', title: '图标'},
+        {field: 'optLink', title: '功能链接'},
         {field: 'optOrder', title: '操作顺序'},
         {field: 'optGroup', title: '操作组'},
         {field: 'status', title: '状态',
