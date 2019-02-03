@@ -15,28 +15,28 @@
       <input type="hidden" name="moduleId" />
       <div class="layui-form-item">
         <div class="layui-inline">
-          <label class="layui-form-label">模块名称</label>
+          <label class="layui-form-label">名称</label>
           <div class="layui-input-inline">
             <input type="text" name="modName" class="layui-input" lay-verify="required" maxlength="10" />
           </div>
         </div>
         <div class="layui-inline">
-          <label class="layui-form-label">模块代码</label>
+          <label class="layui-form-label">英文名</label>
           <div class="layui-input-inline">
-            <input type="text" name="modEnId" class="layui-input" lay-verify="required" maxlength="40" />
+            <input type="text" name="modEnName" class="layui-input" lay-verify="required" maxlength="40" />
           </div>
         </div>
       </div>
 
       <div class="layui-form-item">
         <div class="layui-inline">
-          <label class="layui-form-label">模块图片样式</label>
+          <label class="layui-form-label">图标样式</label>
           <div class="layui-input-inline">
-            <input type="text" name="modImgCls" class="layui-input" lay-verify="alphanumeric" />
+            <input type="text" name="modIconCls" class="layui-input" lay-verify="alphanumeric" />
           </div>
         </div>
         <div class="layui-inline">
-          <label class="layui-form-label">模块级别</label>
+          <label class="layui-form-label">级别</label>
           <div class="layui-input-inline">
             <select name="modLevel" lay-verify="required">
               <option value="1">第一</option>
@@ -49,7 +49,7 @@
 
       <div class="layui-form-item">
         <div class="layui-inline">
-          <label class="layui-form-label">模块顺序</label>
+          <label class="layui-form-label">顺序</label>
           <div class="layui-input-inline">
             <select name="modOrder" lay-verify="required">
               <option value="1">1</option>
@@ -84,7 +84,7 @@
           </div>
         </div>
         <div class="layui-inline">
-          <label class="layui-form-label">上级模块名称</label>
+          <label class="layui-form-label">上级模块</label>
           <div class="layui-input-inline">
             <input type="hidden" name="parentId" />
             <input type="text" name="parentName" class="layui-input" lay-verify="required" readonly />

@@ -165,7 +165,7 @@
         for (var i = 0; i < menu.first.length; i++) {
           var first = menu.first[i];
           lis += '<li class="layui-nav-item ' + (i == 0 ? 'layui-this' : '') + '">' +
-            '     <a href="#side_nav_' + first.moduleId + '" class="' + first.modImgCls + '-hide">' + first.modName + '</a>' +
+            '     <a href="#side_nav_' + first.moduleId + '" class="' + first.modIconCls + '-hide">' + first.modName + '</a>' +
             '   </li>';
         }
         $('.layui-nav[lay-filter=mycuckoo-nav]').html(lis);
@@ -203,13 +203,13 @@
           for (var ii = 0; ii < menu.second[first.moduleId].length; ii++) {
             var second = menu.second[first.moduleId][ii];
             div += '<li class="layui-nav-item">' +
-              '       <a class="' + second.modImgCls + '-hide" href="javascript:;">' + second.modName + '</a>' +
+              '       <a class="' + second.modIconCls + '-hide" href="javascript:;">' + second.modName + '</a>' +
               '       <dl class="layui-nav-child">';
 
             for (var iii = 0; iii < menu.third[second.moduleId].length; iii++) {
               var third = menu.third[second.moduleId][iii];
-              var href = 'view/' + third.belongToSys + '/' + third.modEnId + '.html?id=' + third.moduleId;
-              div += '<dd><a data-url="' + href + '" class="' + third.modImgCls + '-hide">' + third.modName + '</a></dd>';
+              var href = 'view/' + third.belongToSys + '/' + third.modEnName + '.html?id=' + third.moduleId;
+              div += '<dd><a data-url="' + href + '" class="' + third.modIconCls + '-hide">' + third.modName + '</a></dd>';
             }
             div += '</dl>';
             div += '</li>';
