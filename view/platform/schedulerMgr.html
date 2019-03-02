@@ -126,6 +126,9 @@
     });
 
     table.on('toolbar(table)', function (obj) {
+      if (obj.event.indexOf('LAYTABLE_') == 0) {
+        return;
+      }
       if (obj.event == 'add' || obj.event == 'schedulerStart' || obj.event == 'schedulerStop') {
         active[obj.event](this);
         return;
@@ -137,7 +140,11 @@
         return;
       }
 
-      active[obj.event] && active[obj.event](data[0]);
+      if (!active[obj.event]) {
+        MyCuckoo.alert({title : '警示', msg : '此操作无效, 如有疑问, 请联系管理员!' });
+        return;
+      }
+      active[obj.event](data[0]);
     });
 
     let active = {

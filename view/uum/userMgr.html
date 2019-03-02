@@ -94,8 +94,8 @@
       cols: [[
         {type: 'numbers'},
         {type: 'radio'},
-        {field: 'userCode', dialog: 'text', title: '用户号'},
-        {field: 'userName', dialog: 'text', title: '用户名'},
+        {field: 'userCode', title: '用户号'},
+        {field: 'userName', title: '用户名'},
         {field: 'userGender', title: '性别',
           templet: function(d) {
             if(d.userGender == '0') {
@@ -105,12 +105,12 @@
             }
           }
         },
-        {field: 'userPosition', dialog: 'text', title: '职位'},
-        {field: 'userQq', dialog: 'text', title: '用户QQ'},
-        {field: 'userMobile', dialog: 'text', title: '用户手机'},
-        {field: 'userEmail', dialog: 'text', title: '用户邮件'},
-        {field: 'orgName', dialog: 'text', title: '所属机构'},
-        {field: 'roleName', dialog: 'text', title: '所属角色'},
+        {field: 'userPosition', title: '职位'},
+        {field: 'userQq', title: '用户QQ'},
+        {field: 'userMobile', title: '用户手机'},
+        {field: 'userEmail', title: '用户邮件'},
+        {field: 'orgName', title: '所属机构'},
+        {field: 'roleName', title: '所属角色'},
         {field: 'status', title: '用户状态',
           templet: function(d) {
             if(d.status == 'enable') {
@@ -121,8 +121,7 @@
           }
         },
         {field: 'creator', title: '创建人'},
-        {field: 'createDate', title: '创建日期', sort: true},
-        {field: 'memo', title: '备注'},
+        {field: 'createDate', title: '创建日期', sort: true}
       ]],
       page: true,
       request: {
@@ -140,6 +139,9 @@
     });
 
     table.on('toolbar(table)', function (obj) {
+      if (obj.event.indexOf('LAYTABLE_') == 0) {
+        return;
+      }
       if (obj.event == 'add') {
         active[obj.event](this);
         return;
@@ -151,7 +153,11 @@
         return;
       }
 
-      active[obj.event] && active[obj.event](data[0]);
+      if (!active[obj.event]) {
+        MyCuckoo.alert({title : '警示', msg : '此操作无效, 如有疑问, 请联系管理员!' });
+        return;
+      }
+      active[obj.event](data[0]);
     });
 
     function reload() {

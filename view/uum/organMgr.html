@@ -100,8 +100,8 @@
       cols: [[
         {type: 'numbers'},
         {type: 'radio'},
-        {field: 'orgSimpleName', dialog: 'text', title: '机构简称'},
-        {field: 'orgCode', dialog: 'text', title: '机构代码'},
+        {field: 'orgSimpleName', title: '机构简称'},
+        {field: 'orgCode', title: '机构代码'},
         {field: 'orgAddress1', title: '联系地址1'},
         {field: 'orgTel1', title: '联系电话1'},
         {field: 'orgBeginDate', title: '成立日期'},
@@ -136,6 +136,9 @@
     });
 
     table.on('toolbar(table)', function (obj) {
+      if (obj.event.indexOf('LAYTABLE_') == 0) {
+        return;
+      }
       if (obj.event == 'add') {
         active[obj.event](this);
         return;
@@ -147,7 +150,11 @@
         return;
       }
 
-      active[obj.event] && active[obj.event](data);
+      if (!active[obj.event]) {
+        MyCuckoo.alert({title : '警示', msg : '此操作无效, 如有疑问, 请联系管理员!' });
+        return;
+      }
+      active[obj.event](data);
     });
 
     let active = {

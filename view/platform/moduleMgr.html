@@ -100,8 +100,8 @@
       cols: [[
         {type: 'numbers'},
         {type: 'radio'},
-        {field: 'modName', dialog: 'text', title: '名称'},
-        {field: 'modEnName', dialog: 'text', title: '英文名'},
+        {field: 'modName', title: '名称'},
+        {field: 'modEnName', title: '英文名'},
         {field: 'modIconCls', title: '图标样式'},
         {field: 'modLevel', title: '级别',
           templet: function(d) {
@@ -156,6 +156,9 @@
     });
 
     table.on('toolbar(table)', function (obj) {
+      if (obj.event.indexOf('LAYTABLE_') == 0) {
+        return;
+      }
       if (obj.event == 'add') {
         active[obj.event](this);
         return;
@@ -167,7 +170,11 @@
         return;
       }
 
-      active[obj.event] && active[obj.event](data);
+      if (!active[obj.event]) {
+        MyCuckoo.alert({title : '警示', msg : '此操作无效, 如有疑问, 请联系管理员!' });
+        return;
+      }
+      active[obj.event](data);
     });
 
     function reload() {

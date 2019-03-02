@@ -91,8 +91,8 @@
       cols: [[
         {type: 'numbers'},
         {type: 'radio'},
-        {field: 'roleName', dialog: 'text', title: '角色名称'},
-        {field: 'roleLevel', dialog: 'text', title: '角色级别'},
+        {field: 'roleName', title: '角色名称'},
+        {field: 'roleLevel', title: '角色级别'},
         {field: 'status', title: '角色状态',
           templet: function(d) {
             if(d.status == 'enable') {
@@ -122,6 +122,9 @@
     });
 
     table.on('toolbar(table)', function (obj) {
+      if (obj.event.indexOf('LAYTABLE_') == 0) {
+        return;
+      }
       if (obj.event == 'add') {
         active[obj.event](this);
         return;
@@ -133,7 +136,11 @@
         return;
       }
 
-      active[obj.event] && active[obj.event](data[0]);
+      if (!active[obj.event]) {
+        MyCuckoo.alert({title : '警示', msg : '此操作无效, 如有疑问, 请联系管理员!' });
+        return;
+      }
+      active[obj.event](data[0]);
     });
 
     function reload() {

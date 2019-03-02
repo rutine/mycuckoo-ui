@@ -124,7 +124,7 @@
       cols: [[
         {type: 'numbers'},
         {type: 'checkbox'},
-        {field: 'roleName', dialog: 'text', title: '角色名称'},
+        {field: 'roleName', title: '角色名称'},
         {field: 'status', title: '角色状态',
           templet: function(d) {
             if(d.status == 'enable') {
@@ -153,17 +153,25 @@
     });
 
     table.on('toolbar(table)', function (obj) {
-      let data = table.checkStatus(obj.config.id).data;
+      if (obj.event.indexOf('LAYTABLE_') == 0) {
+        return;
+      }
       if (obj.event == 'roleassign') {
-        active[obj.event](data);
+        active[obj.event](this);
         return;
       }
 
+      let data = table.checkStatus(obj.config.id).data;
       if (!data.length) {
         MyCuckoo.alert({title : '提示', msg : '请选择记录' });
         return;
       }
-      active[obj.event] && active[obj.event](data);
+
+      if (!active[obj.event]) {
+        MyCuckoo.alert({title : '警示', msg : '此操作无效, 如有疑问, 请联系管理员!' });
+        return;
+      }
+      active[obj.event](data);
     });
 
 
@@ -172,7 +180,7 @@
         table.reload('table', { page: { pageNo: 1 } });
       },
       //分配角色
-      roleassign() {
+      roleassign(ele) {
         let nodes = selectNode;
         if(nodes == null) {
           MyCuckoo.alert({ title : '提示', msg : '请选择要分配角色的机构' });
