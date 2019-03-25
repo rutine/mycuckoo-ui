@@ -1,0 +1,36 @@
+<project xmlns="http://maven.apache.org/POM/4.0.0" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+         xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 http://maven.apache.org/maven-v4_0_0.xsd">
+
+    <modelVersion>4.0.0</modelVersion>
+    <groupId>com.mycuckoo</groupId>
+    <artifactId>mycuckoo-front</artifactId>
+    <version>4.0.0-SNAPSHOT</version>
+    <name>mycuckoo:front</name>
+    <packaging>jar</packaging>
+    <url>http://maven.apache.org</url>
+
+    <properties>
+        <project.build.sourceEncoding>utf-8</project.build.sourceEncoding>
+    </properties>
+
+    <build>
+        <resources>
+            <resource>
+                <directory>./</directory>
+                <includes>
+                    <include>**.html</include>
+                    <include>README</include>
+                </includes>
+                <targetPath>META-INF/resources</targetPath>
+            </resource>
+            <resource>
+                <directory>static</directory>
+                <targetPath>META-INF/resources/static</targetPath>
+            </resource>
+            <resource>
+                <directory>view</directory>
+                <targetPath>META-INF/resources/view</targetPath>
+            </resource>
+        </resources>
+    </build>
+</project>
