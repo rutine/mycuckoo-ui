@@ -4,3 +4,6 @@
 /logs
 npm-debug.log
 /dist
+target/
+.idea/
+*.iml

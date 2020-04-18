@@ -25,11 +25,11 @@
             </resource>
             <resource>
                 <directory>static</directory>
-                <targetPath>META-INF/resources/static</targetPath>
+                <targetPath>META-INF/resources/webjars/static</targetPath>
             </resource>
             <resource>
                 <directory>view</directory>
-                <targetPath>META-INF/resources/view</targetPath>
+                <targetPath>META-INF/resources/webjars/view</targetPath>
             </resource>
         </resources>
     </build>
