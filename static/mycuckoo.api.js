@@ -14,7 +14,7 @@ layui.use(['jquery'], function () {
           title: '未登录',
           content: xhr.responseJSON.message,
           end: function () {
-            parent.location.href = parent.location.href.replace('index.html', 'login.html');
+            parent.location.href = parent.location.protocol + '/login.html';
           },
         });
       },
