@@ -147,7 +147,7 @@
         $select.empty();
         for (var i = 0; i < json.data.length; i++) {
           var item = json.data[i];
-          $select.append('<option value="' + item.smallTypeCode + '">' + item.smallTypeName + '</option>');
+          $select.append('<option value="' + item.code + '">' + item.name + '</option>');
         }
         form.render('select');
 
@@ -156,7 +156,7 @@
           $select.empty();
           for (var i = 0; i < json.data.length; i++) {
             var item = json.data[i];
-            $select.append('<option value="' + item.smallTypeCode + '">' + item.smallTypeName + '</option>');
+            $select.append('<option value="' + item.code + '">' + item.name + '</option>');
           }
           form.render('select');
 

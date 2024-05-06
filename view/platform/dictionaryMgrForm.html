@@ -4,7 +4,7 @@
   <meta http-equiv="Content-Type" content="text/html; charset=utf-8" />
   <title>字典信息</title>
   <link type="image/x-icon" href="../../static/images/favicon.ico" rel="shortcut icon" />
-  <link type="text/css" href="../../static/layui/2.4.3/css/layui.css" rel="stylesheet" />
+  <link type="text/css" href="../../static/layui/2.9.8/css/layui.css" rel="stylesheet" />
   <link type="text/css" href="../../static/css/mycuckoo.css" rel="stylesheet" />
 </head>
 <body>
@@ -18,15 +18,15 @@
 
     <div class="layui-form-item">
       <div class="layui-inline">
-        <label class="layui-form-label">字典名称</label>
+        <label class="layui-form-label">编码</label>
         <div class="layui-input-inline">
-          <input type="text" name="bigTypeName" class="layui-input" lay-verify="required" maxlength="20" />
+          <input type="text" name="code" class="layui-input" lay-verify="required|alphanumeric" maxlength="15" />
         </div>
-      </div>
-      <div class="layui-inline">
-        <label class="layui-form-label">字典代码</label>
-        <div class="layui-input-inline">
-          <input type="text" name="bigTypeCode" class="layui-input" lay-verify="required|alphanumeric" maxlength="15" />
+        <div class="layui-inline">
+          <label class="layui-form-label">名称</label>
+          <div class="layui-input-inline">
+            <input type="text" name="name" class="layui-input" lay-verify="required" maxlength="20" />
+          </div>
         </div>
       </div>
     </div>
@@ -47,12 +47,12 @@
       <table class="layui-table">
         <thead>
         <tr>
-          <th>小类名称</th>
-          <th>小类代码</th>
+          <th>编码</th>
+          <th>名称</th>
           <th>操作</th>
         </tr>
         </thead>
-        <tbody id="dicSmallType"></tbody>
+        <tbody id="mycuckoo_dict_small_type_content"></tbody>
       </table>
     </div>
 
@@ -60,30 +60,19 @@
   </form>
 </div>
 </body>
-<script type="text/javascript" src="../../static/layui/2.4.3/layui.js" charset="UTF-8"></script>
+<script type="text/javascript" src="../../static/layui/2.9.8/layui.js" charset="UTF-8"></script>
 <script type="text/javascript" src="../../static/mycuckoo.js" charset="UTF-8"></script>
 <script type="text/javascript" src="../../static/mycuckoo.api.js" charset="UTF-8"></script>
 <script type="text/html" id="operator">
-  <div class="layui-btn-group">
-    {{# if(d.action == 'create') { }}
-    <a href="javascript: " class="layui-btn layui-btn-sm" data-type="create" lay-submit="submit">
-      <i class="layui-icon layui-icon-ok-circle"></i>保存
-    </a>
-    <a href="javascript: " class="layui-btn layui-btn-sm" data-type="reback">
-      <i class="layui-icon layui-icon-return"></i>返回
-    </a>
-    {{# } else if(d.action == 'modify') { }}
-    <a href="javascript:" class="layui-btn layui-btn-sm" data-type="update" lay-submit="submit">
-      <i class="layui-icon layui-icon-ok-circle"></i>保存
-    </a>
-    <a href="javascript:" class="layui-btn layui-btn-sm" data-type="reback">
-      <i class="layui-icon layui-icon-return"></i>返回
-    </a>
-    {{# } else if(d.action == 'view') { }}
-    <a href="javascript:" class="layui-btn layui-btn-sm" data-type="reback">
-      <i class="layui-icon layui-icon-return"></i>返回
+  <div class="layui-btn-container" style="margin-bottom: 6px; text-align: center;">
+    {{# if(d.action != 'view') { }}
+    <a href="javascript: " class="layui-btn layui-btn-sm" data-type="{{= d.action }}" lay-submit>
+      <i class="layui-icon layui-icon-ok"></i>保存
     </a>
     {{# } }}
+    <a href="javascript:" class="layui-btn layui-btn-sm" data-type="close">
+      <i class="layui-icon layui-icon-close"></i>关闭
+    </a>
   </div>
 </script>
 <script type="text/javascript">
@@ -93,12 +82,12 @@
   });
 
   layui.use(['jquery', 'laytpl', 'form'], function() {
-    let $ = layui.jquery,
+    var $ = layui.jquery,
       laytpl = layui.laytpl,
       form = layui.form,
       queryObj = MyCuckoo.getQueryObject(location.search);
 
-    let FormMgr = function() {
+    var FormMgr = function() {
       if(queryObj.action != 'view') {
         $('a[data-type=addSmallType]').removeClass('layui-hide');
       }
@@ -110,16 +99,20 @@
 
       //表单初始赋值
       if (queryObj.id) {
-        $.get(api.dictionaryMgr.url + '/' + queryObj.id).then(json => {
+        $.get(api.dictionaryMgr.url + '/' + queryObj.id).then(function(json) {
           form.val('editForm', json.data);
 
-          this.smallTypeGrid(json.data.smallTypes);
+          formMgr.smallTypeGrid(json.data.smallTypes);
+
+          if (queryObj.action == 'view') {
+            $('input, select, textarea').attr('disabled', 'disabled')
+          }
         });
       }
 
-      let formMgr = this;
+      var formMgr = this;
       //操作按钮触发事件
-      $('form a.layui-btn[lay-submit!=submit]').on('click', function() {
+      $('form a.layui-btn:not([lay-submit])').on('click', function() {
         var type = $(this).data('type');
         formMgr[type] && formMgr[type](this);
       });
@@ -134,30 +127,31 @@
     }
 
     FormMgr.prototype = {
+      index: 0,
       constructor: FormMgr,
-      smallTypeGrid(smallTypes) {
-        let $ele = $('#dicSmallType');
-        smallTypes.forEach((item, index) => {
+      smallTypeGrid: function(smallTypes) {
+        var that = this;
+        var $ele = $('#mycuckoo_dict_small_type_content');
+        smallTypes.forEach(function(item, index) {
           if (queryObj.action == 'view') {
-            let tr = $([
+            var tr = $([
               '<tr>',
-              '<td>' + item.smallTypeName + '</td>',
-              '<td>' + item.smallTypeCode + '</td>',
+              '<td>' + item.code + '</td>',
+              '<td>' + item.name + '</td>',
               '<td></td>',
               '</tr>'
             ].join(''));
 
             $ele.append(tr);
           } else {
-            var timestamp = $.now();
-            let tr = $([
+            var tr = $([
               '<tr>',
               '<td>',
-              item.smallTypeId ? ' <input type="hidden" name="smallTypeId[' + timestamp + ']" value="' + item.smallTypeId + '">' : '',
-              ' <input type="text" name="smallTypeName[' + timestamp + ']" value="' + item.smallTypeName + '" class="layui-input" lay-verify="required" maxlength="20">',
+              item.smallTypeId ? ' <input type="hidden" name="smallTypeId[' + that.index + ']" value="' + item.smallTypeId + '">' : '',
+              ' <input type="text" name="code[' + that.index + ']" value="' + item.code + '" class="layui-input" lay-verify="required" maxlength="20">',
               '</td>',
               '<td>',
-              ' <input type="text" name="smallTypeCode[' + timestamp + ']" value="' + item.smallTypeCode + '" class="layui-input" lay-verify="required|alphanumeric" maxlength="10">',
+              ' <input type="text" name="name[' + that.index + ']" value="' + item.name + '" class="layui-input" lay-verify="required|alphanumeric" maxlength="10">',
               '</td>',
               '<td><button class="layui-btn layui-btn-xs layui-btn-danger btn-delete">删除</button></td>',
               '</tr>'
@@ -169,19 +163,20 @@
             });
 
             $ele.append(tr);
+            that.index++;
           }
         });
       },
-      addSmallType(ele) {
-        this.smallTypeGrid([{smallTypeName: '', smallTypeCode: ''}]);
+      addSmallType: function(ele) {
+        this.smallTypeGrid([{name: '', code: ''}]);
       },
-      convert(data) {
-        let reg = /(\w+)\[(\w+)\]/;
-        let obj = {};
+      convert: function(data) {
+        var reg = /(\w+)\[(\w+)\]/;
+        var obj = {};
         //处理name[key]=value => {key: {name: value}}
-        for (let p in data) {
+        for (var p in data) {
           if (reg.test(p)) {
-            let arr = reg.exec(p);
+            var arr = reg.exec(p);
             if(!obj[arr[2]]) {
               obj[arr[2]] = {}
             }
@@ -190,20 +185,20 @@
           }
         }
         data.smallTypes = [];
-        for (let p in obj) {
+        for (var p in obj) {
           data.smallTypes.push(obj[p]);
         }
 
         return data;
       },
-      create(data) {
+      add: function(data) {
         $.postJson(api.dictionaryMgr.url, this.convert(data)).then(json => {
           MyCuckoo.msg({msg: json.data});
 
           this.refresh();
         });
       },
-      update(data) {
+      modify: function(data) {
         $.put(api.dictionaryMgr.url, this.convert(data)).then(json => {
           MyCuckoo.msg({msg: json.data});
 
@@ -211,15 +206,15 @@
         });
       },
       //刷新父窗
-      refresh() {
+      refresh: function() {
         setTimeout(function() {
           parent.location.reload();
-          this.reback();
+          this.close();
         }, 2000);
       },
       //关闭当前iframe页
-      reback(ele) {
-        let index = parent.layer.getFrameIndex(window.name);
+      close: function(ele) {
+        var index = parent.layer.getFrameIndex(window.name);
         parent.layer.close(index);
       }
     }
