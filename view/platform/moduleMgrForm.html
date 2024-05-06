@@ -4,7 +4,7 @@
   <meta http-equiv="Content-Type" content="text/html; charset=utf-8" />
   <title>模块信息</title>
   <link type="image/x-icon" href="../../static/images/favicon.ico" rel="shortcut icon" />
-  <link type="text/css" href="../../static/layui/2.4.3/css/layui.css" rel="stylesheet" />
+  <link type="text/css" href="../../static/layui/2.9.8/css/layui.css" rel="stylesheet" />
   <link type="text/css" href="../../static/css/mycuckoo.css" rel="stylesheet" />
   <link type="text/css" href="../../static/dtree/css/dtree.css" rel="stylesheet" />
   <link type="text/css" href="../../static/dtree/css/font/dtreefont.css" rel="stylesheet" />
@@ -17,13 +17,34 @@
         <div class="layui-inline">
           <label class="layui-form-label">名称</label>
           <div class="layui-input-inline">
-            <input type="text" name="modName" class="layui-input" lay-verify="required" maxlength="10" />
+            <input type="text" name="name" class="layui-input" lay-verify="required" maxlength="10" />
           </div>
         </div>
         <div class="layui-inline">
-          <label class="layui-form-label">英文名</label>
+          <label class="layui-form-label">编码</label>
           <div class="layui-input-inline">
-            <input type="text" name="modEnName" class="layui-input" lay-verify="required" maxlength="40" />
+            <input type="text" name="code" class="layui-input" lay-verify="required" maxlength="40" />
+          </div>
+        </div>
+      </div>
+
+      <div class="layui-form-item">
+        <div class="layui-inline">
+          <label class="layui-form-label">所属系统</label>
+          <div class="layui-input-inline">
+            <select name="belongSys" lay-verify="required">
+              <option value=""></option>
+            </select>
+          </div>
+        </div>
+        <div class="layui-inline">
+          <label class="layui-form-label">上级模块</label>
+          <div class="layui-input-inline">
+            <div class="layui-input-wrap">
+              <input type="hidden" name="parentId" />
+              <input type="text" name="parentName" class="layui-input" lay-affix="search"
+                     data-type="selectModule" lay-filter="selectModule" lay-verify="required" readonly />
+            </div>
           </div>
         </div>
       </div>
@@ -32,26 +53,34 @@
         <div class="layui-inline">
           <label class="layui-form-label">图标样式</label>
           <div class="layui-input-inline">
-            <input type="text" name="modIconCls" class="layui-input" lay-verify="alphanumeric" />
+            <input type="text" name="iconCls" class="layui-input" lay-verify="alphanumeric" />
           </div>
         </div>
         <div class="layui-inline">
-          <label class="layui-form-label">级别</label>
+          <label class="layui-form-label">页面类型</label>
           <div class="layui-input-inline">
-            <select name="modLevel" lay-verify="required">
-              <option value="1">第一</option>
-              <option value="2">第二</option>
-              <option value="3">第三</option>
+            <select name="pageType" lay-verify="required">
+              <option value=""></option>
             </select>
           </div>
         </div>
       </div>
 
       <div class="layui-form-item">
+        <!--<div class="layui-inline">
+          <label class="layui-form-label">级别</label>
+          <div class="layui-input-inline">
+            <select name="level" lay-verify="required">
+              <option value="1">第一</option>
+              <option value="2">第二</option>
+              <option value="3">第三</option>
+            </select>
+          </div>
+        </div>-->
         <div class="layui-inline">
           <label class="layui-form-label">顺序</label>
           <div class="layui-input-inline">
-            <select name="modOrder" lay-verify="required">
+            <select name="order" lay-verify="required">
               <option value="1">1</option>
               <option value="2">2</option>
               <option value="3">3</option>
@@ -63,35 +92,6 @@
               <option value="9">9</option>
             </select>
           </div>
-        </div>
-        <div class="layui-inline">
-          <label class="layui-form-label">所属系统</label>
-          <div class="layui-input-inline">
-            <select name="belongToSys" lay-verify="required">
-              <option value=""></option>
-            </select>
-          </div>
-        </div>
-      </div>
-
-      <div class="layui-form-item">
-        <div class="layui-inline">
-          <label class="layui-form-label">页面类型</label>
-          <div class="layui-input-inline">
-            <select name="modPageType" lay-verify="required">
-              <option value=""></option>
-            </select>
-          </div>
-        </div>
-        <div class="layui-inline">
-          <label class="layui-form-label">上级模块</label>
-          <div class="layui-input-inline">
-            <input type="hidden" name="parentId" />
-            <input type="text" name="parentName" class="layui-input" lay-verify="required" readonly />
-          </div>
-          <a class="layui-btn layui-btn-primary layui-btn-sm layui-btn-radius" data-type="selectModule">
-            <i class="layui-icon layui-icon-search"></i>
-          </a>
         </div>
       </div>
 
@@ -106,30 +106,19 @@
     </form>
   </div>
 </body>
-<script type="text/javascript" src="../../static/layui/2.4.3/layui.js" charset="UTF-8"></script>
+<script type="text/javascript" src="../../static/layui/2.9.8/layui.js" charset="UTF-8"></script>
 <script type="text/javascript" src="../../static/mycuckoo.js" charset="UTF-8"></script>
 <script type="text/javascript" src="../../static/mycuckoo.api.js" charset="UTF-8"></script>
 <script type="text/html" id="operator">
-  <div class="layui-btn-group">
-    {{# if(d.action == 'create') { }}
-    <a href="javascript: " class="layui-btn layui-btn-sm" data-type="create" lay-submit="submit">
-      <i class="layui-icon layui-icon-ok-circle"></i>保存
-    </a>
-    <a href="javascript: " class="layui-btn layui-btn-sm" data-type="reback">
-      <i class="layui-icon layui-icon-return"></i>返回
-    </a>
-    {{# } else if(d.action == 'modify') { }}
-    <a href="javascript:" class="layui-btn layui-btn-sm" data-type="update" lay-submit="submit">
-      <i class="layui-icon layui-icon-ok-circle"></i>保存
-    </a>
-    <a href="javascript:" class="layui-btn layui-btn-sm" data-type="reback">
-      <i class="layui-icon layui-icon-return"></i>返回
-    </a>
-    {{# } else if(d.action == 'view') { }}
-    <a href="javascript:" class="layui-btn layui-btn-sm" data-type="reback">
-      <i class="layui-icon layui-icon-return"></i>返回
+  <div class="layui-btn-container" style="margin-bottom: 6px; text-align: center;">
+    {{# if(d.action != 'view') { }}
+    <a href="javascript: " class="layui-btn layui-btn-sm" data-type="{{= d.action }}" lay-submit>
+      <i class="layui-icon layui-icon-ok"></i>保存
     </a>
     {{# } }}
+    <a href="javascript:" class="layui-btn layui-btn-sm" data-type="close">
+      <i class="layui-icon layui-icon-close"></i>关闭
+    </a>
   </div>
 </script>
 <script type="text/javascript">
@@ -139,52 +128,55 @@
   });
 
   layui.use(['jquery', 'laytpl', 'form', 'dtree'], function() {
-    let $ = layui.jquery,
+    var $ = layui.jquery,
       laytpl = layui.laytpl,
       form = layui.form,
       layer = layui.layer,
       tree = layui.dtree,
       queryObj = MyCuckoo.getQueryObject(location.search);
 
-    let FormMgr = function () {
+    var FormMgr = function () {
       //渲染操作按钮
       laytpl(operator.innerHTML).render(queryObj, function(html) {
         $('.toolbar').html(html);
       });
 
       //初始化
-      $.get(api.dictionaryMgr.smallTypeUrl, {bigTypeCode: 'systemType'}).then(json => {
-        let $select = $('select[name=belongToSys]');
+      $.get(api.dictionaryMgr.smallTypeUrl, {bigTypeCode: 'systemType'}).then(function(json) {
+        var $select = $('select[name=belongSys]');
         $select.empty();
-        for (let i = 0; i < json.data.length; i++) {
-          let item = json.data[i];
+        for (var i = 0; i < json.data.length; i++) {
+          var item = json.data[i];
           $select.append('<option value="' + item.smallTypeCode + '">' + item.smallTypeName + '</option>');
         }
         form.render('select');
 
-        $.get(api.dictionaryMgr.smallTypeUrl, {bigTypeCode: 'modPageType'}).then(json => {
-          let $select = $('select[name=modPageType]');
+        $.get(api.dictionaryMgr.smallTypeUrl, {bigTypeCode: 'modPageType'}).then(function(json) {
+          var $select = $('select[name=pageType]');
           $select.empty();
-          for (let i = 0; i < json.data.length; i++) {
-            let item = json.data[i];
+          for (var i = 0; i < json.data.length; i++) {
+            var item = json.data[i];
             $select.append('<option value="' + item.smallTypeCode + '">' + item.smallTypeName + '</option>');
           }
           form.render('select');
 
           //表单初始赋值
-          if (queryObj.id) {
-            $.get(api.moduleMgr.url + '/' + queryObj.id).then(json => {
-              form.val('editForm', json.data);
-            });
-          }
+          initForm();
         });
       });
 
       //操作按钮触发事件
-      let formMgr = this;
-      $('form a.layui-btn[lay-submit!=submit]').on('click', function() {
+      var formMgr = this;
+      $('form a.layui-btn:not([lay-submit])').on('click', function() {
         var type = $(this).data('type');
         formMgr[type] && formMgr[type](this);
+      });
+
+      form.on('input-affix', function(data) {
+        var elem = data.elem; // 获取输入框 DOM 对象
+        var affix = data.affix; // 获取输入框 lay-affix 属性值
+        var type = $(elem).data('type');
+        $(elem).attr('disabled') != 'disabled' && formMgr[type] && formMgr[type](this);
       });
 
       //监听提交
@@ -196,12 +188,24 @@
       });
     }
 
+    //表单初始赋值
+    function initForm() {
+      if (queryObj.id) {
+        $.get(api.moduleMgr.url + '/' + queryObj.id).then(json => {
+          form.val('editForm', json.data);
+          if (queryObj.action == 'view') {
+            $('input, select, textarea').attr('disabled', 'disabled')
+          }
+        });
+      }
+    }
+
     FormMgr.prototype = {
       constructor: FormMgr,
-      openTree(url, config) {
-        let fillForm = function(data) {
-          let valObj =  {};
-          for (let p in config) {
+      openTree: function(url, config) {
+        var fillForm = function(data) {
+          var valObj =  {};
+          for (var p in config) {
             if (typeof p == 'string') {
               valObj[config[p]] = data[p];
             }
@@ -216,7 +220,7 @@
           content: '<ul id="tree" class="dtree" data-id="0"></ul>',
           btn: ['确认选择'],
           success: function(layero, index){
-            let treeObj = tree.render({
+            var treeObj = tree.render({
               elem: '#tree',
               method: 'get',
               type: 'all',
@@ -228,7 +232,7 @@
               icon: ['-1', '1']
             });
             tree.on('nodedblclick(tree)', function(obj) {
-              let data = obj.param;
+              var data = obj.param;
               if(data.isLeaf) {
                 return;
               }
@@ -250,17 +254,17 @@
           }
         });
       },
-      selectModule(ele) {
+      selectModule: function(ele) {
         this.openTree(api.moduleMgr.childNodesUrl, {nodeId: 'parentId', context: 'parentName'});
       },
-      create(data) {
+      add(data) {
         $.postJson(api.moduleMgr.url, data).then(json => {
           MyCuckoo.msg({msg: json.data});
 
           this.refresh();
         });
       },
-      update(data) {
+      modify: function(data) {
         $.put(api.moduleMgr.url, data).then(json => {
           MyCuckoo.msg({msg: json.data});
 
@@ -268,15 +272,15 @@
         });
       },
       //刷新父窗
-      refresh() {
+      refresh: function() {
         setTimeout(function() {
           parent.location.reload();
-          this.reback();
+          this.close();
         }, 2000);
       },
       //关闭当前iframe页
-      reback(ele) {
-        let index = parent.layer.getFrameIndex(window.name);
+      close: function(ele) {
+        var index = parent.layer.getFrameIndex(window.name);
         parent.layer.close(index);
       }
     }

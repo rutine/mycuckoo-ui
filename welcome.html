@@ -4,7 +4,7 @@
   <meta http-equiv="Content-Type" content="text/html; charset=utf-8" />
   <title>系统平台</title>
   <link type="image/x-icon" href="static/images/favicon.ico" rel="shortcut icon" />
-  <link type="text/css" href="static/layui/2.4.3/css/layui.css" rel="stylesheet" />
+  <link type="text/css" href="static/layui/2.9.8/css/layui.css" rel="stylesheet" />
   <link type="text/css" href="static/css/mycuckoo.css" rel="stylesheet" />
 </head>
 <body>
@@ -24,15 +24,14 @@
     <div class="layui-row">
       <form class="layui-col-md12 layui-form mycuckoo-search">
         <div class="layui-inline">
-          <label class="layui-form-label">搜索：</label>
           <div class="layui-input-inline">
-            <input class="layui-input" name="start" placeholder="开始日">
+            <input class="layui-input" name="start" autocomplete="off" placeholder="开始日">
           </div>
           <div class="layui-input-inline">
-            <input class="layui-input" name="end" placeholder="截止日">
+            <input class="layui-input" name="end" autocomplete="off" placeholder="截止日">
           </div>
           <div class="layui-input-inline">
-            <input type="text" class="layui-input" name="username" placeholder="请输入用户名" autocomplete="off">
+            <input type="text" class="layui-input" name="username" autocomplete="off" placeholder="请输入用户名">
           </div>
           <div class="layui-input-inline">
             <button class="layui-btn" lay-filter="search" lay-submit>
@@ -49,28 +48,29 @@
     <ul class="site-doc-icon site-doc-anim">
       <li>
         <div class="layui-anim" data-anim="layui-anim-up">
-          <h3>1</h3>
+          <h3>滑入</h3>
         </div>
       </li>
       <li>
-        <div class="layui-anim" data-anim="layui-anim-up">
-          <h3>2</h3>
+        <div class="layui-anim" data-anim="layui-anim-fadein">
+          <h3>渐现</h3>
         </div>
       </li>
       <li>
-        <div class="layui-anim" data-anim="layui-anim-up">
-          <h3>3</h3>
+        <div class="layui-anim" data-anim="layui-anim-scale">
+          <h3>放大</h3>
         </div>
       </li>
       <li>
-        <div class="layui-anim" data-anim="layui-anim-up">
-          <h3>4</h3>
+        <div class="layui-anim" data-anim="layui-anim-rotate">
+          <h3>旋转</h3>
         </div>
       </li>
     </ul>
   </div>
 </body>
-<script type="text/javascript" src="static/layui/2.4.3/layui.js" charset="UTF-8"></script>
+<script type="text/javascript" src="static/layui/2.9.8/layui.js" charset="UTF-8"></script>
+<script type="text/javascript" src="static/mycuckoo.js" charset="UTF-8"></script>
 <script type="text/javascript">
   layui.config({
     base: 'static/extend/',
@@ -78,12 +78,47 @@
   });
 
   layui.use(['form', 'table'], function() {
-    var table = layui.table //表格
+    var $ = layui.$;
+    var table = layui.table; //表格
     var form = layui.form;
+    var laydate = layui.laydate;
+
+    // 日期范围
+    laydate.render({
+      elem: 'input[name=start]'
+    });
+
+    laydate.render({
+      elem: 'input[name=end]'
+    });
 
     form.on('submit(search)', function(data) {
+      MyCuckoo.msg({ msg: '此页面仅演示' });
 
       return false;
+    });
+
+    //演示动画
+    $('.site-doc-anim .layui-anim').on('click', function(){
+      var that = $(this),
+          anim = that.data('anim');
+
+      //停止循环
+      if(that.hasClass('layui-anim-loop')){
+        return that.removeClass(anim);
+      }
+
+      that.removeClass(anim);
+
+      setTimeout(function(){
+        that.addClass(anim);
+      });
+      //恢复渐隐
+      if(anim === 'layui-anim-fadeout'){
+        setTimeout(function(){
+          that.removeClass(anim);
+        }, 1300);
+      }
     });
   });
 </script>

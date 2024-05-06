@@ -2,7 +2,7 @@
 <html>
 <head>
   <meta http-equiv="Content-Type" content="text/html; charset=utf-8" />
-  <title>操作信息</title>
+  <title>资源信息</title>
   <link type="image/x-icon" href="../../static/images/favicon.ico" rel="shortcut icon" />
   <link type="text/css" href="../../static/layui/2.9.8/css/layui.css" rel="stylesheet" />
   <link type="text/css" href="../../static/css/mycuckoo.css" rel="stylesheet" />
@@ -10,29 +10,36 @@
 <body>
 <div class="mycuckoo-main">
   <form class="layui-form layui-form-pane" name="editForm" lay-filter="editForm">
-    <input type="hidden" name="operateId" />
+    <input type="hidden" name="resourceId" />
+    <input type="hidden" name="moduleId" required/>
     <div class="layui-form-item">
       <div class="layui-inline">
-        <label class="layui-form-label">操作名称</label>
+        <label class="layui-form-label">名称</label>
         <div class="layui-input-inline">
           <input type="text" name="name" class="layui-input" lay-verify="required" maxlength="10" />
         </div>
       </div>
       <div class="layui-inline">
-        <label class="layui-form-label">图标</label>
+        <label class="layui-form-label">方法</label>
         <div class="layui-input-inline">
-          <input type="text" name="iconCls" class="layui-input" lay-verify="required|alphanumeric" maxlength="20" />
+          <select name="method" lay-verify="required">
+            <option value="get">GET</option>
+            <option value="post">POST</option>
+            <option value="put">PUT</option>
+            <option value="delete">DELETE</option>
+          </select>
         </div>
       </div>
     </div>
 
     <div class="layui-form-item">
-      <div class="layui-inline">
-        <label class="layui-form-label">操作编码</label>
-        <div class="layui-input-inline">
-          <input type="text" name="code" class="layui-input" lay-verify="required" maxlength="10" />
-        </div>
+      <label class="layui-form-label">url</label>
+      <div class="layui-input-block">
+        <input type="text" name="path" class="layui-input" lay-verify="required" maxlength="100" />
       </div>
+    </div>
+
+    <div class="layui-form-item">
       <div class="layui-inline">
         <label class="layui-form-label">操作顺序</label>
         <div class="layui-input-inline">
@@ -49,22 +56,11 @@
           </select>
         </div>
       </div>
-    </div>
-
-    <div class="layui-form-item">
       <div class="layui-inline">
-        <label class="layui-form-label">操作组</label>
+        <label class="layui-form-label">操作按钮</label>
         <div class="layui-input-inline">
-          <select name="group" lay-verify="required">
-            <option value="1">1</option>
-            <option value="2">2</option>
-            <option value="3">3</option>
-            <option value="4">4</option>
-            <option value="5">5</option>
-            <option value="6">6</option>
-            <option value="7">7</option>
-            <option value="8">8</option>
-            <option value="9">9</option>
+          <select name="operateId" lay-search="" lay-verify="required">
+
           </select>
         </div>
       </div>
@@ -114,16 +110,19 @@
         $('.toolbar').html(html);
       });
 
-      //表单初始赋值
-      if (queryObj.id) {
-        $.get(api.operateMgr.url + '/' + queryObj.id).then(json => {
-          form.val('editForm', json.data);
+      //初始化
+      $.get(api.moduleMgr.operationUrl, {id: queryObj.moduleId}).then(function(json) {
+        var $select = $('select[name=operateId]');
+        $select.empty();
+        $select.append('<option value="">请选择或搜索</option>');
+        for (var i = 0; i < json.data.source.length; i++) {
+          var item = json.data.source[i];
+          $select.append('<option value="' + item.id + '">' + item.text + '</option>');
+        }
+        form.render('select');
 
-          if (queryObj.action == 'view') {
-            $('input, select, textarea').attr('disabled', 'disabled')
-          }
-        });
-      }
+        initForm();
+      });
 
       //操作按钮触发事件
       var formMgr = this;
@@ -141,18 +140,33 @@
       });
     }
 
+    //表单初始赋值
+    function initForm() {
+      if (queryObj.id) {
+        $.get(api.resourceMgr.url + '/' + queryObj.id).then(json => {
+          json.data.moduleId = queryObj.moduleId;
+          form.val('editForm', json.data);
+
+          if (queryObj.action == 'view') {
+            $('input, select, textarea').attr('disabled', 'disabled')
+          }
+        });
+      } else {
+        form.val('editForm', {moduleId: queryObj.moduleId});
+      }
+    }
 
     FormMgr.prototype = {
       constructor: FormMgr,
       add: function(data) {
-        $.postJson(api.operateMgr.url, data).then(json => {
+        $.postJson(api.resourceMgr.url, data).then(json => {
           MyCuckoo.msg({msg: json.data});
 
           this.refresh();
         });
       },
       modify: function(data) {
-        $.put(api.operateMgr.url, data).then(json => {
+        $.put(api.resourceMgr.url, data).then(json => {
           MyCuckoo.msg({msg: json.data});
 
           this.refresh();

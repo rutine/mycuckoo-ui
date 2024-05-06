@@ -2,10 +2,11 @@
 <html>
 <head>
   <meta http-equiv="Content-Type" content="text/html; charset=utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1">
   <title>系统平台</title>
   <link type="image/x-icon" href="static/images/favicon.ico" rel="shortcut icon" />
   <link type="text/css" href="static/css/font.css" rel="stylesheet" />
-  <link type="text/css" href="static/layui/2.4.3/css/layui.css" rel="stylesheet" />
+  <link type="text/css" href="static/layui/2.9.8/css/layui.css" rel="stylesheet" />
   <link type="text/css" href="static/css/mycuckoo.css" rel="stylesheet" />
 </head>
 <body>
@@ -59,12 +60,12 @@
     <div class="layui-body mycuckoo-body">
       <div class="layui-tab mycuckoo-tab" lay-filter="mycuckoo-tab" lay-allowclose="true">
         <ul id="tabName" class="layui-tab-title">
-          <li class="layui-this welcome">我的桌面</li>
+          <!--<li class="layui-this welcome">我的桌面</li>-->
         </ul>
         <div class="layui-tab-content">
-          <div class="layui-tab-item layui-show">
+          <!--<div class="layui-tab-item layui-show">
             <iframe class="mycuckoo-frame" src='welcome.html' frameborder="0" scrolling="yes"></iframe>
-          </div>
+          </div>-->
         </div>
       </div>
     </div>
@@ -80,7 +81,7 @@
   <li data-type="closeAll">关闭所有</li>
 </ul>
 </body>
-<script type="text/javascript" src="static/layui/2.4.3/layui.js" charset="UTF-8"></script>
+<script type="text/javascript" src="static/layui/2.9.8/layui.js" charset="UTF-8"></script>
 <script type="text/javascript" src="static/mycuckoo.js" charset="UTF-8"></script>
 <script type="text/javascript" src="static/mycuckoo.api.js" charset="UTF-8"></script>
 <script type="text/javascript">
@@ -89,31 +90,51 @@
     version: '101100'
   });
 
-  layui.use(['jquery', 'element', 'admin', 'upload'], function(){
-    let $ = layui.jquery,
+  layui.use(['jquery', 'element', 'admin', 'upload', 'laytpl'], function(){
+    var $ = layui.jquery,
       element = layui.element,
       tab = layui.admin.tab,
+      laytpl = layui.laytpl,
       upload = layui.upload;
 
-    let MenuMgr = function() {
-      api.postMenu(null).then(json => {
+    window.MyCuckoo.tab = function (code, title, url) {
+      var $tabs = $('.mycuckoo-frame');
+      var tabId = 'mycuckoo-tab-' + code;
+      for (var i = 0; i < $tabs.length; i++) {
+        if ($tabs.eq(i).attr('tab-id') == tabId) {
+          tab.tabChange(tabId);
+          return;
+        }
+      }
+
+      tab.tabAdd(title, url, tabId);
+      tab.tabChange(tabId);
+
+      if (code == 'welcome') {
+        $('.layui-tab-title li[lay-id=' + tabId + '] i').remove();
+      }
+    };
+    MyCuckoo.tab('welcome', '我的桌面', 'welcome.html');
+
+    var MenuMgr = function() {
+      var menuMgr = this;
+      api.postMenu(null).then(function(json) {
         var menu = json.menu;
-        this.renderNavBar(menu);
-        this.renderSideNav(menu);
-        this.user = json.user;
+        menuMgr.renderNavBar(menu);
+        menuMgr.renderSideNav(menu);
+        menuMgr.user = json.user;
 
-        sessionStorage.setItem('myMenu', JSON.stringify(menu));
-        sessionStorage.setItem('userInfo', JSON.stringify(json.user));
+        MyCuckoo.setSession('myMenu', menu);
+        MyCuckoo.setSession('userInfo', json.user);
 
-        var menuMgr = this;
         element.on('nav(mycuckoo-nav-right)', function(data) {
           var type = $(this).data('type');
           menuMgr[type] && menuMgr[type](this);
         });
 
-        $('img#filePicker').siblings('span').text(this.user.userName);
-        if(this.user.userPhotoUrl) {
-          $('img#filePicker').attr('src', this.user.userPhotoUrl)
+        $('img#filePicker').siblings('span').text(menuMgr.user.userName);
+        if(menuMgr.user.userPhotoUrl) {
+          $('img#filePicker').attr('src', menuMgr.user.userPhotoUrl)
         }
 
         //更换头像
@@ -124,13 +145,13 @@
           data: {business: 'photo'},
           done: function(res, index, upload) {
             if(res.code == 0) { //上传成功
-              $.put(api.userMgr.updatePhoto, {photo: res.data.url}).then(json => {
+              $.put(api.userMgr.updatePhoto, {photo: res.data.url}).then(function(json) {
                 $('img#filePicker').attr('src', res.data.url);
                 MyCuckoo.msg({ msg: '成功更换头像' });
               });
               return;
             }
-            this.error(index, upload);
+            menuMgr.error(index, upload);
           },
           error: function(index, upload) {
             MyCuckoo.alert({title : '提示', msg : '上传头像失败!' });
@@ -142,81 +163,109 @@
     MenuMgr.prototype = {
       constructor: MenuMgr,
       //设置密码
-      setPwd(el) {
+      setPwd: function(el) {
         MyCuckoo.dialog('设置新密码', './userInfoSetting.html', 480, 450);
       },
       //查看用户信息
-      userInfo(el) {
-        MyCuckoo.dialog('用户信息', './view/uum/userMgrForm.html?action=view&id=' + this.user.userId);
+      userInfo: function(el) {
+        MyCuckoo.dialog('用户信息', './view/uum/userMgrForm.html?action=view&id=' + this.user.userId, 480, 450);
       },
       //注销登录
-      logout(el) {
-        api.getLogout().then(json => {  window.location.href = './login.html'; });
+      logout: function(el) {
+        api.getLogout().then(function(json) {  window.location.href = './login.html'; });
       },
 
-      activeMenu (el) {
+      activeMenu: function(el) {
         var sidebarIdForShow = $(el).attr('href');
         $(sidebarIdForShow).siblings(':not(.layui-hide)').addClass('layui-hide');
         $(sidebarIdForShow).removeClass('layui-hide');
       },
       //顶部导航条
-      renderNavBar(menu) {
-        var lis = '';
+      renderNavBar: function(menu) {
+        var tpl = '<li class="layui-nav-item {{= d.hideCls }}">'
+            + '<a href="#side_nav_{{= d.id }}" class="{{= d.iconCls }}-hide">{{= d.name }}</a>'
+            + '</li>';
+
+        var liHtm = '';
         for (var i = 0; i < menu.first.length; i++) {
           var first = menu.first[i];
-          lis += '<li class="layui-nav-item ' + (i == 0 ? 'layui-this' : '') + '">' +
-            '     <a href="#side_nav_' + first.moduleId + '" class="' + first.modIconCls + '-hide">' + first.modName + '</a>' +
-            '   </li>';
+          liHtm += laytpl(tpl).render({
+            id: first.moduleId,
+            name: first.name,
+            hideCls: (i == 0 ? 'layui-this' : ''),
+            iconCls: first.modIconCls,
+          });
         }
-        $('.layui-nav[lay-filter=mycuckoo-nav]').html(lis);
+        $('.layui-nav[lay-filter=mycuckoo-nav]').html(liHtm);
         //重新渲染导航
         element.render('nav', 'mycuckoo-nav');
         element.on('nav(mycuckoo-nav)', this.activeMenu);
       },
-      activeTab(el) {
+      activeTab: function(el) {
         if (el.siblings('.layui-nav-child').length) {
 
         } else {
+          var code = el.data('code');
           var url = el.data('url');
           var title = el.html();
           var index = $('.mycuckoo-sidebar a').index(el);
-          for (var i = 0; i < $('.mycuckoo-frame').length; i++) {
-            if ($('.mycuckoo-frame').eq(i).attr('tab-id') == index + 1) {
-              tab.tabChange(index + 1);
+          var $tabs = $('.mycuckoo-frame');
+          var tabId = 'mycuckoo-tab-' + code ? code : index;
+          for (var i = 0; i < $tabs.length; i++) {
+            if ($tabs.eq(i).attr('tab-id') == tabId) {
+              tab.tabChange(tabId);
               return;
             }
           }
 
-          tab.tabAdd(title, url, index + 1);
-          tab.tabChange(index + 1);
+          tab.tabAdd(title, url, tabId);
+          tab.tabChange(tabId);
         }
       },
       //左侧导航栏
-      renderSideNav(menu) {
+      renderSideNav: function(menu) {
+        var navTpl = '<div id="side_nav_{{= d.id }}"  class="{{= d.hideCls }}">'
+            + '<ul class="layui-nav layui-nav-tree" lay-filter="mycuckoo-side-nav">{{- d.innerHtml }}</ul>'
+            + '</div>';
+        var itemTpl = '<li class="layui-nav-item">'
+            + '<a class="{{= d.iconCls }}-hide" href="javascript:;">{{= d.name }}</a>'
+            + '<dl class="layui-nav-child">{{- d.innerHtml }}</dl>'
+            + '</li>';
+        var subItemTpl = '<dd><a data-url="{{= d.href }}" data-code="{{= d.code }}" class="{{= d.iconCls }}-hide">{{= d.name }}</a></dd>'
+
         //左侧导航栏
         var div = '';
         for (var i = 0; i < menu.first.length; i++) {
           var first = menu.first[i];
-          div += '<div id="side_nav_' + first.moduleId + '" class="' + (i !=0 ? 'layui-hide' : '') + '">' +
-            '          <ul class="layui-nav layui-nav-tree" lay-filter="mycuckoo-side-nav">';
-
+          var itemHtm = '';
           for (var ii = 0; ii < menu.second[first.moduleId].length; ii++) {
             var second = menu.second[first.moduleId][ii];
-            div += '<li class="layui-nav-item">' +
-              '       <a class="' + second.modIconCls + '-hide" href="javascript:;">' + second.modName + '</a>' +
-              '       <dl class="layui-nav-child">';
-
+            var subItemHtm = '';
             for (var iii = 0; iii < menu.third[second.moduleId].length; iii++) {
               var third = menu.third[second.moduleId][iii];
-              var href = 'view/' + third.belongToSys + '/' + third.modEnName + '.html?id=' + third.moduleId;
-              div += '<dd><a data-url="' + href + '" class="' + third.modIconCls + '-hide">' + third.modName + '</a></dd>';
+              var href = 'view/' + third.belongSys + '/' + third.code + '.html?id=' + third.moduleId;
+              subItemHtm += laytpl(subItemTpl).render({
+                href: href,
+                iconCls: third.iconCls,
+                code: third.code,
+                name: third.name,
+              });
             }
-            div += '</dl>';
-            div += '</li>';
+
+            itemHtm += laytpl(itemTpl).render({
+              iconCls: second.iconCls,
+              name: second.name,
+              innerHtml: subItemHtm
+            });
           }
-          div += '</ul>';
-          div += '</div>';
+
+          div += laytpl(navTpl).render({
+            id: first.moduleId,
+            hideCls: (i !=0 ? 'layui-hide' : ''),
+            innerHtml: itemHtm
+          });
         }
+
         $('.layui-side-scroll').html(div);
         element.render('nav', 'mycuckoo-side-nav');
         element.on('nav(mycuckoo-side-nav)', this.activeTab);

@@ -148,13 +148,13 @@ layui.define(['jquery', 'layer', 'element'], function (exports) {
    * @todo tab触发事件：增加、删除、切换
    */
   var tab = {
-    stopCloseWelcome() {
+    stopCloseWelcome: function() {
       $('.layui-tab-title li.welcome').find('i').remove();
     },
     /**
      * 判断是刷新后第一次点击时，刷新frame子页面
      */
-    tabReload(which) {
+    tabReload: function(which) {
       var layId = $(which).attr('lay-id');
       var i = 1;
       if ($(which).attr('data-bit')) {
@@ -165,7 +165,7 @@ layui.define(['jquery', 'layer', 'element'], function (exports) {
         frame.attr('src', frame.attr('src'));
       }
     },
-    tabAdd(title, url, id) {
+    tabAdd: function(title, url, id) {
       //判断当前id的元素是否存在于tab中
       var li = $('.mycuckoo-tab li[lay-id=' + id + ']').length;
       if (li > 0) {
@@ -176,7 +176,7 @@ layui.define(['jquery', 'layer', 'element'], function (exports) {
         element.tabAdd('mycuckoo-tab', {
           id: id,
           title: title,
-          content: '<iframe tab-id="' + id + '" frameborder="0" src="' + url + '" scrolling="yes" class="mycuckoo-frame"></iframe>'
+          content: '<iframe tab-id="' + id + '" frameborder="0" src="' + url + '" scrolling="no" class="mycuckoo-frame"></iframe>'
         });
         //当前窗口内容
         menuStorage.addMenu(title, url, id);
@@ -185,15 +185,15 @@ layui.define(['jquery', 'layer', 'element'], function (exports) {
       showTabPopupMenu(id); //绑定右键菜单
       fixFrameWH(); //计算框架高度
     },
-    tabDelete(id) {
+    tabDelete: function(id) {
       element.tabDelete('mycuckoo-tab', id); //删除
       menuStorage.removeMenu(id);
     },
-    tabChange(id) {
+    tabChange: function(id) {
       //切换到指定Tab项
       element.tabChange('mycuckoo-tab', id);
     },
-    tabDeleteAll(ids) { //删除所有
+    tabDeleteAll: function(ids) { //删除所有
       $.each(ids, function (i, item) {
         element.tabDelete('mycuckoo-tab', item);
       })

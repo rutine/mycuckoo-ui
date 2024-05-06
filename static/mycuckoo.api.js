@@ -28,8 +28,8 @@ layui.use(['jquery'], function () {
     }
   });
 
-  let placeholder = /\{(\w+)\}/;
-  let resolvePlaceholder = function(uri, uriVariables) {
+  var placeholder = /\{(\w+)\}/;
+  var resolvePlaceholder = function(uri, uriVariables) {
     var path = uri;
     for (var variable in uriVariables) {
       var witch = typeof variable;
@@ -41,7 +41,7 @@ layui.use(['jquery'], function () {
     return path;
   }
 
-  let $get = $.get;
+  var $get = $.get;
   $.get = function (url, uriVariables, params) {
     if (!params) {
       params = uriVariables;
@@ -156,6 +156,10 @@ layui.use(['jquery'], function () {
     operateMgr: {
       url: host + '/platform/operate/mgr',
       disEnableUrl: host + '/platform/operate/mgr/{id}/disEnable/{disEnableFlag}',
+    },
+    resourceMgr: {
+      url: host + '/platform/resource/mgr',
+      disEnableUrl: host + '/platform/resource/mgr/{id}/disEnable/{disEnableFlag}',
     },
     afficheMgr: {
       url: host + '/platform/affiche/mgr'

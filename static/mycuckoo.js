@@ -1,10 +1,56 @@
 layui.use(['jquery', 'layer'], function() {
-  let $ = layui.jquery;
-  let MyCuckoo = {
+  var $ = layui.jquery;
+  var MyCuckoo = {
+    tableHeight: 'full-90',
+
     /**
-     * 获取当前页链接查询字符串的对象表示：http://localhost?search=word => {search: 'word'}
+     * 设置会话信息
+     */
+    setSession: function(key, value) {
+      if (typeof value == 'object') {
+        sessionStorage.setItem(key, JSON.stringify(value));
+      } else {
+        sessionStorage.setItem(key, value);
+      }
+    },
+
+    /**
+     * 获取会话信息
+     */
+    getSession: function(key) {
+      var value = sessionStorage.getItem(key);
+      if (typeof value == 'string' && (value.charAt(0) == '{' || value.charAt(0) == '[')) {
+        return JSON.parse(value);
+      }
+
+      return value;
+    },
+
+    /**
+     * 获取会话操作按钮
+     */
+    getOperation: function(key) {
+      var menu = this.getSession('myMenu');
+      if (menu && menu.fourth) {
+        return menu.fourth[key];
+      }
+
+      return null;
+    },
+
+    /**
+     * 解析链接占位符变量：http://localhost?id={id}, {'id': 1} => http://localhost?id=1
      *
-     * @return json对象
+     * @return 最终链接
+     */
+    resolve: function(uri, uriVariables) {
+      return this.resolvePlaceholder(uri, uriVariables);
+    },
+
+    /**
+     * 解析链接占位符变量：http://localhost?id={id}, {'id': 1} => http://localhost?id=1
+     *
+     * @return 最终链接
      */
     resolvePlaceholder: function(uri, uriVariables) {
       var path = uri;
@@ -199,6 +245,7 @@ layui.use(['jquery', 'layer'], function() {
      * h       弹出层高度（缺省调默认值）
      */
     dialog: function (title, url, w, h) {
+      var full = !w;
       if (title == null || title == '') {
         title = false;
       }
@@ -213,18 +260,56 @@ layui.use(['jquery', 'layer'], function() {
       }
       layer.open({
         type: 2,
+        skin: 'layui-bg-gray',
         area: [w + 'px', h + 'px'],
-        fix: false, //不固定
-        maxmin: true,
+        fix: true, //固定
+        maxmin: false,
+        shadeClose: false,
+        shade: 0.4,
+        resize: false,
+        move: false,
+        title: title,
+        content: url,
+        success: function (layero, index) {
+          full && layer.full(index)
+        },
+        error: function (layero, index) {
+          alert('失败了');
+        }
+      });
+    },
+
+    /**
+     * 参数解释：
+     * title   标题
+     * url     请求的url
+     */
+    sideDialog: function (title, url) {
+      if (title == null || title == '') {
+        title = false;
+      }
+      if (url == null || url == '') {
+        url = '404.html';
+      }
+      layer.open({
+        type: 2,
+        skin: 'layui-bg-gray',
+        area: ['320px', '100%'],
+        fix: true, //固定
+        maxmin: false,
         shadeClose: true,
         shade: 0.4,
+        resize: false,
+        move: false,
+        offset: 'r',
+        anim: 'slideLeft', // 从上往下
         title: title,
         content: url,
         success: function (layero, index) {
 
         },
         error: function (layero, index) {
-          alert('aaa');
+          alert('失败了');
         }
       });
     }

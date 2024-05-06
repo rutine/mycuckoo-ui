@@ -4,7 +4,7 @@
     <modelVersion>4.0.0</modelVersion>
     <groupId>com.mycuckoo</groupId>
     <artifactId>mycuckoo-ui</artifactId>
-    <version>4.0.0-SNAPSHOT</version>
+    <version>4.1.0-SNAPSHOT</version>
     <name>mycuckoo:ui</name>
     <packaging>jar</packaging>
     <url>http://maven.apache.org</url>
