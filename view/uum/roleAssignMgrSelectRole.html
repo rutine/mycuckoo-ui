@@ -4,7 +4,7 @@
   <meta http-equiv="Content-Type" content="text/html; charset=utf-8" />
   <title>选择角色信息</title>
   <link type="image/x-icon" href="../../static/images/favicon.ico" rel="shortcut icon" />
-  <link type="text/css" href="../../static/layui/2.4.3/css/layui.css" rel="stylesheet" />
+  <link type="text/css" href="../../static/layui/2.9.8/css/layui.css" rel="stylesheet" />
   <link type="text/css" href="../../static/css/mycuckoo.css" rel="stylesheet" />
 </head>
 <body>
@@ -23,7 +23,7 @@
   <table id="table" class="layui-hide" lay-filter="table"></table>
 </div>
 </body>
-<script type="text/javascript" src="../../static/layui/2.4.3/layui.js" charset="UTF-8"></script>
+<script type="text/javascript" src="../../static/layui/2.9.8/layui.js" charset="UTF-8"></script>
 <script type="text/javascript" src="../../static/mycuckoo.js" charset="UTF-8"></script>
 <script type="text/javascript" src="../../static/mycuckoo.api.js" charset="UTF-8"></script>
 <script type="text/javascript">
@@ -33,7 +33,7 @@
   });
 
   layui.use(['jquery', 'form', 'table'], function() {
-    let $ = layui.jquery,
+    var $ = layui.jquery,
       form = layui.form,
       table = layui.table,
       queryObj = MyCuckoo.getQueryObject(location.search);
@@ -44,10 +44,11 @@
       url: MyCuckoo.resolvePlaceholder(api.organRoleMgr.unSelectRoleUrl, queryObj),
       method: 'get',
       cellMinWidth: 100,
+      height: MyCuckoo.tableHeight,
       cols: [[
         {type: 'numbers'},
         {type: 'checkbox'},
-        {field: 'roleName', title: '角色名称'},
+        {field: 'name', title: '角色名称'},
         {field: 'status', title: '角色状态',
           templet: function(d) {
             if(d.status == 'enable') {
@@ -76,10 +77,10 @@
     });
 
 
-    let FormMgr = function () {
-      let formMgr = this;
+    var FormMgr = function () {
+      var formMgr = this;
       //操作按钮触发事件
-      $('form a.layui-btn').on('click', function() {
+      $('form a.layui-btn').on('click', function(ev) {
         var type = $(this).data('type');
         formMgr[type] && formMgr[type](this);
       });
@@ -87,18 +88,18 @@
 
     FormMgr.prototype = {
       constructor: FormMgr,
-      save(ele) {
+      save: function(ele) {
         var data = table.checkStatus('table').data;
         if(data.length == 0) {
           MyCuckoo.alert({title: '提示', msg: '请选择一条或多条记录!'});
           return;
         }
 
-        let roleIdList = [];
+        var roleIdList = [];
         data.forEach(item => {
           roleIdList.push(item.roleId);
         });
-        let params = {id : queryObj.orgId, roleIdList : roleIdList};
+        var params = {id : queryObj.orgId, roleIdList : roleIdList};
         $.put(api.organRoleMgr.url, params).then(json => {
           MyCuckoo.msg({msg: json.data});
 
@@ -106,15 +107,15 @@
         });
       },
       //刷新父窗
-      refresh() {
+      refresh: function() {
         setTimeout(function() {
           parent.location.reload();
           this.reback();
         }, 2000);
       },
       //关闭当前iframe页
-      reback(ele) {
-        let index = parent.layer.getFrameIndex(window.name);
+      reback: function(ele) {
+        var index = parent.layer.getFrameIndex(window.name);
         parent.layer.close(index);
       }
     }

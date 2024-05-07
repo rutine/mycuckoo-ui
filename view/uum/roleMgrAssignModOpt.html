@@ -4,7 +4,7 @@
   <meta http-equiv="Content-Type" content="text/html; charset=utf-8" />
   <title>分配权限</title>
   <link type="image/x-icon" href="../../static/images/favicon.ico" rel="shortcut icon" />
-  <link type="text/css" href="../../static/layui/2.4.3/css/layui.css" rel="stylesheet" />
+  <link type="text/css" href="../../static/layui/2.9.8/css/layui.css" rel="stylesheet" />
   <link type="text/css" href="../../static/css/mycuckoo.css" rel="stylesheet" />
   <link type="text/css" href="../../static/dtree/css/dtree.css" rel="stylesheet" />
   <link type="text/css" href="../../static/dtree/css/font/dtreefont.css" rel="stylesheet" />
@@ -39,12 +39,12 @@
               </div>
             </div>
 
-            <div class="layui-btn-group">
-              <a href="javascript:" class="layui-btn layui-btn-sm" data-type="saveOperationPrivilege" lay-submit="submit">
-                <i class="layui-icon layui-icon-ok-circle"></i>保存
+            <div class="layui-btn-container" style="margin-bottom: 6px; text-align: center;">
+              <a href="javascript:" class="layui-btn layui-btn-sm" data-type="saveOperationPrivilege" lay-submit>
+                <i class="layui-icon layui-icon-ok"></i>保存
               </a>
-              <a href="javascript:" class="layui-btn layui-btn-sm" data-type="reback">
-                <i class="layui-icon layui-icon-return"></i>返回
+              <a href="javascript:" class="layui-btn layui-btn-sm" data-type="close">
+                <i class="layui-icon layui-icon-close"></i>取消
               </a>
             </div>
           </form>
@@ -61,12 +61,12 @@
               </div>
             </div>
 
-            <div class="layui-btn-group">
-              <a href="javascript:" class="layui-btn layui-btn-sm" data-type="saveRowPrivilege" lay-submit="submit">
-                <i class="layui-icon layui-icon-ok-circle"></i>保存
+            <div class="layui-btn-container" style="margin-bottom: 6px; text-align: center;">
+              <a href="javascript:" class="layui-btn layui-btn-sm" data-type="saveRowPrivilege" lay-submit>
+                <i class="layui-icon layui-icon-ok"></i>保存
               </a>
-              <a href="javascript:" class="layui-btn layui-btn-sm" data-type="reback">
-                <i class="layui-icon layui-icon-return"></i>返回
+              <a href="javascript:" class="layui-btn layui-btn-sm" data-type="close">
+                <i class="layui-icon layui-icon-close"></i>取消
               </a>
             </div>
           </form>
@@ -75,7 +75,7 @@
     </div>
   </div>
 </body>
-<script type="text/javascript" src="../../static/layui/2.4.3/layui.js" charset="UTF-8"></script>
+<script type="text/javascript" src="../../static/layui/2.9.8/layui.js" charset="UTF-8"></script>
 <script type="text/javascript" src="../../static/mycuckoo.js" charset="UTF-8"></script>
 <script type="text/javascript" src="../../static/mycuckoo.api.js" charset="UTF-8"></script>
 <script type="text/javascript">
@@ -85,19 +85,19 @@
   });
 
   layui.use(['jquery', 'element', 'form', 'dtree'], function() {
-    let $ = layui.jquery,
+    var $ = layui.jquery,
       element = layui.element,
       form = layui.form,
       tree = layui.dtree,
       queryObj = MyCuckoo.getQueryObject(location.search);
 
 
-    let treeObj;
-    let FormMgr = function () {
+    var treeObj;
+    var FormMgr = function () {
       //表单初始赋值
       if (queryObj.id) {
-        $('fieldset > legend').text(queryObj.roleName);
-        $.get(api.roleMgr.rolePrivilegeUrl, queryObj).then(json => {
+        $('fieldset > legend').text('角色名称: ' + queryObj.name);
+        $.get(api.roleMgr.rolePrivilegeUrl, queryObj).then(function(json) {
           form.val('roleAssignModOpt', json.data);
           form.val('roleAssignRowPriv', json.data);
 
@@ -121,9 +121,9 @@
         return;
       }
 
-      let formMgr = this;
+      var formMgr = this;
       //操作按钮触发事件
-      $('form a.layui-btn[lay-submit!=submit]').on('click', function() {
+      $('form a.layui-btn:not([lay-submit])').on('click', function() {
         var type = $(this).data('type');
         formMgr[type] && formMgr[type](this);
       });
@@ -140,19 +140,19 @@
     FormMgr.prototype = {
       constructor: FormMgr,
       //保存用户权限
-      saveOperationPrivilege(data) {
+      saveOperationPrivilege: function(data) {
         if(!data.privilegeScope) {
           MyCuckoo.alert({ title : '提示', msg : '请选择权限范围!' });
           return;
         }
 
-        let selectedNodes = treeObj.getCheckbarNodesParam();
+        var selectedNodes = treeObj.getCheckbarNodesParam();
         if(!selectedNodes.length) {
           MyCuckoo.alert({ title : '提示', msg : '请选择权限!' });
           return;
         }
 
-        let optIds = [];
+        var optIds = [];
         selectedNodes.forEach(item => item.isLeaf && optIds.push(Number(item.nodeId)));
         $.postJson(api.roleMgr.saveOperationPrivilegeUrl, data, optIds).then(json => {
           MyCuckoo.msg({msg: json.data});
@@ -161,7 +161,7 @@
         });
       },
       //保存行权限
-      saveRowPrivilege(data) {
+      saveRowPrivilege: function(data) {
         if(!data.rowPrivilege) {
           MyCuckoo.alert({ title : '提示', msg : '请选择行权限类别!' });
           return;
@@ -174,15 +174,15 @@
         });
       },
       //刷新父窗
-      refresh() {
+      refresh: function() {
         setTimeout(function() {
           parent.location.reload();
-          this.reback();
+          this.close();
         }, 2000);
       },
       //关闭当前iframe页
-      reback(ele) {
-        let index = parent.layer.getFrameIndex(window.name);
+      close: function(ele) {
+        var index = parent.layer.getFrameIndex(window.name);
         parent.layer.close(index);
       }
     }

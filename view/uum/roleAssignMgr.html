@@ -4,7 +4,7 @@
   <meta http-equiv="Content-Type" content="text/html; charset=utf-8" />
   <title>统一用户</title>
   <link type="image/x-icon" href="../../static/images/favicon.ico" rel="shortcut icon" />
-  <link type="text/css" href="../../static/layui/2.4.3/css/layui.css" rel="stylesheet" />
+  <link type="text/css" href="../../static/layui/2.9.8/css/layui.css" rel="stylesheet" />
   <link type="text/css" href="../../static/css/mycuckoo.css" rel="stylesheet" />
   <link type="text/css" href="../../static/dtree/css/dtree.css" rel="stylesheet" />
   <link type="text/css" href="../../static/dtree/css/font/dtreefont.css" rel="stylesheet" />
@@ -26,7 +26,6 @@
   <div class="layui-row">
     <form class="layui-col-md12 layui-form mycuckoo-search">
       <div class="layui-inline">
-        <label class="layui-form-label">搜索：</label>
         <div class="layui-input-inline">
           <input class="layui-input" name="roleName" placeholder="角色名称">
         </div>
@@ -50,14 +49,14 @@
   </div>
 </div>
 </body>
-<script type="text/javascript" src="../../static/layui/2.4.3/layui.js" charset="UTF-8"></script>
+<script type="text/javascript" src="../../static/layui/2.9.8/layui.js" charset="UTF-8"></script>
 <script type="text/javascript" src="../../static/mycuckoo.js" charset="UTF-8"></script>
 <script type="text/javascript" src="../../static/mycuckoo.api.js" charset="UTF-8"></script>
 <script type="text/html" id="toolbar">
   <div class="layui-btn-group btn-toolbar">
     {{# layui.each(d.operator, function(index, item){ }}
-    <button class="layui-btn layui-btn-sm" lay-event="{{ item.optLink }}">
-      <i class="layui-icon layui-icon-{{ item.modIconCls }}"></i> {{ item.modName }}
+    <button class="layui-btn layui-btn-sm" lay-event="{{ item.code }}">
+      <i class="layui-icon layui-icon-{{ item.iconCls }}"></i> {{ item.name }}
     </button>
     {{# }); }}
   </div>
@@ -69,15 +68,14 @@
   });
 
   layui.use(['jquery', 'form', 'table', 'dtree'], function() {
-    let $ = layui.jquery,
+    var $ = layui.jquery,
       form = layui.form,
       table = layui.table,
       tree = layui.dtree;
 
     //本地缓存数据
-    let queryObj = MyCuckoo.getQueryObject(location.search);
-    let menu = JSON.parse(sessionStorage.getItem('myMenu'));
-    let operator = menu.fourth[queryObj.id];
+    var queryObj = MyCuckoo.getQueryObject(location.search);
+    var operator = MyCuckoo.getOperation(queryObj.id);
 
     //搜索
     form.on('submit(search)', function(data) {
@@ -90,8 +88,8 @@
     });
 
     //初始化结构树
-    let selectNode = null;
-    let treeObj = tree.render({
+    var selectNode = null;
+    var treeObj = tree.render({
       elem: '#tree',
       method: 'get',
       url: MyCuckoo.resolvePlaceholder(api.organMgr.childNodesUrl, {id: 0}),
@@ -103,7 +101,7 @@
       //icon: ['-1', '1']
     });
     tree.on('node(tree)', function(obj) {
-      let data = obj.param;
+      var data = obj.param;
       selectNode = data;
       table.reload('table', {
         page: { pageNo: 1 },
@@ -119,12 +117,13 @@
       url: api.organRoleMgr.url,
       method: 'get',
       cellMinWidth: 100,
+      height: MyCuckoo.tableHeight,
       toolbar: '#toolbar',
       operator: operator,
       cols: [[
         {type: 'numbers'},
         {type: 'checkbox'},
-        {field: 'roleName', title: '角色名称'},
+        {field: 'name', title: '角色名称'},
         {field: 'status', title: '角色状态',
           templet: function(d) {
             if(d.status == 'enable') {
@@ -157,11 +156,11 @@
         return;
       }
       if (obj.event == 'roleassign') {
-        active[obj.event](this);
+        active[obj.event](obj);
         return;
       }
 
-      let data = table.checkStatus(obj.config.id).data;
+      var data = table.checkStatus(obj.config.id).data;
       if (!data.length) {
         MyCuckoo.alert({title : '提示', msg : '请选择记录' });
         return;
@@ -171,36 +170,42 @@
         MyCuckoo.alert({title : '警示', msg : '此操作无效, 如有疑问, 请联系管理员!' });
         return;
       }
-      active[obj.event](data);
+
+      obj.data = data;
+      active[obj.event](obj);
     });
 
 
-    let active = {
-      reload() {
+    var active = {
+      reload: function() {
         table.reload('table', { page: { pageNo: 1 } });
       },
       //分配角色
-      roleassign(ele) {
-        let nodes = selectNode;
+      roleassign: function(obj) {
+        var data = obj.data;
+        var nodes = selectNode;
         if(nodes == null) {
           MyCuckoo.alert({ title : '提示', msg : '请选择要分配角色的机构' });
           return;
         }
 
-        MyCuckoo.dialog('选择角色信息', 'roleAssignMgrSelectRole.html?orgId=' + nodes.nodeId);
+        var url = MyCuckoo.resolve('roleAssignMgrSelectRole.html?action={_event}&opt={_opt}&orgId={id}',
+            {'_event': obj.event, '_opt': queryObj.id, 'id': nodes.nodeId})
+        MyCuckoo.dialog('选择角色信息', url);
       },
       //删除角色
-      roledel(data) {
-        let _this = this;
+      roledel: function(obj) {
+        var data = obj.data;
+        var _this = this;
         MyCuckoo.confirm({title: '警告提示', msg: '您确认删除此记录吗?',
           okBtn: '是', cancelBtn: '否', ok: function() {
-            let roleIdList = [];
-            for (let index in data) {
+            var roleIdList = [];
+            for (var index in data) {
               roleIdList.push(data[index].roleId);
             }
 
-            let orgId = selectNode.nodeId;
-            let params = roleIdList;
+            var orgId = selectNode.nodeId;
+            var params = roleIdList;
             $.delete(api.organRoleMgr.url + '/' + orgId, params).then(json => {
               MyCuckoo.msg({ msg: json.data });
 

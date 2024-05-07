@@ -193,6 +193,7 @@
       if (queryObj.id) {
         $.get(api.moduleMgr.url + '/' + queryObj.id).then(json => {
           form.val('editForm', json.data);
+
           if (queryObj.action == 'view') {
             $('input, select, textarea').attr('disabled', 'disabled')
           }

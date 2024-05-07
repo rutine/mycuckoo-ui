@@ -4,7 +4,7 @@
   <meta http-equiv="Content-Type" content="text/html; charset=utf-8" />
   <title>统一用户</title>
   <link type="image/x-icon" href="../../static/images/favicon.ico" rel="shortcut icon" />
-  <link type="text/css" href="../../static/layui/2.4.3/css/layui.css" rel="stylesheet" />
+  <link type="text/css" href="../../static/layui/2.9.8/css/layui.css" rel="stylesheet" />
   <link type="text/css" href="../../static/css/mycuckoo.css" rel="stylesheet" />
 </head>
 <body>
@@ -24,9 +24,8 @@
   <div class="layui-row">
     <form class="layui-col-md12 layui-form mycuckoo-search">
       <div class="layui-inline">
-        <label class="layui-form-label">搜索：</label>
         <div class="layui-input-inline">
-          <input class="layui-input" name="roleName" placeholder="角色名称">
+          <input class="layui-input" name="name" placeholder="角色名称">
         </div>
         <div class="layui-input-inline">
           <button class="layui-btn" lay-filter="search" lay-submit>
@@ -40,14 +39,14 @@
   <table id="table" class="layui-hide" lay-filter="table"></table>
 </div>
 </body>
-<script type="text/javascript" src="../../static/layui/2.4.3/layui.js" charset="UTF-8"></script>
+<script type="text/javascript" src="../../static/layui/2.9.8/layui.js" charset="UTF-8"></script>
 <script type="text/javascript" src="../../static/mycuckoo.js" charset="UTF-8"></script>
 <script type="text/javascript" src="../../static/mycuckoo.api.js" charset="UTF-8"></script>
 <script type="text/html" id="toolbar">
   <div class="layui-btn-group btn-toolbar">
     {{# layui.each(d.operator, function(index, item){ }}
-    <button class="layui-btn layui-btn-sm" lay-event="{{ item.optLink }}">
-      <i class="layui-icon layui-icon-{{ item.modIconCls }}"></i> {{ item.modName }}
+    <button class="layui-btn layui-btn-sm" lay-event="{{ item.code }}">
+      <i class="layui-icon layui-icon-{{ item.iconCls }}"></i> {{ item.name }}
     </button>
     {{# }); }}
   </div>
@@ -59,14 +58,13 @@
   });
 
   layui.use(['jquery', 'form', 'table'], function() {
-    let $ = layui.jquery,
+    var $ = layui.jquery,
       form = layui.form,
       table = layui.table;
 
     //本地缓存数据
-    let queryObj = MyCuckoo.getQueryObject(location.search);
-    let menu = JSON.parse(sessionStorage.getItem('myMenu'));
-    let operator = menu.fourth[queryObj.id];
+    var queryObj = MyCuckoo.getQueryObject(location.search);
+    var operator = MyCuckoo.getOperation(queryObj.id);
 
     form.on('submit(search)', function(data) {
       //执行重载
@@ -86,13 +84,14 @@
       url: api.roleMgr.url,
       method: 'get',
       cellMinWidth: 100,
+      height: MyCuckoo.tableHeight,
       toolbar: '#toolbar',
       operator: operator,
       cols: [[
         {type: 'numbers'},
         {type: 'radio'},
-        {field: 'roleName', title: '角色名称'},
-        {field: 'roleLevel', title: '角色级别'},
+        {field: 'name', title: '角色名称'},
+        {field: 'level', title: '角色级别'},
         {field: 'status', title: '角色状态',
           templet: function(d) {
             if(d.status == 'enable') {
@@ -126,11 +125,11 @@
         return;
       }
       if (obj.event == 'add') {
-        active[obj.event](this);
+        active[obj.event](obj);
         return;
       }
 
-      let data = table.checkStatus(obj.config.id).data;
+      var data = table.checkStatus(obj.config.id).data;
       if (data.length != 1) {
         MyCuckoo.alert({title : '提示', msg : '请选择一条记录' });
         return;
@@ -140,28 +139,39 @@
         MyCuckoo.alert({title : '警示', msg : '此操作无效, 如有疑问, 请联系管理员!' });
         return;
       }
-      active[obj.event](data[0]);
+
+      obj.data = data[0]
+      active[obj.event](obj);
     });
 
     function reload() {
       table.reload('table', { page: { pageNo: 1 } });
     }
 
-    let active = {
+    var active = {
       //增加
-      add(ele) {
-        MyCuckoo.dialog('角色信息', 'roleMgrForm.html?action=create');
+      add: function(obj) {
+        var url = MyCuckoo.resolve('roleMgrForm.html?action={_event}&opt={_opt}',
+            {'_event': obj.event, '_opt': queryObj.id})
+        MyCuckoo.dialog('角色信息', url);
       },
       //修改
-      modify(data) {
-        MyCuckoo.dialog('角色信息', 'roleMgrForm.html?action=modify&id=' + data.roleId);
+      modify: function(obj) {
+        var data = obj.data;
+        var url = MyCuckoo.resolve('roleMgrForm.html?action={_event}&opt={_opt}&id={id}',
+            {'_event': obj.event, '_opt': queryObj.id, 'id': data.roleId})
+        MyCuckoo.dialog('角色信息', url);
       },
       //查看
-      view(data) {
-        MyCuckoo.dialog('角色信息', 'roleMgrForm.html?action=view&id=' + data.roleId);
+      view: function(obj) {
+        var data = obj.data;
+        var url = MyCuckoo.resolve('roleMgrForm.html?action={_event}&opt={_opt}&id={id}',
+            {'_event': obj.event, '_opt': queryObj.id, 'id': data.roleId})
+        MyCuckoo.sideDialog('角色信息', url);
       },
       //删除
-      delete(data) {
+      delete(obj) {
+        var data = obj.data;
         MyCuckoo.confirm({title: '警告提示', msg: '您确认删除此记录吗?',
           okBtn: '是', cancelBtn: '否', ok: function() {
             $.delete(api.roleMgr.url + '/' + data.roleId, {}).then(json => {
@@ -172,7 +182,8 @@
         }});
       },
       //启用
-      enable(data) {
+      enable: function(obj) {
+        var data = obj.data;
         if(data.status == 'enable') {
           MyCuckoo.msg({ msg : '此角色已经启用' });
           return;
@@ -185,7 +196,8 @@
         });
       },
       //停用
-      disable(data) {
+      disable: function(obj) {
+        var data = obj.data;
         if(data.status == 'disable') {
           MyCuckoo.alert({ title : '提示', msg : '此角色已经停用' });
           return;
@@ -200,13 +212,17 @@
         }});
       },
       //分配权限
-      optpri(data) {
+      optpri: function(obj) {
+        var data = obj.data;
         if (data.status == 'disable') {
           MyCuckoo.msg({ state : 'danger', title : '提示', msg : '请先启用此角色！' });
           return;
         }
 
-        MyCuckoo.dialog('分配权限', 'roleMgrAssignModOpt.html?&id=' + data.roleId + '&roleName=' + data.roleName);
+        var url = MyCuckoo.resolve('roleMgrAssignModOpt.html?action={_event}&opt={_opt}&id={id}&name={name}',
+            {'_event': obj.event, '_opt': queryObj.id, 'id': data.roleId, 'name': data.name})
+
+        MyCuckoo.dialog('分配权限', url);
       }
       //end
     }
