@@ -4,7 +4,7 @@
   <meta http-equiv="Content-Type" content="text/html; charset=utf-8" />
   <title>系统平台</title>
   <link type="image/x-icon" href="../../static/images/favicon.ico" rel="shortcut icon" />
-  <link type="text/css" href="../../static/layui/2.4.3/css/layui.css" rel="stylesheet" />
+  <link type="text/css" href="../../static/layui/2.9.8/css/layui.css" rel="stylesheet" />
   <link type="text/css" href="../../static/css/mycuckoo.css" rel="stylesheet" />
 </head>
 <body>
@@ -16,7 +16,7 @@
   </span>
 </div>
 
-<div class="mycuckoo-main">
+<div class="mycuckoo-main" style="overflow: auto">
   <div class="layui-row">
     <div class="layui-col-md6">
       <div class="layui-card">
@@ -193,7 +193,7 @@
   </div>
 </div>
 </body>
-<script type="text/javascript" src="../../static/layui/2.4.3/layui.js" charset="UTF-8"></script>
+<script type="text/javascript" src="../../static/layui/2.9.8/layui.js" charset="UTF-8"></script>
 <script type="text/javascript" src="../../static/mycuckoo.js" charset="UTF-8"></script>
 <script type="text/javascript" src="../../static/mycuckoo.api.js" charset="UTF-8"></script>
 <script type="text/javascript">
@@ -203,14 +203,17 @@
   });
 
   layui.use(['jquery', 'form'], function() {
-    let $ = layui.jquery,
+    var $ = layui.jquery,
       form = layui.form,
       queryObj = MyCuckoo.getQueryObject(location.search);
 
-    let FormMgr = function() {
+    console.log($('.mycuckoo-main'))
+    $('.mycuckoo-main').height($(window).height() - 90);
+
+    var FormMgr = function() {
       this.reload();
 
-      let formMgr = this;
+      var formMgr = this;
       //监听提交
       form.on('submit', function(data) {
         var type = $(this).data('type');
@@ -226,11 +229,11 @@
         $.get(api.systemConfigMgr.url).then(json => {
           form.val('editForm', json.data);
 
-          let $select = $('select[name=systemMgr]');
+          var $select = $('select[name=systemMgr]');
           $select.empty();
 
-          for (let i = 0; i < json.data.systemMgr.length; i++) {
-            let item = json.data.systemMgr[i];
+          for (var i = 0; i < json.data.systemMgr.length; i++) {
+            var item = json.data.systemMgr[i];
             $select.append('<option value="' + item + '">' + item + '</option>');
           }
           form.render('select');

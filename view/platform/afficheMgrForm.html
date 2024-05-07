@@ -4,7 +4,7 @@
   <meta http-equiv="Content-Type" content="text/html; charset=utf-8" />
   <title>系统公告信息</title>
   <link type="image/x-icon" href="../../static/images/favicon.ico" rel="shortcut icon" />
-  <link type="text/css" href="../../static/layui/2.4.3/css/layui.css" rel="stylesheet" />
+  <link type="text/css" href="../../static/layui/2.9.8/css/layui.css" rel="stylesheet" />
   <link type="text/css" href="../../static/css/mycuckoo.css" rel="stylesheet" />
 </head>
 <body>
@@ -16,13 +16,13 @@
       <div class="layui-inline">
         <label class="layui-form-label">公告标题</label>
         <div class="layui-input-inline">
-          <input type="text" name="afficheTitle" class="layui-input" lay-verify="required" maxlength="100" />
+          <input type="text" name="title" class="layui-input" lay-verify="required" maxlength="100" />
         </div>
       </div>
       <div class="layui-inline">
         <label class="layui-form-label">有效日期</label>
         <div class="layui-input-inline">
-          <input type="text" name="afficheInvalidate" class="layui-input" lay-verify="required"/>
+          <input type="text" name="invalidate" class="layui-input" lay-verify="required"/>
         </div>
       </div>
     </div>
@@ -31,15 +31,15 @@
     <div class="layui-form-item">
       <label class="layui-form-label">是否发布</label>
       <div class="layui-input-block">
-        <input type="radio" name="affichePulish" value="0" title="是" checked="">
-        <input type="radio" name="affichePulish" value="1" title="否">
+        <input type="radio" name="publish" value="0" title="是" checked="">
+        <input type="radio" name="publish" value="1" title="否">
       </div>
     </div>
 
     <div class="layui-form-item layui-form-text">
       <label class="layui-form-label">公告正文</label>
       <div class="layui-input-block">
-        <textarea name="afficheContent" class="layui-textarea" placeholder="请输入内容" maxlength="50" ></textarea>
+        <textarea name="content" class="layui-textarea" placeholder="请输入内容" maxlength="50" ></textarea>
       </div>
     </div>
 
@@ -71,30 +71,19 @@
   </form>
 </div>
 </body>
-<script type="text/javascript" src="../../static/layui/2.4.3/layui.js" charset="UTF-8"></script>
+<script type="text/javascript" src="../../static/layui/2.9.8/layui.js" charset="UTF-8"></script>
 <script type="text/javascript" src="../../static/mycuckoo.js" charset="UTF-8"></script>
 <script type="text/javascript" src="../../static/mycuckoo.api.js" charset="UTF-8"></script>
 <script type="text/html" id="operator">
-  <div class="layui-btn-group">
-    {{# if(d.action == 'create') { }}
-    <a href="javascript: " class="layui-btn layui-btn-sm" data-type="create" lay-submit="submit">
-      <i class="layui-icon layui-icon-ok-circle"></i>保存
-    </a>
-    <a href="javascript: " class="layui-btn layui-btn-sm" data-type="reback">
-      <i class="layui-icon layui-icon-return"></i>返回
-    </a>
-    {{# } else if(d.action == 'modify') { }}
-    <a href="javascript:" class="layui-btn layui-btn-sm" data-type="update" lay-submit="submit">
-      <i class="layui-icon layui-icon-ok-circle"></i>保存
-    </a>
-    <a href="javascript:" class="layui-btn layui-btn-sm" data-type="reback">
-      <i class="layui-icon layui-icon-return"></i>返回
-    </a>
-    {{# } else if(d.action == 'view') { }}
-    <a href="javascript:" class="layui-btn layui-btn-sm" data-type="reback">
-      <i class="layui-icon layui-icon-return"></i>返回
+  <div class="layui-btn-container" style="margin-bottom: 6px; text-align: center;">
+    {{# if(d.action != 'view') { }}
+    <a href="javascript: " class="layui-btn layui-btn-sm" data-type="{{= d.action }}" lay-submit>
+      <i class="layui-icon layui-icon-ok"></i>保存
     </a>
     {{# } }}
+    <a href="javascript:" class="layui-btn layui-btn-sm" data-type="close">
+      <i class="layui-icon layui-icon-close"></i>关闭
+    </a>
   </div>
 </script>
 <script type="text/javascript">
@@ -104,7 +93,7 @@
   });
 
   layui.use(['jquery', 'laytpl', 'form', 'laydate', 'upload'], function() {
-    let $ = layui.jquery,
+    var $ = layui.jquery,
       laytpl = layui.laytpl,
       form = layui.form,
       layDate = layui.laydate,
@@ -112,10 +101,10 @@
       queryObj = MyCuckoo.getQueryObject(location.search);
 
 
-    let $fileList = $('#fileList');
-    let accessories = [];
+    var $fileList = $('#fileList');
+    var accessories = [];
 
-    let FormMgr = function () {
+    var FormMgr = function () {
       //渲染操作按钮
       laytpl(operator.innerHTML).render(queryObj, function(html) {
         $('.toolbar').html(html);
@@ -123,16 +112,17 @@
 
       //表单初始赋值
       if (queryObj.id) {
+        var formMgr = this;
         if(queryObj.action == 'view') {
           $('#filePicker').addClass('layui-hide');
           $('#uploadStart').addClass('layui-hide');
         }
-        $.get(api.afficheMgr.url + '/' + queryObj.id).then(json => {
+
+        $.get(api.afficheMgr.url + '/' + queryObj.id).then(function (json) {
           form.val('editForm', json.data);
 
-          json.data.accessories.forEach((item, index) => {
-            let formMgr = this;
-            let tr = $([
+          json.data.accessories.forEach(function(item, index) {
+            var tr = $([
               '<tr>',
               '<td>',
               ' <input type="hidden" name="accessoryName" value="' + item.accessoryName + '">',
@@ -160,14 +150,15 @@
 
       //日期
       layDate.render({
-        elem: 'input[name=afficheInvalidate]'
+        elem: 'input[name=invalidate]'
       });
 
       this.init();
 
-      let formMgr = this;
+      var formMgr = this;
       //操作按钮触发事件
-      $('form a.layui-btn[lay-submit!=submit]').on('click', function() {
+      var formMgr = this;
+      $('form a.layui-btn:not([lay-submit])').on('click', function() {
         var type = $(this).data('type');
         formMgr[type] && formMgr[type](this);
       });
@@ -183,11 +174,11 @@
 
     FormMgr.prototype = {
       constructor: FormMgr,
-      init() {
-        let formMgr = this;
+      init: function() {
+        var formMgr = this;
 
         //多文件列表示例
-        let uploader = upload.render({
+        var uploader = upload.render({
           elem: '#filePicker',
           url: api.fileMgr.url,
           accept: 'file',
@@ -196,10 +187,10 @@
           data: {business: 'document'},
           bindAction: '#uploadStart',
           choose: function(obj) {
-            let files = this.files = obj.pushFile(); //将每次选择的文件追加到文件队列
+            var files = this.files = obj.pushFile(); //将每次选择的文件追加到文件队列
             //读取本地文件
             obj.preview(function(index, file, result) {
-              let tr = $([
+              var tr = $([
                 '<tr id="upload-'+ index +'">',
                 '<td>',
                 ' <img src="' + formMgr.getThumbnail(file.name) + '">&nbsp;&nbsp;',
@@ -234,7 +225,7 @@
             if(res.code == 0) { //上传成功
               accessories.push({accessoryName: this.files[index].name});
 
-              let tr = $fileList.find('tr#upload-'+ index),
+              var tr = $fileList.find('tr#upload-'+ index),
                 tds = tr.children();
               tds.eq(2).html('<span style="color: #5FB878;">上传成功</span>');
               tds.eq(3).html(''); //清空操作
@@ -251,12 +242,12 @@
         });
       },
       // 附件图标
-      getThumbnail(filename) {
-        let baseUrl = '../../static/images/button/';
-        let splitFlag = filename.indexOf('_');
+      getThumbnail: function(filename) {
+        var baseUrl = '../../static/images/button/';
+        var splitFlag = filename.indexOf('_');
         filename = filename.substr(splitFlag + 1);
-        let suffixName = filename.substr(filename.lastIndexOf('.') + 1);
-        let imgPictureUrl = baseUrl + 'no-format.png';
+        var suffixName = filename.substr(filename.lastIndexOf('.') + 1);
+        var imgPictureUrl = baseUrl + 'no-format.png';
         if (suffixName == 'docx' || suffixName == 'doc') {
           imgPictureUrl = baseUrl + 'word.png';
         } else if (suffixName == 'pdf') {
@@ -268,14 +259,16 @@
         }
         return imgPictureUrl;
       },
-      create(data) {
+      add: function(data) {
+        data.publish = (data.publish != 0)
         $.postJson(api.afficheMgr.url, data).then(json => {
           MyCuckoo.msg({msg: json.data});
 
           this.refresh();
         });
       },
-      update(data) {
+      modify: function(data) {
+        data.publish = (data.publish != 0)
         $.put(api.afficheMgr.url, data).then(json => {
           MyCuckoo.msg({msg: json.data});
 
@@ -283,21 +276,21 @@
         });
       },
       // 删除附件
-      deleteAccessory(accessoryId) {
+      deleteAccessory: function(accessoryId) {
         $.delete(api.accessoryMgr.url + '/' + accessoryId, {}).then(json => {
           MyCuckoo.msg({msg: json.data});
         });
       },
       //刷新父窗
-      refresh() {
+      refresh: function() {
         setTimeout(function() {
           parent.location.reload();
-          this.reback();
+          this.close();
         }, 2000);
       },
       //关闭当前iframe页
-      reback(ele) {
-        let index = parent.layer.getFrameIndex(window.name);
+      close: function(ele) {
+        var index = parent.layer.getFrameIndex(window.name);
         parent.layer.close(index);
       }
     }

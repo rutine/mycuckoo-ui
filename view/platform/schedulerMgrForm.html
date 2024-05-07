@@ -4,7 +4,7 @@
   <meta http-equiv="Content-Type" content="text/html; charset=utf-8" />
   <title>任务调度信息</title>
   <link type="image/x-icon" href="../../static/images/favicon.ico" rel="shortcut icon" />
-  <link type="text/css" href="../../static/layui/2.4.3/css/layui.css" rel="stylesheet" />
+  <link type="text/css" href="../../static/layui/2.9.8/css/layui.css" rel="stylesheet" />
   <link type="text/css" href="../../static/css/mycuckoo.css" rel="stylesheet" />
 </head>
 <body>
@@ -32,8 +32,8 @@
     <div class="layui-form-item">
       <label class="layui-form-label">触发器类型</label>
       <div class="layui-input-block">
-        <input type="radio" name="triggerType" value="Simple" title="简单调度" checked="">
-        <input type="radio" name="triggerType" value="Cron" title="表达式">
+        <input type="radio" name="triggerType" value="Simple" title="简单调度" lay-filter="trigger-type" checked="">
+        <input type="radio" name="triggerType" value="Cron" title="表达式" lay-filter="trigger-type">
       </div>
     </div>
 
@@ -48,7 +48,7 @@
       <legend>调度设置</legend>
     </fieldset>
 
-    <div class="simple-scheduler layui-hide">
+    <div class="scheduler-trigger-type scheduler-trigger-type-simple layui-hide">
       <div class="layui-form-item">
         <div class="layui-inline">
           <label class="layui-form-label">开始时间</label>
@@ -81,11 +81,11 @@
       </div>
     </div>
 
-    <div class="cron-scheduler layui-hide">
+    <div class="scheduler-trigger-type scheduler-trigger-type-cron layui-hide">
       <div class="layui-inline">
         <label class="layui-form-label">时间表达式</label>
         <div class="layui-input-inline">
-          <input type="text" name="cronExpression" class="layui-input" lay-verify="" maxlength="20" />
+          <input type="text" name="cron" class="layui-input" lay-verify="" maxlength="20" />
         </div>
       </div>
     </div>
@@ -94,30 +94,19 @@
   </form>
 </div>
 </body>
-<script type="text/javascript" src="../../static/layui/2.4.3/layui.js" charset="UTF-8"></script>
+<script type="text/javascript" src="../../static/layui/2.9.8/layui.js" charset="UTF-8"></script>
 <script type="text/javascript" src="../../static/mycuckoo.js" charset="UTF-8"></script>
 <script type="text/javascript" src="../../static/mycuckoo.api.js" charset="UTF-8"></script>
 <script type="text/html" id="operator">
-  <div class="layui-btn-group">
-    {{# if(d.action == 'create') { }}
-    <a href="javascript: " class="layui-btn layui-btn-sm" data-type="create" lay-submit="submit">
-      <i class="layui-icon layui-icon-ok-circle"></i>保存
-    </a>
-    <a href="javascript: " class="layui-btn layui-btn-sm" data-type="reback">
-      <i class="layui-icon layui-icon-return"></i>返回
-    </a>
-    {{# } else if(d.action == 'modify') { }}
-    <a href="javascript:" class="layui-btn layui-btn-sm" data-type="update" lay-submit="submit">
-      <i class="layui-icon layui-icon-ok-circle"></i>保存
-    </a>
-    <a href="javascript:" class="layui-btn layui-btn-sm" data-type="reback">
-      <i class="layui-icon layui-icon-return"></i>返回
-    </a>
-    {{# } else if(d.action == 'view') { }}
-    <a href="javascript:" class="layui-btn layui-btn-sm" data-type="reback">
-      <i class="layui-icon layui-icon-return"></i>返回
+  <div class="layui-btn-container" style="margin-bottom: 6px; text-align: center;">
+    {{# if(d.action != 'view') { }}
+    <a href="javascript: " class="layui-btn layui-btn-sm" data-type="{{= d.action }}" lay-submit>
+      <i class="layui-icon layui-icon-ok"></i>保存
     </a>
     {{# } }}
+    <a href="javascript:" class="layui-btn layui-btn-sm" data-type="close">
+      <i class="layui-icon layui-icon-close"></i>关闭
+    </a>
   </div>
 </script>
 <script type="text/javascript">
@@ -126,15 +115,15 @@
     version: '101100'
   });
 
-  let $ = null;
+  var $ = null;
   layui.use(['jquery', 'laytpl', 'form', 'laydate'], function() {
     $ = layui.jquery;
-    let laytpl = layui.laytpl,
+    var laytpl = layui.laytpl,
       form = layui.form,
       layDate = layui.laydate,
       queryObj = MyCuckoo.getQueryObject(location.search);
 
-    let FormMgr = function() {
+    var FormMgr = function() {
       //渲染操作按钮
       laytpl(operator.innerHTML).render(queryObj, function(html) {
         $('.toolbar').html(html);
@@ -142,14 +131,18 @@
 
       //表单初始赋值
       if (queryObj.id) {
-        $.get(api.schedulerMgr.url + '/' + queryObj.id).then(json => {
+        $.get(api.schedulerMgr.url + '/' + queryObj.id).then(function(json) {
           form.val('editForm', json.data);
 
-          let triggerType = json.data.triggerType.toLowerCase();
-          $('.' + triggerType + '-scheduler').removeClass('layui-hide');
+          var triggerType = json.data.triggerType.toLowerCase();
+          $('.scheduler-trigger-type-' + triggerType).removeClass('layui-hide');
+
+          if (queryObj.action == 'view') {
+            $('input, select, textarea').attr('disabled', 'disabled')
+          }
         });
       } else {
-        $('.simple-scheduler').removeClass('layui-hide');
+        $('.scheduler-trigger-type-simple').removeClass('layui-hide');
       }
 
       //日期
@@ -160,9 +153,16 @@
         elem: 'input[name=endTime]'
       });
 
-      let formMgr = this;
+      var formMgr = this;
       //操作按钮触发事件
-      $('form a.layui-btn[lay-submit!=submit]').on('click', function() {
+      form.on('radio(trigger-type)', function(data) {
+        var triggerType = data.value.toLowerCase();
+        $('.scheduler-trigger-type').addClass('layui-hide');
+        $('.scheduler-trigger-type-' + triggerType).removeClass('layui-hide');
+      });
+
+      //操作按钮触发事件
+      $('form a.layui-btn:not([lay-submit])').on('click', function() {
         var type = $(this).data('type');
         formMgr[type] && formMgr[type](this);
       });
@@ -178,7 +178,7 @@
 
     FormMgr.prototype = {
       constructor: FormMgr,
-      valid(data) {
+      valid: function(data) {
         if(data.triggerType == 'Simple') {
           if(!data.startTime) {
             MyCuckoo.msg({msg: '开始时间必填!'});
@@ -197,7 +197,7 @@
             return false;
           }
         } else {
-          if(!data.cronExpression) {
+          if(!data.cron) {
             MyCuckoo.msg({msg: '时间表达式必填!'});
             return false;
           }
@@ -205,7 +205,7 @@
 
         return true;
       },
-      create(data) {
+      add: function(data) {
         if(!this.valid(data)) {
           return;
         }
@@ -216,7 +216,7 @@
           this.refresh();
         });
       },
-      update(data) {
+      modify: function(data) {
         if(!this.valid(data)) {
           return;
         }
@@ -228,15 +228,15 @@
         });
       },
       //刷新父窗
-      refresh() {
+      refresh: function() {
         setTimeout(function() {
           parent.location.reload();
-          this.reback();
+          this.close();
         }, 2000);
       },
       //关闭当前iframe页
-      reback(ele) {
-        let index = parent.layer.getFrameIndex(window.name);
+      close: function(ele) {
+        var index = parent.layer.getFrameIndex(window.name);
         parent.layer.close(index);
       }
     }

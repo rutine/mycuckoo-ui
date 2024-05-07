@@ -4,7 +4,7 @@
   <meta http-equiv="Content-Type" content="text/html; charset=utf-8" />
   <title>系统参数信息</title>
   <link type="image/x-icon" href="../../static/images/favicon.ico" rel="shortcut icon" />
-  <link type="text/css" href="../../static/layui/2.4.3/css/layui.css" rel="stylesheet" />
+  <link type="text/css" href="../../static/layui/2.9.8/css/layui.css" rel="stylesheet" />
   <link type="text/css" href="../../static/css/mycuckoo.css" rel="stylesheet" />
 </head>
 <body>
@@ -16,13 +16,13 @@
       <div class="layui-inline">
         <label class="layui-form-label">参数名称</label>
         <div class="layui-input-inline">
-          <input type="text" name="paraName" class="layui-input" lay-verify="required" maxlength="20" />
+          <input type="text" name="name" class="layui-input" lay-verify="required" maxlength="20" />
         </div>
       </div>
       <div class="layui-inline">
-        <label class="layui-form-label">参数键名称</label>
+        <label class="layui-form-label">参数键</label>
         <div class="layui-input-inline">
-          <input type="text" name="paraKeyName" class="layui-input" lay-verify="required" maxlength="20" />
+          <input type="text" name="key" class="layui-input" lay-verify="required" maxlength="20" />
         </div>
       </div>
     </div>
@@ -31,13 +31,13 @@
       <div class="layui-inline">
         <label class="layui-form-label">参数键值</label>
         <div class="layui-input-inline">
-          <input type="text" name="paraValue" class="layui-input" />
+          <input type="text" name="value" class="layui-input" />
         </div>
       </div>
       <div class="layui-inline">
         <label class="layui-form-label">系统类别</label>
         <div class="layui-input-inline">
-          <select name="paraType" lay-verify="required">
+          <select name="type" lay-verify="required">
             <option value=""></option>
           </select>
         </div>
@@ -55,30 +55,19 @@
   </form>
 </div>
 </body>
-<script type="text/javascript" src="../../static/layui/2.4.3/layui.js" charset="UTF-8"></script>
+<script type="text/javascript" src="../../static/layui/2.9.8/layui.js" charset="UTF-8"></script>
 <script type="text/javascript" src="../../static/mycuckoo.js" charset="UTF-8"></script>
 <script type="text/javascript" src="../../static/mycuckoo.api.js" charset="UTF-8"></script>
 <script type="text/html" id="operator">
-  <div class="layui-btn-group">
-    {{# if(d.action == 'create') { }}
-    <a href="javascript: " class="layui-btn layui-btn-sm" data-type="create" lay-submit="submit">
-      <i class="layui-icon layui-icon-ok-circle"></i>保存
-    </a>
-    <a href="javascript: " class="layui-btn layui-btn-sm" data-type="reback">
-      <i class="layui-icon layui-icon-return"></i>返回
-    </a>
-    {{# } else if(d.action == 'modify') { }}
-    <a href="javascript:" class="layui-btn layui-btn-sm" data-type="update" lay-submit="submit">
-      <i class="layui-icon layui-icon-ok-circle"></i>保存
-    </a>
-    <a href="javascript:" class="layui-btn layui-btn-sm" data-type="reback">
-      <i class="layui-icon layui-icon-return"></i>返回
-    </a>
-    {{# } else if(d.action == 'view') { }}
-    <a href="javascript:" class="layui-btn layui-btn-sm" data-type="reback">
-      <i class="layui-icon layui-icon-return"></i>返回
+  <div class="layui-btn-container" style="margin-bottom: 6px; text-align: center;">
+    {{# if(d.action != 'view') { }}
+    <a href="javascript: " class="layui-btn layui-btn-sm" data-type="{{= d.action }}" lay-submit>
+      <i class="layui-icon layui-icon-ok"></i>保存
     </a>
     {{# } }}
+    <a href="javascript:" class="layui-btn layui-btn-sm" data-type="close">
+      <i class="layui-icon layui-icon-close"></i>关闭
+    </a>
   </div>
 </script>
 <script type="text/javascript">
@@ -87,46 +76,50 @@
     version: '101100'
   });
 
-  let $ = null;
+  var $ = null;
   layui.use(['jquery', 'laytpl', 'form'], function() {
     $ = layui.jquery;
-    let laytpl = layui.laytpl,
+    var laytpl = layui.laytpl,
       form = layui.form,
       tree = layui.dtree,
       queryObj = MyCuckoo.getQueryObject(location.search);
 
-    let FormMgr = function() {
+    var FormMgr = function() {
       //渲染操作按钮
       laytpl(operator.innerHTML).render(queryObj, function(html) {
         $('.toolbar').html(html);
       });
 
       //初始化
-      $.get(api.dictionaryMgr.smallTypeUrl, {bigTypeCode: 'systemType'}).then(json => {
-        let $select = $('select[name=paraType]');
+      $.get(api.dictionaryMgr.smallTypeUrl, {bigTypeCode: 'systemType'}).then(function(json) {
+        var $select = $('select[name=type]');
         $select.empty();
 
-        for (let i = 0; i < json.data.length; i++) {
-          let item = json.data[i];
-          $select.append('<option value="' + item.smallTypeCode + '">' + item.smallTypeName + '</option>');
+        for (var i = 0; i < json.data.length; i++) {
+          var item = json.data[i];
+          $select.append('<option value="' + item.code + '">' + item.name + '</option>');
         }
         form.render('select');
 
         //表单初始赋值
         if (queryObj.id) {
           if(queryObj.action != 'create') {
-            $('input[name=paraKeyName]').attr('readonly', true);
+            $('input[name=key]').attr('readonly', true);
           }
 
-          $.get(api.systemParameterMgr.url + '/' + queryObj.id).then(json => {
+          $.get(api.systemParameterMgr.url + '/' + queryObj.id).then(function(json) {
             form.val('editForm', json.data);
+
+            if (queryObj.action == 'view') {
+              $('input, select, textarea').attr('disabled', 'disabled')
+            }
           });
         }
       });
 
-      let formMgr = this;
+      var formMgr = this;
       //操作按钮触发事件
-      $('form a.layui-btn[lay-submit!=submit]').on('click', function() {
+      $('form a.layui-btn:not([lay-submit])').on('click', function() {
         var type = $(this).data('type');
         formMgr[type] && formMgr[type](this);
       });
@@ -142,14 +135,14 @@
 
     FormMgr.prototype = {
       constructor: FormMgr,
-      create(data) {
+      add: function(data) {
         $.postJson(api.systemParameterMgr.url, data).then(json => {
           MyCuckoo.msg({msg: json.data});
 
           this.refresh();
         });
       },
-      update(data) {
+      modify: function(data) {
         $.put(api.systemParameterMgr.url, data).then(json => {
           MyCuckoo.msg({msg: json.data});
 
@@ -157,15 +150,15 @@
         });
       },
       //刷新父窗
-      refresh() {
+      refresh: function() {
         setTimeout(function() {
           parent.location.reload();
-          this.reback();
+          this.close();
         }, 2000);
       },
       //关闭当前iframe页
-      reback(ele) {
-        let index = parent.layer.getFrameIndex(window.name);
+      close: function(ele) {
+        var index = parent.layer.getFrameIndex(window.name);
         parent.layer.close(index);
       }
     }

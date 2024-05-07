@@ -4,7 +4,7 @@
   <meta http-equiv="Content-Type" content="text/html; charset=utf-8" />
   <title>地区信息</title>
   <link type="image/x-icon" href="../../static/images/favicon.ico" rel="shortcut icon" />
-  <link type="text/css" href="../../static/layui/2.4.3/css/layui.css" rel="stylesheet" />
+  <link type="text/css" href="../../static/layui/2.9.8/css/layui.css" rel="stylesheet" />
   <link type="text/css" href="../../static/css/mycuckoo.css" rel="stylesheet" />
   <link type="text/css" href="../../static/dtree/css/dtree.css" rel="stylesheet" />
   <link type="text/css" href="../../static/dtree/css/font/dtreefont.css" rel="stylesheet" />
@@ -18,13 +18,13 @@
       <div class="layui-inline">
         <label class="layui-form-label">地区名称</label>
         <div class="layui-input-inline">
-          <input type="text" name="districtName" class="layui-input" lay-verify="required" maxlength="10" />
+          <input type="text" name="name" class="layui-input" lay-verify="required" maxlength="10" />
         </div>
       </div>
       <div class="layui-inline">
         <label class="layui-form-label">地区代码</label>
         <div class="layui-input-inline">
-          <input type="text" name="districtCode" class="layui-input" lay-verify="required|alphanumeric" maxlength="10" />
+          <input type="text" name="code" class="layui-input" lay-verify="required|alphanumeric" maxlength="10" />
         </div>
       </div>
     </div>
@@ -33,13 +33,13 @@
       <div class="layui-inline">
         <label class="layui-form-label">地区邮编</label>
         <div class="layui-input-inline">
-          <input type="text" name="districtPostal" class="layui-input" lay-verify="number" maxlength="6" />
+          <input type="text" name="postal" class="layui-input" lay-verify="number" maxlength="6" />
         </div>
       </div>
       <div class="layui-inline">
         <label class="layui-form-label">电话区号</label>
         <div class="layui-input-inline">
-          <input type="text" name="districtTelcode" class="layui-input" lay-verify="number" maxlength="10" />
+          <input type="text" name="telcode" class="layui-input" lay-verify="number" maxlength="10" />
         </div>
       </div>
     </div>
@@ -48,7 +48,7 @@
       <div class="layui-inline">
         <label class="layui-form-label">地区级别</label>
         <div class="layui-input-inline">
-          <select name="districtLevel" lay-verify="required">
+          <select name="level" lay-verify="required">
             <option value=""></option>
           </select>
         </div>
@@ -56,12 +56,12 @@
       <div class="layui-inline">
         <label class="layui-form-label">上级地区</label>
         <div class="layui-input-inline">
-          <input type="hidden" name="parentId" />
-          <input type="text" name="parentName" class="layui-input" autocomplete="off" lay-verify="required" />
+          <div class="layui-input-wrap">
+            <input type="hidden" name="parentId" />
+            <input type="text" name="parentName" class="layui-input" lay-affix="search"
+                   data-type="selectDistrict" lay-filter="selectDistrict" lay-verify="required" readonly />
+          </div>
         </div>
-        <a class="layui-btn layui-btn-primary layui-btn-sm layui-btn-radius" data-type="selectDistrict">
-          <i class="layui-icon layui-icon-search"></i>
-        </a>
       </div>
     </div>
 
@@ -76,44 +76,33 @@
   </form>
 </div>
 </body>
-<script type="text/javascript" src="../../static/layui/2.4.3/layui.js" charset="UTF-8"></script>
+<script type="text/javascript" src="../../static/layui/2.9.8/layui.js" charset="UTF-8"></script>
 <script type="text/javascript" src="../../static/mycuckoo.js" charset="UTF-8"></script>
 <script type="text/javascript" src="../../static/mycuckoo.api.js" charset="UTF-8"></script>
 <script type="text/html" id="operator">
-  <div class="layui-btn-group">
-    {{# if(d.action == 'create') { }}
-    <a href="javascript: " class="layui-btn layui-btn-sm" data-type="create" lay-submit="submit">保存
-      <span class="layui-icon glyphicon-hdd"></span>
-    </a>
-    <a href="javascript: " class="layui-btn layui-btn-sm" data-type="reback">返回
-      <span class="layui-icon glyphicon-circle-arrow-left"></span>
-    </a>
-    {{# } else if(d.action == 'modify') { }}
-    <a href="javascript:" class="layui-btn layui-btn-sm" data-type="update" lay-submit="submit">保存
-      <span class="layui-icon glyphicon-hdd"></span>
-    </a>
-    <a href="javascript:" class="layui-btn layui-btn-sm" data-type="reback">返回
-      <span class="layui-icon glyphicon-circle-arrow-left"></span>
-    </a>
-    {{# } else if(d.action == 'view') { }}
-    <a href="javascript:" class="layui-btn layui-btn-sm" data-type="reback">返回
-      <span class="layui-icon glyphicon-circle-arrow-left"></span>
+  <div class="layui-btn-container" style="margin-bottom: 6px; text-align: center;">
+    {{# if(d.action != 'view') { }}
+    <a href="javascript: " class="layui-btn layui-btn-sm" data-type="{{= d.action }}" lay-submit>
+      <i class="layui-icon layui-icon-ok"></i>保存
     </a>
     {{# } }}
+    <a href="javascript:" class="layui-btn layui-btn-sm" data-type="close">
+      <i class="layui-icon layui-icon-close"></i>关闭
+    </a>
   </div>
 </script>
 <script type="text/javascript">
   function formatDate(format) {
     if (!format) return '';
-    let d = new Date();
+    var d = new Date();
     if (format == 'yyyy') {
       return d.getFullYear();
     } else if (format == 'yyyyMM') {
-      let month = d.getMonth() + 1;
+      var month = d.getMonth() + 1;
       var monthStr = month < 10 ? '0' + month : month + '';
       return d.getFullYear() + '' + monthStr;
     } else if (format == 'yyyyMMdd') {
-      let month = d.getMonth() + 1;
+      var month = d.getMonth() + 1;
       var monthStr = month < 10 ? '0' + month : month + '';
       return d.getFullYear() + '' + monthStr + '' + d.getDate();
     } else if (format == 'userName') {
@@ -129,14 +118,14 @@
 
   //编码效果
   function calcCodeEffect() {
-    let partNum = parseInt($('select[name=partNum]').val());
-    let delimite = $('select[name=delimite]').val();
-    let codePart1 = formatDate($('select[name=part1Con], input[name=part1Con]').val());
-    let codePart2 = formatDate($('select[name=part2Con], input[name=part2Con]').val());
-    let codePart3 = formatDate($('select[name=part3Con], input[name=part3Con]').val());
-    let codePart4 = formatDate($('select[name=part4Con], input[name=part4Con]').val());
+    var partNum = parseInt($('select[name=partNum]').val());
+    var delimite = $('select[name=delimite]').val();
+    var codePart1 = formatDate($('select[name=part1Con], input[name=part1Con]').val());
+    var codePart2 = formatDate($('select[name=part2Con], input[name=part2Con]').val());
+    var codePart3 = formatDate($('select[name=part3Con], input[name=part3Con]').val());
+    var codePart4 = formatDate($('select[name=part4Con], input[name=part4Con]').val());
 
-    let value;
+    var value;
     switch (partNum) {
       case 2:
         value = [codePart1, codePart2].join(delimite);
@@ -198,14 +187,14 @@
       return;
     }
 
-    let $wrapper = $(config.elem);
+    var $wrapper = $(config.elem);
     if ($(config.elem).length === 0) {
       MyCuckoo.alert({title: '找不到元素: ' + config.elem});
       return;
     }
 
     [1, 2, 3, 4].forEach((item, index) => {
-      let partName = 'part1',
+      var partName = 'part1',
         partTitle = '段一格式',
         partConName = 'part1Con',
         partConTitle = '段一内容';
@@ -236,7 +225,7 @@
           break;
       }
 
-      let selector = [
+      var selector = [
         '<div class="layui-form-item">',
         '<div class="layui-inline">',
         '<label class="layui-form-label">' + partTitle + '</label>',
@@ -254,10 +243,10 @@
       ].join('');
       $wrapper.append(selector);
 
-      let that = this;
+      var that = this;
       config.form.render('select');
       config.form.on('select(calcSelector)', function (data) {
-        let target = $(data.elem).attr('target');
+        var target = $(data.elem).attr('target');
         $('[name=' + target + ']').parent().children().off().parent().empty()
           .html(that[data.value + 'Selector'].replace('{placeholder}', data.elem.name + 'Con'));
         config.form.render('select');
@@ -275,44 +264,55 @@
     version: '101100'
   });
 
-  let $ = null;
+  var $ = null;
   layui.use(['jquery', 'laytpl', 'form', 'dtree'], function() {
     $ = layui.jquery;
-    let laytpl = layui.laytpl,
+    var laytpl = layui.laytpl,
       form = layui.form,
       tree = layui.dtree,
       queryObj = MyCuckoo.getQueryObject(location.search);
 
-    let FormMgr = function() {
+    var FormMgr = function() {
       //渲染操作按钮
       laytpl(operator.innerHTML).render(queryObj, function(html) {
         $('.toolbar').html(html);
       });
 
       //初始化
-      $.get(api.dictionaryMgr.smallTypeUrl, {bigTypeCode: 'district'}).then(json => {
-        let $select = $('select[name=districtLevel]');
+      $.get(api.dictionaryMgr.smallTypeUrl, {bigTypeCode: 'district'}).then(function(json) {
+        var $select = $('select[name=level]');
         $select.empty();
 
-        for (let i = 0; i < json.data.length; i++) {
-          let item = json.data[i];
-          $select.append('<option value="' + item.smallTypeCode + '">' + item.smallTypeName + '</option>');
+        for (var i = 0; i < json.data.length; i++) {
+          var item = json.data[i];
+          $select.append('<option value="' + item.code + '">' + item.name + '</option>');
         }
         form.render('select');
 
         //表单初始赋值
         if (queryObj.id) {
-          $.get(api.districtMgr.url + '/' + queryObj.id).then(json => {
+          $.get(api.districtMgr.url + '/' + queryObj.id).then(function(json) {
             form.val('editForm', json.data);
+
+            if (queryObj.action == 'view') {
+              $('input, select, textarea').attr('disabled', 'disabled')
+            }
           });
         }
       });
 
-      let formMgr = this;
+      var formMgr = this;
       //操作按钮触发事件
-      $('form a.layui-btn[lay-submit!=submit]').on('click', function() {
+      $('form a.layui-btn:not([lay-submit])').on('click', function() {
         var type = $(this).data('type');
         formMgr[type] && formMgr[type](this);
+      });
+
+      form.on('input-affix', function(data) {
+        var elem = data.elem; // 获取输入框 DOM 对象
+        var affix = data.affix; // 获取输入框 lay-affix 属性值
+        var type = $(elem).data('type');
+        $(elem).attr('disabled') != 'disabled' && formMgr[type] && formMgr[type](this);
       });
 
       //监听提交
@@ -326,10 +326,10 @@
 
     FormMgr.prototype = {
       constructor: FormMgr,
-      openTree(url, config) {
-        let fillForm = function(data) {
-          let valObj =  {};
-          for (let p in config) {
+      openTree: function(url, config) {
+        var fillForm = function(data) {
+          var valObj =  {};
+          for (var p in config) {
             if (typeof p == 'string') {
               valObj[config[p]] = data[p];
             }
@@ -344,7 +344,7 @@
           content: '<ul id="tree" class="dtree" data-id="0"></ul>',
           btn: ['确认选择'],
           success: function(layero, index){
-            let treeObj = tree.render({
+            var treeObj = tree.render({
               elem: '#tree',
               method: 'get',
               type: 'all',
@@ -356,7 +356,7 @@
               icon: ['-1', '1']
             });
             tree.on('nodedblclick(tree)', function(obj) {
-              let data = obj.param;
+              var data = obj.param;
               if(data.isLeaf) {
                 return;
               }
@@ -378,17 +378,17 @@
           }
         });
       },
-      selectDistrict(ele) {
+      selectDistrict: function(ele) {
         this.openTree(api.districtMgr.childNodesUrl, {nodeId: 'parentId', context: 'parentName'});
       },
-      create(data) {
+      add: function(data) {
         $.postJson(api.districtMgr.url, data).then(json => {
           MyCuckoo.msg({msg: json.data});
 
           this.refresh();
         });
       },
-      update(data) {
+      modify: function(data) {
         $.put(api.districtMgr.url, data).then(json => {
           MyCuckoo.msg({msg: json.data});
 
@@ -396,15 +396,15 @@
         });
       },
       //刷新父窗
-      refresh() {
+      refresh: function() {
         setTimeout(function() {
           parent.location.reload();
-          this.reback();
+          this.close();
         }, 2000);
       },
       //关闭当前iframe页
-      reback(ele) {
-        let index = parent.layer.getFrameIndex(window.name);
+      close: function(ele) {
+        var index = parent.layer.getFrameIndex(window.name);
         parent.layer.close(index);
       }
     }

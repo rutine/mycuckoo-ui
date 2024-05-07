@@ -4,7 +4,7 @@
   <meta http-equiv="Content-Type" content="text/html; charset=utf-8" />
   <title>系统平台</title>
   <link type="image/x-icon" href="../../static/images/favicon.ico" rel="shortcut icon" />
-  <link type="text/css" href="../../static/layui/2.4.3/css/layui.css" rel="stylesheet" />
+  <link type="text/css" href="../../static/layui/2.9.8/css/layui.css" rel="stylesheet" />
   <link type="text/css" href="../../static/css/mycuckoo.css" rel="stylesheet" />
 </head>
 <body>
@@ -24,15 +24,14 @@
   <div class="layui-row">
     <form class="layui-col-md12 layui-form mycuckoo-search">
       <div class="layui-inline">
-        <label class="layui-form-label">搜索：</label>
         <div class="layui-input-inline">
-          <input class="layui-input" name="optModName" placeholder="操作模块名">
+          <input class="layui-input" name="modName" placeholder="操作模块名">
         </div>
         <div class="layui-input-inline">
-          <input class="layui-input" name="optName" placeholder="操作名">
+          <input class="layui-input" name="name" placeholder="操作名">
         </div>
         <div class="layui-input-inline">
-          <input class="layui-input" name="optUserName" placeholder="操作人姓名">
+          <input class="layui-input" name="userName" placeholder="操作人姓名">
         </div>
         <div class="layui-input-inline">
           <button class="layui-btn" lay-filter="search" lay-submit>
@@ -46,14 +45,14 @@
   <table id="table" class="layui-hide" lay-filter="table"></table>
 </div>
 </body>
-<script type="text/javascript" src="../../static/layui/2.4.3/layui.js" charset="UTF-8"></script>
+<script type="text/javascript" src="../../static/layui/2.9.8/layui.js" charset="UTF-8"></script>
 <script type="text/javascript" src="../../static/mycuckoo.js" charset="UTF-8"></script>
 <script type="text/javascript" src="../../static/mycuckoo.api.js" charset="UTF-8"></script>
 <script type="text/html" id="toolbar">
   <div class="layui-btn-group btn-toolbar">
     {{# layui.each(d.operator, function(index, item){ }}
-    <button class="layui-btn layui-btn-sm" lay-event="{{ item.optLink }}">
-      <i class="layui-icon layui-icon-{{ item.modIconCls }}"></i> {{ item.modName }}
+    <button class="layui-btn layui-btn-sm" lay-event="{{ item.code }}">
+      <i class="layui-icon layui-icon-{{ item.iconCls }}"></i> {{ item.name }}
     </button>
     {{# }); }}
   </div>
@@ -65,14 +64,13 @@
   });
 
   layui.use(['jquery', 'form', 'table'], function() {
-    let $ = layui.jquery,
+    var $ = layui.jquery,
       form = layui.form,
       table = layui.table;
 
     //本地缓存数据
-    let queryObj = MyCuckoo.getQueryObject(location.search);
-    let menu = JSON.parse(sessionStorage.getItem('myMenu'));
-    let operator = menu.fourth[queryObj.id];
+    var queryObj = MyCuckoo.getQueryObject(location.search);
+    var operator = MyCuckoo.getOperation(queryObj.id);
 
     form.on('submit(search)', function(data) {
       //执行重载
@@ -92,20 +90,21 @@
       url: api.systemLogMgr.url,
       method: 'get',
       cellMinWidth: 100,
+      height: MyCuckoo.tableHeight,
       toolbar: '#toolbar',
       operator: operator,
       cols: [[
         {type: 'numbers'},
         {type: 'radio'},
-        {field: 'optModName', title: '操作模块名'},
-        {field: 'optName', title: '操作名'},
-        {field: 'optBusinessId', title: '业务数据ID'},
-        {field: 'optPcName', title: '计算机名称'},
-        {field: 'optPcIp', title: '计算机IP'},
-        {field: 'optUserName', title: '操作人姓名'},
-        {field: 'optUserRole', title: '操作人角色'},
-        {field: 'optUserOgan', title: '操作人机构'},
-        {field: 'optTime', title: '操作时间', sort: true}
+        {field: 'modName', title: '操作模块名'},
+        {field: 'name', title: '操作名'},
+        {field: 'busiId', title: '业务数据ID'},
+        {field: 'host', title: '计算机名称'},
+        {field: 'ip', title: '计算机IP'},
+        {field: 'userName', title: '操作人姓名'},
+        {field: 'userRole', title: '操作人角色'},
+        {field: 'userOrgan', title: '操作人机构'},
+        {field: 'createDate', title: '操作时间', sort: true}
       ]],
       page: true,
       request: {
@@ -127,7 +126,7 @@
         return;
       }
 
-      let data = table.checkStatus(obj.config.id).data;
+      var data = table.checkStatus(obj.config.id).data;
       if (data.length != 1) {
         MyCuckoo.alert({title : '提示', msg : '请选择一条记录' });
         return;
@@ -137,14 +136,17 @@
         MyCuckoo.alert({title : '警示', msg : '此操作无效, 如有疑问, 请联系管理员!' });
         return;
       }
-      active[obj.event](data[0]);
+
+      obj.data = data[0]
+      active[obj.event](obj);
     });
 
-    let active = {
+    var active = {
       //查看
-      view(data) {
+      view(obj) {
+        var data = obj.data
         $.get(api.systemLogMgr.url + '/' + data.optId).then(json => {
-          MyCuckoo.alert({title : '日志内容查看', msg : json.data });
+          MyCuckoo.msg({title : '日志内容查看', msg : json.data });
         });
       },
     }
