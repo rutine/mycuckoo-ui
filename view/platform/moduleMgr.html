@@ -264,7 +264,19 @@
         }
 
         var url = MyCuckoo.resolve('moduleMgrAssignOpts.html?action={_event}&opt={_opt}&id={id}&name={name}',
-            {'_event': obj.event, '_opt': queryObj.id, 'id': data.moduleId, 'name': data.name})
+          {'_event': obj.event, '_opt': queryObj.id, 'id': data.moduleId, 'name': data.name})
+        MyCuckoo.dialog('模块信息', url);
+      },
+      //分配菜单资源
+      resassign: function(obj) {
+        var data = obj.data;
+        if(data.level != 3) {
+          MyCuckoo.alert({ msg: '请您选择第三级模块菜单'});
+          return;
+        }
+
+        var url = MyCuckoo.resolve('moduleMgrAssignResource.html?action={_event}&opt={_opt}&id={id}&name={name}',
+          {'_event': obj.event, '_opt': queryObj.id, 'id': data.moduleId, 'name': data.name})
         MyCuckoo.dialog('模块信息', url);
       },
       //

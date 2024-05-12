@@ -151,7 +151,9 @@ layui.use(['jquery'], function () {
       disEnableUrl: host + '/platform/module/mgr/{id}/disEnable/{disEnableFlag}',
       childNodesUrl: host + '/platform/module/mgr/{id}/child/nodes',
       operationUrl: host + '/platform/module/mgr/{id}/operation',
+      resourceUrl: host + '/platform/module/mgr/{id}/resource',
       saveModuleOptRefsUrl: host + '/platform/module/mgr/{id}/module-opt-ref',
+      saveModuleResRefsUrl: host + '/platform/module/mgr/{id}/module-res-ref',
     },
     operateMgr: {
       url: host + '/platform/operate/mgr',

@@ -6,8 +6,20 @@
   <link type="image/x-icon" href="../../static/images/favicon.ico" rel="shortcut icon" />
   <link type="text/css" href="../../static/layui/2.9.8/css/layui.css" rel="stylesheet" />
   <link type="text/css" href="../../static/css/mycuckoo.css" rel="stylesheet" />
-  <link type="text/css" href="../../static/dtree/css/dtree.css" rel="stylesheet" />
-  <link type="text/css" href="../../static/dtree/css/font/dtreefont.css" rel="stylesheet" />
+
+  <!-- 标签风格 -->
+  <style>
+    .layui-form-radio>.lay-skin-tag,
+    .layui-form-checkbox>.lay-skin-tag {
+      font-size: 13px;
+      border-radius: 100px;
+    }
+    .layui-form-checked>.lay-skin-tag,
+    .layui-form-radioed>.lay-skin-tag {
+      color: #fff !important;
+      background-color: #16b777 !important;
+    }
+  </style>
 </head>
 <body>
 <div class="mycuckoo-main">
@@ -15,11 +27,11 @@
     <legend>模块名称</legend>
   </fieldset>
 
-  <form class="layui-form layui-form-pane">
+  <form class="layui-form layui-form-pane" name="editForm">
     <div class="layui-form-item">
-      <label class="layui-form-label">操作</label>
-      <div class="layui-input-block">
-        <ul id="tree" lay-filter="tree"></ul>
+      <label class="layui-form-label">请选择操作</label>
+      <div id="ID-mycuckoo-tag" class="layui-input-block">
+
       </div>
     </div>
 
@@ -47,13 +59,11 @@
     version: '101100'
   });
 
-  layui.use(['jquery', 'form', 'dtree'], function() {
+  layui.use(['jquery', 'form'], function() {
     var $ = layui.jquery,
       form = layui.form,
-      tree = layui.dtree,
-      queryObj = MyCuckoo.getQueryObject(location.search);
-
-    var treeObj;
+      queryObj = MyCuckoo.getQueryObject(location.search),
+      $form = $('form[name=editForm]');
 
     var FormMgr = function () {
       //表单初始赋值
@@ -61,29 +71,29 @@
         MyCuckoo.alert({title: '提示', msg: '请选择模块!'});
         return;
       } else {
-        $('legend').text(queryObj.name);
+        $form.parent().find('legend').text(queryObj.name);
 
         $.get(api.moduleMgr.operationUrl, queryObj).then(function(json) {
-          //初始化结构树
-          treeObj = tree.render({
-            elem: '#tree',
-            method: 'get',
-            data: json.data.source,
-            dataStyle: 'layuiStyle',
-            response: { statusCode: 0, treeId: 'id', title: 'text', isLast: 'isLeaf', checkArr: 'checkBox'},
-            checkbar: true,
-            dot: false,
-            icon: ['-1', '1'],
-//          done: function() {
-//            treeObj.chooseDataInit(json.data.assign.join(','));
-//          }
-          });
+          var data = json.data.source;
+          var assign = json.data.assign || [];
+          var $checkbox = $('<div></div>');
+          for (var i = 0; i < data.length; i++) {
+            var item = data[i];
+            var checked = (assign.indexOf(parseInt(item.id)) >= 0) ? 'checked' : '';
+            $checkbox.append('' +
+                '<input type="checkbox" name="optIds[' + i + ']" lay-skin="none" value="' + item.id + '" ' + checked + '>' +
+                '<div lay-checkbox class="lay-skin-tag layui-badge">' + item.text + '</div>' +
+                ''
+            );
+          }
+          $checkbox.appendTo($('#ID-mycuckoo-tag'))
+          form.render('checkbox');
         });
       }
 
       //操作按钮触发事件
       var formMgr = this;
-      $('form a.layui-btn:not([lay-submit])').on('click', function() {
+      $form.find('a.layui-btn:not([lay-submit])').on('click', function() {
         var type = $(this).data('type');
         formMgr[type] && formMgr[type](this);
       });
@@ -101,14 +111,17 @@
       constructor: FormMgr,
       //保存模块操作
       save(data) {
-        var selectedNodes = treeObj.getCheckbarNodesParam();
-        if(!selectedNodes.length) {
+        var optIds = []
+        for (var p in data) {
+          if (p.indexOf('optIds') == 0) {
+            optIds.push(data[p]);
+          }
+        }
+        if(!optIds.length) {
           MyCuckoo.alert({ title : '提示', msg : '请选择操作!' });
           return;
         }
 
-        var optIds = [];
-        selectedNodes.forEach(item => item.isLeaf && optIds.push(Number(item.nodeId)));
         $.postJson(api.moduleMgr.saveModuleOptRefsUrl, data, optIds).then(json => {
           MyCuckoo.msg({msg: json.data});
 

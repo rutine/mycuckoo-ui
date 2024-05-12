@@ -1,0 +1,282 @@
+<!DOCTYPE html>
+<html>
+<head>
+  <meta http-equiv="Content-Type" content="text/html; charset=utf-8" />
+  <title>分配资源</title>
+  <link type="image/x-icon" href="../../static/images/favicon.ico" rel="shortcut icon" />
+  <link type="text/css" href="../../static/layui/2.9.8/css/layui.css" rel="stylesheet" />
+  <link type="text/css" href="../../static/css/mycuckoo.css" rel="stylesheet" />
+  <!-- 标签风格 -->
+  <style>
+    .layui-form-radio > div.lay-skin-tag,
+    .layui-form-checkbox > div.lay-skin-tag {
+      font-size: 13px;
+      border-radius: 100px;
+      background-color: #D2D2D2;
+    }
+
+    .layui-form-checked > .lay-skin-tag,
+    .layui-form-radioed > .lay-skin-tag {
+      color: #fff !important;
+      background-color: #16b777 !important;
+    }
+
+    .layui-form-checked > .lay-skin-tag,
+    .layui-form-radioed > .lay-skin-tag {
+      color: #fff !important;
+      background-color: #16b777 !important;
+    }
+  </style>
+</head>
+<body>
+  <div class="mycuckoo-main">
+    <fieldset class="layui-elem-field layui-field-title" style="margin-top: 30px;">
+      <legend>模块名称</legend>
+    </fieldset>
+
+    <form class="layui-form layui-form-pane" name="editForm" lay-filter="moduleAssignResource">
+      <div class="layui-row">
+        <div class="layui-col-md3">
+          <div class="layui-row mycuckoo-row-header">
+            <div class="layui-col-md12"><span style="font-weight: bold;">选择资源</span></div>
+          </div>
+          <div class="layui-row">
+            <div class="layui-col-md12" style="max-height: 300px; overflow: scroll">
+              <div id="ID-mycuckoo-tree"></div>
+            </div>
+          </div>
+        </div>
+        <div class="layui-col-md9">
+          <div class="layui-row mycuckoo-row-header">
+            <div class="layui-col-sm3"><span style="font-weight: bold;">配置资源</span></div>
+            <div class="layui-col-sm9"><span style="font-weight: bold;">应用位置</span></div>
+          </div>
+        </div>
+      </div>
+
+      <div class="layui-btn-container" style="margin-bottom: 6px; text-align: center;">
+        <a href="javascript:" class="layui-btn layui-btn-sm" data-type="saveModResource" lay-submit>
+          <i class="layui-icon layui-icon-ok"></i>保存
+        </a>
+        <a href="javascript:" class="layui-btn layui-btn-sm" data-type="close">
+          <i class="layui-icon layui-icon-close"></i>取消
+        </a>
+      </div>
+    </form>
+  </div>
+</body>
+<script type="text/javascript" src="../../static/layui/2.9.8/layui.js" charset="UTF-8"></script>
+<script type="text/javascript" src="../../static/mycuckoo.js" charset="UTF-8"></script>
+<script type="text/javascript" src="../../static/mycuckoo.api.js" charset="UTF-8"></script>
+<script type="text/javascript">
+  layui.config({
+    base: '../../static/extend/',
+    version: '101100'
+  });
+
+  layui.use(['jquery', 'form', 'tree'], function() {
+    var $ = layui.jquery,
+      form = layui.form,
+      tree = layui.tree,
+      queryObj = MyCuckoo.getQueryObject(location.search),
+      $form = $('form[name=editForm]');
+
+    var FormMgr = function () {
+      var that = this;
+
+      $form.find('#ID-mycuckoo-tree').height($(window).height - 293);
+
+      //表单初始赋值
+      if (queryObj.id) {
+        $form.parent().find('fieldset > legend').text('模块: ' + queryObj.name);
+        $.get(api.moduleMgr.resourceUrl, queryObj).then(function(json) {
+          var source = json.data.source;
+          var $elem = $form.find('.layui-col-md9');
+          that.rend($elem, source, false, source);
+
+          //初始化结构树
+          tree.render({
+            elem: '#ID-mycuckoo-tree',
+            id: 'ID-mycuckoo-tree',
+            showCheckbox: true,
+            showLine: true,
+            data: source,
+            customName: {
+              title: 'text'
+            },
+            oncheck: function(obj) {
+              var data = obj.data;
+
+              that.rend($elem, data, obj.checked, source);
+
+              form.render('checkbox', 'moduleAssignResource')
+            }
+          });
+
+          tree.setChecked('ID-mycuckoo-tree', json.data.assign)
+        });
+      } else {
+        MyCuckoo.alert({ title : '提示', msg : '请关闭后选择模块!' });
+        return;
+      }
+      
+      var formMgr = this;
+      //操作按钮触发事件
+      $form.find('a.layui-btn:not([lay-submit])').on('click', function() {
+        var type = $(this).data('type');
+        formMgr[type] && formMgr[type](this);
+      });
+
+      //监听提交
+      form.on('submit', function(data) {
+        var type = $(this).data('type');
+        formMgr[type] && formMgr[type]($.extend({}, data.field, queryObj));
+
+        return false;
+      });
+    }
+
+    FormMgr.prototype = {
+      constructor: FormMgr,
+      rend: function (elem, data, checked, source) {
+        var hideBi = 1 << 9;
+        if (data && data.children && data.children.length > 0) {
+          for (var p in data.children) {
+            this.rend(elem, data.children[p], checked, source);
+          }
+        } else {
+          checked = checked || data.checked;
+          delete data.checked;
+
+          var $checkbox = elem.find('.mycuckoo-checkbox-set-' + data.id);
+          if (!checked) {
+            $checkbox.addClass('layui-hide');
+            return
+          }
+          if ($checkbox.length) {
+            $checkbox.removeClass('layui-hide');
+            return;
+          }
+          var arr = []
+          var text = this.getParentText(data.parentId, source)
+          if (text) {
+            arr.push(text);
+          }
+          arr.push(data.text);
+
+          console.log()
+
+          elem.append([
+            '<div class="layui-row mycuckoo-checkbox-set mycuckoo-checkbox-set-' + data.id + '" data-id="' + data.id + '">',
+            ' <div class="layui-col-sm3 layui-font-green">',
+            function () {
+              return '<span>' + arr.join('</span><span>=></span><span>') + '</span>';
+            }(),
+            ' </div>',
+            ' <div class="layui-col-sm9">',
+            '   <input type="checkbox" name="resGroup" lay-skin="none" value="1" ' + ((data.group & 1) == 1 ? 'checked' : '') + '>',
+            '   <div lay-checkbox class="lay-skin-tag layui-badge">列表</div>',
+            '   <input type="checkbox" name="resGroup" lay-skin="none" value="2" ' + ((data.group & 2) == 2 ? 'checked' : '') + '>',
+            '   <div lay-checkbox class="lay-skin-tag layui-badge">工具栏</div>',
+            '   <input type="checkbox" name="resGroup" lay-skin="none" value="4" ' + ((data.group & 4) == 4 ? 'checked' : '') + '>',
+            '   <div lay-checkbox class="lay-skin-tag layui-badge">操作栏</div>',
+            '   <input type="checkbox" name="resGroup" lay-skin="none" value="8" ' + ((data.group & 8) == 8 ? 'checked' : '') + '>',
+            '   <div lay-checkbox class="lay-skin-tag layui-badge">表单</div>',
+            '   <input type="checkbox" name="resGroup" lay-skin="none" value="' + hideBi + '" ' + ((data.group & hideBi) == hideBi ? 'checked' : '') + '>',
+            '   <div lay-checkbox class="lay-skin-tag layui-badge">不显示</div>',
+            ' </div>',
+            '</div>'
+          ].join(''));
+        }
+      },
+      getParentText: function (parentId, data) {
+        if (Array.isArray(data)) {
+          for (var one in data) {
+            var text = this.getParentText(parentId, data[one]);
+            if (text) {
+              return text
+            }
+          }
+          return
+        }
+
+        if (parentId == '0' || parentId == data.parentId) {
+          return null;
+        }
+
+        for (var one in data.children) {
+          var text = this.getParentText(parentId, data.children[one]);
+          if (text) {
+            return text
+          }
+        }
+
+        if (data.id == parentId) {
+          return data.text;
+        }
+
+        return null;
+      },
+      //保存用户权限
+      saveModResource: function(data) {
+        var main = 0;
+        var resource = [];
+        $checkboxSet = $form.find('.mycuckoo-checkbox-set:not(.layui-hide)');
+        if(!$checkboxSet.length) {
+          MyCuckoo.alert({ title : '提示', msg : '请选择资源!' });
+          return;
+        }
+
+        for (var i = 0; i < $checkboxSet.length; i++) {
+          var $ele = $checkboxSet.eq(i);
+          var $checkGrp = $ele.find('input:checkbox:checked');
+          if (!$checkGrp.length) {
+            MyCuckoo.msg({ title : '提示', msg : '请给[' + $ele.find('.layui-col-sm3').text() + ']配置应用位置!' });
+            return;
+          }
+
+          var grp = 0;
+          for (var ii = 0; ii < $checkGrp.length; ii++) {
+            var elee = $checkGrp[ii];
+            var value = parseInt(elee.value);
+            if (main == 0 && value == 1) {
+              main =  value;
+            } else if (main == value && value == 1) {
+              MyCuckoo.alert({ title : '提示', msg : '应用位置只允许选择一个列表!' });
+              return;
+            }
+            grp |= value
+          }
+
+          var id = $ele.data('id');
+          resource.push({
+            resourceId: id.indexOf('leaf-id-') >= 0 ? id.substr('leaf-id-'.length) : id,
+            group: grp
+          })
+        }
+
+        $.postJson(api.moduleMgr.saveModuleResRefsUrl, queryObj, resource).then(json => {
+          MyCuckoo.msg({msg: json.data});
+
+          this.refresh();
+        });
+      },
+      //刷新父窗
+      refresh: function() {
+        setTimeout(function() {
+          parent.location.reload();
+          this.close();
+        }, 2000);
+      },
+      //关闭当前iframe页
+      close: function(ele) {
+        var index = parent.layer.getFrameIndex(window.name);
+        parent.layer.close(index);
+      }
+    }
+
+    new FormMgr();
+    //end
+  });
+</script>
+</html>
