@@ -37,7 +37,7 @@
               <td>
                 <div class="select-side">
                   <span>未选角色</span>
-                  <ul id="left_role_tree" class="select-side-body" data-id="orgId_0"></ul>
+                  <ul id="ID_left_role_tree" class="select-side-body" data-id="orgId_0"></ul>
                 </div>
               </td>
               <td>
@@ -49,7 +49,7 @@
               <td>
                 <div class="select-side">
                   <span>已选角色</span>
-                  <div id="right_role_multi_select" class="select-side-body" lay-filter="multiple"></div>
+                  <div id="ID_right_role_multi_select" class="select-side-body" lay-filter="multiple"></div>
                 </div>
               </td>
             </tr>
@@ -65,10 +65,10 @@
             <i class="layui-icon layui-icon-rate"></i>默认角色
           </a>
           <a href="javascript:" class="layui-btn layui-btn-sm" data-type="save" lay-submit>
-            <i class="layui-icon layui-icon-ok-circle"></i>保存
+            <i class="layui-icon layui-icon-ok"></i>保存
           </a>
-          <a href="javascript:" class="layui-btn layui-btn-sm" data-type="reback">
-            <i class="layui-icon layui-icon-return"></i>返回
+          <a href="javascript:" class="layui-btn layui-btn-sm" data-type="close">
+            <i class="layui-icon layui-icon-close"></i>取消
           </a>
         </div>
       </div>
@@ -95,7 +95,7 @@
     var treeObj;
     var multiSelectObj;
     var reloadMultiSelect = function(roles) {
-      $('#right_role_multi_select').off().empty();
+      $('#ID_right_role_multi_select').off().empty();
 
       var names = [];
       roles.forEach(item => {
@@ -104,7 +104,7 @@
       });
 
       multiSelectObj = select({
-        elem: '#right_role_multi_select',
+        elem: '#ID_right_role_multi_select',
         data: roles,
         field: {idName: 'orgRoleId', titleName: 'name'},
         delimiter: ', '
@@ -121,7 +121,7 @@
         $.get(api.userMgr.rolePrivilegeUrl, queryObj).then(function(json) {
           //初始化结构树
           treeObj = tree.render({
-            elem: '#left_role_tree',
+            elem: '#ID_left_role_tree',
             method: 'get',
             data: json.data.orgRoles,
             dataStyle: 'layuiStyle',
@@ -276,11 +276,11 @@
       refresh: function() {
         setTimeout(function() {
           parent.location.reload();
-          this.reback();
+          this.close();
         }, 2000);
       },
       //关闭当前iframe页
-      reback: function(ele) {
+      close: function(ele) {
         var index = parent.layer.getFrameIndex(window.name);
         parent.layer.close(index);
       }

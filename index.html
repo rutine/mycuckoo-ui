@@ -59,7 +59,7 @@
 
     <div class="layui-body mycuckoo-body">
       <div class="layui-tab mycuckoo-tab" lay-filter="mycuckoo-tab" lay-allowclose="true">
-        <ul id="tabName" class="layui-tab-title">
+        <ul class="layui-tab-title">
           <!--<li class="layui-this welcome">我的桌面</li>-->
         </ul>
         <div class="layui-tab-content">
@@ -109,10 +109,6 @@
 
       tab.tabAdd(title, url, tabId);
       tab.tabChange(tabId);
-
-      if (code == 'welcome') {
-        $('.layui-tab-title li[lay-id=' + tabId + '] i').remove();
-      }
     };
     MyCuckoo.tab('welcome', '我的桌面', 'welcome.html');
 

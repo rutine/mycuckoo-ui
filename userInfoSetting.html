@@ -4,7 +4,7 @@
   <meta http-equiv="Content-Type" content="text/html; charset=utf-8" />
   <title>设置新密码</title>
   <link type="image/x-icon" href="static/images/favicon.ico" rel="shortcut icon" />
-  <link type="text/css" href="static/layui/2.4.3/css/layui.css" rel="stylesheet" />
+  <link type="text/css" href="static/layui/2.9.8/css/layui.css" rel="stylesheet" />
   <link type="text/css" href="static/css/mycuckoo.css" rel="stylesheet" />
 </head>
 <body>
@@ -13,14 +13,14 @@
       <div class="layui-form-item">
         <div class="layui-inline">
           <label class="layui-form-label">用户号</label>
-          <div class="layui-form-mid layui-word-aux" id="userCode"></div>
+          <div class="layui-form-mid layui-word-aux" id="ID_userCode"></div>
         </div>
       </div>
 
       <div class="layui-form-item">
         <div class="layui-inline">
           <label class="layui-form-label">用户名</label>
-          <div class="layui-form-mid layui-word-aux" id="userName"></div>
+          <div class="layui-form-mid layui-word-aux" id="ID_userName"></div>
         </div>
       </div>
 
@@ -59,7 +59,7 @@
     </form>
   </div>
 </body>
-<script type="text/javascript" src="static/layui/2.4.3/layui.js" charset="UTF-8"></script>
+<script type="text/javascript" src="static/layui/2.9.8/layui.js" charset="UTF-8"></script>
 <script type="text/javascript" src="static/mycuckoo.js" charset="UTF-8"></script>
 <script type="text/javascript" src="static/mycuckoo.api.js" charset="UTF-8"></script>
 <script type="text/javascript">
@@ -69,14 +69,13 @@
   });
 
   layui.use(['jquery', 'form'], function() {
-    let $ = layui.jquery,
+    var $ = layui.jquery,
       form = layui.form,
       queryObj = MyCuckoo.getQueryObject(location.search);
 
-    let userInfo = JSON.parse(sessionStorage.getItem('userInfo'));
-
-    $('#userCode').text(userInfo.userCode);
-    $('#userName').text(userInfo.userName);
+    var userInfo =  MyCuckoo.getSession('userInfo');;
+    $('#ID_userCode').text(userInfo.userCode);
+    $('#ID_userName').text(userInfo.userName);
 
     //监听提交
     form.on('submit', function(data) {

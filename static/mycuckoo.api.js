@@ -127,12 +127,12 @@ layui.use(['jquery'], function () {
       url: host + '/uum/role/mgr',
       disEnableUrl: host + '/uum/role/mgr/{id}/disEnable/{disEnableFlag}',
       rolePrivilegeUrl: host + '/uum/role/mgr/{id}/role-privilege',
-      saveOperationPrivilegeUrl: host + '/uum/role/mgr/{id}/operation-privilege/{privilegeScope}',
+      saveOptPrivilegeUrl: host + '/uum/role/mgr/{id}/opt-privilege/{privilegeScope}',
       saveRowPrivilegeUrl: host + '/uum/role/mgr/{id}/row-privilege',
     },
     userMgr: {
       url: host + '/uum/user/mgr',
-      queryUsersUrl: host + '/uum/user/mgr/query/users',
+      selectorUrl: host + '/uum/user/mgr/selector',
       updatePhoto: host + '/uum/user/mgr/update/photo',
       updatePwdUrl: host + '/uum/user/mgr/update/password',
       resetPwdUrl: host + '/uum/user/mgr/{id}/reset-password',
@@ -141,7 +141,7 @@ layui.use(['jquery'], function () {
       userPrivilegeUrl: host + '/uum/user/mgr/{id}/user-privilege',
       rolePrivilegeUrl: host + '/uum/user/mgr/{id}/role-privilege',
       rowPrivilegeUrl: host + '/uum/user/mgr/{id}/row-privilege',
-      saveOperationPrivilegeUrl: host + '/uum/user/mgr/{id}/operation-privilege/{privilegeScope}',
+      saveOptPrivilegeUrl: host + '/uum/user/mgr/{id}/opt-privilege/{privilegeScope}',
       saveRolePrivilegeUrl: host + '/uum/user/mgr/{id}/role-privilege/{defaultRoleId}',
       saveRowPrivilegeUrl: host + '/uum/user/mgr/{id}/row-privilege/{privilegeScope}'
     },

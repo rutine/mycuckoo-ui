@@ -258,7 +258,7 @@
           return;
         }
 
-        var url = MyCuckoo.resolve('roleMgrAssignModOpt.html?action={_event}&opt={_opt}&id={id}&name={name}',
+        var url = MyCuckoo.resolve('userMgrAssignModOpt.html?action={_event}&opt={_opt}&id={id}&name={name}',
             {'_event': obj.event, '_opt': queryObj.id, 'id': data.userId, 'name': data.name})
         MyCuckoo.dialog('分配权限', url);
       }

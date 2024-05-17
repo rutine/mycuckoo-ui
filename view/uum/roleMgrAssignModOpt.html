@@ -153,8 +153,8 @@
         }
 
         var optIds = [];
-        selectedNodes.forEach(item => item.isLeaf && optIds.push(Number(item.nodeId)));
-        $.postJson(api.roleMgr.saveOperationPrivilegeUrl, data, optIds).then(json => {
+        selectedNodes.forEach(item => item.isLeaf && optIds.push(item.nodeId));
+        $.postJson(api.roleMgr.saveOptPrivilegeUrl, data, optIds).then(json => {
           MyCuckoo.msg({msg: json.data});
 
           this.refresh();
