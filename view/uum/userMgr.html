@@ -5,6 +5,8 @@
   <title>统一用户</title>
   <link type="image/x-icon" href="../../static/images/favicon.ico" rel="shortcut icon" />
   <link type="text/css" href="../../static/layui/2.9.8/css/layui.css" rel="stylesheet" />
+  <link type="text/css" href="../../static/dtree/css/dtree.css" rel="stylesheet" />
+  <link type="text/css" href="../../static/dtree/css/font/dtreefont.css" rel="stylesheet" />
   <link type="text/css" href="../../static/css/mycuckoo.css" rel="stylesheet" />
 </head>
 <body>
@@ -60,9 +62,10 @@
     version: '101100'
   });
 
-  layui.use(['jquery', 'form', 'table'], function() {
+  layui.use(['jquery', 'form', 'table', 'dtree'], function() {
     var $ = layui.jquery,
       form = layui.form,
+      tree = layui.dtree,
       table = layui.table;
 
     //本地缓存数据
@@ -237,15 +240,55 @@
           });
         }});
       },
-      //分配角色
-      assignrole: function(obj) {
+//      //分配角色
+//      assignrole: function(obj) {
+//        var data = obj.data;
+//        if(data.status == 'disable') {
+//          MyCuckoo.alert({title: '提示', msg: '请先启用此用户'});
+//          return;
+//        }
+//
+//        MyCuckoo.dialog('分配角色', 'userMgrAssignRole.html?&id=' + data.userId);
+//      },
+      assign: function(obj) {
         var data = obj.data;
-        if(data.status == 'disable') {
-          MyCuckoo.alert({title: '提示', msg: '请先启用此用户'});
-          return;
-        }
+        layer.open({
+          type: 1,
+          title: "选择角色",
+          area: ["400px", "80%"],
+          content: '<ul id="tree" class="dtree" data-id="1"></ul>',
+          btn: ['确认选择'],
+          success: function(layero, index){
+            var treeObj = tree.render({
+              elem: '#tree',
+              method: 'get',
+              type: 'all',
+              url: MyCuckoo.resolve(api.deptMgr.childNodesUrl, {id: 1, isCheckbox: true, withRole: true}),
+              request: {isCheckbox: true},
+              dataStyle: 'layuiStyle',
+              response: { statusCode: 0, treeId: 'id', title: 'text', isLast: 'isLeaf', checkArr: 'checkbox'},
+              checkbar: true,
+              dot: false,
+              icon: ['-1', '1']
+            });
+          },
+          yes: function(index, layero) {
+            var params = tree.getCheckbarNodesParam('tree');
+            if(params.length != 1) {
+              MyCuckoo.alert({msg: '请选择一个角色'});
+              return;
+            }
 
-        MyCuckoo.dialog('分配角色', 'userMgrAssignRole.html?&id=' + data.userId);
+            var roleId = params[0].nodeId.replace('leaf-id-', '');
+            $.put(api.userMgr.updateRoleUrl, $.extend({}, data, {roleId: roleId})).then(json => {
+              MyCuckoo.msg({msg: json.data});
+
+            this.refresh();
+          });
+
+            layer.close(index);
+          }
+        });
       },
       //分配权限
       optpri: function(obj) {

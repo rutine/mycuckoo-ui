@@ -96,19 +96,19 @@ layui.use(['jquery'], function () {
     host: host,
 
     login: {
-      firstStepUrl: host + '/login/step/first',
-      secondStepUrl: host + '/login/step/second',
-      thirdStepUrl: host + '/login/step/third'
+      loginUrl: host + '/login',
+      selectOrgUrl: host + '/login/select-org',
+      thirdStepUrl: host + '/login/my-menu'
     },
 
-    postFirstStep: function(params) {
-      return $.post(host + '/login/step/first', params).then(res => res.data);
+    postLogin: function(params) {
+      return $.post(host + '/login', params).then(res => res.data);
     },
-    postSecondStep: function(params) {
-      return $.postJson(host + '/login/step/second', params).then(res => res.data);
+    postSelectOrg: function(params) {
+      return $.postJson(host + '/login/select-org', params).then(res => res.data);
     },
     postMenu: function(params) {
-      return $.post(host + '/login/step/third', params).then(res => res.data);
+      return $.post(host + '/login/my-menu', params).then(res => res.data);
     },
     getLogout: function() {
       return $.get(host + '/login/logout').then(res => res.data);
@@ -119,10 +119,6 @@ layui.use(['jquery'], function () {
       childNodesUrl: host + '/uum/organ/mgr/{id}/child/nodes',
       disEnableUrl: host + '/uum/organ/mgr/{id}/disEnable/{disEnableFlag}',
     },
-    organRoleMgr: {
-      url: host + '/uum/role/assign/mgr',
-      unSelectRoleUrl: host + '/uum/role/assign/mgr/{orgId}/unselect/role'
-    },
     roleMgr: {
       url: host + '/uum/role/mgr',
       disEnableUrl: host + '/uum/role/mgr/{id}/disEnable/{disEnableFlag}',
@@ -130,19 +126,23 @@ layui.use(['jquery'], function () {
       saveOptPrivilegeUrl: host + '/uum/role/mgr/{id}/opt-privilege/{privilegeScope}',
       saveRowPrivilegeUrl: host + '/uum/role/mgr/{id}/row-privilege',
     },
+    deptMgr: {
+      url: host + '/uum/dept/mgr',
+      childNodesUrl: host + '/uum/dept/mgr/{id}/child/nodes',
+      disEnableUrl: host + '/uum/dept/mgr/{id}/disEnable/{disEnableFlag}',
+      assignUrl: host + '/uum/dept/mgr/{id}/assign',
+    },
     userMgr: {
       url: host + '/uum/user/mgr',
       selectorUrl: host + '/uum/user/mgr/selector',
       updatePhoto: host + '/uum/user/mgr/update/photo',
       updatePwdUrl: host + '/uum/user/mgr/update/password',
+      updateRoleUrl: host + '/uum/user/mgr/update/role',
       resetPwdUrl: host + '/uum/user/mgr/{id}/reset-password',
       disEnableUrl: host + '/uum/user/mgr/{id}/disEnable/{disEnableFlag}',
-      childNodesUrl: host + '/uum/user/mgr/{id}/child/nodes',
       userPrivilegeUrl: host + '/uum/user/mgr/{id}/user-privilege',
-      rolePrivilegeUrl: host + '/uum/user/mgr/{id}/role-privilege',
       rowPrivilegeUrl: host + '/uum/user/mgr/{id}/row-privilege',
       saveOptPrivilegeUrl: host + '/uum/user/mgr/{id}/opt-privilege/{privilegeScope}',
-      saveRolePrivilegeUrl: host + '/uum/user/mgr/{id}/role-privilege/{defaultRoleId}',
       saveRowPrivilegeUrl: host + '/uum/user/mgr/{id}/row-privilege/{privilegeScope}'
     },
 

@@ -40,9 +40,13 @@
         </div>
       </div>
       <div class="layui-inline">
-        <label class="layui-form-label">密码</label>
+        <label class="layui-form-label">所属角色</label>
         <div class="layui-input-inline">
-          <input type="password" name="password" class="layui-input" lay-verify="required|alphanumeric" maxlength="20" />
+          <div class="layui-input-wrap">
+            <input type="hidden" name="roleId" />
+            <input type="text" name="roleName" class="layui-input" lay-affix="search"
+                   data-type="selectRole" lay-filter="selectRole" lay-verify="required" readonly />
+          </div>
         </div>
       </div>
     </div>
@@ -119,19 +123,6 @@
         <label class="layui-form-label">用户有效期</label>
         <div class="layui-input-inline">
           <input type="text" name="avidate" class="layui-input" placeholder="yyyy-MM-dd" lay-verify="date" readonly />
-        </div>
-      </div>
-    </div>
-
-    <div class="layui-form-item">
-      <div class="layui-inline">
-        <label class="layui-form-label">所属角色</label>
-        <div class="layui-input-inline">
-          <div class="layui-input-wrap">
-            <input type="hidden" name="orgRoleId" />
-            <input type="text" name="roleName" class="layui-input" lay-affix="search"
-                   data-type="selectRole" lay-filter="selectRole" lay-verify="required" readonly />
-          </div>
         </div>
       </div>
     </div>
@@ -258,6 +249,9 @@
             if (typeof p == 'string') {
               var index = !isNaN(data[p]) ? -1 : data[p].indexOf('_');
               var val = index != -1 ? data[p].substr(index + 1) : data[p]
+              if (val.indexOf('leaf-id') >= 0) {
+                val = val.replace('leaf-id-', '')
+              }
               valObj[config[p]] = val;
             }
           }
@@ -268,17 +262,17 @@
           type: 1,
           title: "选择角色",
           area: ["400px", "80%"],
-          content: '<ul id="tree" class="dtree" data-id="orgId_0"></ul>',
+          content: '<ul id="tree" class="dtree" data-id="1"></ul>',
           btn: ['确认选择'],
           success: function(layero, index){
             var treeObj = tree.render({
               elem: '#tree',
               method: 'get',
               type: 'all',
-              url: MyCuckoo.resolvePlaceholder(url, {id: 0, isCheckbox: 'Y'}),
-              request: {isCheckbox: 'Y'},
+              url: MyCuckoo.resolvePlaceholder(url, {id: 1, isCheckbox: true}),
+              request: {isCheckbox: true},
               dataStyle: 'layuiStyle',
-              response: { statusCode: 0, treeId: 'id', title: 'text', isLast: 'isLeaf', checkArr: 'checkBox'},
+              response: { statusCode: 0, treeId: 'id', title: 'text', isLast: 'isLeaf', checkArr: 'checkbox'},
               checkbar: true,
               dot: false,
               icon: ['-1', '1']
@@ -306,7 +300,8 @@
         });
       },
       selectRole: function(ele) {
-        this.openTree(api.userMgr.childNodesUrl, {nodeId: 'orgRoleId', context: 'roleName'});
+//        this.openTree(api.userMgr.childNodesUrl, {nodeId: 'orgRoleId', context: 'roleName'});
+        this.openTree(api.deptMgr.childNodesUrl, {nodeId: 'roleId', context: 'roleName'});
       },
       add: function(data) {
         $.postJson(api.userMgr.url, data).then(json => {

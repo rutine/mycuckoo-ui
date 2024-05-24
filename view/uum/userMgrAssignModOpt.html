@@ -35,12 +35,12 @@
           <div class="layui-form-item">
             <label class="layui-form-label">模块</label>
             <div class="layui-input-block" style="max-height: 310px; overflow: auto;">
-              <ul id="tree" data-id="0" lay-filter="tree"></ul>
+              <ul id="ID_opt_tree" data-id="0" lay-filter="tree"></ul>
             </div>
           </div>
 
           <div class="layui-btn-container" style="margin-bottom: 6px; text-align: center;">
-            <a href="javascript:" class="layui-btn layui-btn-sm" data-type="saveOperationPrivilege" lay-submit="submit">
+            <a href="javascript:" class="layui-btn layui-btn-sm" data-type="saveOptPrivilege" lay-submit="submit">
               <i class="layui-icon layui-icon-ok"></i>保存
             </a>
             <a href="javascript:" class="layui-btn layui-btn-sm" data-type="close">
@@ -55,44 +55,44 @@
           <div class="layui-form-item">
             <label class="layui-form-label">权限范围</label>
             <div class="layui-input-block">
-              <input type="radio" name="privilegeScope" value="org" title="机构" lay-filter="rowPrivilege">
+              <input type="radio" name="privilegeScope" value="dept" title="部门" lay-filter="rowPrivilege">
               <input type="radio" name="privilegeScope" value="rol" title="角色" lay-filter="rowPrivilege">
               <input type="radio" name="privilegeScope" value="usr" title="用户" lay-filter="rowPrivilege">
             </div>
           </div>
 
-          <div id="orgScope" class="layui-hide scope">
+          <div id="ID_dept_scope" class="layui-hide scope">
             <div class="layui-form-item">
-              <label class="layui-form-label">机构</label>
+              <label class="layui-form-label">部门</label>
               <div class="layui-input-block" style="max-height: 310px; overflow: auto;">
-                <ul id="orgScopeTree" data-id="0" lay-filter="row-tree"></ul>
+                <ul id="ID_dept_scope_tree" data-id="0" lay-filter="row-tree"></ul>
               </div>
             </div>
           </div>
 
-          <div id="rolScope" class="layui-hide scope">
+          <div id="ID_rol_scope" class="layui-hide scope">
             <div class="layui-form-item">
               <label class="layui-form-label">角色</label>
               <div class="layui-input-block" style="max-height: 310px; overflow: auto;">
-                <ul id="rolScopeTree" data-id="0" lay-filter="row-tree"></ul>
+                <ul id="ID_rol_scope_tree" data-id="0" lay-filter="row-tree"></ul>
               </div>
             </div>
           </div>
 
-          <div id="usrScope" class="layui-hide scope">
+          <div id="ID_usr_scope" class="layui-hide scope">
             <div class="layui-form-item">
               <label class="layui-form-label">搜索</label>
               <div class="layui-input-inline">
                 <input type="text" name="searchUsr" class="layui-input" placeholder="请输入用户名称">
               </div>
-              <a class="layui-btn layui-btn-primary layui-btn-sm layui-btn-radius" data-type="queryUsers">
+              <a class="layui-btn layui-btn-primary layui-btn-sm layui-btn-radius" data-type="selectUsers">
                 <i class="layui-icon layui-icon-search"></i>
               </a>
             </div>
             <div class="layui-form-item">
               <label class="layui-form-label">用户</label>
               <div class="layui-input-block" style="max-height: 310px; overflow: auto;">
-                <ul id="usrScopeTree" data-id="0" lay-filter="row-tree"></ul>
+                <ul id="ID_usr_scope_tree" data-id="0" lay-filter="row-tree"></ul>
               </div>
             </div>
           </div>
@@ -142,11 +142,11 @@
 
           //菜单操作权限树
           treeObj = tree.render({
-            elem: '#tree',
+            elem: '#ID_opt_tree',
             method: 'get',
             data: json.data.source,
             dataStyle: 'layuiStyle',
-            response: { statusCode: 0, treeId: 'id', title: 'text', isLast: 'isLeaf', checkArr: 'checkBox'},
+            response: { statusCode: 0, treeId: 'id', title: 'text', isLast: 'isLeaf', checkArr: 'checkbox'},
             checkbar: true,
             nodeIconArray:{'1': {'open': 'dtree-icon-move-up', 'close': 'dtree-icon-move-down'}},
             icon: ['1', '5']
@@ -188,9 +188,9 @@
           elem: '#' + config.id,
           method: 'get',
           url: MyCuckoo.resolvePlaceholder(url, {id: 0}),
-          request: {isCheckbox: 'Y'},
+          request: {isCheckbox: true, withRole: config.withRole == true},
           dataStyle: 'layuiStyle',
-          response: { statusCode: 0, treeId: 'id', title: 'text', isLast: 'isLeaf', checkArr: 'checkBox'},
+          response: { statusCode: 0, treeId: 'id', title: 'text', isLast: 'isLeaf', checkArr: 'checkbox'},
           checkbar: true,
           dot: false,
           icon: ['-1', '5'],
@@ -207,25 +207,25 @@
 
           if(!privilegeType) {
             form.val('userAssignRowPriv', data);
-            privilegeType = selectedPrivilegeType || 'org';
+            privilegeType = selectedPrivilegeType || 'dept';
           }
-          var id = privilegeType + 'ScopeTree';
-          $('.scope').addClass('layui-hide');
-          $('#' + privilegeType + 'Scope').removeClass('layui-hide');
+          var id = 'ID_' + privilegeType + '_scope_tree';
+          $tab.find('.scope').addClass('layui-hide');
+          $tab.find('#ID_' + privilegeType + '_scope').removeClass('layui-hide');
 
-          if(privilegeType == 'org') {
+          if(privilegeType == 'dept') {
             var checkNodes = [];
             data.privileges.forEach(item => {
               checkNodes.push(item.id);
             });
-            that.openTree(api.organMgr.childNodesUrl, {id: id, data: checkNodes});
+            that.openTree(api.deptMgr.childNodesUrl, {id: id, data: checkNodes});
           }
           else if(privilegeType == 'rol') {
             var checkNodes = [];
             data.privileges.forEach(item => {
-              checkNodes.push('orgRoleId_' + item.id);
+              checkNodes.push('leaf-id-' + item.id);
             });
-            that.openTree(api.userMgr.childNodesUrl, {id: id, data: checkNodes});
+            that.openTree(api.deptMgr.childNodesUrl, {id: id, data: checkNodes, withRole: true});
           }
           else {
             var nodes = data.privileges;
@@ -241,7 +241,7 @@
               elem: '#' + id,
               data: nodes,
               dataStyle: 'layuiStyle',
-              response: { treeId: 'id', title: 'name', isLast: 'isLeaf', checkArr: 'checkBox'},
+              response: { treeId: 'id', title: 'name', isLast: 'isLeaf', checkArr: 'checkbox'},
               checkbar: true,
               dot: false,
               icon: ['-1', '5']
@@ -250,8 +250,8 @@
         });
       },
       //查询用户
-      queryUsers: function(ele) {
-        $.get(api.userMgr.selectorUrl, {userName: $('input[name=searchUsr]').val()}).then(json => {
+      selectUsers: function(ele) {
+        $.get(api.userMgr.selectorUrl, {userName: $tab.find('input[name=searchUsr]').val()}).then(json => {
           var nodes = [];
           json.data.forEach(item => nodes.push({
             id: item.userId,
@@ -265,7 +265,7 @@
         });
       },
       //保存用户权限
-      saveOperationPrivilege: function(data) {
+      saveOptPrivilege: function(data) {
         if(!data.privilegeScope) {
           MyCuckoo.alert({ title : '提示', msg : '请选择权限范围!' });
           return;

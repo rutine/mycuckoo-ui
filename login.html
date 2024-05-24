@@ -28,7 +28,7 @@
             <div class="layui-col-md8 layui-col-md-offset2">
               <label class="layui-form-label"><i class="layui-icon layui-icon-username" style="font-size: 28px; color: #ea5200;"></i></label>
               <div class="layui-input-inline">
-                <input type="text" class="layui-input" name="userCode" placeholder="用户" lay-verify="required" required>
+                <input type="text" class="layui-input" name="account" placeholder="用户" lay-verify="required" required>
               </div>
               <div class="layui-form-mid error layui-hide">请输入用户名</div>
             </div>
@@ -73,13 +73,13 @@
 
       var $bground = $('<div class="background"></div>');
       var $signForm = $('form[name=signForm]');
-      var $userCode = $signForm.find('input[name=userCode]');
+      var $account = $signForm.find('input[name=account]');
       var $password = $signForm.find('input[name=password]');
       var $helpText = $signForm.find('.layui-form-mid');
       var $rolePane = $('.role-pane');
 
       // 用户改变事件
-      $userCode.on('blur', function() {
+      $account.on('blur', function() {
         if (!$(this).val()) {
           $helpText.eq(0).removeClass('layui-hide');
         } else {
@@ -97,8 +97,8 @@
 
       // 登陆
       form.on('submit(login)', function(data) {
-        if (!$userCode.val()) {
-          $userCode.focus();
+        if (!$account.val()) {
+          $account.focus();
         } else if (!$password.val()) {
           $password.focus();
         } else {
@@ -113,13 +113,13 @@
         $bground.appendTo(($('body')));
         layer.msg('预登录中,请稍候... ');
 
-        var userCode = $userCode.val();
+        var account = $account.val();
         var password = $password.val();
         var params = {
-          userCode: userCode,
+          account: account,
           password: password
         }
-        $.post(api.login.firstStepUrl, params).then(function(json) {
+        $.post(api.login.loginUrl, params).then(function(json) {
           if(json.code != 0) {
             loginError(json.code, json.message);
             $bground.remove();
@@ -129,22 +129,22 @@
           // 角色列表
           if(json.data) {
             for(var i = 0, len = json.data.length; i < len; i++) {
-              var roleUser = json.data[i];
-              if(roleUser.isDefault == 'Y') {
-                roleUser.roleName = roleUser.orgName + ' - ' + roleUser.roleName + '(默认)';
-              } else {
-                roleUser.roleName = roleUser.orgName + ' - ' + roleUser.roleName;
-              }
+              var org = json.data[i];
+//              if(org.isDefault == 'Y') {
+//                org.roleName = org.orgName + ' - ' + (org.roleName ? org.roleName + '(默认)' : '');
+//              } else {
+//                org.roleName = org.orgName + ' - ' + (org.roleName ? org.roleName : '');
+//              }
               $('<div class="layui-col-sm6 layui-col-md3">'
                 + '  <ul class="site-doc-icon site-doc-anim">'
                 + '    <li>'
                 + '      <div class="layui-anim" data-anim="layui-anim-up">'
-                + '        <h3>' + roleUser.roleName + '</h3>'
+                + '        <h3>' + org.orgName + '</h3>'
                 + '      </div>'
                 + '    </li>'
                 + '  </ul>'
                 + '</div>')
-                .data(roleUser)
+                .data(org)
                 .on('click', function() {
                   loginSys($(this).data());
                 }).appendTo($rolePane);
@@ -159,8 +159,9 @@
         });
       };
 
-      var loginSys = function(role) {
-        $.postJson(api.login.secondStepUrl, role).then(function(json) {
+      var loginSys = function(org) {
+        console.log(typeof org.userId)
+        $.postJson(api.login.selectOrgUrl, org.userId).then(function(json) {
           var code = json.code;
           var msg = json.message;
           if(code != 0) {
