@@ -58,7 +58,7 @@
 <script type="text/javascript" src="../../static/layui/2.9.8/layui.js" charset="UTF-8"></script>
 <script type="text/javascript" src="../../static/mycuckoo.js" charset="UTF-8"></script>
 <script type="text/javascript" src="../../static/mycuckoo.api.js" charset="UTF-8"></script>
-<script type="text/html" id="operator">
+<script type="text/html" id="ID_operator">
   <div class="layui-btn-container" style="margin-bottom: 6px; text-align: center;">
     {{# if(d.action != 'view') { }}
     <a href="javascript: " class="layui-btn layui-btn-sm" data-type="{{= d.action }}" lay-submit>
@@ -82,17 +82,18 @@
     var laytpl = layui.laytpl,
       form = layui.form,
       tree = layui.dtree,
-      queryObj = MyCuckoo.getQueryObject(location.search);
+      queryObj = MyCuckoo.getQueryObject(location.search),
+      $form = $('form[name=editForm]');
 
     var FormMgr = function() {
       //渲染操作按钮
-      laytpl(operator.innerHTML).render(queryObj, function(html) {
-        $('.toolbar').html(html);
+      laytpl(ID_operator.innerHTML).render(queryObj, function(html) {
+        $form.find('.toolbar').html(html);
       });
 
       //初始化
       $.get(api.dictionaryMgr.smallTypeUrl, {bigTypeCode: 'systemType'}).then(function(json) {
-        var $select = $('select[name=type]');
+        var $select = $form.find('select[name=type]');
         $select.empty();
 
         for (var i = 0; i < json.data.length; i++) {
@@ -104,14 +105,14 @@
         //表单初始赋值
         if (queryObj.id) {
           if(queryObj.action != 'create') {
-            $('input[name=key]').attr('readonly', true);
+            $form.find('input[name=key]').attr('readonly', true);
           }
 
           $.get(api.systemParameterMgr.url + '/' + queryObj.id).then(function(json) {
             form.val('editForm', json.data);
 
             if (queryObj.action == 'view') {
-              $('input, select, textarea').attr('disabled', 'disabled')
+              $form.find('input, select, textarea').attr('disabled', 'disabled')
             }
           });
         }
@@ -119,7 +120,7 @@
 
       var formMgr = this;
       //操作按钮触发事件
-      $('form a.layui-btn:not([lay-submit])').on('click', function() {
+      $form.find('a.layui-btn:not([lay-submit])').on('click', function() {
         var type = $(this).data('type');
         formMgr[type] && formMgr[type](this);
       });
@@ -137,14 +138,14 @@
       constructor: FormMgr,
       add: function(data) {
         $.postJson(api.systemParameterMgr.url, data).then(json => {
-          MyCuckoo.msg({msg: json.data});
+          MyCuckoo.msg({msg: json.message});
 
           this.refresh();
         });
       },
       modify: function(data) {
         $.put(api.systemParameterMgr.url, data).then(json => {
-          MyCuckoo.msg({msg: json.data});
+          MyCuckoo.msg({msg: json.message});
 
           this.refresh();
         });

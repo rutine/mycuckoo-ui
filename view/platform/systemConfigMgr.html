@@ -205,10 +205,11 @@
   layui.use(['jquery', 'form'], function() {
     var $ = layui.jquery,
       form = layui.form,
-      queryObj = MyCuckoo.getQueryObject(location.search);
+      queryObj = MyCuckoo.getQueryObject(location.search),
+      $form = $('form[name=editForm]');
 
-    console.log($('.mycuckoo-main'))
-    $('.mycuckoo-main').height($(window).height() - 90);
+    $main = $('.mycuckoo-main');
+    $main.height($(window).height() - 90);
 
     var FormMgr = function() {
       this.reload();
@@ -229,7 +230,7 @@
         $.get(api.systemConfigMgr.url).then(json => {
           form.val('editForm', json.data);
 
-          var $select = $('select[name=systemMgr]');
+          var $select = $form.find('select[name=systemMgr]');
           $select.empty();
 
           for (var i = 0; i < json.data.systemMgr.length; i++) {
@@ -243,14 +244,14 @@
       // 系统名称设置
       saveName(data) {
         $.put(api.systemConfigMgr.url, data).then(json => {
-          MyCuckoo.msg({msg: json.data});
+          MyCuckoo.msg({msg: json.message});
 
           this.reload();
         });
       },
       //选择管理员
       selectAdmin(userAddDelFlag) {
-        MyCuckoo.dialog('选择用户', 'systemConfigMgrSelectUser.html?userAddDelFlag=' + userAddDelFlag);
+        MyCuckoo.dialog('选择用户', 'systemConfigMgrSelectUser.html?q[userAddDelFlag]=' + userAddDelFlag);
       },
       addAdmin(data) {
         this.selectAdmin('add');
@@ -261,7 +262,7 @@
       // 系统日志级别设置
       saveLogLevel(data) {
         $.put(api.systemConfigMgr.url, data).then(json => {
-          MyCuckoo.msg({msg: json.data});
+          MyCuckoo.msg({msg: json.message});
 
           this.reload();
         });
@@ -269,7 +270,7 @@
       // 系统日志保留天数设置
       saveLogKeepDays(data) {
         $.put(api.systemConfigMgr.url, data).then(json => {
-          MyCuckoo.msg({msg: json.data});
+          MyCuckoo.msg({msg: json.message});
 
           this.reload();
         });
@@ -277,13 +278,13 @@
       // 系统监控设置
       startJConsole(data) {
         $.post(api.systemConfigMgr.startJConsoleUrl, {}).then(json => {
-          MyCuckoo.msg({msg: json.data});
+          MyCuckoo.msg({msg: json.message});
         });
       },
       // 系统行权限设置
       saveRowPrivilege(data) {
         $.put(api.systemConfigMgr.url, data).then(json => {
-          MyCuckoo.msg({msg: json.data});
+          MyCuckoo.msg({msg: json.message});
 
           this.reload();
         });

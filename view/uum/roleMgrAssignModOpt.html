@@ -35,12 +35,12 @@
             <div class="layui-form-item">
               <label class="layui-form-label">模块</label>
               <div class="layui-input-block" style="max-height: 310px; overflow: auto;">
-                <ul id="tree" lay-filter="tree"></ul>
+                <ul id="ID_tree" lay-filter="tree"></ul>
               </div>
             </div>
 
             <div class="layui-btn-container" style="margin-bottom: 6px; text-align: center;">
-              <a href="javascript:" class="layui-btn layui-btn-sm" data-type="saveOperationPrivilege" lay-submit>
+              <a href="javascript:" class="layui-btn layui-btn-sm" data-type="saveOptPrivilege" lay-submit>
                 <i class="layui-icon layui-icon-ok"></i>保存
               </a>
               <a href="javascript:" class="layui-btn layui-btn-sm" data-type="close">
@@ -89,7 +89,8 @@
       element = layui.element,
       form = layui.form,
       tree = layui.dtree,
-      queryObj = MyCuckoo.getQueryObject(location.search);
+      queryObj = MyCuckoo.getQueryObject(location.search),
+      $main = $('.mycuckoo-main');
 
 
     var treeObj;
@@ -103,7 +104,7 @@
 
           //初始化结构树
           treeObj = tree.render({
-            elem: '#tree',
+            elem: '#ID_tree',
             method: 'get',
             data: json.data.privileges,
             dataStyle: 'layuiStyle',
@@ -123,7 +124,7 @@
 
       var formMgr = this;
       //操作按钮触发事件
-      $('form a.layui-btn:not([lay-submit])').on('click', function() {
+      $main.find('a.layui-btn:not([lay-submit])').on('click', function() {
         var type = $(this).data('type');
         formMgr[type] && formMgr[type](this);
       });
@@ -140,7 +141,7 @@
     FormMgr.prototype = {
       constructor: FormMgr,
       //保存用户权限
-      saveOperationPrivilege: function(data) {
+      saveOptPrivilege: function(data) {
         if(!data.privilegeScope) {
           MyCuckoo.alert({ title : '提示', msg : '请选择权限范围!' });
           return;
@@ -152,10 +153,12 @@
           return;
         }
 
+        console.log(selectedNodes)
+
         var optIds = [];
         selectedNodes.forEach(item => item.isLeaf && optIds.push(item.nodeId));
         $.postJson(api.roleMgr.saveOptPrivilegeUrl, data, optIds).then(json => {
-          MyCuckoo.msg({msg: json.data});
+          MyCuckoo.msg({msg: json.message});
 
           this.refresh();
         });
@@ -168,7 +171,7 @@
         }
 
         $.postJson(api.roleMgr.saveRowPrivilegeUrl, data, data.rowPrivilege).then(json => {
-          MyCuckoo.msg({msg: json.data});
+          MyCuckoo.msg({msg: json.message});
 
           this.refresh();
         });

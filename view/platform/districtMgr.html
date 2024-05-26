@@ -26,7 +26,7 @@
       <div class="layui-inline">
         <label class="layui-form-label">搜索：</label>
         <div class="layui-input-inline">
-          <input class="layui-input" name="districtName" placeholder="地区名称">
+          <input class="layui-input" name="keyword" placeholder="地区名称">
         </div>
         <div class="layui-input-inline">
           <button class="layui-btn" lay-filter="search" lay-submit>
@@ -37,13 +37,13 @@
     </form>
   </div>
 
-  <table id="table" class="layui-hide" lay-filter="table"></table>
+  <table id="ID_table" class="layui-hide" lay-filter="table"></table>
 </div>
 </body>
 <script type="text/javascript" src="../../static/layui/2.9.8/layui.js" charset="UTF-8"></script>
 <script type="text/javascript" src="../../static/mycuckoo.js" charset="UTF-8"></script>
 <script type="text/javascript" src="../../static/mycuckoo.api.js" charset="UTF-8"></script>
-<script type="text/html" id="toolbar">
+<script type="text/html" id="ID_toolbar">
   <div class="layui-btn-group btn-toolbar">
     {{# layui.each(d.operator, function(index, item){ }}
     <button class="layui-btn layui-btn-sm" lay-event="{{ item.code }}">
@@ -81,12 +81,12 @@
 
     table.render({
       id: 'table',
-      elem: '#table',
+      elem: '#ID_table',
       url: api.districtMgr.url,
       method: 'get',
       cellMinWidth: 100,
       height: MyCuckoo.tableHeight,
-      toolbar: '#toolbar',
+      toolbar: '#ID_toolbar',
       operator: operator,
       cols: [[
         {type: 'numbers'},

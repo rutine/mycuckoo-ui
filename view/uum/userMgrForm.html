@@ -25,7 +25,7 @@
           <div class="layui-upload">
             <input type="hidden" name="photoUrl" />
             <div class="layui-upload-list">
-              <img id="filePicker" style="max-height: 120px; max-width: 120px;" class="layui-upload-img" src="../../static/images/form/blank_userphoto.gif" title="用户照片" />
+              <img id="ID_filePicker" style="max-height: 120px; max-width: 120px;" class="layui-upload-img" src="../../static/images/form/blank_userphoto.gif" title="用户照片" />
             </div>
           </div>
         </div>
@@ -141,7 +141,7 @@
 <script type="text/javascript" src="../../static/layui/2.9.8/layui.js" charset="UTF-8"></script>
 <script type="text/javascript" src="../../static/mycuckoo.js" charset="UTF-8"></script>
 <script type="text/javascript" src="../../static/mycuckoo.api.js" charset="UTF-8"></script>
-<script type="text/html" id="operator">
+<script type="text/html" id="ID_operator">
   <div class="layui-btn-container" style="margin-bottom: 6px; text-align: center;">
     {{# if(d.action != 'view') { }}
     <a href="javascript: " class="layui-btn layui-btn-sm" data-type="{{= d.action }}" lay-submit>
@@ -167,28 +167,29 @@
       layDate = layui.laydate,
       tree = layui.dtree,
       upload = layui.upload,
-      queryObj = MyCuckoo.getQueryObject(location.search);
+      queryObj = MyCuckoo.getQueryObject(location.search),
+      $form = $('form[name=editForm]');
 
     var FormMgr = function() {
       //渲染操作按钮
-      laytpl(operator.innerHTML).render(queryObj, function(html) {
-        $('.toolbar').html(html);
+      laytpl(ID_operator.innerHTML).render(queryObj, function(html) {
+        $form.find('.toolbar').html(html);
       });
 
       //表单初始赋值
       if (queryObj.id) {
         if(queryObj.action != 'add') {
-          $('input[name=code]').attr('readonly', true);
+          $form.find('input[name=code]').attr('readonly', true);
         }
 
         $.get(api.userMgr.url + '/' + queryObj.id).then(function(json) {
           form.val('editForm', json.data);
 
           if (queryObj.action == 'view') {
-            $('input, select, textarea').attr('disabled', 'disabled')
+            $form.find('input, select, textarea').attr('disabled', 'disabled')
           }
           if(json.data.photoUrl) {
-            $('img#filePicker').attr('src', json.data.photoUrl)
+            $form.find('img#ID_filePicker').attr('src', json.data.photoUrl)
           }
         });
       }
@@ -200,14 +201,14 @@
 
       //更换头像
       upload.render({
-        elem: '#filePicker',
+        elem: '#ID_filePicker',
         url: api.fileMgr.url,
         accept: 'images',
         data: {business: 'photo'},
         done: function(res, index, upload) {
           if(res.code == 0) { //上传成功
-            $('img#filePicker').attr('src', res.data.url);
-            $('input[name=photoUrl]').val(res.data.url);
+            $form.find('img#ID_filePicker').attr('src', res.data.url);
+            $form.find('input[name=photoUrl]').val(res.data.url);
             return;
           }
           this.error(index, upload);
@@ -219,7 +220,7 @@
 
       var formMgr = this;
       //操作按钮触发事件
-      $('form a.layui-btn:not([lay-submit])').on('click', function() {
+      $form.find('a.layui-btn:not([lay-submit])').on('click', function() {
         var type = $(this).data('type');
         formMgr[type] && formMgr[type](this);
       });
@@ -262,11 +263,11 @@
           type: 1,
           title: "选择角色",
           area: ["400px", "80%"],
-          content: '<ul id="tree" class="dtree" data-id="1"></ul>',
+          content: '<ul id="ID_tree" class="dtree" data-id="1"></ul>',
           btn: ['确认选择'],
           success: function(layero, index){
             var treeObj = tree.render({
-              elem: '#tree',
+              elem: '#ID_tree',
               method: 'get',
               type: 'all',
               url: MyCuckoo.resolvePlaceholder(url, {id: 1, isCheckbox: true}),
@@ -300,19 +301,18 @@
         });
       },
       selectRole: function(ele) {
-//        this.openTree(api.userMgr.childNodesUrl, {nodeId: 'orgRoleId', context: 'roleName'});
         this.openTree(api.deptMgr.childNodesUrl, {nodeId: 'roleId', context: 'roleName'});
       },
       add: function(data) {
         $.postJson(api.userMgr.url, data).then(json => {
-          MyCuckoo.msg({msg: json.data});
+          MyCuckoo.msg({msg: json.message});
 
           this.refresh();
         });
       },
       modify: function(data) {
         $.put(api.userMgr.url, data).then(json => {
-          MyCuckoo.msg({msg: json.data});
+          MyCuckoo.msg({msg: json.message});
 
           this.refresh();
         });

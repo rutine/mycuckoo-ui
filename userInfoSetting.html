@@ -81,7 +81,7 @@
     form.on('submit', function(data) {
       $.put(api.userMgr.updatePwdUrl, data.field).then(json => {
         MyCuckoo.confirm({
-          msg: json.data,
+          msg: json.message,
           end: function() {
             parent.location.href = parent.location.href.replace('index.html', 'login.html');
           }

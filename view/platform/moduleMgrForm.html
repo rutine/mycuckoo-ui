@@ -109,7 +109,7 @@
 <script type="text/javascript" src="../../static/layui/2.9.8/layui.js" charset="UTF-8"></script>
 <script type="text/javascript" src="../../static/mycuckoo.js" charset="UTF-8"></script>
 <script type="text/javascript" src="../../static/mycuckoo.api.js" charset="UTF-8"></script>
-<script type="text/html" id="operator">
+<script type="text/html" id="ID_operator">
   <div class="layui-btn-container" style="margin-bottom: 6px; text-align: center;">
     {{# if(d.action != 'view') { }}
     <a href="javascript: " class="layui-btn layui-btn-sm" data-type="{{= d.action }}" lay-submit>
@@ -133,17 +133,18 @@
       form = layui.form,
       layer = layui.layer,
       tree = layui.dtree,
-      queryObj = MyCuckoo.getQueryObject(location.search);
+      queryObj = MyCuckoo.getQueryObject(location.search),
+      $form = $('form[name=editForm]');
 
     var FormMgr = function () {
       //渲染操作按钮
-      laytpl(operator.innerHTML).render(queryObj, function(html) {
-        $('.toolbar').html(html);
+      laytpl(ID_operator.innerHTML).render(queryObj, function(html) {
+        $form.find('.toolbar').html(html);
       });
 
       //初始化
       $.get(api.dictionaryMgr.smallTypeUrl, {bigTypeCode: 'systemType'}).then(function(json) {
-        var $select = $('select[name=belongSys]');
+        var $select = $form.find('select[name=belongSys]');
         $select.empty();
         for (var i = 0; i < json.data.length; i++) {
           var item = json.data[i];
@@ -152,7 +153,7 @@
         form.render('select');
 
         $.get(api.dictionaryMgr.smallTypeUrl, {bigTypeCode: 'modPageType'}).then(function(json) {
-          var $select = $('select[name=pageType]');
+          var $select = $form.find('select[name=pageType]');
           $select.empty();
           for (var i = 0; i < json.data.length; i++) {
             var item = json.data[i];
@@ -167,7 +168,7 @@
 
       //操作按钮触发事件
       var formMgr = this;
-      $('form a.layui-btn:not([lay-submit])').on('click', function() {
+      $form.find('a.layui-btn:not([lay-submit])').on('click', function() {
         var type = $(this).data('type');
         formMgr[type] && formMgr[type](this);
       });
@@ -195,7 +196,7 @@
           form.val('editForm', json.data);
 
           if (queryObj.action == 'view') {
-            $('input, select, textarea').attr('disabled', 'disabled')
+            $form.find('input, select, textarea').attr('disabled', 'disabled')
           }
         });
       }
@@ -218,11 +219,11 @@
           type: 1,
           title: "选择上级模块",
           area: ['400px', '80%'],
-          content: '<ul id="tree" class="dtree" data-id="0"></ul>',
+          content: '<ul id="ID_tree" class="dtree" data-id="0"></ul>',
           btn: ['确认选择'],
           success: function(layero, index){
             var treeObj = tree.render({
-              elem: '#tree',
+              elem: '#ID_tree',
               method: 'get',
               type: 'all',
               url: MyCuckoo.resolvePlaceholder(url, {id: 0}),
@@ -243,7 +244,7 @@
             })
           },
           yes: function(index, layero) {
-            var param = tree.getNowParam('tree');
+            var param = tree.getNowParam('ID_tree');
 
             if(!param.nodeId) {
               MyCuckoo.alert({msg: '请选择一个模块'});
@@ -260,14 +261,14 @@
       },
       add(data) {
         $.postJson(api.moduleMgr.url, data).then(json => {
-          MyCuckoo.msg({msg: json.data});
+          MyCuckoo.msg({msg: json.message});
 
           this.refresh();
         });
       },
       modify: function(data) {
         $.put(api.moduleMgr.url, data).then(json => {
-          MyCuckoo.msg({msg: json.data});
+          MyCuckoo.msg({msg: json.message});
 
           this.refresh();
         });

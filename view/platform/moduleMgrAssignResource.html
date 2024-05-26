@@ -42,7 +42,7 @@
           </div>
           <div class="layui-row">
             <div class="layui-col-md12" style="max-height: 300px; overflow: scroll">
-              <div id="ID-mycuckoo-tree"></div>
+              <div id="ID_mycuckoo-tree"></div>
             </div>
           </div>
         </div>
@@ -84,7 +84,7 @@
     var FormMgr = function () {
       var that = this;
 
-      $form.find('#ID-mycuckoo-tree').height($(window).height - 293);
+      $form.find('#ID_mycuckoo-tree').height($(window).height - 293);
 
       //表单初始赋值
       if (queryObj.id) {
@@ -96,7 +96,7 @@
 
           //初始化结构树
           tree.render({
-            elem: '#ID-mycuckoo-tree',
+            elem: '#ID_mycuckoo-tree',
             id: 'ID-mycuckoo-tree',
             showCheckbox: true,
             showLine: true,
@@ -254,7 +254,7 @@
         }
 
         $.postJson(api.moduleMgr.saveModuleResRefsUrl, queryObj, resource).then(json => {
-          MyCuckoo.msg({msg: json.data});
+          MyCuckoo.msg({msg: json.message});
 
           this.refresh();
         });

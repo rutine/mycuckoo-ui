@@ -25,11 +25,11 @@
     <form class="layui-col-md12 layui-form mycuckoo-search">
       <div class="layui-inline">
         <div class="layui-input-inline">
-          <input class="layui-input" name="title" placeholder="公告标题">
+          <input class="layui-input" name="keyword" placeholder="公告标题">
         </div>
         <div class="layui-input-inline">
-          <input type="radio" name="publish" value="0" title="是">
-          <input type="radio" name="publish" value="1" title="否">
+          <input type="radio" name="q[publish]" value="0" title="是">
+          <input type="radio" name="q[publish]" value="1" title="否">
         </div>
         <div class="layui-input-inline">
           <button class="layui-btn" lay-filter="search" lay-submit>
@@ -40,13 +40,13 @@
     </form>
   </div>
 
-  <table id="table" class="layui-hide" lay-filter="table"></table>
+  <table id="ID_table" class="layui-hide" lay-filter="table"></table>
 </div>
 </body>
 <script type="text/javascript" src="../../static/layui/2.9.8/layui.js" charset="UTF-8"></script>
 <script type="text/javascript" src="../../static/mycuckoo.js" charset="UTF-8"></script>
 <script type="text/javascript" src="../../static/mycuckoo.api.js" charset="UTF-8"></script>
-<script type="text/html" id="toolbar">
+<script type="text/html" id="ID_toolbar">
   <div class="layui-btn-group btn-toolbar">
     {{# layui.each(d.operator, function(index, item){ }}
     <button class="layui-btn layui-btn-sm" lay-event="{{ item.code }}">
@@ -85,12 +85,12 @@
 
     table.render({
       id: 'table',
-      elem: '#table',
+      elem: '#ID_table',
       url: api.afficheMgr.url,
       method: 'get',
       cellMinWidth: 100,
       height: MyCuckoo.tableHeight,
-      toolbar: '#toolbar',
+      toolbar: '#ID_toolbar',
       operator: operator,
       cols: [[
         {type: 'numbers'},
@@ -177,7 +177,7 @@
         var data = obj.data;
         MyCuckoo.confirm({msg : '您确认删除此记录吗.', ok : function() {
           $.put(api.afficheMgr + '/' + data.afficheId, {}).then(json => {
-            MyCuckoo.msg({ msg: json.data });
+            MyCuckoo.msg({ msg: json.message });
 
             reload(); // 刷新列表
           });

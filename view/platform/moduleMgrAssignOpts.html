@@ -30,7 +30,7 @@
   <form class="layui-form layui-form-pane" name="editForm">
     <div class="layui-form-item">
       <label class="layui-form-label">请选择操作</label>
-      <div id="ID-mycuckoo-tag" class="layui-input-block">
+      <div id="ID_mycuckoo-tag" class="layui-input-block">
 
       </div>
     </div>
@@ -86,7 +86,7 @@
                 ''
             );
           }
-          $checkbox.appendTo($('#ID-mycuckoo-tag'))
+          $checkbox.appendTo($('#ID_mycuckoo-tag'))
           form.render('checkbox');
         });
       }
@@ -123,7 +123,7 @@
         }
 
         $.postJson(api.moduleMgr.saveModuleOptRefsUrl, data, optIds).then(json => {
-          MyCuckoo.msg({msg: json.data});
+          MyCuckoo.msg({msg: json.message});
 
           this.refresh();
         });

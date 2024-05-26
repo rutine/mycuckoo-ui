@@ -36,13 +36,13 @@
     </form>
   </div>
 
-  <table id="table" class="layui-hide" lay-filter="table"></table>
+  <table id="ID_table" class="layui-hide" lay-filter="table"></table>
 </div>
 </body>
 <script type="text/javascript" src="../../static/layui/2.9.8/layui.js" charset="UTF-8"></script>
 <script type="text/javascript" src="../../static/mycuckoo.js" charset="UTF-8"></script>
 <script type="text/javascript" src="../../static/mycuckoo.api.js" charset="UTF-8"></script>
-<script type="text/html" id="toolbar">
+<script type="text/html" id="ID_toolbar">
   <!--<div class="layui-btn-group btn-toolbar">
     {{# layui.each(d.operator, function(index, item){ }}
     <button class="layui-btn layui-btn-sm" lay-event="{{ item.code }}">
@@ -88,12 +88,12 @@
 
     var treeTable = table.render({
       id: 'table',
-      elem: '#table',
+      elem: '#ID_table',
       url: api.resourceMgr.url,
       method: 'get',
       cellMinWidth: 100,
       height: MyCuckoo.tableHeight,
-      //toolbar: '#toolbar',
+      //toolbar: '#ID_toolbar',
       operator: operator,
       tree: {
         customName: {
@@ -115,7 +115,7 @@
         }},
         {field: 'creator', title: '创建人', templet: function(d) { return d.method ? d.creator : '' }},
         {field: 'createDate', title: '创建日期', templet: function(d) { return d.method ? d.createDate : '' }},
-        {fixed: "right", title: "操作", width: 190, align: "center", toolbar: '#toolbar'}
+        {fixed: "right", title: "操作", width: 190, align: "center", toolbar: '#ID_toolbar'}
       ]],
       page: false,
       parseData: function(res) {

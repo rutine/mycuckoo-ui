@@ -49,8 +49,8 @@
     </fieldset>
 
     <div class="layui-upload">
-      <button type="button" class="layui-btn layui-btn-sm layui-btn-normal" id="filePicker">添加文件</button>
-      <button type="button" class="layui-btn layui-btn-sm" id="uploadStart">开始上传</button>
+      <button type="button" class="layui-btn layui-btn-sm layui-btn-normal" id="ID_filePicker">添加文件</button>
+      <button type="button" class="layui-btn layui-btn-sm" id="ID_uploadStart">开始上传</button>
       <div class="layui-upload-list">
         <table class="layui-table">
           <thead>
@@ -61,7 +61,7 @@
             <th>操作</th>
           </tr>
           </thead>
-          <tbody id="fileList"></tbody>
+          <tbody id="ID_fileList"></tbody>
         </table>
       </div>
     </div>
@@ -74,7 +74,7 @@
 <script type="text/javascript" src="../../static/layui/2.9.8/layui.js" charset="UTF-8"></script>
 <script type="text/javascript" src="../../static/mycuckoo.js" charset="UTF-8"></script>
 <script type="text/javascript" src="../../static/mycuckoo.api.js" charset="UTF-8"></script>
-<script type="text/html" id="operator">
+<script type="text/html" id="ID_operator">
   <div class="layui-btn-container" style="margin-bottom: 6px; text-align: center;">
     {{# if(d.action != 'view') { }}
     <a href="javascript: " class="layui-btn layui-btn-sm" data-type="{{= d.action }}" lay-submit>
@@ -98,24 +98,25 @@
       form = layui.form,
       layDate = layui.laydate,
       upload = layui.upload,
-      queryObj = MyCuckoo.getQueryObject(location.search);
+      queryObj = MyCuckoo.getQueryObject(location.search),
+      $form = $('form[name=editForm]');
 
 
-    var $fileList = $('#fileList');
+    var $fileList = $('#ID_fileList');
     var accessories = [];
 
     var FormMgr = function () {
       //渲染操作按钮
-      laytpl(operator.innerHTML).render(queryObj, function(html) {
-        $('.toolbar').html(html);
+      laytpl(ID_operator.innerHTML).render(queryObj, function(html) {
+        $form.find('.toolbar').html(html);
       });
 
       //表单初始赋值
       if (queryObj.id) {
         var formMgr = this;
         if(queryObj.action == 'view') {
-          $('#filePicker').addClass('layui-hide');
-          $('#uploadStart').addClass('layui-hide');
+          $('#ID_filePicker').addClass('layui-hide');
+          $('#ID_uploadStart').addClass('layui-hide');
         }
 
         $.get(api.afficheMgr.url + '/' + queryObj.id).then(function (json) {
@@ -158,7 +159,7 @@
       var formMgr = this;
       //操作按钮触发事件
       var formMgr = this;
-      $('form a.layui-btn:not([lay-submit])').on('click', function() {
+      $form.find('a.layui-btn:not([lay-submit])').on('click', function() {
         var type = $(this).data('type');
         formMgr[type] && formMgr[type](this);
       });
@@ -179,19 +180,19 @@
 
         //多文件列表示例
         var uploader = upload.render({
-          elem: '#filePicker',
+          elem: '#ID_filePicker',
           url: api.fileMgr.url,
           accept: 'file',
           multiple: true,
           auto: false,
           data: {business: 'document'},
-          bindAction: '#uploadStart',
+          bindAction: '#ID_uploadStart',
           choose: function(obj) {
             var files = this.files = obj.pushFile(); //将每次选择的文件追加到文件队列
             //读取本地文件
             obj.preview(function(index, file, result) {
               var tr = $([
-                '<tr id="upload-'+ index +'">',
+                '<tr id="ID_upload_'+ index +'">',
                 '<td>',
                 ' <img src="' + formMgr.getThumbnail(file.name) + '">&nbsp;&nbsp;',
                 ' <span>' + file.name + '</span>',
@@ -225,7 +226,7 @@
             if(res.code == 0) { //上传成功
               accessories.push({accessoryName: this.files[index].name});
 
-              var tr = $fileList.find('tr#upload-'+ index),
+              var tr = $fileList.find('tr#ID_upload_'+ index),
                 tds = tr.children();
               tds.eq(2).html('<span style="color: #5FB878;">上传成功</span>');
               tds.eq(3).html(''); //清空操作
@@ -234,7 +235,7 @@
             this.error(index, upload);
           },
           error: function(index, upload) {
-            var tr = $fileList.find('tr#upload-'+ index),
+            var tr = $fileList.find('tr#ID_upload_'+ index),
               tds = tr.children();
             tds.eq(2).html('<span style="color: #FF5722;">上传失败</span>');
             tds.eq(3).find('.btn-upload').removeClass('layui-hide'); //显示重传
@@ -262,7 +263,7 @@
       add: function(data) {
         data.publish = (data.publish != 0)
         $.postJson(api.afficheMgr.url, data).then(json => {
-          MyCuckoo.msg({msg: json.data});
+          MyCuckoo.msg({msg: json.message});
 
           this.refresh();
         });
@@ -270,7 +271,7 @@
       modify: function(data) {
         data.publish = (data.publish != 0)
         $.put(api.afficheMgr.url, data).then(json => {
-          MyCuckoo.msg({msg: json.data});
+          MyCuckoo.msg({msg: json.message});
 
           this.refresh();
         });
@@ -278,7 +279,7 @@
       // 删除附件
       deleteAccessory: function(accessoryId) {
         $.delete(api.accessoryMgr.url + '/' + accessoryId, {}).then(json => {
-          MyCuckoo.msg({msg: json.data});
+          MyCuckoo.msg({msg: json.message});
         });
       },
       //刷新父窗

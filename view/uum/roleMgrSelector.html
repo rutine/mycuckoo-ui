@@ -20,7 +20,7 @@
     </div>
   </form>
 
-  <table id="table" class="layui-hide" lay-filter="table"></table>
+  <table id="ID_table" class="layui-hide" lay-filter="table"></table>
 </div>
 </body>
 <script type="text/javascript" src="../../static/layui/2.9.8/layui.js" charset="UTF-8"></script>
@@ -36,11 +36,12 @@
     var $ = layui.jquery,
       form = layui.form,
       table = layui.table,
-      queryObj = MyCuckoo.getQueryObject(location.search);
+      queryObj = MyCuckoo.getQueryObject(location.search),
+      $form = $('form[name=editForm]');
 
     table.render({
       id: 'table',
-      elem: '#table',
+      elem: '#ID_table',
       url: MyCuckoo.resolvePlaceholder(api.roleMgr.url, queryObj),
       method: 'get',
       cellMinWidth: 100,
@@ -80,7 +81,7 @@
     var FormMgr = function () {
       var formMgr = this;
       //操作按钮触发事件
-      $('form a.layui-btn').on('click', function(ev) {
+      $form.find('a.layui-btn').on('click', function(ev) {
         var type = $(this).data('type');
         formMgr[type] && formMgr[type](this);
       });
@@ -97,7 +98,7 @@
 
         var params = {id : queryObj.id, roleId : data[0].roleId};
         $.put(api.deptMgr.assignUrl, params).then(json => {
-          MyCuckoo.msg({msg: json.data});
+          MyCuckoo.msg({msg: json.message});
 
           this.refresh();
         });

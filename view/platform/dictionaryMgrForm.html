@@ -52,7 +52,7 @@
           <th>操作</th>
         </tr>
         </thead>
-        <tbody id="mycuckoo_dict_small_type_content"></tbody>
+        <tbody id="ID_mycuckoo_dict_small_type_content"></tbody>
       </table>
     </div>
 
@@ -63,7 +63,7 @@
 <script type="text/javascript" src="../../static/layui/2.9.8/layui.js" charset="UTF-8"></script>
 <script type="text/javascript" src="../../static/mycuckoo.js" charset="UTF-8"></script>
 <script type="text/javascript" src="../../static/mycuckoo.api.js" charset="UTF-8"></script>
-<script type="text/html" id="operator">
+<script type="text/html" id="ID_operator">
   <div class="layui-btn-container" style="margin-bottom: 6px; text-align: center;">
     {{# if(d.action != 'view') { }}
     <a href="javascript: " class="layui-btn layui-btn-sm" data-type="{{= d.action }}" lay-submit>
@@ -85,16 +85,17 @@
     var $ = layui.jquery,
       laytpl = layui.laytpl,
       form = layui.form,
-      queryObj = MyCuckoo.getQueryObject(location.search);
+      queryObj = MyCuckoo.getQueryObject(location.search),
+      $form = $('form[name=editForm]');
 
     var FormMgr = function() {
       if(queryObj.action != 'view') {
-        $('a[data-type=addSmallType]').removeClass('layui-hide');
+        $form.find('a[data-type=addSmallType]').removeClass('layui-hide');
       }
 
       //渲染操作按钮
-      laytpl(operator.innerHTML).render(queryObj, function(html) {
-        $('.toolbar').html(html);
+      laytpl(ID_operator.innerHTML).render(queryObj, function(html) {
+        $form.find('.toolbar').html(html);
       });
 
       //表单初始赋值
@@ -105,14 +106,14 @@
           formMgr.smallTypeGrid(json.data.smallTypes);
 
           if (queryObj.action == 'view') {
-            $('input, select, textarea').attr('disabled', 'disabled')
+            $form.find('input, select, textarea').attr('disabled', 'disabled')
           }
         });
       }
 
       var formMgr = this;
       //操作按钮触发事件
-      $('form a.layui-btn:not([lay-submit])').on('click', function() {
+      $form.find('a.layui-btn:not([lay-submit])').on('click', function() {
         var type = $(this).data('type');
         formMgr[type] && formMgr[type](this);
       });
@@ -131,7 +132,7 @@
       constructor: FormMgr,
       smallTypeGrid: function(smallTypes) {
         var that = this;
-        var $ele = $('#mycuckoo_dict_small_type_content');
+        var $ele = $form.find('#ID_mycuckoo_dict_small_type_content');
         smallTypes.forEach(function(item, index) {
           if (queryObj.action == 'view') {
             var tr = $([
@@ -193,14 +194,14 @@
       },
       add: function(data) {
         $.postJson(api.dictionaryMgr.url, this.convert(data)).then(json => {
-          MyCuckoo.msg({msg: json.data});
+          MyCuckoo.msg({msg: json.message});
 
           this.refresh();
         });
       },
       modify: function(data) {
         $.put(api.dictionaryMgr.url, this.convert(data)).then(json => {
-          MyCuckoo.msg({msg: json.data});
+          MyCuckoo.msg({msg: json.message});
 
           this.refresh();
         });
