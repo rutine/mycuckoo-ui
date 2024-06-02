@@ -53,15 +53,50 @@
     {{# }); }}
   </div>
 </script>
-<script type="text/html" id="tool">
+<script type="text/html" id="ID_tool">
   <div class="layui-btn-container">
     {{# layui.each(d.LAY_COL.operator, function(index, item){
       if (item.code == 'add') return;
     }}
-    <button class="layui-btn layui-btn-xs" lay-event="{{ item.code }}">
+    <a class="layui-btn layui-btn-xs" lay-event="{{ item.code }}">
       <i class="layui-icon layui-icon-{{ item.iconCls }}"></i> {{ item.name }}
-    </button>
+    </a>
     {{# }); }}
+  </div>
+  <div class="layui-clear-space">
+    {{#
+      var len = d.LAY_COL.operator.length;
+      var i = 0;
+      layui.each(d.LAY_COL.operator, function(index, item) {
+        if (item.code == 'add') {
+          len--;
+          return;
+        }
+      });
+
+      layui.each(d.LAY_COL.operator, function(index, item) {
+        return;
+        if (item.code == 'add') {
+          return;
+        }
+        if (i == 0) {
+          i++;
+    }}
+          <a class="layui-btn layui-btn-xs" lay-event="{{ item.code }}">
+            <i class="layui-icon layui-icon-{{ item.iconCls }}"></i> {{ item.name }}
+          </a>
+    {{#
+        }
+        if (i == 1) {
+          i++;
+    }}
+          <a class="layui-btn layui-btn-xs" lay-event="more">更多
+           <i class="layui-icon layui-icon-down"></i>
+          </a>
+    {{#
+        }
+      });
+    }}
   </div>
 </script>
 <script type="text/javascript">
@@ -70,9 +105,10 @@
     version: '101100'
   });
 
-  layui.use(['jquery', 'form', 'treeTable'], function() {
+  layui.use(['jquery', 'form', 'dropdown', 'treeTable'], function() {
     var $ = layui.jquery,
       form = layui.form,
+      dropdown = layui.dropdown,
       table = layui.treeTable;
 
     //本地缓存数据
@@ -118,7 +154,7 @@
             return '';
           }
         },
-        {fixed: "right", title: "操作", align: "center", toolbar: '#tool', operator: operator}
+        {fixed: "right", title: "操作", align: "center", toolbar: '#ID_tool', operator: operator}
       ]],
       page: false,
       parseData: function(res) {
@@ -145,6 +181,7 @@
         MyCuckoo.alert({title : '警示', msg : '此操作无效, 如有疑问, 请联系管理员!' });
         return;
       }
+      obj.othis = this;
       active[event] &&  active[event](obj);
     });
 
@@ -234,6 +271,28 @@
             _this.reload(); // 刷新列表
           });
         }});
+      },
+      more: function (obj) {
+        var btns = [];
+        var i = 0;
+        layui.each(operator, function(index, item) {
+          if (item.code == 'add' || i++ == 0) {
+            return;
+          }
+          btns.push(item);
+        });
+        dropdown.render({
+          elem: obj.othis, // 触发事件的 DOM 对象
+          show: true, // 外部事件触发即显示
+          data: btns,
+          customName: {
+            title: 'name'
+          },
+          click: function(menudata) {
+            var event = menudata.code;
+            active[event] && active[event](obj);
+          }
+        });
       }
     }
     // the end

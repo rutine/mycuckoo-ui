@@ -43,24 +43,36 @@
 <script type="text/javascript" src="../../static/mycuckoo.js" charset="UTF-8"></script>
 <script type="text/javascript" src="../../static/mycuckoo.api.js" charset="UTF-8"></script>
 <script type="text/html" id="ID_toolbar">
-  <!--<div class="layui-btn-group btn-toolbar">
-    {{# layui.each(d.operator, function(index, item){ }}
-    <button class="layui-btn layui-btn-sm" lay-event="{{ item.code }}">
+  <div class="layui-btn-group btn-toolbar">
+    {{# layui.each(d.operator, function(index, item){
+      if (item.code != 'add1') return;
+    }}
+    <a class="layui-btn layui-btn-sm" lay-event="{{ item.code }}">
       <i class="layui-icon layui-icon-{{ item.iconCls }}"></i> {{ item.name }}
-    </button>
+    </a>
     {{# }); }}
-  </div>-->
-
-  {{# if (d.level == 3) { }}
-  <div class="layui-btn-container">
-    <a class="layui-btn layui-btn-warm layui-btn-xs" lay-event="add">新增</a>
   </div>
-  {{# } else if (d.level == 4) { }}
-  <div class="layui-btn-container">
-    <a class="layui-btn layui-btn-primary layui-btn-xs" lay-event="view">查看</a>
-    <a class="layui-btn layui-btn-info layui-btn-xs" lay-event="modify">编辑</a>
+</script>
+<script type="text/html" id="ID_tool">
+  <div class="layui-clear-space">
+    {{#
+      layui.each(d.LAY_COL.operator, function(index, item) {
+        if (d.level == 3 && ['add', 'assign'].indexOf(item.code) >= 0) {
+    }}
+    <a class="layui-btn layui-btn-xs {{ item.code == 'add' ? 'layui-btn-warm' : 'layui-bg-purple'}}" lay-event="{{ item.code }}">
+      <i class="layui-icon layui-icon-{{ item.iconCls }}"></i> {{ item.name }}
+    </a>
+    {{#
+        } else if (d.level == 4 && ['view', 'modify'].indexOf(item.code) >= 0) {
+    }}
+    <a class="layui-btn layui-btn-xs {{ item.code == 'view' ? 'layui-btn-primary' : 'layui-btn-info'}}" lay-event="{{ item.code }}">
+      <i class="layui-icon layui-icon-{{ item.iconCls }}"></i> {{ item.name }}
+    </a>
+    {{#
+        }
+      });
+    }}
   </div>
-  {{# } }}
 </script>
 <script type="text/javascript">
   layui.config({
@@ -77,27 +89,18 @@
     var queryObj = MyCuckoo.getQueryObject(location.search);
     var operator = MyCuckoo.getOperation(queryObj.id);
 
-    form.on('submit(search)', function(data) {
-      //执行重载
-      table.reload('table', {
-        where: data.field
-      });
-
-      return false;
-    });
-
-    var treeTable = table.render({
+    var tableInst = table.render({
       id: 'table',
       elem: '#ID_table',
       url: api.resourceMgr.url,
       method: 'get',
       cellMinWidth: 100,
       height: MyCuckoo.tableHeight,
-      //toolbar: '#ID_toolbar',
+//      toolbar: '#ID_toolbar',
       operator: operator,
       tree: {
         customName: {
-          isParent: 'isLeaf',
+          isParent: 'isParent',
           name: 'text'
         },
         view: {
@@ -107,6 +110,7 @@
       },
       cols: [[
         {field: 'text', title: '名称', width: 200},
+        {field: 'code', title: '编码', templet: function(d) { return d.code ? d.code : '' }},
         {field: 'method', title: '方法', templet: function(d) { return d.method ? d.method : '' }},
         {field: 'path', title: 'url', width: 200, templet: function(d) { return d.method ? d.path : '' }},
         {field: 'order', title: '顺序', templet: function(d) { return d.method ? d.order : '' }},
@@ -115,65 +119,82 @@
         }},
         {field: 'creator', title: '创建人', templet: function(d) { return d.method ? d.creator : '' }},
         {field: 'createDate', title: '创建日期', templet: function(d) { return d.method ? d.createDate : '' }},
-        {fixed: "right", title: "操作", width: 190, align: "center", toolbar: '#ID_toolbar'}
+        {fixed: "right", title: "操作", width: 190, align: "center", toolbar: '#ID_tool', operator: operator}
       ]],
       page: false,
-      parseData: function(res) {
-        return {
-          code: res.code,
-          msg: '',
-          count: res.data.length,
-          data: res.data
-        }
+      done: function(res, curr, count) {
+        new IndexMgr();
       }
     });
 
-    //单元格工具事件
-    table.on('tool(table)', function(obj) {
-      var event = obj.event; // 获得 lay-event 对应的值
-      var ele = obj.tr;
-      var data = obj.data;
-      var tableId = obj.config.id;
-      if (typeof data.id == 'string') {
-        data.id = data.id .replace('leaf-id-', '')
-      }
-      active[event] &&  active[event](obj);
-    });
-
-    table.on('toolbar(table)', function (obj) {
-      if (obj.event.indexOf('LAYTABLE_') == 0) {
-        return;
-      }
-      if (obj.event == 'add') {
-        active[obj.event](this);
-        return;
-      }
-
-      var data = table.radioStatus(obj.config.id);
-      if (!data.resourceId) {
-        MyCuckoo.alert({title : '提示', msg : '请选择一条记录' });
-        return;
-      }
-
-      if (!active[obj.event]) {
-        MyCuckoo.alert({title : '警示', msg : '此操作无效, 如有疑问, 请联系管理员!' });
-        return;
-      }
-
-      obj.data = data;
-      active[obj.event](obj);
-    });
-
-    function reload() {
-      table.reload('table', { page: { pageNo: 1 } });
+    function reload(config) {
+      table.reload('table', config || {});
     }
 
-    var active = {
+    var indexMgrInst = null;
+    var IndexMgr = function () {
+      if (indexMgrInst) { //实例已存在
+        return;
+      }
+      var that = indexMgrInst  = this;
+
+      form.on('submit(search)', function(data) {
+        //执行重载
+        reload({where: data.field});
+
+        return false;
+      });
+
+      //单元格工具事件
+      table.on('tool(table)', function(obj) {
+        var event = obj.event; // 获得 lay-event 对应的值
+        var ele = obj.tr;
+        var data = obj.data;
+        var tableId = obj.config.id;
+        if (typeof data.id == 'string') {
+          data.id = data.id .replace('leaf-id-', '')
+        }
+        that[event] && that[event](obj);
+      });
+
+      table.on('toolbar(table)', function (obj) {
+        if (obj.event.indexOf('LAYTABLE_') == 0) {
+          return;
+        }
+        if (obj.event == 'add') {
+          that[obj.event](this);
+          return;
+        }
+
+        var data = table.radioStatus(obj.config.id);
+        if (!data.resourceId) {
+          MyCuckoo.alert({title : '提示', msg : '请选择一条记录' });
+          return;
+        }
+
+        if (!that[obj.event]) {
+          MyCuckoo.alert({title : '警示', msg : '此操作无效, 如有疑问, 请联系管理员!' });
+          return;
+        }
+
+        obj.data = data;
+        that[obj.event](obj);
+      });
+    }
+
+    IndexMgr.prototype = {
+      constructor: IndexMgr,
       //增加
       add: function(obj) {
         var url = MyCuckoo.resolve('resourceMgrForm.html?action={_event}&opt={_opt}&moduleId={id}',
             {'_event': obj.event, '_opt': queryObj.id, 'id': obj.data.id})
         MyCuckoo.dialog('资源信息', url);
+      },
+      //分配
+      assign: function(obj) {
+        var url = MyCuckoo.resolve('tableConfigMgrForm.html?action={_event}&opt={_opt}&moduleId={id}&moduleName={name}',
+          {'_event': obj.event, '_opt': queryObj.id, 'id': obj.data.id, 'name': obj.data.text})
+        MyCuckoo.dialog('表头信息', url);
       },
       //修改
       modify: function(obj) {

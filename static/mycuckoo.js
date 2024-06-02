@@ -97,6 +97,22 @@ layui.use(['jquery', 'layer'], function() {
     },
 
     /**
+     * 字典数组转换map对象
+     */
+    getDictMap: function (dicts) {
+      var map = {}
+      if (dicts.constructor !== Array) {
+        return dicts
+      }
+
+      for (var i in dicts) {
+        map[dicts[i].code] = dicts[i];
+      }
+
+      return map;
+    },
+
+    /**
      * 将json对象转换为json字符串, 请参看jQuery.serializeArray()返回的数据格式
      *
      * @param obj 对象

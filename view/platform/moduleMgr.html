@@ -60,131 +60,109 @@
     version: '101100'
   });
 
-  layui.use(['jquery', 'form', 'treeGrid', 'treeTable'], function() {
+  layui.use(['jquery', 'form', 'treeTable'], function() {
     var $ = layui.jquery,
       form = layui.form,
-      table = layui.treeGrid;
+      table = layui.treeTable;
 
     //本地缓存数据
     var queryObj = MyCuckoo.getQueryObject(location.search);
     var operator = MyCuckoo.getOperation(queryObj.id);
 
-    form.on('submit(search)', function(data) {
-      //执行重载
-      table.reload('table', {
-        page: {
-          pageNo: 1 //重新从第 1 页开始
-        },
-        where: data.field
-      });
-
-      return false;
-    });
-
-    var treeTable = table.render({
-      id: 'table',
-      elem: '#ID_table',
-      url: api.moduleMgr.url,
-      method: 'get',
-      cellMinWidth: 100,
-      height: MyCuckoo.tableHeight,
-      toolbar: '#ID_toolbar',
-      operator: operator,
-      idField: 'moduleId',
-      treeId: 'moduleId', //树形id字段名称,
-      treeUpId: 'parentId', //树形父id字段名称
-      treeShowName: 'name', //以树形式显示的字段
-      iconOpen: false, //是否显示图标【默认显示】
-      isOpenDefault: true, //节点默认是展开还是折叠【默认展开】
-      cols: [[
-        {type: 'numbers'},
+    $.postJson(api.configMgr.tableConfigUrl + '?tableCode=table_code_menu').then(function (json) {
+      var col = [
         {type: 'radio'},
-        {field: 'name', title: '名称', width: 200},
-        {field: 'code', title: '编码'},
-        {field: 'iconCls', title: '图标样式'},
-        {field: 'level', title: '级别',
-          templet: function(d) {
-            if(d.level == '1') {
-              return '第一';
-            } else if(d.level == '2') {
-              return '第二';
-            } else if(d.level == '3') {
-              return '第三';
-            }
+      ]
+      for (var i in json.data) {
+        var one = json.data[i];
+        if (one.type === 'seq') {
+          col.push({type: 'numbers', title: one['title']});
+        } else if (one.type === 'dict') {
+          if (!one['dictMap']) {
+            one['dictMap'] = MyCuckoo.getDictMap(one['dict']);
           }
-        },
-        {field: 'order', title: '顺序'},
-        {field: 'belongSys', title: '所属系统',
-          templet: function(d) {
-            if(d.belongSys == 'platform') {
-              return '系统平台';
-            } else if(d.belongSys == 'uum') {
-              return '统一用户';
-            }
-          }
-        },
-        {field: 'pageType', title: '页面类型'},
-        {field: 'status', title: '状态',
-          templet: function(d) {
-            if(d.status == 'enable') {
-              return '启用';
-            } else if(d.status == 'disable') {
-              return '停用';
-            }
-          }
-        },
-        {field: 'creator', title: '创建人'},
-        {field: 'createDate', title: '创建日期', sort: true}
-      ]],
-      page: true,
-      request: {
-        pageName: 'pageNo',
-        limitName: 'pageSize'
-      },
-      where: {
-        pageSize: 1000,
-      },
-      parseData: function(res) {
-        return {
-          code: res.code,
-          msg: res.message,
-          count: res.data.totalElements,
-          data: res.data.content
+          col.push({field: one['field'], title: one['title'], sort: one['sort'], width: one['width'], colConfig: one, templet: function(d) {
+              return this.colConfig['dictMap'][d[this.colConfig['field']]]['name'];
+          }});
+        } else {
+          col.push({field: one['field'], title: one['title'], sort: one['sort'], width: one['width'], colConfig: one});
         }
       }
+
+      var tableInst = table.render({
+        id: 'table',
+        elem: '#ID_table',
+        url: api.moduleMgr.url,
+        method: 'get',
+        cellMinWidth: 100,
+        height: MyCuckoo.tableHeight,
+        toolbar: '#ID_toolbar',
+        operator: operator,
+        tree: {
+          customName: {
+            isParent: 'isParent',
+            name: 'name'
+          },
+          view: {
+            expandAllDefault: false
+          }
+        },
+        cols: [col],
+        page: false,
+        done: function(res, curr, count) {
+          new IndexMgr();
+        }
+      });
     });
 
-    table.on('toolbar(table)', function (obj) {
-      if (obj.event.indexOf('LAYTABLE_') == 0) {
-        return;
-      }
-      if (obj.event == 'add') {
-        active[obj.event](obj);
-        return;
-      }
-
-      var data = table.radioStatus(obj.config.id);
-      if (!data.moduleId) {
-        MyCuckoo.alert({title : '提示', msg : '请选择一条记录' });
-        return;
-      }
-
-      if (!active[obj.event]) {
-        MyCuckoo.alert({title : '警示', msg : '此操作无效, 如有疑问, 请联系管理员!' });
-        return;
-      }
-
-      obj.data = data;
-      active[obj.event](obj);
-    });
-
-    function reload() {
-      table.reload('table', { page: { pageNo: 1 } });
+    function reload(config) {
+      table.reload('table', config || {});
     }
 
     var path = location.pathname.substr(0, location.pathname.lastIndexOf('/')) + '/';
     var tab = window.parent.MyCuckoo;
-    var active = {
+
+    var indexMgrInst = null;
+    var IndexMgr = function () {
+      if (indexMgrInst) { //实例已存在
+        return;
+      }
+      var that = indexMgrInst  = this;
+
+      form.on('submit(search)', function(data) {
+        //执行重载
+        reload({where: data.field});
+
+        return false;
+      });
+
+      table.on('toolbar(table)', function (obj) {
+        if (obj.event.indexOf('LAYTABLE_') == 0) {
+          return;
+        }
+        if (obj.event == 'add') {
+          that[obj.event](obj);
+          return;
+        }
+
+        var data = table.checkStatus(obj.config.id).data;
+        if (data.length != 1 || !data[0].id) {
+          MyCuckoo.alert({title : '提示', msg : '请选择一条记录' });
+          return;
+        }
+
+        if (!that[obj.event]) {
+          MyCuckoo.alert({title : '警示', msg : '此操作无效, 如有疑问, 请联系管理员!' });
+          return;
+        }
+
+        obj.data = data[0];
+        that[obj.event](obj);
+      });
+    }
+
+    IndexMgr.prototype = {
+      constructor: IndexMgr,
       //增加
       add: function(obj) {
         var url = MyCuckoo.resolve('moduleMgrForm.html?action={_event}&opt={_opt}',
@@ -196,21 +174,21 @@
       modify: function(obj) {
         var data = obj.data;
         var url = MyCuckoo.resolve('moduleMgrForm.html?action={_event}&opt={_opt}&id={id}',
-            {'_event': obj.event, '_opt': queryObj.id, 'id': data.moduleId})
+            {'_event': obj.event, '_opt': queryObj.id, 'id': data.id})
         MyCuckoo.dialog('菜单信息', url);
       },
       //查看
       view: function(obj) {
         var data = obj.data;
         var url = MyCuckoo.resolve('moduleMgrForm.html?action={_event}&opt={_opt}&id={id}',
-            {'_event': obj.event, '_opt': queryObj.id, 'id': data.moduleId})
+            {'_event': obj.event, '_opt': queryObj.id, 'id': data.id})
         MyCuckoo.sideDialog('菜单信息', url);
       },
       //删除
       delete: function(obj) {
         var data = obj.data;
         MyCuckoo.confirm({msg : '您确认删除此记录吗?', ok : function() {
-          $.delete(api.moduleMgr.url + '/' + data.moduleId).then(json => {
+          $.delete(api.moduleMgr.url + '/' + data.id).then(json => {
             MyCuckoo.msg({ msg: '菜单停用成功' });
 
             reload(); // 刷新列表
@@ -229,7 +207,7 @@
           return;
         }
 
-        $.put(api.moduleMgr.disEnableUrl, {id: data.moduleId, disEnableFlag: 'enable'}).then(json => {
+        $.put(api.moduleMgr.disEnableUrl, {id: data.id, disEnableFlag: 'enable'}).then(json => {
           MyCuckoo.msg({ msg: '菜单启用成功' });
 
           reload(); // 刷新列表
@@ -248,7 +226,7 @@
         }
 
         MyCuckoo.confirm({msg : '您确认停用此菜单吗?如果停用,此菜单下的操作将自动清除,并重登生效.', ok : function() {
-          $.put(api.moduleMgr.disEnableUrl, {id: data.moduleId, disEnableFlag: 'disable'}).then(json => {
+          $.put(api.moduleMgr.disEnableUrl, {id: data.id, disEnableFlag: 'disable'}).then(json => {
             MyCuckoo.msg({ msg: '菜单停用成功' });
 
             reload(); // 刷新列表
@@ -256,7 +234,7 @@
         }});
       },
       //分配菜单操作
-      optassign: function(obj) {
+      assignOpt: function(obj) {
         var data = obj.data;
         if(data.level != 3) {
           MyCuckoo.alert({ msg: '请您选择第三级模块菜单'});
@@ -264,11 +242,11 @@
         }
 
         var url = MyCuckoo.resolve('moduleMgrAssignOpts.html?action={_event}&opt={_opt}&id={id}&name={name}',
-          {'_event': obj.event, '_opt': queryObj.id, 'id': data.moduleId, 'name': data.name})
+          {'_event': obj.event, '_opt': queryObj.id, 'id': data.id, 'name': data.name})
         MyCuckoo.dialog('模块信息', url);
       },
       //分配菜单资源
-      resassign: function(obj) {
+      assignRes: function(obj) {
         var data = obj.data;
         if(data.level != 3) {
           MyCuckoo.alert({ msg: '请您选择第三级模块菜单'});
@@ -276,12 +254,8 @@
         }
 
         var url = MyCuckoo.resolve('moduleMgrAssignResource.html?action={_event}&opt={_opt}&id={id}&name={name}',
-          {'_event': obj.event, '_opt': queryObj.id, 'id': data.moduleId, 'name': data.name})
+          {'_event': obj.event, '_opt': queryObj.id, 'id': data.id, 'name': data.name})
         MyCuckoo.dialog('模块信息', url);
-      },
-      //
-      optpri: function(obj) {
-        MyCuckoo.alert({ msg: '开发中...'});
       },
       //
       moduleLabel: function(obj) {

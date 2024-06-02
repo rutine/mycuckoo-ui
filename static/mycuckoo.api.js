@@ -114,6 +114,11 @@ layui.use(['jquery'], function () {
       return $.get(host + '/login/logout').then(res => res.data);
     },
 
+    //公共
+    configMgr: {
+      tableConfigUrl: host + '/platform/config/list-table-config',
+    },
+
     organMgr: {
       url: host + '/uum/organ/mgr',
       childNodesUrl: host + '/uum/organ/mgr/{id}/child/nodes',
@@ -162,6 +167,10 @@ layui.use(['jquery'], function () {
     resourceMgr: {
       url: host + '/platform/resource/mgr',
       disEnableUrl: host + '/platform/resource/mgr/{id}/disEnable/{disEnableFlag}',
+    },
+    tableConfigMgr: {
+      url: host + '/platform/table-config/mgr',
+      listUrl: host + '/platform/table-config/mgr/{moduleId}/list',
     },
     afficheMgr: {
       url: host + '/platform/affiche/mgr'

@@ -105,7 +105,25 @@
       queryObj = MyCuckoo.getQueryObject(location.search),
       $form = $('form[name=editForm]');
 
+    //表单初始赋值
+    function initForm() {
+      if (queryObj.id) {
+        $.get(api.resourceMgr.url + '/' + queryObj.id).then(json => {
+          json.data.moduleId = queryObj.moduleId;
+        form.val('editForm', json.data);
+
+        if (queryObj.action == 'view') {
+          $form.find('input, select, textarea').attr('disabled', 'disabled')
+        }
+      });
+      } else {
+        form.val('editForm', {moduleId: queryObj.moduleId});
+      }
+    }
+
     var FormMgr = function () {
+      var formMgr = this;
+
       //渲染操作按钮
       laytpl(ID_operator.innerHTML).render(queryObj, function(html) {
         $form.find('.toolbar').html(html);
@@ -126,7 +144,6 @@
       });
 
       //操作按钮触发事件
-      var formMgr = this;
       $form.find('a.layui-btn:not([lay-submit])').on('click', function() {
         var type = $(this).data('type');
         formMgr[type] && formMgr[type](this);
@@ -141,34 +158,18 @@
       });
     }
 
-    //表单初始赋值
-    function initForm() {
-      if (queryObj.id) {
-        $.get(api.resourceMgr.url + '/' + queryObj.id).then(json => {
-          json.data.moduleId = queryObj.moduleId;
-          form.val('editForm', json.data);
-
-          if (queryObj.action == 'view') {
-            $form.find('input, select, textarea').attr('disabled', 'disabled')
-          }
-        });
-      } else {
-        form.val('editForm', {moduleId: queryObj.moduleId});
-      }
-    }
-
     FormMgr.prototype = {
       constructor: FormMgr,
       add: function(data) {
         $.postJson(api.resourceMgr.url, data).then(json => {
-          MyCuckoo.msg({msg: json.data});
+          MyCuckoo.msg({msg: json.message});
 
           this.refresh();
         });
       },
       modify: function(data) {
         $.put(api.resourceMgr.url, data).then(json => {
-          MyCuckoo.msg({msg: json.data});
+          MyCuckoo.msg({msg: json.message});
 
           this.refresh();
         });
@@ -177,8 +178,7 @@
       refresh: function() {
         setTimeout(function() {
           parent.location.reload();
-          this.close();
-        }, 2000);
+        }, 1500);
       },
       //关闭当前iframe页
       close: function(ele) {

@@ -1,0 +1,359 @@
+<!DOCTYPE html>
+<html>
+<head>
+  <meta http-equiv="Content-Type" content="text/html; charset=utf-8" />
+  <title>表头信息</title>
+  <link type="image/x-icon" href="../../static/images/favicon.ico" rel="shortcut icon" />
+  <link type="text/css" href="../../static/layui/2.9.8/css/layui.css" rel="stylesheet" />
+  <link type="text/css" href="../../static/css/mycuckoo.css" rel="stylesheet" />
+</head>
+<body>
+<div class="mycuckoo-main">
+  <form class="layui-form layui-form-pane" name="editForm" lay-filter="editForm">
+    <input type="hidden" name="moduleId"/>
+    <div class="layui-form-item">
+      <div class="layui-inline">
+        <label class="layui-form-label">所属菜单</label>
+        <div class="layui-input-inline">
+          <input type="text" name="moduleName" class="layui-input" readonly disabled/>
+        </div>
+      </div>
+      <div class="layui-inline">
+        <label class="layui-form-label">表头编码</label>
+        <div class="layui-input-inline">
+          <input type="text" name="tableCode" class="layui-input" maxlength="60" lay-verify="required|alphanumeric" />
+        </div>
+      </div>
+    </div>
+
+    <table id="ID_table" class="layui-hide" lay-filter="table"></table>
+
+    <div class="toolbar"></div>
+  </form>
+</div>
+</body>
+<script type="text/javascript" src="../../static/layui/2.9.8/layui.js" charset="UTF-8"></script>
+<script type="text/javascript" src="../../static/mycuckoo.js" charset="UTF-8"></script>
+<script type="text/javascript" src="../../static/mycuckoo.api.js" charset="UTF-8"></script>
+<script type="text/html" id="ID_operator">
+  <div class="layui-btn-container" style="margin-bottom: 6px; text-align: center;">
+    {{# if(d.action != 'view') { }}
+    <a href="javascript: " class="layui-btn layui-btn-sm" data-type="{{= d.action }}" lay-submit>
+      <i class="layui-icon layui-icon-ok"></i>保存
+    </a>
+    {{# } }}
+    <a href="javascript:" class="layui-btn layui-btn-sm" data-type="close">
+      <i class="layui-icon layui-icon-close"></i>关闭
+    </a>
+  </div>
+</script>
+<script type="text/javascript">
+  layui.config({
+    base: '../../static/extend/',
+    version: '101100'
+  });
+
+  layui.use(['jquery', 'laytpl', 'form', 'dropdown', 'table'], function() {
+    var $ = layui.jquery,
+      laytpl = layui.laytpl,
+      form = layui.form,
+      dropdown = layui.dropdown,
+      table = layui.table,
+      queryObj = MyCuckoo.getQueryObject(location.search),
+      $form = $('form[name=editForm]');
+
+    var types = [
+      {code: 'seq', name: '序号'},
+      {code: 'number', name: '数字'},
+      {code: 'text', name: '文本'},
+      {code: 'date', name: '时间'},
+      {code: 'bool', name: '布尔'},
+      {code: 'dict', name: '字典'}
+    ];
+    var filterTypes = [
+      {code: 'eq', name: '等于'},
+      {code: 'like', name: '前缀匹配'},
+      {code: 'text', name: '模糊'},
+      {code: 'scope', name: '区间'},
+      {code: 'multi', name: '多选'},
+      {code: 'province_city', name: '两级地区'},
+      {code: 'province_city_area', name: '三级地区'},
+      {code: 'bool', name: '是否'}
+    ];
+    var typeMap = MyCuckoo.getDictMap(types);
+    var filterTypeMap = MyCuckoo.getDictMap(filterTypes);
+
+    var tableInst = table.render({
+      id: 'table',
+      elem: '#ID_table',
+      url: MyCuckoo.resolve(api.tableConfigMgr.listUrl, queryObj),
+      method: 'get',
+      height: MyCuckoo.tableHeight,
+      toolbar: '<div class="layui-btn-container"><a class="layui-btn layui-btn-warm layui-btn-xs" lay-event="addRow">新增行</a></div>',
+      cols: [[
+        {field: 'type', title: '类型', templet: function(d) {
+          var name = typeMap[d.type] ? typeMap[d.type]['name'] : d.type;
+          var arr = ['<a class="layui-btn layui-btn-primary table-col-dropdown-type">',
+            '<span>' + name + '</span>',
+            '<i class="layui-icon layui-icon-down layui-font-12"></i>',
+            '</a>'
+          ];
+          return arr.join('');
+        }},
+        {field: 'field', title: '字段', edit: 'text'},
+        {field: 'title', title: '标题', edit: 'text'},
+        {field: 'filterType', title: '过滤类型', templet: function(d) {
+          var name = filterTypeMap[d.filterType] ? filterTypeMap[d.filterType]['name'] : d.filterType;
+          var arr = ['<a class="layui-btn layui-btn-primary table-col-dropdown-filterType">',
+                      '<span>' + name + '</span>',
+                      '<i class="layui-icon layui-icon-down layui-font-12"></i>',
+                    '</a>'
+          ];
+          return arr.join('');
+        }},
+        {field: 'filter', title: '过滤', width: 30, templet: function(d) {
+          return '<input type="checkbox" name="filter" value="' + d.filter + '" title="是|否" lay-skin="switch" lay-filter="table-col-filter"' + (d.filter ? 'checked' : '') + '>';
+        }},
+        {field: 'sort', title: '排序', width: 30, templet: function(d) {
+          return '<input type="checkbox" name="sort" value="' + d.sort + '" title="是|否" lay-skin="switch" lay-filter="table-col-filter"' + (d.sort ? 'checked' : '') + '>';
+        }},
+        {field: 'blank', title: '可空', width: 30, templet: function(d) {
+          return '<input type="checkbox" name="blank" value="' + d.blank + '" title="是|否" lay-skin="switch" lay-filter="table-col-filter"' + (d.blank ? 'checked' : '') + '>';
+        }},
+        {field: 'width', title: '宽度', edit: 'text'},
+        {field: 'extra', title: '额外信息', edit: 'text'},
+        {fixed: "right", title: "操作", width: 150, toolbar: (function() {
+          return [
+            '<div class="layui-btn-container">',
+            '<a class="layui-btn layui-btn-xs" lay-event="moveupRow">',
+            '<i class="layui-icon layui-icon-up"></i>',
+            '</a>',
+            '<a class="layui-btn layui-btn-xs layui-bg-red" lay-event="deleteRow">',
+            '<i class="layui-icon layui-icon-delete"></i>',
+            '</a>',
+            '</div>'
+          ].join('');
+        })()}
+      ]],
+      page: false,
+      done: function(res, curr, count) {
+        var options = this;
+        var commDropdown = function (config) {
+          dropdown.render({
+            elem: config.elem,
+            data: config.data,
+            customName: {id: 'code', title: 'name'},
+            click: function(obj) {
+              var data = tableInst.getRowData(options.id, this.elem);
+              this.elem.find('span').html(obj.name);
+              data[config.field] = obj.code;
+            }
+          });
+        }
+
+        //radio开关
+        form.on('switch(table-col-filter)', function(obj) {
+          var data = tableInst.getRowData(options.id, obj.elem);
+          data[obj.elem.name] = obj.elem.checked;
+        });
+
+        //类型(下拉项)
+        commDropdown({elem: '.table-col-dropdown-type', data: types, field: 'type'});
+        //过滤类型(下拉项)
+        commDropdown({elem: '.table-col-dropdown-filterType', data: filterTypes, field: 'filterType'})
+
+        new FormMgr();
+      }
+    });
+
+    // 获取当前行数据
+    tableInst.getRowData = function(tableId, elem) {
+      var index = $(elem).closest('tr').data('index');
+      return table.cache[tableId][index] || {};
+    };
+
+    // 获取table缓存
+    tableInst.getCache = function() {
+      return table.cache[this.config.id] || {};
+    };
+
+    // 自定义验证规则
+    form.verify({
+      // 验证且为必填项
+      alphanumeric: function(value, elem){
+        if (!/^(?![0-9_])[a-zA-Z0-9_]+(?<![_])$/.test(value)) {
+          return '必须由字符数字和下划线组成, 首字符不能数字, 首尾字符不能下划线';
+        }
+      }
+    });
+
+    var formMgrInst = null;
+    var FormMgr = function() {
+      if (formMgrInst) { //实例已存在
+        return;
+      }
+      var formMgr = formMgrInst  = this;
+
+      //渲染操作按钮
+      laytpl(ID_operator.innerHTML).render(queryObj, function(html) {
+        $form.find('.toolbar').html(html);
+      });
+
+      //表单初始赋值
+      if (queryObj.action) {
+        var data = tableInst.getCache();
+        var one = data.length > 0 ? data[0] : {};
+        //初始化
+        form.val('editForm', $.extend({}, queryObj, one));
+      }
+
+      //单元格工具事件
+      table.on('tool(table)', function(obj) {
+        var event = obj.event; // 获得 lay-event 对应的值
+        var ele = obj.tr;
+        var data = obj.data;
+        var tableId = obj.config.id;
+        if (!formMgr[event]) {
+          MyCuckoo.alert({title : '警示', msg : '此操作无效, 如有疑问, 请联系管理员!' });
+          return;
+        }
+        obj.othis = this;
+        formMgr[event] &&  formMgr[event](obj);
+      });
+
+      // 单元格编辑后的事件
+      table.on('edit(table)', function(obj) {
+        var field = obj.field; // 得到修改的字段
+        var value = obj.value // 得到修改后的值
+        var oldValue = obj.oldValue // 得到修改前的值 -- v2.8.0 新增
+        var col = obj.getCol(); // 得到当前列的表头配置属性 -- v2.8.0 新增
+        if (field === 'title') {
+          if (!/^[a-zA-Z0-9_\u4e00-\u9fa5\\s·]+$/.test(value)) {
+            layer.tips('标题不能有特殊字符', this, {tips: 1});
+            return obj.reedit();
+          }
+        } else if (field === 'width') {
+          if (!/^[0-9]{1,3}$/.test(value)) {
+            layer.tips('宽度必须又3位以内数字', this, {tips: 1});
+            return obj.reedit();
+          }
+        } else if (!/^(?![0-9_])[a-zA-Z0-9_]+(?<![_])$/.test(value)) {
+          layer.tips('必须由字符数字和下划线组成, 首字符不能数字, 首尾不能下划线', this, {tips: 1});
+          return obj.reedit();
+        }
+        var maxLen = 30;
+        if (field === 'extra') {
+          maxLen = 100;
+        }
+        if (value.length > maxLen) {
+          layer.tips('长度不能超过' + maxLen + '个字符', this, {tips: 1});
+          return obj.reedit();
+        }
+      });
+
+      table.on('toolbar(table)', function(obj) {
+        var event = obj.event; // 获得 lay-event 对应的值
+        var ele = obj.tr;
+        var data = obj.data;
+        var tableId = obj.config.id;
+        formMgr[event] &&  formMgr[event](obj);
+      });
+
+      //操作按钮触发事件
+      $form.find('a.layui-btn:not([lay-submit])').on('click', function() {
+        var type = $(this).data('type');
+        formMgr[type] && formMgr[type](this);
+      });
+
+      //监听提交
+      form.on('submit', function(data) {
+        var fields = [
+          {key: 'type', value: '类型'},
+          {key: 'field', value: '字段'},
+          {key: 'title', value: '标题'},
+          {key: 'filterType', value: '过滤类型'}
+        ]
+        var tableData = table.cache['table'];
+        for (var i in tableData) {
+          for (var ii in fields) {
+            if (tableData[i][fields[ii].key] === undefined || tableData[i][fields[ii].key] === '') {
+              MyCuckoo.msg({ msg : '第' + (parseInt(i) + 1) + '行[' + fields[ii].value + ']不能为空!'});
+              return false;
+            }
+          }
+        }
+
+        var type = $(this).data('type');
+        data.field['configs'] = tableData;
+        formMgr[type] && formMgr[type](data.field);
+
+        return false;
+      });
+    }
+
+    FormMgr.prototype = {
+      constructor: FormMgr,
+      assign: function(data) {
+        $.postJson(api.tableConfigMgr.url, data).then(json => {
+            MyCuckoo.msg({msg: json.message});
+            this.refresh();
+        });
+      },
+      //增加
+      addRow: function(obj) {
+        var data = table.cache[obj.config.id];
+        data.push({
+          type: 'text',
+          field: '',
+          title: '',
+          filterType: 'eq',
+          filter: false,
+          sort: false,
+          blank: false,
+          extra: ''
+        })
+        table.renderData(obj.config.id);
+        table.resize(obj.config.id);
+      },
+      //删除行
+      deleteRow: function (obj) {
+        var data = table.cache[obj.config.id];
+        if (obj.data.tableId || obj.data.field) {
+          MyCuckoo.confirm({msg : '您确认删除此记录吗?', ok : function() {
+            var item = data.splice(obj.index, 1)
+            table.renderData(obj.config.id);
+          }});
+        } else {
+          var item = data.splice(obj.index, 1)
+          table.renderData(obj.config.id);
+        }
+      },
+      //上移行
+      moveupRow: function (obj) {
+        if (obj.index === 0) {
+          return
+        }
+
+        var data = table.cache[obj.config.id];
+        var item = data.splice(obj.index, 1);
+        data.splice(obj.index - 1, 0, item[0]);
+        table.renderData(obj.config.id);
+      },
+      //刷新父窗
+      refresh: function() {
+        var that = this;
+        setTimeout(function() {
+          //parent.location.reload();
+          that.close();
+        }, 1500);
+      },
+      //关闭当前iframe页
+      close: function(ele) {
+        var index = parent.layer.getFrameIndex(window.name);
+        parent.layer.close(index);
+      }
+    }
+    //end
+  });
+</script>
+</html>

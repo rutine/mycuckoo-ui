@@ -254,11 +254,11 @@
           type: 1,
           title: "请选择",
           area: ["400px", "80%"],
-          content: '<ul id="tree" class="dtree" data-id="0"></ul>',
+          content: '<ul id="ID_tree" class="dtree" data-id="0"></ul>',
           btn: ['确认选择'],
           success: function(layero, index){
             var treeObj = tree.render({
-              elem: '#tree',
+              elem: '#ID_tree',
               method: 'get',
               type: 'all',
               url: MyCuckoo.resolvePlaceholder(url, {id: 0, isCheckbox: true}),
