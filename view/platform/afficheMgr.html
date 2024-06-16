@@ -68,20 +68,7 @@
 
     //本地缓存数据
     var queryObj = MyCuckoo.getQueryObject(location.search);
-    var menu = JSON.parse(sessionStorage.getItem('myMenu'));
-    var operator = menu.fourth[queryObj.id];
-
-    form.on('submit(search)', function(data) {
-      //执行重载
-      table.reload('table', {
-        page: {
-          pageNo: 1 //重新从第 1 页开始
-        },
-        where: data.field
-      });
-
-      return false;
-    });
+    var operator = MyCuckoo.getOperation(queryObj.id);
 
     table.render({
       id: 'table',
@@ -119,38 +106,59 @@
           count: res.data.totalElements,
           data: res.data.content
         }
+      },
+      done: function(res, curr, count) {
+        new IndexMgr();
       }
     });
 
-    table.on('toolbar(table)', function (obj) {
-      if (obj.event.indexOf('LAYTABLE_') == 0) {
+    var indexMgrInst = null;
+    var IndexMgr = function () {
+      if (indexMgrInst) { //实例已存在
         return;
       }
-      if (obj.event == 'add') {
-        active[obj.event](obj);
-        return;
-      }
+      var that = indexMgrInst = this;
 
-      var data = table.checkStatus(obj.config.id).data;
-      if (data.length != 1) {
-        MyCuckoo.alert({title : '提示', msg : '请选择一条记录' });
-        return;
-      }
+      form.on('submit(search)', function(data) {
+        //执行重载
+        table.reload('table', {
+          page: {pageNo: 1},
+          where: data.field
+        });
 
-      if (!active[obj.event]) {
-        MyCuckoo.alert({title : '警示', msg : '此操作无效, 如有疑问, 请联系管理员!' });
-        return;
-      }
+        return false;
+      });
 
-      obj.data = data[0]
-      active[obj.event](obj);
-    });
+      table.on('toolbar(table)', function (obj) {
+        if (obj.event.indexOf('LAYTABLE_') == 0) {
+          return;
+        }
+        if (obj.event == 'add') {
+          that[obj.event](obj);
+          return;
+        }
 
-    function reload() {
-      table.reload('table', { page: { pageNo: 1 } });
+        var data = table.checkStatus(obj.config.id).data;
+        if (data.length != 1) {
+          MyCuckoo.alert({title : '提示', msg : '请选择一条记录' });
+          return;
+        }
+
+        if (!that[obj.event]) {
+          MyCuckoo.alert({title : '警示', msg : '此操作无效, 如有疑问, 请联系管理员!' });
+          return;
+        }
+
+        obj.data = data[0]
+        that[obj.event](obj);
+      });
     }
 
-    var active = {
+    IndexMgr.prototype = {
+      constructor: IndexMgr,
+      reload: function() {
+        table.reload('table', { page: { pageNo: 1 } });
+      },
       //增加
       add: function(obj) {
         var url = MyCuckoo.resolve('afficheMgrForm.html?action={_event}&opt={_opt}',
@@ -175,11 +183,12 @@
       //删除
       delete: function(obj) {
         var data = obj.data;
+        var that = this;
         MyCuckoo.confirm({msg : '您确认删除此记录吗.', ok : function() {
           $.put(api.afficheMgr + '/' + data.afficheId, {}).then(json => {
             MyCuckoo.msg({ msg: json.message });
 
-            reload(); // 刷新列表
+            that.reload(); // 刷新列表
           });
         }});
       },

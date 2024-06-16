@@ -59,9 +59,7 @@
     form.on('submit(search)', function(data) {
       //执行重载
       table.reload('table', {
-        page: {
-          pageNo: 1 //重新从第 1 页开始
-        },
+        page: {pageNo: 1},
         where: $.extend({}, data.field, {'q[userAddDelFlag]': 'add'})
       });
 
@@ -100,7 +98,6 @@
     });
 
 
-    console.log(queryObj['q[userAddDelFlag]'])
     var FormMgr = function() {
       if(queryObj['q[userAddDelFlag]'] == 'add') {
         $('.mycuckoo-search').parent().removeClass('layui-hide');

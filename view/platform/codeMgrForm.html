@@ -364,7 +364,7 @@
               type: 'all',
               url: MyCuckoo.resolvePlaceholder(url, {id: 0}),
               dataStyle: 'layuiStyle',
-              response: { statusCode: 0, treeId: 'id', title: 'text', isLast: 'isLeaf', checkArr: 'checkbox'},
+              response: { statusCode: 0, treeId: 'id', title: 'name', isLast: 'isLeaf', checkArr: 'checkbox'},
               checkbar: true,
               dot: false,
               icon: ['-1', '1']
@@ -413,8 +413,7 @@
       refresh: function() {
         setTimeout(function() {
           parent.location.reload();
-          this.close();
-        }, 2000);
+        }, 1500);
       },
       //关闭当前iframe页
       close: function(ele) {

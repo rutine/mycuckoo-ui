@@ -310,7 +310,7 @@ layui.use(['jquery', 'layer'], function() {
       layer.open({
         type: 2,
         skin: 'layui-bg-gray',
-        area: ['320px', '100%'],
+        area: ['480px', '100%'],
         fix: true, //固定
         maxmin: false,
         shadeClose: true,

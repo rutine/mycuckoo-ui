@@ -110,7 +110,7 @@
       },
       cols: [[
         {field: 'text', title: '名称', width: 200},
-        {field: 'code', title: '编码', templet: function(d) { return d.code ? d.code : '' }},
+        {field: 'code', title: '操作', templet: function(d) { return d.code ? d.code : '' }},
         {field: 'method', title: '方法', templet: function(d) { return d.method ? d.method : '' }},
         {field: 'path', title: 'url', width: 200, templet: function(d) { return d.method ? d.path : '' }},
         {field: 'order', title: '顺序', templet: function(d) { return d.method ? d.order : '' }},
@@ -118,7 +118,7 @@
             return d.method ? (d.status == 'enable' ? '启用' : '停用') : ''
         }},
         {field: 'creator', title: '创建人', templet: function(d) { return d.method ? d.creator : '' }},
-        {field: 'createDate', title: '创建日期', templet: function(d) { return d.method ? d.createDate : '' }},
+        {field: 'createTime', title: '创建日期', templet: function(d) { return d.method ? d.createTime : '' }},
         {fixed: "right", title: "操作", width: 190, align: "center", toolbar: '#ID_tool', operator: operator}
       ]],
       page: false,
@@ -126,10 +126,6 @@
         new IndexMgr();
       }
     });
-
-    function reload(config) {
-      table.reload('table', config || {});
-    }
 
     var indexMgrInst = null;
     var IndexMgr = function () {
@@ -140,7 +136,7 @@
 
       form.on('submit(search)', function(data) {
         //执行重载
-        reload({where: data.field});
+        that.reload({where: data.field});
 
         return false;
       });
@@ -184,6 +180,9 @@
 
     IndexMgr.prototype = {
       constructor: IndexMgr,
+      reload: function(config) {
+        table.reload('table', config || {});
+      },
       //增加
       add: function(obj) {
         var url = MyCuckoo.resolve('resourceMgrForm.html?action={_event}&opt={_opt}&moduleId={id}',
@@ -214,11 +213,12 @@
       },
       //删除
       delete: function(obj) {
+        var that = this;
         MyCuckoo.confirm({msg : '您确认删除此记录吗?', ok : function() {
           $.delete(api.resourceMgr + '/' + obj.data.resourceId).then(json => {
             MyCuckoo.msg({ msg: '资源删除成功' });
 
-            reload(); // 刷新列表
+            that.reload(); // 刷新列表
           });
         }});
       },
@@ -233,10 +233,11 @@
           return;
         }
 
+        var that = this;
         $.put(api.resourceMgr.disEnableUrl, {id: obj.data.moduleId, disEnableFlag: 'enable'}).then(json => {
           MyCuckoo.msg({ msg: '菜单启用成功' });
 
-          reload(); // 刷新列表
+          that.reload(); // 刷新列表
         });
       },
       //停用
@@ -250,11 +251,12 @@
           return;
         }
 
+        var that = this;
         MyCuckoo.confirm({msg : '您确认停用此资源吗?如果停用,此资源下的操作将自动清除,并重登生效.', ok : function() {
           $.put(api.resourceMgr.disEnableUrl, {id: obj.data.moduleId, disEnableFlag: 'disable'}).then(json => {
             MyCuckoo.msg({ msg: '资源停用成功' });
 
-            reload(); // 刷新列表
+            that.reload(); // 刷新列表
           });
         }});
       }

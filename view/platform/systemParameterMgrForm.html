@@ -81,7 +81,6 @@
     $ = layui.jquery;
     var laytpl = layui.laytpl,
       form = layui.form,
-      tree = layui.dtree,
       queryObj = MyCuckoo.getQueryObject(location.search),
       $form = $('form[name=editForm]');
 
@@ -154,8 +153,7 @@
       refresh: function() {
         setTimeout(function() {
           parent.location.reload();
-          this.close();
-        }, 2000);
+        }, 1500);
       },
       //关闭当前iframe页
       close: function(ele) {

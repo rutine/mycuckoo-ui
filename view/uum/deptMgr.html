@@ -54,7 +54,7 @@
   </div>
 </script>
 <script type="text/html" id="ID_tool">
-  <div class="layui-btn-container">
+  <div class="layui-clear-space layui-hide">
     {{# layui.each(d.LAY_COL.operator, function(index, item){
       if (item.code == 'add') return;
     }}
@@ -75,7 +75,6 @@
       });
 
       layui.each(d.LAY_COL.operator, function(index, item) {
-        return;
         if (item.code == 'add') {
           return;
         }
@@ -114,15 +113,6 @@
     //本地缓存数据
     var queryObj = MyCuckoo.getQueryObject(location.search);
     var operator = MyCuckoo.getOperation(queryObj.id);
-
-    form.on('submit(search)', function(data) {
-      //执行重载
-      table.reload('table', {
-        where: data.field
-      });
-
-      return false;
-    });
 
     var treeTable = table.render({
       id: 'table',
@@ -164,52 +154,73 @@
           count: res.data.length,
           data: res.data
         }
+      },
+      done: function(res, curr, count) {
+        new IndexMgr();
       }
     });
 
-    //单元格工具事件
-    table.on('tool(table)', function(obj) {
-      var event = obj.event; // 获得 lay-event 对应的值
-      var ele = obj.tr;
-      var data = obj.data;
-      var tableId = obj.config.id;
-      if (typeof data.id == 'string') {
-        data.id = data.id .replace('leaf-id-', '')
-      }
-
-      if (!active[event]) {
-        MyCuckoo.alert({title : '警示', msg : '此操作无效, 如有疑问, 请联系管理员!' });
+    var indexMgrInst = null;
+    var IndexMgr = function () {
+      if (indexMgrInst) { //实例已存在
         return;
       }
-      obj.othis = this;
-      active[event] &&  active[event](obj);
-    });
+      var that = indexMgrInst = this;
 
-    table.on('toolbar(table)', function (obj) {
-      if (obj.event.indexOf('LAYTABLE_') == 0) {
-        return;
-      }
-      if (obj.event == 'add') {
-        active[obj.event](obj);
-        return;
-      }
+      form.on('submit(search)', function(data) {
+        //执行重载
+        table.reload('table', {
+          where: data.field
+        });
 
-      var data = table.radioStatus(obj.config.id);
-      if (!data.orgId) {
-        MyCuckoo.alert({title : '提示', msg : '请选择一条记录' });
-        return;
-      }
+        return false;
+      });
 
-      if (!active[obj.event]) {
-        MyCuckoo.alert({title : '警示', msg : '此操作无效, 如有疑问, 请联系管理员!' });
-        return;
-      }
+      //单元格工具事件
+      table.on('tool(table)', function (obj) {
+        var event = obj.event; // 获得 lay-event 对应的值
+        var ele = obj.tr;
+        var data = obj.data;
+        var tableId = obj.config.id;
+        if (typeof data.id == 'string') {
+          data.id = data.id.replace('leaf-id-', '')
+        }
 
-      obj.data = data;
-      active[obj.event](obj);
-    });
+        if (!that[event]) {
+          MyCuckoo.alert({title: '警示', msg: '此操作无效, 如有疑问, 请联系管理员!'});
+          return;
+        }
+        obj.othis = this;
+        that[event] && that[event](obj);
+      });
 
-    var active = {
+      table.on('toolbar(table)', function (obj) {
+        if (obj.event.indexOf('LAYTABLE_') == 0) {
+          return;
+        }
+        if (obj.event == 'add') {
+          that[obj.event](obj);
+          return;
+        }
+
+        var data = table.radioStatus(obj.config.id);
+        if (!data.orgId) {
+          MyCuckoo.alert({title: '提示', msg: '请选择一条记录'});
+          return;
+        }
+
+        if (!that[obj.event]) {
+          MyCuckoo.alert({title: '警示', msg: '此操作无效, 如有疑问, 请联系管理员!'});
+          return;
+        }
+
+        obj.data = data;
+        that[obj.event](obj);
+      });
+    }
+
+    IndexMgr.prototype = {
+      constructor: IndexMgr,
       reload: function() {
         table.reload('table', { page: { pageNo: 1 } });
       },
@@ -248,11 +259,11 @@
           return;
         }
 
-        var _this = this;
+        var that = this;
         $.put(api.deptMgr.disEnableUrl, {id: data.id, disEnableFlag: 'enable'}).then(json => {
           MyCuckoo.msg({ msg: '部门启用成功' });
 
-          _this.reload(); // 刷新列表
+          that.reload(); // 刷新列表
         });
       },
       //停用
@@ -263,16 +274,17 @@
           return;
         }
 
-        var _this = this;
+        var that = this;
         MyCuckoo.confirm({msg : '您确认停用此部门吗.', ok : function() {
           $.put(api.deptMgr.disEnableUrl, {id: data.id, disEnableFlag: 'disable'}).then(json => {
             MyCuckoo.msg({ msg: '部门停用成功' });
 
-            _this.reload(); // 刷新列表
+            that.reload(); // 刷新列表
           });
         }});
       },
       more: function (obj) {
+        var that = this;
         var btns = [];
         var i = 0;
         layui.each(operator, function(index, item) {
@@ -290,7 +302,7 @@
           },
           click: function(menudata) {
             var event = menudata.code;
-            active[event] && active[event](obj);
+            that[event] && that[event](obj);
           }
         });
       }

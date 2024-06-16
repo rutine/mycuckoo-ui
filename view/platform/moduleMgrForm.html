@@ -275,10 +275,11 @@
       },
       //刷新父窗
       refresh: function() {
+        var that = this;
         setTimeout(function() {
           parent.location.reload();
-          this.close();
-        }, 2000);
+          that.close();
+        }, 1500);
       },
       //关闭当前iframe页
       close: function(ele) {

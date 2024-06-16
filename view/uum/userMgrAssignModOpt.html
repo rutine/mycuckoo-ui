@@ -136,7 +136,7 @@
       //表单初始赋值
       if (queryObj.id) {
         $('fieldset > legend').text('用户名称:' + queryObj.name);
-        $.get(api.userMgr.userPrivilegeUrl, queryObj).then(function(json) {
+        $.get(api.userMgr.resPrivilegeUrl, queryObj).then(function(json) {
           form.val('userAssignModOpt', json.data);
           form.val('userAssignRowPriv', json.data);
 
@@ -312,8 +312,7 @@
       refresh: function() {
         setTimeout(function() {
           parent.location.reload();
-          this.close();
-        }, 2000);
+        }, 1500);
       },
       //关闭当前iframe页
       close: function(ele) {

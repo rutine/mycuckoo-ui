@@ -74,18 +74,18 @@
         {type: 'radio'},
       ]
       for (var i in json.data) {
-        var one = json.data[i];
-        if (one.type === 'seq') {
-          col.push({type: 'numbers', title: one['title']});
-        } else if (one.type === 'dict') {
-          if (!one['dictMap']) {
-            one['dictMap'] = MyCuckoo.getDictMap(one['dict']);
+        var obj = json.data[i];
+        if (obj['type'] === 'seq') {
+          col.push({type: 'numbers', title: obj['title']});
+        } else if (obj['type'] === 'dict') {
+          if (!obj['dictMap']) {
+            obj['dictMap'] = MyCuckoo.getDictMap(obj['dict']);
           }
-          col.push({field: one['field'], title: one['title'], sort: one['sort'], width: one['width'], colConfig: one, templet: function(d) {
+          col.push({field: obj['field'], title: obj['title'], sort: obj['sort'], width: obj['width'], colConfig: obj, templet: function(d) {
               return this.colConfig['dictMap'][d[this.colConfig['field']]]['name'];
           }});
         } else {
-          col.push({field: one['field'], title: one['title'], sort: one['sort'], width: one['width'], colConfig: one});
+          col.push({field: obj['field'], title: obj['title'], sort: obj['sort'], width: obj['width'], colConfig: obj});
         }
       }
 
@@ -104,7 +104,7 @@
             name: 'name'
           },
           view: {
-            expandAllDefault: false
+            expandAllDefault: true
           }
         },
         cols: [col],

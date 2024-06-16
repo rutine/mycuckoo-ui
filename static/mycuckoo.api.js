@@ -145,7 +145,7 @@ layui.use(['jquery'], function () {
       updateRoleUrl: host + '/uum/user/mgr/update/role',
       resetPwdUrl: host + '/uum/user/mgr/{id}/reset-password',
       disEnableUrl: host + '/uum/user/mgr/{id}/disEnable/{disEnableFlag}',
-      userPrivilegeUrl: host + '/uum/user/mgr/{id}/user-privilege',
+      resPrivilegeUrl: host + '/uum/user/mgr/{id}/res-privilege',
       rowPrivilegeUrl: host + '/uum/user/mgr/{id}/row-privilege',
       saveOptPrivilegeUrl: host + '/uum/user/mgr/{id}/opt-privilege/{privilegeScope}',
       saveRowPrivilegeUrl: host + '/uum/user/mgr/{id}/row-privilege/{privilegeScope}'
