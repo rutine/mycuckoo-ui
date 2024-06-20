@@ -40,10 +40,10 @@
             </div>
 
             <div class="layui-btn-container" style="margin-bottom: 6px; text-align: center;">
-              <a href="javascript:" class="layui-btn layui-btn-sm" data-type="saveOptPrivilege" lay-submit>
+              <a href="javascript:" class="layui-btn layui-btn-sm" data-event="assignRes" lay-submit>
                 <i class="layui-icon layui-icon-ok"></i>保存
               </a>
-              <a href="javascript:" class="layui-btn layui-btn-sm" data-type="close">
+              <a href="javascript:" class="layui-btn layui-btn-sm" data-event="close">
                 <i class="layui-icon layui-icon-close"></i>取消
               </a>
             </div>
@@ -62,10 +62,10 @@
             </div>
 
             <div class="layui-btn-container" style="margin-bottom: 6px; text-align: center;">
-              <a href="javascript:" class="layui-btn layui-btn-sm" data-type="saveRowPrivilege" lay-submit>
+              <a href="javascript:" class="layui-btn layui-btn-sm" data-event="assignRow" lay-submit>
                 <i class="layui-icon layui-icon-ok"></i>保存
               </a>
-              <a href="javascript:" class="layui-btn layui-btn-sm" data-type="close">
+              <a href="javascript:" class="layui-btn layui-btn-sm" data-event="close">
                 <i class="layui-icon layui-icon-close"></i>取消
               </a>
             </div>
@@ -90,6 +90,8 @@
       form = layui.form,
       tree = layui.dtree,
       queryObj = MyCuckoo.getQueryObject(location.search),
+      operator = MyCuckoo.getOperation(queryObj.opt),
+      operatorMap = MyCuckoo.getDictMap(operator),
       $main = $('.mycuckoo-main');
 
 
@@ -98,7 +100,7 @@
       //表单初始赋值
       if (queryObj.id) {
         $('fieldset > legend').text('角色名称: ' + queryObj.name);
-        $.get(api.roleMgr.rolePrivilegeUrl, queryObj).then(function(json) {
+        $.request(operatorMap['roleMgr:resSelector'], queryObj).then(json => {
           form.val('roleAssignModOpt', json.data);
           form.val('roleAssignRowPriv', json.data);
 
@@ -125,14 +127,14 @@
       var formMgr = this;
       //操作按钮触发事件
       $main.find('a.layui-btn:not([lay-submit])').on('click', function() {
-        var type = $(this).data('type');
-        formMgr[type] && formMgr[type](this);
+        var event = $(this).data('event');
+        formMgr[event] && formMgr[event]({event: event, data: this});
       });
 
       //监听提交
       form.on('submit', function(data) {
-        var type = $(this).data('type');
-        formMgr[type] && formMgr[type]($.extend({}, data.field, queryObj));
+        var event = $(this).data('event');
+        formMgr[event] && formMgr[event]({event: event, data: $.extend({}, data.field, queryObj)});
 
         return false;
       });
@@ -141,7 +143,8 @@
     FormMgr.prototype = {
       constructor: FormMgr,
       //保存用户权限
-      saveOptPrivilege: function(data) {
+      assignRes: function(obj) {
+        var data = obj.data;
         if(!data.privilegeScope) {
           MyCuckoo.alert({ title : '提示', msg : '请选择权限范围!' });
           return;
@@ -153,25 +156,24 @@
           return;
         }
 
-        console.log(selectedNodes)
-
         var optIds = [];
         selectedNodes.forEach(item => item.isLeaf && optIds.push(item.nodeId));
-        $.postJson(api.roleMgr.saveOptPrivilegeUrl, data, optIds).then(json => {
-          MyCuckoo.msg({msg: json.message});
+        $.request(operatorMap['roleMgr:assignRes'], data, optIds).then(json => {
+          MyCuckoo.msg({msg: json.msg});
 
           this.refresh();
         });
       },
       //保存行权限
-      saveRowPrivilege: function(data) {
+      assignRow: function(obj) {
+        var data = obj.data;
         if(!data.rowPrivilege) {
           MyCuckoo.alert({ title : '提示', msg : '请选择行权限类别!' });
           return;
         }
 
-        $.postJson(api.roleMgr.saveRowPrivilegeUrl, data, data.rowPrivilege).then(json => {
-          MyCuckoo.msg({msg: json.message});
+        $.request(operatorMap['roleMgr:assignRow'], data, rowIds).then(json => {
+          MyCuckoo.msg({msg: json.msg});
 
           this.refresh();
         });

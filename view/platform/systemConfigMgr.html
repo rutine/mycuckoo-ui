@@ -32,7 +32,7 @@
 
             <div class="layui-form-item">
               <div class="layui-input-block">
-                <a href="javascript:" class="layui-btn layui-btn-sm" data-type="saveName" lay-submit="submit">设置
+                <a href="javascript:" class="layui-btn layui-btn-sm" data-event="modify" lay-submit="submit">设置
                   <i class="layui-icon glyphicon-hdd"></i>
                 </a>
               </div>
@@ -55,10 +55,10 @@
 
             <div class="layui-form-item">
               <div class="layui-input-block">
-                <a href="javascript:" class="layui-btn layui-btn-sm" data-type="addAdmin" lay-submit="submit">增加
+                <a href="javascript:" class="layui-btn layui-btn-sm" data-event="addAdmin" lay-submit="submit">增加
                   <i class="layui-icon glyphicon-hdd"></i>
                 </a>
-                <a href="javascript:" class="layui-btn layui-btn-sm" data-type="delAdmin" lay-submit="submit">删除
+                <a href="javascript:" class="layui-btn layui-btn-sm" data-event="delAdmin" lay-submit="submit">删除
                   <i class="layui-icon glyphicon-hdd"></i>
                 </a>
               </div>
@@ -87,7 +87,7 @@
 
             <div class="layui-form-item">
               <div class="layui-input-block">
-                <a href="javascript:" class="layui-btn layui-btn-sm" data-type="saveLogLevel" lay-submit="submit">设置
+                <a href="javascript:" class="layui-btn layui-btn-sm" data-event="modify" lay-submit="submit">设置
                   <i class="layui-icon glyphicon-hdd"></i>
                 </a>
               </div>
@@ -120,7 +120,7 @@
 
             <div class="layui-form-item">
               <div class="layui-input-block">
-                <a href="javascript:" class="layui-btn layui-btn-sm" data-type="saveLogKeepDays" lay-submit="submit">设置
+                <a href="javascript:" class="layui-btn layui-btn-sm" data-event="modify" lay-submit="submit">设置
                   <i class="layui-icon glyphicon-hdd"></i>
                 </a>
               </div>
@@ -156,7 +156,7 @@
 
             <div class="layui-form-item">
               <div class="layui-input-block">
-                <a href="javascript:" class="layui-btn layui-btn-sm" data-type="startJConsole" lay-submit="submit">启动
+                <a href="javascript:" class="layui-btn layui-btn-sm" data-event="startJConsole" lay-submit="submit">启动
                   <i class="layui-icon glyphicon-hdd"></i>
                 </a>
               </div>
@@ -181,7 +181,7 @@
 
             <div class="layui-form-item">
               <div class="layui-input-block">
-                <a href="javascript:" class="layui-btn layui-btn-sm" data-type="saveRowPrivilege" lay-submit="submit">设置
+                <a href="javascript:" class="layui-btn layui-btn-sm" data-event="modify" lay-submit="submit">设置
                   <i class="layui-icon glyphicon-hdd"></i>
                 </a>
               </div>
@@ -205,8 +205,11 @@
   layui.use(['jquery', 'form'], function() {
     var $ = layui.jquery,
       form = layui.form,
-      queryObj = MyCuckoo.getQueryObject(location.search),
-      $form = $('form[name=editForm]');
+      queryObj = MyCuckoo.getQueryObject(location.search);
+
+    var operator = MyCuckoo.getOperation(queryObj.id);
+    var operatorMap = MyCuckoo.getDictMap(operator);
+    var action = operator.findLast(o => (o['group'] & 1) === 1);
 
     $main = $('.mycuckoo-main');
     $main.height($(window).height() - 90);
@@ -217,8 +220,8 @@
       var formMgr = this;
       //监听提交
       form.on('submit', function(data) {
-        var type = $(this).data('type');
-        formMgr[type] && formMgr[type](data.field);
+        var event = $(this).data('event');
+        formMgr[event] && formMgr[event]({event: event, data: data.field});
 
         return false;
       });
@@ -227,10 +230,10 @@
     FormMgr.prototype = {
       constructor: FormMgr,
       reload() {
-        $.get(api.systemConfigMgr.url).then(json => {
+        $.request(action).then(json => {
           form.val('editForm', json.data);
 
-          var $select = $form.find('select[name=systemMgr]');
+          var $select = $main.find('select[name=systemMgr]');
           $select.empty();
 
           for (var i = 0; i < json.data.systemMgr.length; i++) {
@@ -241,52 +244,30 @@
         });
       },
 
-      // 系统名称设置
-      saveName(data) {
-        $.put(api.systemConfigMgr.url, data).then(json => {
-          MyCuckoo.msg({msg: json.message});
+      //设置
+      modify(obj) {
+        $.request(operatorMap['systemConfigMgr:modify'], obj.data).then(json => {
+          MyCuckoo.msg({msg: json.msg});
 
           this.reload();
         });
+      },
+      addAdmin(obj) {
+        this.selectAdmin('add');
+      },
+      delAdmin(obj) {
+        this.selectAdmin('delete');
       },
       //选择管理员
       selectAdmin(userAddDelFlag) {
-        MyCuckoo.dialog('选择用户', 'systemConfigMgrSelectUser.html?q[userAddDelFlag]=' + userAddDelFlag);
-      },
-      addAdmin(data) {
-        this.selectAdmin('add');
-      },
-      delAdmin(data) {
-        this.selectAdmin('delete');
-      },
-      // 系统日志级别设置
-      saveLogLevel(data) {
-        $.put(api.systemConfigMgr.url, data).then(json => {
-          MyCuckoo.msg({msg: json.message});
-
-          this.reload();
-        });
-      },
-      // 系统日志保留天数设置
-      saveLogKeepDays(data) {
-        $.put(api.systemConfigMgr.url, data).then(json => {
-          MyCuckoo.msg({msg: json.message});
-
-          this.reload();
-        });
+        var url = MyCuckoo.resolve('systemConfigMgrAssignUser.html?action=systemConfigMgr:modify&opt={opt}&q[userAddDelFlag]={flag}',
+          {'opt': queryObj.id, 'flag': userAddDelFlag})
+        MyCuckoo.dialog('选择用户', url);
       },
       // 系统监控设置
-      startJConsole(data) {
-        $.post(api.systemConfigMgr.startJConsoleUrl, {}).then(json => {
-          MyCuckoo.msg({msg: json.message});
-        });
-      },
-      // 系统行权限设置
-      saveRowPrivilege(data) {
-        $.put(api.systemConfigMgr.url, data).then(json => {
-          MyCuckoo.msg({msg: json.message});
-
-          this.reload();
+      startJConsole(obj) {
+        $.request(operatorMap['systemConfigMgr:' +  obj.event], {}).then(json => {
+          MyCuckoo.msg({msg: json.msg});
         });
       },
     }

@@ -47,11 +47,46 @@
 <script type="text/javascript" src="../../static/mycuckoo.api.js" charset="UTF-8"></script>
 <script type="text/html" id="ID_toolbar">
   <div class="layui-btn-group btn-toolbar">
-    {{# layui.each(d.operator, function(index, item){ }}
+    {{# layui.each(d.operator, function(index, item) {
+      if ((item.group & 2) !== 2) return;
+    }}
     <button class="layui-btn layui-btn-sm" lay-event="{{ item.code }}">
       <i class="layui-icon layui-icon-{{ item.iconCls }}"></i> {{ item.name }}
     </button>
     {{# }); }}
+  </div>
+</script>
+<script type="text/html" id="ID_tool">
+  <div class="layui-clear-space">
+    {{#
+      var i = 0;
+      var count = 0;
+      layui.each(d.LAY_COL.operator, function(index, item) {
+        if ((item.group & 4) === 4) {
+          count++;
+        }
+      });
+
+      layui.each(d.LAY_COL.operator, function(index, item) {
+        if ((item.group & 4) !== 4) {
+          return;
+        } else if (i === 0) {
+          i++;
+    }}
+    <a class="layui-btn layui-btn-xs" lay-event="{{ item.code }}">
+      <i class="layui-icon layui-icon-{{ item.iconCls }}"></i> {{ item.name }}
+    </a>
+    {{#
+        } else if (i === 1) {
+          i++;
+    }}
+    <a class="layui-btn layui-btn-xs" lay-event="more">更多
+      <i class="layui-icon layui-icon-down"></i>
+    </a>
+    {{#
+        }
+      });
+    }}
   </div>
 </script>
 <script type="text/javascript">
@@ -60,14 +95,17 @@
     version: '101100'
   });
 
-  layui.use(['jquery', 'form', 'treeTable'], function() {
+  layui.use(['jquery', 'form', 'dropdown', 'treeTable'], function() {
     var $ = layui.jquery,
       form = layui.form,
+      dropdown = layui.dropdown,
       table = layui.treeTable;
 
     //本地缓存数据
     var queryObj = MyCuckoo.getQueryObject(location.search);
     var operator = MyCuckoo.getOperation(queryObj.id);
+    var operatorMap = MyCuckoo.getDictMap(operator);
+    var action = operator.findLast(o => (o['group'] & 1) === 1);
 
     $.postJson(api.configMgr.tableConfigUrl + '?tableCode=table_code_menu').then(function (json) {
       var col = [
@@ -88,12 +126,13 @@
           col.push({field: obj['field'], title: obj['title'], sort: obj['sort'], width: obj['width'], colConfig: obj});
         }
       }
+      col.push({fixed: "right", title: "操作", align: "center", width: 120, toolbar: '#ID_tool', operator: operator});
 
       var tableInst = table.render({
         id: 'table',
         elem: '#ID_table',
-        url: api.moduleMgr.url,
-        method: 'get',
+        url: api.host + action.path,
+        method: action.method,
         cellMinWidth: 100,
         height: MyCuckoo.tableHeight,
         toolbar: '#ID_toolbar',
@@ -115,10 +154,6 @@
       });
     });
 
-    function reload(config) {
-      table.reload('table', config || {});
-    }
-
     var path = location.pathname.substr(0, location.pathname.lastIndexOf('/')) + '/';
     var tab = window.parent.MyCuckoo;
 
@@ -131,17 +166,28 @@
 
       form.on('submit(search)', function(data) {
         //执行重载
-        reload({where: data.field});
+        that.reload({where: data.field});
 
         return false;
+      });
+
+      //单元格工具事件
+      table.on('tool(table)', function (obj) {
+        var event = obj.event;
+        var ele = obj.tr;
+        var data = obj.data;
+
+        obj.othis = this;
+        that['execute'](obj);
       });
 
       table.on('toolbar(table)', function (obj) {
         if (obj.event.indexOf('LAYTABLE_') == 0) {
           return;
         }
-        if (obj.event == 'add') {
-          that[obj.event](obj);
+
+        if (obj.event.endsWith('add')) {
+          that['execute'](obj);
           return;
         }
 
@@ -151,52 +197,63 @@
           return;
         }
 
-        if (!that[obj.event]) {
-          MyCuckoo.alert({title : '警示', msg : '此操作无效, 如有疑问, 请联系管理员!' });
-          return;
-        }
-
         obj.data = data[0];
-        that[obj.event](obj);
+        that['execute'](obj);
       });
     }
 
     IndexMgr.prototype = {
       constructor: IndexMgr,
+      execute: function(obj) {
+        var arr = obj.event.split(':');
+        var event = arr[arr.length - 1];
+
+        if (!this[event]) {
+          MyCuckoo.alert({title : '警示', msg : '此操作无效, 如有疑问, 请联系管理员!' });
+          return;
+        }
+
+        this[event](obj);
+      },
+      reload: function(config) {
+        table.reload('table', config || {});
+      },
       //增加
       add: function(obj) {
-        var url = MyCuckoo.resolve('moduleMgrForm.html?action={_event}&opt={_opt}',
-            {'_event': obj.event, '_opt': queryObj.id})
+        var url = MyCuckoo.resolve('moduleMgrForm.html?action={action}&opt={opt}',
+            {'action': obj.event, 'opt': queryObj.id})
 //        tab.tab('moduleMgrForm-create', '菜单信息', path + 'moduleMgrForm.html?action=create')
         MyCuckoo.dialog('菜单信息', url);
       },
       //修改
       modify: function(obj) {
         var data = obj.data;
-        var url = MyCuckoo.resolve('moduleMgrForm.html?action={_event}&opt={_opt}&id={id}',
-            {'_event': obj.event, '_opt': queryObj.id, 'id': data.id})
+        var url = MyCuckoo.resolve('moduleMgrForm.html?action={action}&opt={opt}&id={id}',
+            {'action': obj.event, 'opt': queryObj.id, 'id': data.id})
         MyCuckoo.dialog('菜单信息', url);
       },
       //查看
       view: function(obj) {
         var data = obj.data;
-        var url = MyCuckoo.resolve('moduleMgrForm.html?action={_event}&opt={_opt}&id={id}',
-            {'_event': obj.event, '_opt': queryObj.id, 'id': data.id})
+        var url = MyCuckoo.resolve('moduleMgrForm.html?action={action}&opt={opt}&id={id}',
+            {'action': obj.event, 'opt': queryObj.id, 'id': data.id})
         MyCuckoo.sideDialog('菜单信息', url);
       },
       //删除
       delete: function(obj) {
+        var that = this;
         var data = obj.data;
         MyCuckoo.confirm({msg : '您确认删除此记录吗?', ok : function() {
-          $.delete(api.moduleMgr.url + '/' + data.id).then(json => {
-            MyCuckoo.msg({ msg: '菜单停用成功' });
+          $.request(operatorMap[obj.event], obj.data).then(json => {
+            MyCuckoo.msg({ msg: '菜单删除成功' });
 
-            reload(); // 刷新列表
+            that.reload();
           });
         }});
       },
       //启用
       enable: function(obj) {
+        var that = this;
         var data = obj.data;
         if(data.status == 'enable') {
           MyCuckoo.msg({ msg : '此菜单已经启用' });
@@ -207,14 +264,15 @@
           return;
         }
 
-        $.put(api.moduleMgr.disEnableUrl, {id: data.id, disEnableFlag: 'enable'}).then(json => {
+        $.request(operatorMap[obj.event], {id: data.id, disEnableFlag: 'enable'}).then(json => {
           MyCuckoo.msg({ msg: '菜单启用成功' });
 
-          reload(); // 刷新列表
+          that.reload();
         });
       },
       //停用
       disable: function(obj) {
+        var that = this;
         var data = obj.data;
         if(data.status == 'disable') {
           MyCuckoo.alert({ title : '提示', msg : '此菜单已经停用' });
@@ -226,10 +284,10 @@
         }
 
         MyCuckoo.confirm({msg : '您确认停用此菜单吗?如果停用,此菜单下的操作将自动清除,并重登生效.', ok : function() {
-          $.put(api.moduleMgr.disEnableUrl, {id: data.id, disEnableFlag: 'disable'}).then(json => {
+          $.request(operatorMap[obj.event], {id: data.id, disEnableFlag: 'disable'}).then(json => {
             MyCuckoo.msg({ msg: '菜单停用成功' });
 
-            reload(); // 刷新列表
+            that.reload();
           });
         }});
       },
@@ -241,8 +299,8 @@
           return;
         }
 
-        var url = MyCuckoo.resolve('moduleMgrAssignOpts.html?action={_event}&opt={_opt}&id={id}&name={name}',
-          {'_event': obj.event, '_opt': queryObj.id, 'id': data.id, 'name': data.name})
+        var url = MyCuckoo.resolve('moduleMgrAssignOpts.html?action={action}&opt={opt}&id={id}&name={name}',
+          {'action': obj.event, 'opt': queryObj.id, 'id': data.id, 'name': data.name})
         MyCuckoo.dialog('模块信息', url);
       },
       //分配菜单资源
@@ -253,13 +311,32 @@
           return;
         }
 
-        var url = MyCuckoo.resolve('moduleMgrAssignResource.html?action={_event}&opt={_opt}&id={id}&name={name}',
-          {'_event': obj.event, '_opt': queryObj.id, 'id': data.id, 'name': data.name})
+        var url = MyCuckoo.resolve('moduleMgrAssignRes.html?action={action}&opt={opt}&id={id}&name={name}',
+          {'action': obj.event, 'opt': queryObj.id, 'id': data.id, 'name': data.name})
         MyCuckoo.dialog('模块信息', url);
       },
-      //
-      moduleLabel: function(obj) {
-        MyCuckoo.alert({ msg: '开发中...'});
+      more: function (obj) {
+        var that = this;
+        var btns = [];
+        var i = 0;
+        layui.each(operator, function(index, item) {
+          if ((item.group & 4) != 4 || i++ == 0) {
+            return;
+          }
+          btns.push(item);
+        });
+        dropdown.render({
+          elem: obj.othis, // 触发事件的 DOM 对象
+          show: true, // 外部事件触发即显示
+          data: btns,
+          customName: {
+            title: 'name'
+          },
+          click: function(menudata) {
+            obj.event = menudata.code;
+            that['execute'](obj);
+          }
+        });
       }
     }
     //end

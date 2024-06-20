@@ -60,12 +60,12 @@
 <script type="text/javascript" src="../../static/mycuckoo.api.js" charset="UTF-8"></script>
 <script type="text/html" id="ID_operator">
   <div class="layui-btn-container" style="margin-bottom: 6px; text-align: center;">
-    {{# if(d.action != 'view') { }}
-    <a href="javascript: " class="layui-btn layui-btn-sm" data-type="{{= d.action }}" lay-submit>
-      <i class="layui-icon layui-icon-ok"></i>保存
+    {{# if((d.group & 8) === 8) { }}
+    <a href="javascript: " class="layui-btn layui-btn-sm" data-event="{{= d.code }}" lay-submit>
+      <i class="layui-icon layui-icon-ok"></i>{{= d.name }}
     </a>
     {{# } }}
-    <a href="javascript:" class="layui-btn layui-btn-sm" data-type="close">
+    <a href="javascript:" class="layui-btn layui-btn-sm" data-event="close">
       <i class="layui-icon layui-icon-close"></i>关闭
     </a>
   </div>
@@ -82,16 +82,19 @@
     var laytpl = layui.laytpl,
       form = layui.form,
       queryObj = MyCuckoo.getQueryObject(location.search),
+      operator = MyCuckoo.getOperation(queryObj.opt),
+      operatorMap = MyCuckoo.getDictMap(operator),
+      action = operatorMap[queryObj.action],
       $form = $('form[name=editForm]');
 
     var FormMgr = function() {
       //渲染操作按钮
-      laytpl(ID_operator.innerHTML).render(queryObj, function(html) {
+      laytpl(ID_operator.innerHTML).render(action, function(html) {
         $form.find('.toolbar').html(html);
       });
 
       //初始化
-      $.get(api.dictionaryMgr.smallTypeUrl, {bigTypeCode: 'systemType'}).then(function(json) {
+      $.get(api.dictionaryMgr.smallTypeUrl, {bigTypeCode: 'system_type'}).then(function(json) {
         var $select = $form.find('select[name=type]');
         $select.empty();
 
@@ -102,15 +105,15 @@
         form.render('select');
 
         //表单初始赋值
-        if (queryObj.id) {
-          if(queryObj.action != 'create') {
+        if (queryObj.id && action) {
+          if (!action.code.endsWith('create')) {
             $form.find('input[name=key]').attr('readonly', true);
           }
 
-          $.get(api.systemParameterMgr.url + '/' + queryObj.id).then(function(json) {
+          $.request(operatorMap['systemParameterMgr:view'], queryObj).then(json => {
             form.val('editForm', json.data);
 
-            if (queryObj.action == 'view') {
+            if (action.code.endsWith('view')) {
               $form.find('input, select, textarea').attr('disabled', 'disabled')
             }
           });
@@ -120,14 +123,14 @@
       var formMgr = this;
       //操作按钮触发事件
       $form.find('a.layui-btn:not([lay-submit])').on('click', function() {
-        var type = $(this).data('type');
-        formMgr[type] && formMgr[type](this);
+        var event = $(this).data('event');
+        formMgr['execute']({event: event, data: this});
       });
 
       //监听提交
       form.on('submit', function(data) {
-        var type = $(this).data('type');
-        formMgr[type] && formMgr[type](data.field);
+        var event = $(this).data('event');
+        formMgr['execute']({event: event, data: data.field});
 
         return false;
       });
@@ -135,16 +138,22 @@
 
     FormMgr.prototype = {
       constructor: FormMgr,
-      add: function(data) {
-        $.postJson(api.systemParameterMgr.url, data).then(json => {
-          MyCuckoo.msg({msg: json.message});
+      execute: function(obj) {
+        var arr = obj.event.split(':');
+        var event = arr[arr.length - 1];
+
+        this[event] && this[event](obj);
+      },
+      add: function(obj) {
+        $.request(action, obj.data).then(json => {
+          MyCuckoo.msg({msg: json.msg});
 
           this.refresh();
         });
       },
-      modify: function(data) {
-        $.put(api.systemParameterMgr.url, data).then(json => {
-          MyCuckoo.msg({msg: json.message});
+      modify: function(obj) {
+        $.request(action, obj.data).then(json => {
+          MyCuckoo.msg({msg: json.msg});
 
           this.refresh();
         });

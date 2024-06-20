@@ -44,12 +44,12 @@
 <script type="text/javascript" src="../../static/mycuckoo.api.js" charset="UTF-8"></script>
 <script type="text/html" id="ID_toolbar">
   <div class="layui-btn-group btn-toolbar">
-    {{# layui.each(d.operator, function(index, item){
-      if (item.code != 'add1') return;
+    {{# layui.each(d.operator, function(index, item) {
+      if ((item.group & 2) !== 2) return;
     }}
-    <a class="layui-btn layui-btn-sm" lay-event="{{ item.code }}">
+    <button class="layui-btn layui-btn-sm" lay-event="{{ item.code }}">
       <i class="layui-icon layui-icon-{{ item.iconCls }}"></i> {{ item.name }}
-    </a>
+    </button>
     {{# }); }}
   </div>
 </script>
@@ -57,15 +57,15 @@
   <div class="layui-clear-space">
     {{#
       layui.each(d.LAY_COL.operator, function(index, item) {
-        if (d.level == 3 && ['add', 'assign'].indexOf(item.code) >= 0) {
+        if (d.level == 3 && (item.group & 4) === 4 && (item.code.endsWith('add') || item.code.endsWith('assign'))) {
     }}
-    <a class="layui-btn layui-btn-xs {{ item.code == 'add' ? 'layui-btn-warm' : 'layui-bg-purple'}}" lay-event="{{ item.code }}">
+    <a class="layui-btn layui-btn-xs {{ item.code.endsWith('add') ? 'layui-btn-warm' : 'layui-bg-purple'}}" lay-event="{{ item.code }}">
       <i class="layui-icon layui-icon-{{ item.iconCls }}"></i> {{ item.name }}
     </a>
     {{#
-        } else if (d.level == 4 && ['view', 'modify'].indexOf(item.code) >= 0) {
+        } else if (d.level == 4 && (item.group & 4) === 4 && (item.code.endsWith('view') || item.code.endsWith('modify'))) {
     }}
-    <a class="layui-btn layui-btn-xs {{ item.code == 'view' ? 'layui-btn-primary' : 'layui-btn-info'}}" lay-event="{{ item.code }}">
+    <a class="layui-btn layui-btn-xs {{ item.code.endsWith('view') ? 'layui-btn-primary' : 'layui-btn-info'}}" lay-event="{{ item.code }}">
       <i class="layui-icon layui-icon-{{ item.iconCls }}"></i> {{ item.name }}
     </a>
     {{#
@@ -88,12 +88,14 @@
     //本地缓存数据
     var queryObj = MyCuckoo.getQueryObject(location.search);
     var operator = MyCuckoo.getOperation(queryObj.id);
+    var operatorMap = MyCuckoo.getDictMap(operator);
+    var action = operator.findLast(o => (o['group'] & 1) === 1);
 
     var tableInst = table.render({
       id: 'table',
       elem: '#ID_table',
-      url: api.resourceMgr.url,
-      method: 'get',
+      url: api.host + action.path,
+      method: action.method,
       cellMinWidth: 100,
       height: MyCuckoo.tableHeight,
 //      toolbar: '#ID_toolbar',
@@ -143,14 +145,12 @@
 
       //单元格工具事件
       table.on('tool(table)', function(obj) {
-        var event = obj.event; // 获得 lay-event 对应的值
-        var ele = obj.tr;
         var data = obj.data;
-        var tableId = obj.config.id;
         if (typeof data.id == 'string') {
-          data.id = data.id .replace('leaf-id-', '')
+          data.id = data.id .replace('id-leaf-', '')
         }
-        that[event] && that[event](obj);
+
+        that['execute'](obj);
       });
 
       table.on('toolbar(table)', function (obj) {
@@ -158,7 +158,7 @@
           return;
         }
         if (obj.event == 'add') {
-          that[obj.event](this);
+          that['execute'](obj);
           return;
         }
 
@@ -168,54 +168,61 @@
           return;
         }
 
-        if (!that[obj.event]) {
-          MyCuckoo.alert({title : '警示', msg : '此操作无效, 如有疑问, 请联系管理员!' });
-          return;
-        }
-
         obj.data = data;
-        that[obj.event](obj);
+        that['execute'](obj);
       });
     }
 
     IndexMgr.prototype = {
       constructor: IndexMgr,
+      execute: function(obj) {
+        var arr = obj.event.split(':');
+        var event = arr[arr.length - 1];
+
+        if (!this[event]) {
+          MyCuckoo.alert({title : '警示', msg : '此操作无效, 如有疑问, 请联系管理员!' });
+          return;
+        }
+
+        this[event](obj);
+      },
       reload: function(config) {
         table.reload('table', config || {});
       },
       //增加
       add: function(obj) {
-        var url = MyCuckoo.resolve('resourceMgrForm.html?action={_event}&opt={_opt}&moduleId={id}',
-            {'_event': obj.event, '_opt': queryObj.id, 'id': obj.data.id})
+        var url = MyCuckoo.resolve('resourceMgrForm.html?action={action}&opt={opt}&moduleId={id}',
+            {'action': obj.event, 'opt': queryObj.id, 'id': obj.data.id})
         MyCuckoo.dialog('资源信息', url);
       },
       //分配
       assign: function(obj) {
-        var url = MyCuckoo.resolve('tableConfigMgrForm.html?action={_event}&opt={_opt}&moduleId={id}&moduleName={name}',
-          {'_event': obj.event, '_opt': queryObj.id, 'id': obj.data.id, 'name': obj.data.text})
+        var url = MyCuckoo.resolve('resourceMgrAssignTableConfig.html?action={action}&opt={opt}&moduleId={id}&moduleName={name}',
+          {'action': obj.event, 'opt': queryObj.id, 'id': obj.data.id, 'name': obj.data.text})
         MyCuckoo.dialog('表头信息', url);
       },
       //修改
       modify: function(obj) {
         var data = obj.data;
-        data._event = obj.event;
-        data._opt = queryObj.id;
-        var url = MyCuckoo.resolve('resourceMgrForm.html?action={_event}&opt={_opt}&id={id}&moduleId={parentId}', data)
+        data.action = obj.event;
+        data.opt = queryObj.id;
+        var url = MyCuckoo.resolve('resourceMgrForm.html?action={action}&opt={opt}&id={id}&moduleId={parentId}', data)
         MyCuckoo.dialog('资源信息', url);
       },
       //查看
       view: function(obj) {
         var data = obj.data;
-        data._event = obj.event;
-        data._opt = queryObj.id;
-        var url = MyCuckoo.resolve('resourceMgrForm.html?action={_event}&opt={_opt}&id={id}&moduleId={parentId}', data)
+        data.action = obj.event;
+        data.opt = queryObj.id;
+        var url = MyCuckoo.resolve('resourceMgrForm.html?action={action}&opt={opt}&id={id}&moduleId={parentId}', data)
         MyCuckoo.sideDialog('资源信息', url);
       },
       //删除
       delete: function(obj) {
         var that = this;
+        var data = obj.data;
         MyCuckoo.confirm({msg : '您确认删除此记录吗?', ok : function() {
-          $.delete(api.resourceMgr + '/' + obj.data.resourceId).then(json => {
+          $.request(operatorMap[obj.event], {id: data.resourceId}).then(json => {
             MyCuckoo.msg({ msg: '资源删除成功' });
 
             that.reload(); // 刷新列表
@@ -224,17 +231,18 @@
       },
       //启用
       enable: function(obj) {
-        if(obj.data.status == 'enable') {
+        var data = obj.data;
+        if(data.status == 'enable') {
           MyCuckoo.msg({ msg : '此菜单已经启用' });
           return;
         }
-        if (obj.data.level != 3) {
+        if (data.level != 3) {
           MyCuckoo.msg({ msg : '请您选择资源!' });
           return;
         }
 
         var that = this;
-        $.put(api.resourceMgr.disEnableUrl, {id: obj.data.moduleId, disEnableFlag: 'enable'}).then(json => {
+        $.request(operatorMap[obj.event], {id: data.moduleId, disEnableFlag: 'enable'}).then(json => {
           MyCuckoo.msg({ msg: '菜单启用成功' });
 
           that.reload(); // 刷新列表
@@ -253,7 +261,7 @@
 
         var that = this;
         MyCuckoo.confirm({msg : '您确认停用此资源吗?如果停用,此资源下的操作将自动清除,并重登生效.', ok : function() {
-          $.put(api.resourceMgr.disEnableUrl, {id: obj.data.moduleId, disEnableFlag: 'disable'}).then(json => {
+          $.request(operatorMap[obj.event], {id: obj.data.moduleId, disEnableFlag: 'disable'}).then(json => {
             MyCuckoo.msg({ msg: '资源停用成功' });
 
             that.reload(); // 刷新列表

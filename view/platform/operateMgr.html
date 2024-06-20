@@ -44,11 +44,46 @@
 <script type="text/javascript" src="../../static/mycuckoo.api.js" charset="UTF-8"></script>
 <script type="text/html" id="ID_toolbar">
   <div class="layui-btn-group btn-toolbar">
-    {{# layui.each(d.operator, function(index, item){ }}
-    <button class="layui-btn layui-btn-sm" lay-event="{{= item.code }}">
-      <i class="layui-icon layui-icon-{{= item.iconCls }}"></i> {{= item.name }}
+    {{# layui.each(d.operator, function(index, item) {
+      if ((item.group & 2) !== 2) return;
+    }}
+    <button class="layui-btn layui-btn-sm" lay-event="{{ item.code }}">
+      <i class="layui-icon layui-icon-{{ item.iconCls }}"></i> {{ item.name }}
     </button>
     {{# }); }}
+  </div>
+</script>
+<script type="text/html" id="ID_tool">
+  <div class="layui-clear-space">
+    {{#
+      var i = 0;
+      var count = 0;
+      layui.each(d.LAY_COL.operator, function(index, item) {
+        if ((item.group & 4) === 4) {
+          count++;
+        }
+      });
+
+      layui.each(d.LAY_COL.operator, function(index, item) {
+        if ((item.group & 4) !== 4) {
+          return;
+        } else if (i === 0) {
+          i++;
+    }}
+    <a class="layui-btn layui-btn-xs" lay-event="{{ item.code }}">
+      <i class="layui-icon layui-icon-{{ item.iconCls }}"></i> {{ item.name }}
+    </a>
+    {{#
+        } else if (i === 1) {
+          i++;
+    }}
+    <a class="layui-btn layui-btn-xs" lay-event="more">更多
+      <i class="layui-icon layui-icon-down"></i>
+    </a>
+    {{#
+        }
+      });
+    }}
   </div>
 </script>
 <script type="text/javascript">
@@ -57,20 +92,23 @@
     version: '101100'
   });
 
-  layui.use(['jquery', 'form', 'table'], function() {
+  layui.use(['jquery', 'form', 'dropdown', 'table'], function() {
     var $ = layui.jquery,
       form = layui.form,
+      dropdown = layui.dropdown,
       table = layui.table;
 
     //本地缓存数据
     var queryObj = MyCuckoo.getQueryObject(location.search);
     var operator = MyCuckoo.getOperation(queryObj.id);
+    var operatorMap = MyCuckoo.getDictMap(operator);
+    var action = operator.findLast(o => (o['group'] & 1) === 1);
 
     table.render({
       id: 'table',
       elem: '#ID_table',
-      url: api.operateMgr.url,
-      method: 'get',
+      url: api.host + action.path,
+      method: action.method,
       cellMinWidth: 100,
       height: MyCuckoo.tableHeight,
       toolbar: '#ID_toolbar',
@@ -94,6 +132,7 @@
         },
         {field: 'creator', title: '创建人'},
         {field: 'createTime', title: '创建日期', sort: true},
+        {fixed: "right", title: "操作", align: "center", width: 120, toolbar: '#ID_tool', operator: operator}
       ]],
       page: true,
       request: {
@@ -103,7 +142,7 @@
       parseData: function(res) {
         return {
           code: res.code,
-          msg: res.message,
+          msg: res.msg,
           count: res.data.totalElements,
           data: res.data.content
         }
@@ -130,72 +169,87 @@
         return false;
       });
 
+      //单元格工具事件
+      table.on('tool(table)', function (obj) {
+        obj.othis = this;
+        that['execute'](obj);
+      });
+
       table.on('toolbar(table)', function (obj) {
         if (obj.event.indexOf('LAYTABLE_') == 0) {
           return;
         }
-        if (obj.event == 'add') {
-          that[obj.event](obj);
+
+        if (obj.event.endsWith('add')) {
+          that['execute'](obj);
           return;
         }
 
         var data = table.checkStatus(obj.config.id).data;
-        if (data.length != 1) {
+        if (data.length != 1 || !data[0].id) {
           MyCuckoo.alert({title : '提示', msg : '请选择一条记录' });
           return;
         }
 
-        if (!that[obj.event]) {
-          MyCuckoo.alert({title : '警示', msg : '此操作无效, 如有疑问, 请联系管理员!' });
-          return;
-        }
-
         obj.data = data[0];
-        that[obj.event](obj);
+        that['execute'](obj);
       });
     }
 
     IndexMgr.prototype = {
       constructor: IndexMgr,
+      execute: function(obj) {
+        var arr = obj.event.split(':');
+        var event = arr[arr.length - 1];
+
+        if (!this[event]) {
+          MyCuckoo.alert({title : '警示', msg : '此操作无效, 如有疑问, 请联系管理员!' });
+          return;
+        }
+
+        this[event](obj);
+      },
       reload: function() {
         table.reload('table', { page: { pageNo: 1 } });
       },
       //增加
       add: function(obj) {
-        var url = MyCuckoo.resolve('operateMgrForm.html?action={_event}&opt={_opt}',
-            {'_event': obj.event, '_opt': queryObj.id})
+        var url = MyCuckoo.resolve('operateMgrForm.html?action={action}&opt={opt}',
+            {'action': obj.event, 'opt': queryObj.id})
         MyCuckoo.dialog('角色信息', url);
       },
       //修改
       modify: function(obj) {
         var data = obj.data;
-        var url = MyCuckoo.resolve('operateMgrForm.html?action={_event}&opt={_opt}&id={id}',
-            {'_event': obj.event, '_opt': queryObj.id, 'id': data.operateId})
+        var url = MyCuckoo.resolve('operateMgrForm.html?action={action}&opt={opt}&id={id}',
+            {'action': obj.event, 'opt': queryObj.id, 'id': data.operateId})
         MyCuckoo.dialog('角色信息', url);
       },
       //查看
       view: function(obj) {
         var data = obj.data;
-        var url = MyCuckoo.resolve('operateMgrForm.html?action={_event}&opt={_opt}&id={id}',
-            {'_event': obj.event, '_opt': queryObj.id, 'id': data.operateId})
+        var url = MyCuckoo.resolve('operateMgrForm.html?action={action}&opt={opt}&id={id}',
+            {'action': obj.event, 'opt': queryObj.id, 'id': data.operateId})
         MyCuckoo.sideDialog('角色信息', url);
       },
       //启用
-      enable: function(data) {
+      enable: function(obj) {
+        var data = obj.data;
         if(data.status == 'enable') {
           MyCuckoo.msg({ msg : '此操作已经启用' });
           return;
         }
 
         var that = this;
-        $.put(api.operateMgr.disEnableUrl, {id: data.operateId, disEnableFlag: 'enable'}).then(function(json) {
+        $.request(operatorMap[obj.event], {id: data.operateId, disEnableFlag: 'enable'}).then(json => {
           MyCuckoo.msg({ msg: '操作启用成功' });
 
-          that.reload(); // 刷新列表
+          that.reload();
         });
       },
       //停用
-      disable: function(data) {
+      disable: function(obj) {
+        var data = obj.data;
         if(data.status == 'disable') {
           MyCuckoo.alert({ title : '提示', msg : '此操作已经停用' });
           return;
@@ -203,13 +257,36 @@
 
         var that = this;
         MyCuckoo.confirm({msg : '您确认停用此操作吗? 如果停用,相应模块下的此操作将自动清除,并重登生效.', ok : function() {
-          $.put(api.operateMgr.disEnableUrl, {id: data.operateId, disEnableFlag: 'disable'}).then(function(json) {
+          $.request(operatorMap[obj.event], {id: data.operateId, disEnableFlag: 'disable'}).then(function(json) {
             MyCuckoo.msg({ msg: '操作停用成功' });
 
-            that.reload(); // 刷新列表
+            that.reload();
           });
         }});
       },
+      more: function (obj) {
+        var that = this;
+        var btns = [];
+        var i = 0;
+        layui.each(operator, function(index, item) {
+          if ((item.group & 4) != 4 || i++ == 0) {
+            return;
+          }
+          btns.push(item);
+        });
+        dropdown.render({
+          elem: obj.othis, // 触发事件的 DOM 对象
+          show: true, // 外部事件触发即显示
+          data: btns,
+          customName: {
+            title: 'name'
+          },
+          click: function(menudata) {
+            obj.event = menudata.code;
+            that['execute'](obj);
+          }
+        });
+      }
       //end
     }
   });

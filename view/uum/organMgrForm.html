@@ -41,7 +41,7 @@
             <div class="layui-input-wrap">
               <input type="hidden" name="belongDist" />
               <input type="text" name="belongDistName" class="layui-input" lay-affix="search"
-                     data-type="selectBelongDist" lay-filter="selectBelongDist" lay-verify="required" readonly />
+                     data-event="selectBelongDist" lay-filter="selectBelongDist" lay-verify="required" readonly />
             </div>
           </div>
         </div>
@@ -131,7 +131,7 @@
             <div class="layui-input-wrap">
               <input type="hidden" name="parentId" />
               <input type="text" name="parentName" class="layui-input" lay-affix="search"
-                     data-type="selectOrgan" lay-filter="selectOrgan" lay-verify="required" readonly />
+                     data-event="selectOrgan" lay-filter="selectOrgan" lay-verify="required" readonly />
             </div>
           </div>
         </div>
@@ -153,12 +153,12 @@
 <script type="text/javascript" src="../../static/mycuckoo.api.js" charset="UTF-8"></script>
 <script type="text/html" id="ID_operator">
   <div class="layui-btn-container" style="margin-bottom: 6px; text-align: center;">
-    {{# if(d.action != 'view') { }}
-    <a href="javascript: " class="layui-btn layui-btn-sm" data-type="{{= d.action }}" lay-submit>
-      <i class="layui-icon layui-icon-ok"></i>保存
+    {{# if((d.group & 8) === 8) { }}
+    <a href="javascript: " class="layui-btn layui-btn-sm" data-event="{{= d.code }}" lay-submit>
+      <i class="layui-icon layui-icon-ok"></i>{{= d.name }}
     </a>
     {{# } }}
-    <a href="javascript:" class="layui-btn layui-btn-sm" data-type="close">
+    <a href="javascript:" class="layui-btn layui-btn-sm" data-event="close">
       <i class="layui-icon layui-icon-close"></i>关闭
     </a>
   </div>
@@ -177,17 +177,20 @@
       layDate = layui.laydate,
       tree = layui.dtree,
       queryObj = MyCuckoo.getQueryObject(location.search),
+      operator = MyCuckoo.getOperation(queryObj.opt),
+      operatorMap = MyCuckoo.getDictMap(operator),
+      action = operatorMap[queryObj.action],
       $form = $('form[name=editForm]');
 
 
     var FormMgr = function() {
       //渲染操作按钮
-      laytpl(ID_operator.innerHTML).render(queryObj, function(html) {
+      laytpl(ID_operator.innerHTML).render(action, function(html) {
         $form.find('.toolbar').html(html);
       });
 
       //初始化
-      $.get(api.dictionaryMgr.smallTypeUrl, {bigTypeCode: 'organType'}).then(function(json) {
+      $.get(api.dictionaryMgr.smallTypeUrl, {bigTypeCode: 'org_type'}).then(function(json) {
         var $select = $form.find('select[name=type]');
         $select.empty();
         for (var i = 0; i < json.data.length; i++) {
@@ -197,11 +200,11 @@
         form.render('select');
 
         //表单初始赋值
-        if (queryObj.id) {
-          $.get(api.organMgr.url + '/' + queryObj.id).then(function(json) {
+        if (queryObj.id && action) {
+          $.request(operatorMap['organMgr:view'], queryObj).then(json => {
             form.val('editForm', json.data);
 
-            if (queryObj.action == 'view') {
+            if (action.code.endsWith('view')) {
               $form.find('input, select, textarea').attr('disabled', 'disabled')
             }
           });
@@ -216,29 +219,34 @@
       var formMgr = this;
       //操作按钮触发事件
       $form.find('a.layui-btn:not([lay-submit])').on('click', function() {
-        var type = $(this).data('type');
-        formMgr[type] && formMgr[type](this);
+        var event = $(this).data('event');
+        formMgr['execute']({event: event, data: this});
       });
 
       form.on('input-affix', function(data) {
         var elem = data.elem; // 获取输入框 DOM 对象
         var affix = data.affix; // 获取输入框 lay-affix 属性值
-        var type = $(elem).data('type');
-        $(elem).attr('disabled') != 'disabled' && formMgr[type] && formMgr[type](this);
+        var event = $(elem).data('event');
+        $(elem).attr('disabled') != 'disabled' && formMgr[event]({event: event, data: this});
       });
 
       //监听提交
       form.on('submit', function(data) {
-        var type = $(this).data('type');
-        formMgr[type] && formMgr[type](data.field);
+        var event = $(this).data('event');
+        formMgr['execute']({event: event, data: data.field});
 
         return false;
       });
     }
 
-
     FormMgr.prototype = {
       constructor: FormMgr,
+      execute: function(obj) {
+        var arr = obj.event.split(':');
+        var event = arr[arr.length - 1];
+
+        this[event] && this[event](obj);
+      },
       openTree: function(url, config) {
         var fillForm = function(data) {
           var valObj =  {};
@@ -283,22 +291,34 @@
           }
         });
       },
-      selectBelongDist: function(ele) {
-        this.openTree(api.districtMgr.childNodesUrl, {nodeId: 'belongDist', context: 'belongDistName'});
+      selectBelongDist: function(obj) {
+        var action = operatorMap['districtMgr:tree'];
+        if (!action) {
+          MyCuckoo.msg({msg: '无权访问此资源'});
+          return;
+        }
+
+        this.openTree(api.host + action.path, {nodeId: 'belongDist', context: 'belongDistName'});
       },
-      selectOrgan: function(ele) {
-        this.openTree(api.organMgr.childNodesUrl, {nodeId: 'parentId', context: 'parentName'});
+      selectOrgan: function(obj) {
+        var action = operatorMap['organMgr:tree'];
+        if (!action) {
+          MyCuckoo.msg({msg: '无权访问此资源'});
+          return;
+        }
+
+        this.openTree(api.host + action.path, {nodeId: 'parentId', context: 'parentName'});
       },
-      add: function(data) {
-        $.postJson(api.organMgr.url, data).then(json => {
-          MyCuckoo.msg({msg: json.message});
+      add: function(obj) {
+        $.request(action, obj.data).then(json => {
+          MyCuckoo.msg({msg: json.msg});
 
           this.refresh();
         });
       },
-      modify: function(data) {
-        $.put(api.organMgr.url, data).then(json => {
-          MyCuckoo.msg({msg: json.message});
+      modify: function(obj) {
+        $.request(action, obj.data).then(json => {
+          MyCuckoo.msg({msg: json.msg});
 
           this.refresh();
         });

@@ -35,37 +35,47 @@
       </div>
     </div>
 
-    <div class="layui-form-item">
-      <div class="layui-input-block">
-        <div class="layui-btn-group">
-          <a href="javascript:" class="layui-btn layui-btn-sm" data-type="save" lay-submit>
-            <i class="layui-icon layui-icon-ok"></i>保存
-          </a>
-          <a href="javascript:" class="layui-btn layui-btn-sm" data-type="close">
-            <i class="layui-icon layui-icon-close"></i>关闭
-          </a>
-        </div>
-      </div>
-    </div>
+    <div class="toolbar"></div>
   </form>
 </div>
 </body>
 <script type="text/javascript" src="../../static/layui/2.9.8/layui.js" charset="UTF-8"></script>
 <script type="text/javascript" src="../../static/mycuckoo.js" charset="UTF-8"></script>
 <script type="text/javascript" src="../../static/mycuckoo.api.js" charset="UTF-8"></script>
+<script type="text/html" id="ID_operator">
+  <div class="layui-btn-container" style="margin-bottom: 6px; text-align: center;">
+    {{# if((d.group & 8) === 8) { }}
+    <a href="javascript: " class="layui-btn layui-btn-sm" data-event="{{= d.code }}" lay-submit>
+      <i class="layui-icon layui-icon-ok"></i>{{= d.name }}
+    </a>
+    {{# } }}
+    <a href="javascript:" class="layui-btn layui-btn-sm" data-event="close">
+      <i class="layui-icon layui-icon-close"></i>关闭
+    </a>
+  </div>
+</script>
 <script type="text/javascript">
   layui.config({
     base: '../../static/extend/',
     version: '101100'
   });
 
-  layui.use(['jquery', 'form'], function() {
+  layui.use(['jquery', 'laytpl', 'form'], function() {
     var $ = layui.jquery,
+      laytpl = layui.laytpl,
       form = layui.form,
       queryObj = MyCuckoo.getQueryObject(location.search),
+      operator = MyCuckoo.getOperation(queryObj.opt),
+      operatorMap = MyCuckoo.getDictMap(operator),
+      action = operatorMap[queryObj.action],
       $form = $('form[name=editForm]');
 
     var FormMgr = function () {
+      //渲染操作按钮
+      laytpl(ID_operator.innerHTML).render(action || {}, function(html) {
+        $form.find('.toolbar').html(html);
+      });
+
       //表单初始赋值
       if (!queryObj.id) {
         MyCuckoo.alert({title: '提示', msg: '请选择模块!'});
@@ -73,7 +83,7 @@
       } else {
         $form.parent().find('legend').text(queryObj.name);
 
-        $.get(api.moduleMgr.operationUrl, queryObj).then(function(json) {
+        $.request(operatorMap['moduleMgr:optSelector'], queryObj).then(function(json) {
           var data = json.data.source;
           var assign = json.data.assign || [];
           var $checkbox = $('<div></div>');
@@ -94,14 +104,14 @@
       //操作按钮触发事件
       var formMgr = this;
       $form.find('a.layui-btn:not([lay-submit])').on('click', function() {
-        var type = $(this).data('type');
-        formMgr[type] && formMgr[type](this);
+        var event = $(this).data('event');
+        formMgr['execute']({event: event, data: this});
       });
 
       //监听提交
       form.on('submit', function(data) {
-        var type = $(this).data('type');
-        formMgr[type] && formMgr[type]($.extend({}, data.field, queryObj));
+        var event = $(this).data('event');
+        formMgr['execute']({event: event, data: $.extend({}, data.field, queryObj)});
 
         return false;
       });
@@ -109,8 +119,15 @@
 
     FormMgr.prototype = {
       constructor: FormMgr,
+      execute: function(obj) {
+        var arr = obj.event.split(':');
+        var event = arr[arr.length - 1];
+
+        this[event] && this[event](obj);
+      },
       //保存模块操作
-      save(data) {
+      assignOpt(obj) {
+        var data = obj.data;
         var optIds = []
         for (var p in data) {
           if (p.indexOf('optIds') == 0) {
@@ -122,18 +139,17 @@
           return;
         }
 
-        $.postJson(api.moduleMgr.saveModuleOptRefsUrl, data, optIds).then(json => {
-          MyCuckoo.msg({msg: json.message});
+        $.request(action, data, optIds).then(json => {
+          MyCuckoo.msg({msg: json.msg});
 
-          this.refresh();
+          this.close();
         });
       },
       //刷新父窗
       refresh: function() {
         setTimeout(function() {
           parent.location.reload();
-          this.close();
-        }, 2000);
+        }, 1500);
       },
       //关闭当前iframe页
       close: function(ele) {

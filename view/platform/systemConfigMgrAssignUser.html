@@ -31,10 +31,10 @@
 
   <form class="layui-form">
     <div class="layui-btn-container" style="margin-bottom: 6px; text-align: center;">
-      <a href="javascript:" class="layui-btn layui-btn-sm" data-type="save" lay-submit="submit">
-        <i class="layui-icon layui-icon-ok"></i>添加保存
+      <a href="javascript:" class="layui-btn layui-btn-sm" data-event="save" lay-submit="submit">
+        <i class="layui-icon layui-icon-ok"></i>保存
       </a>
-      <a href="javascript:" class="layui-btn layui-btn-sm" data-type="close">
+      <a href="javascript:" class="layui-btn layui-btn-sm" data-event="close">
         <i class="layui-icon layui-icon-close"></i>取消
       </a>
     </div>
@@ -54,22 +54,15 @@
     var $ = layui.jquery,
       form = layui.form,
       table = layui.table,
-      queryObj = MyCuckoo.getQueryObject(location.search);
-
-    form.on('submit(search)', function(data) {
-      //执行重载
-      table.reload('table', {
-        page: {pageNo: 1},
-        where: $.extend({}, data.field, {'q[userAddDelFlag]': 'add'})
-      });
-
-      return false;
-    });
+      queryObj = MyCuckoo.getQueryObject(location.search),
+      operator = MyCuckoo.getOperation(queryObj.opt),
+      operatorMap = MyCuckoo.getDictMap(operator),
+      action = operatorMap[queryObj.action];
 
     table.render({
       id: 'table',
       elem: '#ID_table',
-      url: api.systemConfigMgr.userUrl,
+      url: api.host + operatorMap['systemConfigMgr:selector'].path,
       method: 'get',
       cellMinWidth: 100,
       cols: [[
@@ -90,7 +83,7 @@
       parseData: function(res) {
         return {
           code: res.code,
-          msg: res.message,
+          msg: res.msg,
           count: res.data.totalElements,
           data: res.data.content
         }
@@ -99,6 +92,15 @@
 
 
     var FormMgr = function() {
+      form.on('submit(search)', function(data) {
+        table.reload('table', {
+          page: {pageNo: 1},
+          where: $.extend({}, data.field, {'q[userAddDelFlag]': 'add'})
+        });
+
+        return false;
+      });
+
       if(queryObj['q[userAddDelFlag]'] == 'add') {
         $('.mycuckoo-search').parent().removeClass('layui-hide');
       }
@@ -106,8 +108,8 @@
       var formMgr = this;
       //操作按钮触发事件
       $('form a.layui-btn').on('click', function() {
-        var type = $(this).data('type');
-        formMgr[type] && formMgr[type](this);
+        var event = $(this).data('event');
+        formMgr[event] && formMgr[event](this);
       });
     }
 
@@ -125,8 +127,8 @@
           codes.push(item.code);
         });
         var params = {'userAddDelFlag': queryObj['q[userAddDelFlag]'], systemMgr : codes};
-        $.put(api.systemConfigMgr.url, params).then(json => {
-          MyCuckoo.msg({msg: json.message});
+        $.request(action, params).then(json => {
+          MyCuckoo.msg({msg: json.msg});
 
           this.refresh();
         });
@@ -135,8 +137,7 @@
       refresh: function() {
         setTimeout(function() {
           parent.location.reload();
-          this.close();
-        }, 2000);
+        }, 1500);
       },
       //关闭当前iframe页
       close: function(ele) {

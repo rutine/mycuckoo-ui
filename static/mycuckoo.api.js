@@ -42,6 +42,26 @@ layui.use(['jquery'], function () {
   }
 
   var $get = $.get;
+  $.request = function(action, uriVariables, params) {
+    if (!action) {
+      throw new Error('无权访问此资源');
+    }
+
+    var method = action.method.toLowerCase();
+    var url = action.url ? action.url : (host + action.path);
+    if (method === 'get') {
+      return $.get(url, uriVariables, params);
+    } else if (method === 'post') {
+      return $.postJson(url, uriVariables, params);
+    } else if (method === 'put') {
+      return $.put(url, uriVariables, params);
+    } else if (method === 'delete') {
+      return $.delete(url, uriVariables, params);
+    }
+
+    return {}
+  }
+
   $.get = function (url, uriVariables, params) {
     if (!params) {
       params = uriVariables;
@@ -52,6 +72,7 @@ layui.use(['jquery'], function () {
   }
 
   $.postJson = function (url, uriVariables, params) {
+    console.log(url)
     if (!params) {
       params = uriVariables;
     }
@@ -97,18 +118,18 @@ layui.use(['jquery'], function () {
 
     login: {
       loginUrl: host + '/login',
-      selectOrgUrl: host + '/login/select-org',
-      thirdStepUrl: host + '/login/my-menu'
+      selectOrgUrl: host + '/login/orgs',
+      thirdStepUrl: host + '/login/menus'
     },
 
     postLogin: function(params) {
       return $.post(host + '/login', params).then(res => res.data);
     },
     postSelectOrg: function(params) {
-      return $.postJson(host + '/login/select-org', params).then(res => res.data);
+      return $.postJson(host + '/login/orgs', params).then(res => res.data);
     },
     postMenu: function(params) {
-      return $.post(host + '/login/my-menu', params).then(res => res.data);
+      return $.post(host + '/login/menus', params).then(res => res.data);
     },
     getLogout: function() {
       return $.get(host + '/login/logout').then(res => res.data);

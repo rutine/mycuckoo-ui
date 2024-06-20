@@ -70,7 +70,7 @@
       parseData: function(res) {
         return {
           code: res.code,
-          msg: res.message,
+          msg: res.msg,
           count: res.data.totalElements,
           data: res.data.content
         }
@@ -98,7 +98,7 @@
 
         var params = {id : queryObj.id, roleId : data[0].roleId};
         $.put(api.deptMgr.assignUrl, params).then(json => {
-          MyCuckoo.msg({msg: json.message});
+          MyCuckoo.msg({msg: json.msg});
 
           this.refresh();
         });

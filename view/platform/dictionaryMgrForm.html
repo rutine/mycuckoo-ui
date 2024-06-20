@@ -12,10 +12,6 @@
   <form class="layui-form layui-form-pane" name="editForm" lay-filter="editForm">
     <input type="hidden" name="bigTypeId" />
 
-    <fieldset class="layui-elem-field layui-field-title" style="margin-top: 20px;">
-      <legend>字典</legend>
-    </fieldset>
-
     <div class="layui-form-item">
       <div class="layui-inline">
         <label class="layui-form-label">编码</label>
@@ -39,11 +35,13 @@
     </div>
 
     <fieldset class="layui-elem-field layui-field-title" style="margin-top: 20px;">
-      <legend>字典项目</legend>
+      <legend>项目</legend>
     </fieldset>
 
     <div class="dic-small-type">
-      <a class="layui-btn layui-btn-sm layui-btn-normal layui-hide" data-type="addSmallType">添加</a>
+      <a class="layui-btn layui-btn-xs layui-btn-warm layui-hide" data-event="addRow">
+        <i class="layui-icon layui-icon-addition"></i>添加
+      </a>
       <table class="layui-table">
         <thead>
         <tr>
@@ -65,12 +63,12 @@
 <script type="text/javascript" src="../../static/mycuckoo.api.js" charset="UTF-8"></script>
 <script type="text/html" id="ID_operator">
   <div class="layui-btn-container" style="margin-bottom: 6px; text-align: center;">
-    {{# if(d.action != 'view') { }}
-    <a href="javascript: " class="layui-btn layui-btn-sm" data-type="{{= d.action }}" lay-submit>
-      <i class="layui-icon layui-icon-ok"></i>保存
+    {{# if((d.group & 8) === 8) { }}
+    <a href="javascript: " class="layui-btn layui-btn-sm" data-event="{{= d.code }}" lay-submit>
+      <i class="layui-icon layui-icon-ok"></i>{{= d.name }}
     </a>
     {{# } }}
-    <a href="javascript:" class="layui-btn layui-btn-sm" data-type="close">
+    <a href="javascript:" class="layui-btn layui-btn-sm" data-event="close">
       <i class="layui-icon layui-icon-close"></i>关闭
     </a>
   </div>
@@ -86,26 +84,29 @@
       laytpl = layui.laytpl,
       form = layui.form,
       queryObj = MyCuckoo.getQueryObject(location.search),
+      operator = MyCuckoo.getOperation(queryObj.opt),
+      operatorMap = MyCuckoo.getDictMap(operator),
+      action = operatorMap[queryObj.action],
       $form = $('form[name=editForm]');
 
     var FormMgr = function() {
-      if(queryObj.action != 'view') {
-        $form.find('a[data-type=addSmallType]').removeClass('layui-hide');
+      if (!action.code.endsWith('view')) {
+        $form.find('a[data-event=addRow]').removeClass('layui-hide');
       }
 
       //渲染操作按钮
-      laytpl(ID_operator.innerHTML).render(queryObj, function(html) {
+      laytpl(ID_operator.innerHTML).render(action, function(html) {
         $form.find('.toolbar').html(html);
       });
 
       //表单初始赋值
-      if (queryObj.id) {
-        $.get(api.dictionaryMgr.url + '/' + queryObj.id).then(function(json) {
+      if (queryObj.id && action) {
+        $.request(operatorMap['dictionaryMgr:view'], queryObj).then(function(json) {
           form.val('editForm', json.data);
 
           formMgr.smallTypeGrid(json.data.smallTypes);
 
-          if (queryObj.action == 'view') {
+          if (action.code.endsWith('view')) {
             $form.find('input, select, textarea').attr('disabled', 'disabled')
           }
         });
@@ -114,27 +115,33 @@
       var formMgr = this;
       //操作按钮触发事件
       $form.find('a.layui-btn:not([lay-submit])').on('click', function() {
-        var type = $(this).data('type');
-        formMgr[type] && formMgr[type](this);
+        var event = $(this).data('event');
+        formMgr['execute']({event: event, data: this});
       });
 
       //监听提交
       form.on('submit', function(data) {
-        var type = $(this).data('type');
-        formMgr[type] && formMgr[type](data.field);
+        var event = $(this).data('event');
+        formMgr['execute']({event: event, data: data.field});
 
         return false;
       });
     }
 
     FormMgr.prototype = {
-      index: 0,
       constructor: FormMgr,
+      index: 0,
+      execute: function(obj) {
+        var arr = obj.event.split(':');
+        var event = arr[arr.length - 1];
+
+        this[event] && this[event](obj);
+      },
       smallTypeGrid: function(smallTypes) {
         var that = this;
         var $ele = $form.find('#ID_mycuckoo_dict_small_type_content');
         smallTypes.forEach(function(item, index) {
-          if (queryObj.action == 'view') {
+          if (action.code.endsWith('view')) {
             var tr = $([
               '<tr>',
               '<td>' + item.code + '</td>',
@@ -168,7 +175,7 @@
           }
         });
       },
-      addSmallType: function(ele) {
+      addRow: function(ele) {
         this.smallTypeGrid([{name: '', code: ''}]);
       },
       convert: function(data) {
@@ -192,16 +199,16 @@
 
         return data;
       },
-      add: function(data) {
-        $.postJson(api.dictionaryMgr.url, this.convert(data)).then(json => {
-          MyCuckoo.msg({msg: json.message});
+      add: function(obj) {
+        $.request(action, this.convert(obj.data)).then(json => {
+          MyCuckoo.msg({msg: json.msg});
 
           this.refresh();
         });
       },
-      modify: function(data) {
-        $.put(api.dictionaryMgr.url, this.convert(data)).then(json => {
-          MyCuckoo.msg({msg: json.message});
+      modify: function(obj) {
+        $.request(action, this.convert(obj.data)).then(json => {
+          MyCuckoo.msg({msg: json.msg});
 
           this.refresh();
         });

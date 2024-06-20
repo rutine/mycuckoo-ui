@@ -54,42 +54,56 @@
         </div>
       </div>
 
-      <div class="layui-btn-container" style="margin-bottom: 6px; text-align: center;">
-        <a href="javascript:" class="layui-btn layui-btn-sm" data-type="saveModResource" lay-submit>
-          <i class="layui-icon layui-icon-ok"></i>保存
-        </a>
-        <a href="javascript:" class="layui-btn layui-btn-sm" data-type="close">
-          <i class="layui-icon layui-icon-close"></i>取消
-        </a>
-      </div>
+      <div class="toolbar"></div>
     </form>
   </div>
 </body>
 <script type="text/javascript" src="../../static/layui/2.9.8/layui.js" charset="UTF-8"></script>
 <script type="text/javascript" src="../../static/mycuckoo.js" charset="UTF-8"></script>
 <script type="text/javascript" src="../../static/mycuckoo.api.js" charset="UTF-8"></script>
+<script type="text/html" id="ID_operator">
+  <div class="layui-btn-container" style="margin-bottom: 6px; text-align: center;">
+    {{# if((d.group & 8) === 8) { }}
+    <a href="javascript: " class="layui-btn layui-btn-sm" data-event="{{= d.code }}" lay-submit>
+      <i class="layui-icon layui-icon-ok"></i>{{= d.name }}
+    </a>
+    {{# } }}
+    <a href="javascript:" class="layui-btn layui-btn-sm" data-event="close">
+      <i class="layui-icon layui-icon-close"></i>关闭
+    </a>
+  </div>
+</script>
 <script type="text/javascript">
   layui.config({
     base: '../../static/extend/',
     version: '101100'
   });
 
-  layui.use(['jquery', 'form', 'tree'], function() {
+  layui.use(['jquery', 'laytpl', 'form', 'tree'], function() {
     var $ = layui.jquery,
+      laytpl = layui.laytpl,
       form = layui.form,
       tree = layui.tree,
       queryObj = MyCuckoo.getQueryObject(location.search),
+      operator = MyCuckoo.getOperation(queryObj.opt),
+      operatorMap = MyCuckoo.getDictMap(operator),
+      action = operatorMap[queryObj.action],
       $form = $('form[name=editForm]');
 
     var FormMgr = function () {
       var that = this;
+
+      //渲染操作按钮
+      laytpl(ID_operator.innerHTML).render(action || {}, function(html) {
+        $form.find('.toolbar').html(html);
+      });
 
       $form.find('#ID_mycuckoo-tree').height($(window).height - 293);
 
       //表单初始赋值
       if (queryObj.id) {
         $form.parent().find('fieldset > legend').text('模块: ' + queryObj.name);
-        $.get(api.moduleMgr.resourceUrl, queryObj).then(function(json) {
+        $.request(operatorMap['moduleMgr:resSelector'], queryObj).then(function(json) {
           var source = json.data.source;
           var $elem = $form.find('.layui-col-md9');
           that.rend($elem, source, false, source);
@@ -123,14 +137,14 @@
       var formMgr = this;
       //操作按钮触发事件
       $form.find('a.layui-btn:not([lay-submit])').on('click', function() {
-        var type = $(this).data('type');
-        formMgr[type] && formMgr[type](this);
+        var event = $(this).data('event');
+        formMgr['execute']({event: event, data: this});
       });
 
       //监听提交
       form.on('submit', function(data) {
-        var type = $(this).data('type');
-        formMgr[type] && formMgr[type]($.extend({}, data.field, queryObj));
+        var event = $(this).data('event');
+        formMgr['execute']({event: event, data: $.extend({}, data.field, queryObj)});
 
         return false;
       });
@@ -138,6 +152,12 @@
 
     FormMgr.prototype = {
       constructor: FormMgr,
+      execute: function(obj) {
+        var arr = obj.event.split(':');
+        var event = arr[arr.length - 1];
+
+        this[event] && this[event](obj);
+      },
       rend: function (elem, data, checked, source) {
         var hideBi = 1 << 9;
         if (data && data.children && data.children.length > 0) {
@@ -168,7 +188,7 @@
             '<div class="layui-row mycuckoo-checkbox-set mycuckoo-checkbox-set-' + data.id + '" data-id="' + data.id + '">',
             ' <div class="layui-col-sm3 layui-font-green">',
             function () {
-              return '<span>' + arr.join('</span><span>=></span><span>') + '</span>';
+              return '<span class="layui-badge"><span>' + arr.join('</span><span> => </span><span>') + '</span></span>';
             }(),
             ' </div>',
             ' <div class="layui-col-sm9">',
@@ -216,7 +236,7 @@
         return null;
       },
       //保存用户权限
-      saveModResource: function(data) {
+      assignRes: function(obj) {
         var main = 0;
         var resource = [];
         $checkboxSet = $form.find('.mycuckoo-checkbox-set:not(.layui-hide)');
@@ -248,23 +268,22 @@
 
           var id = $ele.data('id');
           resource.push({
-            resourceId: id.indexOf('leaf-id-') >= 0 ? id.substr('leaf-id-'.length) : id,
+            resourceId: id.indexOf('id-leaf-') >= 0 ? id.substr('id-leaf-'.length) : id,
             group: grp
           })
         }
 
-        $.postJson(api.moduleMgr.saveModuleResRefsUrl, queryObj, resource).then(json => {
-          MyCuckoo.msg({msg: json.message});
+        $.request(action, obj.data, resource).then(json => {
+          MyCuckoo.msg({msg: json.msg});
 
-          this.refresh();
+          this.close();
         });
       },
       //刷新父窗
       refresh: function() {
         setTimeout(function() {
           parent.location.reload();
-          this.close();
-        }, 2000);
+        }, 1500);
       },
       //关闭当前iframe页
       close: function(ele) {

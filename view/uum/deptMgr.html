@@ -44,8 +44,8 @@
 <script type="text/javascript" src="../../static/mycuckoo.api.js" charset="UTF-8"></script>
 <script type="text/html" id="ID_toolbar">
   <div class="layui-btn-group btn-toolbar">
-    {{# layui.each(d.operator, function(index, item){
-      if (item.code != 'add') return;
+    {{# layui.each(d.operator, function(index, item) {
+      if ((item.group & 2) !== 2 && !item.code.endsWith('add')) return;
     }}
     <button class="layui-btn layui-btn-sm" lay-event="{{ item.code }}">
       <i class="layui-icon layui-icon-{{ item.iconCls }}"></i> {{ item.name }}
@@ -54,44 +54,32 @@
   </div>
 </script>
 <script type="text/html" id="ID_tool">
-  <div class="layui-clear-space layui-hide">
-    {{# layui.each(d.LAY_COL.operator, function(index, item){
-      if (item.code == 'add') return;
-    }}
-    <a class="layui-btn layui-btn-xs" lay-event="{{ item.code }}">
-      <i class="layui-icon layui-icon-{{ item.iconCls }}"></i> {{ item.name }}
-    </a>
-    {{# }); }}
-  </div>
   <div class="layui-clear-space">
     {{#
-      var len = d.LAY_COL.operator.length;
       var i = 0;
+      var count = 0;
       layui.each(d.LAY_COL.operator, function(index, item) {
-        if (item.code == 'add') {
-          len--;
-          return;
+        if ((item.group & 4) === 4) {
+          count++;
         }
       });
 
       layui.each(d.LAY_COL.operator, function(index, item) {
-        if (item.code == 'add') {
+        if ((item.group & 4) !== 4) {
           return;
-        }
-        if (i == 0) {
+        } else if (i === 0) {
           i++;
     }}
-          <a class="layui-btn layui-btn-xs" lay-event="{{ item.code }}">
-            <i class="layui-icon layui-icon-{{ item.iconCls }}"></i> {{ item.name }}
-          </a>
+    <a class="layui-btn layui-btn-xs" lay-event="{{ item.code }}">
+      <i class="layui-icon layui-icon-{{ item.iconCls }}"></i> {{ item.name }}
+    </a>
     {{#
-        }
-        if (i == 1) {
+        } else if (i === 1) {
           i++;
     }}
-          <a class="layui-btn layui-btn-xs" lay-event="more">更多
-           <i class="layui-icon layui-icon-down"></i>
-          </a>
+    <a class="layui-btn layui-btn-xs" lay-event="more">更多
+      <i class="layui-icon layui-icon-down"></i>
+    </a>
     {{#
         }
       });
@@ -113,12 +101,14 @@
     //本地缓存数据
     var queryObj = MyCuckoo.getQueryObject(location.search);
     var operator = MyCuckoo.getOperation(queryObj.id);
+    var operatorMap = MyCuckoo.getDictMap(operator);
+    var action = operator.findLast(o => (o['group'] & 1) === 1);
 
     var treeTable = table.render({
       id: 'table',
       elem: '#ID_table',
-      url: api.deptMgr.url,
-      method: 'get',
+      url: api.host + action.path,
+      method: action.method,
       cellMinWidth: 100,
       height: MyCuckoo.tableHeight,
       toolbar: '#ID_toolbar',
@@ -132,6 +122,7 @@
         }
       },
       cols: [[
+        {type: 'radio'},
         {type: 'numbers'},
         {field: 'text', title: '名称', width: 200},
         {field: 'status', title: '状态', width: 50,
@@ -178,77 +169,71 @@
 
       //单元格工具事件
       table.on('tool(table)', function (obj) {
-        var event = obj.event; // 获得 lay-event 对应的值
-        var ele = obj.tr;
-        var data = obj.data;
-        var tableId = obj.config.id;
-        if (typeof data.id == 'string') {
-          data.id = data.id.replace('leaf-id-', '')
-        }
-
-        if (!that[event]) {
-          MyCuckoo.alert({title: '警示', msg: '此操作无效, 如有疑问, 请联系管理员!'});
-          return;
-        }
         obj.othis = this;
-        that[event] && that[event](obj);
+        that['execute'](obj);
       });
 
       table.on('toolbar(table)', function (obj) {
         if (obj.event.indexOf('LAYTABLE_') == 0) {
           return;
         }
-        if (obj.event == 'add') {
-          that[obj.event](obj);
+        if (obj.event.endsWith('add')) {
+          that['execute'](obj);
           return;
         }
 
-        var data = table.radioStatus(obj.config.id);
-        if (!data.orgId) {
+        var data = table.checkStatus(obj.config.id).data;
+        if (data.length != 1 || !data[0].id) {
           MyCuckoo.alert({title: '提示', msg: '请选择一条记录'});
           return;
         }
 
-        if (!that[obj.event]) {
-          MyCuckoo.alert({title: '警示', msg: '此操作无效, 如有疑问, 请联系管理员!'});
-          return;
-        }
-
-        obj.data = data;
-        that[obj.event](obj);
+        obj.data = data[0];
+        that['execute'](obj);
       });
     }
 
     IndexMgr.prototype = {
       constructor: IndexMgr,
+      execute: function(obj) {
+        var arr = obj.event.split(':');
+        var event = arr[arr.length - 1];
+
+        if (!this[event]) {
+          MyCuckoo.alert({title : '警示', msg : '此操作无效, 如有疑问, 请联系管理员!' });
+          return;
+        }
+
+        this[event](obj);
+      },
       reload: function() {
         table.reload('table', { page: { pageNo: 1 } });
       },
       //增加
       add: function(obj) {
-        var url = MyCuckoo.resolve('deptMgrForm.html?action={_event}&opt={_opt}',
-            {'_event': obj.event, '_opt': queryObj.id})
+        var url = MyCuckoo.resolve('deptMgrForm.html?action={action}&opt={opt}',
+            {'action': obj.event, 'opt': queryObj.id})
         MyCuckoo.dialog('部门信息', url);
       },
       //修改
       modify: function(obj) {
         var data = obj.data;
-        var url = MyCuckoo.resolve('deptMgrForm.html?action={_event}&opt={_opt}&id={id}',
-            {'_event': obj.event, '_opt': queryObj.id, 'id': data.id})
+        var url = MyCuckoo.resolve('deptMgrForm.html?action={action}&opt={opt}&id={id}',
+            {'action': obj.event, 'opt': queryObj.id, 'id': data.id})
         MyCuckoo.dialog('部门信息', url);
       },
       //查看
       view: function(obj) {
         var data = obj.data;
-        var url = MyCuckoo.resolve('deptMgrForm.html?action={_event}&opt={_opt}&id={id}',
-            {'_event': obj.event, '_opt': queryObj.id, 'id': data.id})
+        var url = MyCuckoo.resolve('deptMgrForm.html?action={action}&opt={opt}&id={id}',
+            {'action': obj.event, 'opt': queryObj.id, 'id': data.id})
         MyCuckoo.sideDialog('部门信息', url);
       },
       //分配
       assign: function(obj) {
         var data = obj.data;
-        var url = MyCuckoo.resolve('roleMgrSelector.html?action={_event}&opt={_opt}&id={id}',
-          {'_event': obj.event, '_opt': queryObj.id, 'id': data.id})
+        var url = MyCuckoo.resolve('roleMgrSelector.html?action={action}&opt={opt}&id={id}',
+          {'action': obj.event, 'opt': queryObj.id, 'id': data.id})
         MyCuckoo.dialog('角色信息', url);
       },
       //启用
@@ -260,10 +245,10 @@
         }
 
         var that = this;
-        $.put(api.deptMgr.disEnableUrl, {id: data.id, disEnableFlag: 'enable'}).then(json => {
+        $.request(operatorMap[obj.event], {id: data.id, disEnableFlag: 'enable'}).then(json => {
           MyCuckoo.msg({ msg: '部门启用成功' });
 
-          that.reload(); // 刷新列表
+          that.reload();
         });
       },
       //停用
@@ -276,10 +261,10 @@
 
         var that = this;
         MyCuckoo.confirm({msg : '您确认停用此部门吗.', ok : function() {
-          $.put(api.deptMgr.disEnableUrl, {id: data.id, disEnableFlag: 'disable'}).then(json => {
+          $.request(operatorMap[obj.event], {id: data.id, disEnableFlag: 'disable'}).then(function(json) {
             MyCuckoo.msg({ msg: '部门停用成功' });
 
-            that.reload(); // 刷新列表
+            that.reload();
           });
         }});
       },
@@ -288,7 +273,7 @@
         var btns = [];
         var i = 0;
         layui.each(operator, function(index, item) {
-          if (item.code == 'add' || i++ == 0) {
+          if ((item.group & 4) != 4 || i++ == 0) {
             return;
           }
           btns.push(item);
@@ -301,8 +286,8 @@
             title: 'name'
           },
           click: function(menudata) {
-            var event = menudata.code;
-            that[event] && that[event](obj);
+            obj.event = menudata.code;
+            that['execute'](obj);
           }
         });
       }

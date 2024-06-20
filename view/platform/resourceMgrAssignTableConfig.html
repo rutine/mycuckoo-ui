@@ -37,12 +37,12 @@
 <script type="text/javascript" src="../../static/mycuckoo.api.js" charset="UTF-8"></script>
 <script type="text/html" id="ID_operator">
   <div class="layui-btn-container" style="margin-bottom: 6px; text-align: center;">
-    {{# if(d.action != 'view') { }}
-    <a href="javascript: " class="layui-btn layui-btn-sm" data-type="{{= d.action }}" lay-submit>
-      <i class="layui-icon layui-icon-ok"></i>保存
+    {{# if((d.group & 8) === 8) { }}
+    <a href="javascript: " class="layui-btn layui-btn-sm" data-event="{{= d.code }}" lay-submit>
+      <i class="layui-icon layui-icon-ok"></i>{{= d.name }}
     </a>
     {{# } }}
-    <a href="javascript:" class="layui-btn layui-btn-sm" data-type="close">
+    <a href="javascript:" class="layui-btn layui-btn-sm" data-event="close">
       <i class="layui-icon layui-icon-close"></i>关闭
     </a>
   </div>
@@ -60,6 +60,9 @@
       dropdown = layui.dropdown,
       table = layui.table,
       queryObj = MyCuckoo.getQueryObject(location.search),
+      operator = MyCuckoo.getOperation(queryObj.opt),
+      operatorMap = MyCuckoo.getDictMap(operator),
+      action = operatorMap[queryObj.action],
       $form = $('form[name=editForm]');
 
     var types = [
@@ -86,7 +89,7 @@
     var tableInst = table.render({
       id: 'table',
       elem: '#ID_table',
-      url: MyCuckoo.resolve(api.tableConfigMgr.listUrl, queryObj),
+      url: MyCuckoo.resolve(api.host + operatorMap['resourceMgr:selector'].path, queryObj),
       method: 'get',
       height: MyCuckoo.tableHeight,
       toolbar: '<div class="layui-btn-container"><a class="layui-btn layui-btn-warm layui-btn-xs" lay-event="addRow">新增行</a></div>',
@@ -195,7 +198,7 @@
       var formMgr = formMgrInst  = this;
 
       //渲染操作按钮
-      laytpl(ID_operator.innerHTML).render(queryObj, function(html) {
+      laytpl(ID_operator.innerHTML).render(action, function(html) {
         $form.find('.toolbar').html(html);
       });
 
@@ -206,20 +209,6 @@
         //初始化
         form.val('editForm', $.extend({}, queryObj, one));
       }
-
-      //单元格工具事件
-      table.on('tool(table)', function(obj) {
-        var event = obj.event; // 获得 lay-event 对应的值
-        var ele = obj.tr;
-        var data = obj.data;
-        var tableId = obj.config.id;
-        if (!formMgr[event]) {
-          MyCuckoo.alert({title : '警示', msg : '此操作无效, 如有疑问, 请联系管理员!' });
-          return;
-        }
-        obj.othis = this;
-        formMgr[event] &&  formMgr[event](obj);
-      });
 
       // 单元格编辑后的事件
       table.on('edit(table)', function(obj) {
@@ -251,18 +240,20 @@
         }
       });
 
+      //单元格工具事件
+      table.on('tool(table)', function(obj) {
+        obj.othis = this;
+        formMgr['execute'](obj);
+      });
+
       table.on('toolbar(table)', function(obj) {
-        var event = obj.event; // 获得 lay-event 对应的值
-        var ele = obj.tr;
-        var data = obj.data;
-        var tableId = obj.config.id;
-        formMgr[event] &&  formMgr[event](obj);
+        formMgr['execute'](obj);
       });
 
       //操作按钮触发事件
       $form.find('a.layui-btn:not([lay-submit])').on('click', function() {
-        var type = $(this).data('type');
-        formMgr[type] && formMgr[type](this);
+        var event = $(this).data('event');
+        event && formMgr['execute']({event: event, data: this});
       });
 
       //监听提交
@@ -283,9 +274,9 @@
           }
         }
 
-        var type = $(this).data('type');
         data.field['configs'] = tableData;
-        formMgr[type] && formMgr[type](data.field);
+        var event = $(this).data('event');
+        formMgr['execute']({event: event, data: data.field});
 
         return false;
       });
@@ -293,9 +284,15 @@
 
     FormMgr.prototype = {
       constructor: FormMgr,
-      assign: function(data) {
-        $.postJson(api.tableConfigMgr.url, data).then(json => {
-            MyCuckoo.msg({msg: json.message});
+      execute: function(obj) {
+        var arr = obj.event.split(':');
+        var event = arr[arr.length - 1];
+
+        this[event] && this[event](obj);
+      },
+      assign: function(obj) {
+        $.request(action, obj.data).then(json => {
+            MyCuckoo.msg({msg: json.msg});
             this.refresh();
         });
       },

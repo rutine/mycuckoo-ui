@@ -50,7 +50,9 @@
 <script type="text/javascript" src="../../static/mycuckoo.api.js" charset="UTF-8"></script>
 <script type="text/html" id="ID_toolbar">
   <div class="layui-btn-group btn-toolbar">
-    {{# layui.each(d.operator, function(index, item){ }}
+    {{# layui.each(d.operator, function(index, item) {
+      if ((item.group & 2) !== 2) return;
+    }}
     <button class="layui-btn layui-btn-sm" lay-event="{{ item.code }}">
       <i class="layui-icon layui-icon-{{ item.iconCls }}"></i> {{ item.name }}
     </button>
@@ -71,12 +73,14 @@
     //本地缓存数据
     var queryObj = MyCuckoo.getQueryObject(location.search);
     var operator = MyCuckoo.getOperation(queryObj.id);
+    var operatorMap = MyCuckoo.getDictMap(operator);
+    var action = operator.findLast(o => (o['group'] & 1) === 1);
 
     table.render({
       id: 'table',
       elem: '#ID_table',
-      url: api.systemLogMgr.url,
-      method: 'get',
+      url: api.host + action.path,
+      method: action.method,
       cellMinWidth: 100,
       height: MyCuckoo.tableHeight,
       toolbar: '#ID_toolbar',
@@ -102,7 +106,7 @@
       parseData: function(res) {
         return {
           code: res.code,
-          msg: res.message,
+          msg: res.msg,
           count: res.data.totalElements,
           data: res.data.content
         }
@@ -140,22 +144,28 @@
           return;
         }
 
-        if (!that[obj.event]) {
-          MyCuckoo.alert({title: '警示', msg: '此操作无效, 如有疑问, 请联系管理员!'});
-          return;
-        }
-
         obj.data = data[0]
-        that[obj.event](obj);
+        that['execute'](obj);
       });
     }
 
     IndexMgr.prototype = {
       constructor: IndexMgr,
+      execute: function(obj) {
+        var arr = obj.event.split(':');
+        var event = arr[arr.length - 1];
+
+        if (!this[event]) {
+          MyCuckoo.alert({title : '警示', msg : '此操作无效, 如有疑问, 请联系管理员!' });
+          return;
+        }
+
+        this[event](obj);
+      },
       //查看
       view(obj) {
-        var data = obj.data
-        $.get(api.systemLogMgr.url + '/' + data.optId).then(json => {
+        var data = obj.data;
+        $.request(operatorMap[obj.event], {id: data.optId}).then(json => {
           MyCuckoo.msg({title : '日志内容查看', msg : json.data });
         });
       },

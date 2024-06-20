@@ -40,10 +40,10 @@
           </div>
 
           <div class="layui-btn-container" style="margin-bottom: 6px; text-align: center;">
-            <a href="javascript:" class="layui-btn layui-btn-sm" data-type="saveOptPrivilege" lay-submit="submit">
+            <a href="javascript:" class="layui-btn layui-btn-sm" data-event="assignRes" lay-submit="submit">
               <i class="layui-icon layui-icon-ok"></i>保存
             </a>
-            <a href="javascript:" class="layui-btn layui-btn-sm" data-type="close">
+            <a href="javascript:" class="layui-btn layui-btn-sm" data-event="close">
               <i class="layui-icon layui-icon-close"></i>取消
             </a>
           </div>
@@ -85,7 +85,7 @@
               <div class="layui-input-inline">
                 <input type="text" name="searchUsr" class="layui-input" placeholder="请输入用户名称">
               </div>
-              <a class="layui-btn layui-btn-primary layui-btn-sm layui-btn-radius" data-type="selectUsers">
+              <a class="layui-btn layui-btn-primary layui-btn-sm layui-btn-radius" data-event="selectUsers">
                 <i class="layui-icon layui-icon-search"></i>
               </a>
             </div>
@@ -98,10 +98,10 @@
           </div>
 
           <div class="layui-btn-container" style="margin-bottom: 6px; text-align: center;">
-            <a href="javascript:" class="layui-btn layui-btn-sm" data-type="saveRowPrivilege" lay-submit="submit">
+            <a href="javascript:" class="layui-btn layui-btn-sm" data-event="assignRow" lay-submit="submit">
               <i class="layui-icon layui-icon-ok"></i>保存
             </a>
-            <a href="javascript:" class="layui-btn layui-btn-sm" data-type="close">
+            <a href="javascript:" class="layui-btn layui-btn-sm" data-event="close">
               <i class="layui-icon layui-icon-close"></i>取消
             </a>
           </div>
@@ -126,6 +126,8 @@
       form = layui.form,
       tree = layui.dtree,
       queryObj = MyCuckoo.getQueryObject(location.search),
+      operator = MyCuckoo.getOperation(queryObj.opt),
+      operatorMap = MyCuckoo.getDictMap(operator),
       $tab = $('.layui-tab');
 
 
@@ -136,7 +138,7 @@
       //表单初始赋值
       if (queryObj.id) {
         $('fieldset > legend').text('用户名称:' + queryObj.name);
-        $.get(api.userMgr.resPrivilegeUrl, queryObj).then(function(json) {
+        $.request(operatorMap['userMgr:resSelector'], queryObj).then(json => {
           form.val('userAssignModOpt', json.data);
           form.val('userAssignRowPriv', json.data);
 
@@ -166,14 +168,14 @@
 
       //操作按钮触发事件
       $tab.find('form a.layui-btn:not([lay-submit])').on('click', function() {
-        var type = $(this).data('type');
-        formMgr[type] && formMgr[type](this);
+        var event = $(this).data('event');
+        formMgr[event] && formMgr[event]({event: event, data: this});
       });
 
       //监听提交
       form.on('submit', function(data) {
-        var type = $(this).data('type');
-        formMgr[type] && formMgr[type]($.extend({}, data.field, queryObj));
+        var event = $(this).data('event');
+        formMgr[event] && formMgr[event]({event: event, data: $.extend({}, data.field, queryObj)});
 
         return false;
       });
@@ -201,7 +203,7 @@
       },
       selectRowPrivilege: function(privilegeType) {
         var that = this;
-        $.get(api.userMgr.rowPrivilegeUrl, queryObj).then(json => {
+        $.request(operatorMap['userMgr:rowSelector'], queryObj).then(json => {
           var data = json.data;
           var selectedPrivilegeType = data.privilegeScope;
 
@@ -218,14 +220,16 @@
             data.privileges.forEach(item => {
               checkNodes.push(item.id);
             });
-            that.openTree(api.deptMgr.childNodesUrl, {id: id, data: checkNodes});
+            var action = operatorMap['deptMgr:tree'];
+            that.openTree(api.host + action.path, {id: id, data: checkNodes});
           }
           else if(privilegeType == 'rol') {
             var checkNodes = [];
             data.privileges.forEach(item => {
-              checkNodes.push('leaf-id-' + item.id);
+              checkNodes.push('id-leaf-' + item.id);
             });
-            that.openTree(api.deptMgr.childNodesUrl, {id: id, data: checkNodes, withRole: true});
+            var action = operatorMap['deptMgr:tree'];
+            that.openTree(api.host + action.path, {id: id, data: checkNodes, withRole: true});
           }
           else {
             var nodes = data.privileges;
@@ -251,7 +255,7 @@
       },
       //查询用户
       selectUsers: function(ele) {
-        $.get(api.userMgr.selectorUrl, {userName: $tab.find('input[name=searchUsr]').val()}).then(json => {
+        $.request(operatorMap['userMgr:selector'], {userName: $tab.find('input[name=searchUsr]').val()}).then(json => {
           var nodes = [];
           json.data.forEach(item => nodes.push({
             id: item.userId,
@@ -265,7 +269,8 @@
         });
       },
       //保存用户权限
-      saveOptPrivilege: function(data) {
+      assignRes: function(obj) {
+        var data = obj.data;
         if(!data.privilegeScope) {
           MyCuckoo.alert({ title : '提示', msg : '请选择权限范围!' });
           return;
@@ -278,14 +283,15 @@
 
         var optIds = [];
         selectedNodes.forEach(item => item.isLeaf && optIds.push(item.nodeId));
-        $.postJson(api.userMgr.saveOptPrivilegeUrl, data, optIds).then(json => {
-          MyCuckoo.msg({msg: json.data});
+        $.request(operatorMap['userMgr:assignRes'], data, optIds).then(json => {
+          MyCuckoo.msg({msg: json.msg});
 
           this.refresh();
         });
       },
       //保存行权限
-      saveRowPrivilege: function(data) {
+      assignRow: function(obj) {
+        var data = obj.data;
         if(!data.privilegeScope) {
           MyCuckoo.alert({ title : '提示', msg : '请选择行权限类别!' });
           return;
@@ -302,8 +308,8 @@
           var index = !isNaN(id) ? -1 : id.indexOf('_');
           rowIds.push(item.isLeaf && index != -1 ? id.substr(index + 1) : id);
         });
-        $.postJson(api.userMgr.saveRowPrivilegeUrl, data, rowIds).then(json => {
-          MyCuckoo.msg({msg: json.data});
+        $.request(operatorMap['userMgr:assignRow'], data, rowIds).then(json => {
+          MyCuckoo.msg({msg: json.msg});
 
           this.refresh();
         });

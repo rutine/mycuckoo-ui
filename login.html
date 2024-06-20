@@ -121,7 +121,7 @@
         }
         $.post(api.login.loginUrl, params).then(function(json) {
           if(json.code != 0) {
-            loginError(json.code, json.message);
+            loginError(json.code, json.msg);
             $bground.remove();
             return;
           }
@@ -160,10 +160,9 @@
       };
 
       var loginSys = function(org) {
-        console.log(typeof org.userId)
         $.postJson(api.login.selectOrgUrl, org.userId).then(function(json) {
           var code = json.code;
-          var msg = json.message;
+          var msg = json.msg;
           if(code != 0) {
             loginError(code, msg);
           } else {
