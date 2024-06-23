@@ -4,7 +4,7 @@
   <meta http-equiv="Content-Type" content="text/html; charset=utf-8" />
   <title>分配权限</title>
   <link type="image/x-icon" href="../../static/images/favicon.ico" rel="shortcut icon" />
-  <link type="text/css" href="../../static/layui/2.9.8/css/layui.css" rel="stylesheet" />
+  <link type="text/css" href="../../static/layui/2.9.13/css/layui.css" rel="stylesheet" />
   <link type="text/css" href="../../static/css/mycuckoo.css" rel="stylesheet" />
   <link type="text/css" href="../../static/dtree/css/dtree.css" rel="stylesheet" />
   <link type="text/css" href="../../static/dtree/css/font/dtreefont.css" rel="stylesheet" />
@@ -55,7 +55,7 @@
             <div class="layui-form-item">
               <label class="layui-form-label">权限范围</label>
               <div class="layui-input-block">
-                <input type="radio" name="rowPrivilege" value="org" title="机构">
+                <input type="radio" name="rowPrivilege" value="dept" title="部门">
                 <input type="radio" name="rowPrivilege" value="rol" title="角色">
                 <input type="radio" name="rowPrivilege" value="urs" title="用户">
               </div>
@@ -75,7 +75,7 @@
     </div>
   </div>
 </body>
-<script type="text/javascript" src="../../static/layui/2.9.8/layui.js" charset="UTF-8"></script>
+<script type="text/javascript" src="../../static/layui/2.9.13/layui.js" charset="UTF-8"></script>
 <script type="text/javascript" src="../../static/mycuckoo.js" charset="UTF-8"></script>
 <script type="text/javascript" src="../../static/mycuckoo.api.js" charset="UTF-8"></script>
 <script type="text/javascript">
@@ -128,7 +128,7 @@
       //操作按钮触发事件
       $main.find('a.layui-btn:not([lay-submit])').on('click', function() {
         var event = $(this).data('event');
-        formMgr[event] && formMgr[event]({event: event, data: this});
+        formMgr[event] && formMgr[event]({event: event, elem: this});
       });
 
       //监听提交
@@ -185,7 +185,7 @@
         }, 1500);
       },
       //关闭当前iframe页
-      close: function(ele) {
+      close: function() {
         var index = parent.layer.getFrameIndex(window.name);
         parent.layer.close(index);
       }

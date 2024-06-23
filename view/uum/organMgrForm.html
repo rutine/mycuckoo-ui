@@ -4,7 +4,7 @@
   <meta http-equiv="Content-Type" content="text/html; charset=utf-8" />
   <title>机构信息</title>
   <link type="image/x-icon" href="../../static/images/favicon.ico" rel="shortcut icon" />
-  <link type="text/css" href="../../static/layui/2.9.8/css/layui.css" rel="stylesheet" />
+  <link type="text/css" href="../../static/layui/2.9.13/css/layui.css" rel="stylesheet" />
   <link type="text/css" href="../../static/css/mycuckoo.css" rel="stylesheet" />
   <link type="text/css" href="../../static/dtree/css/dtree.css" rel="stylesheet" />
   <link type="text/css" href="../../static/dtree/css/font/dtreefont.css" rel="stylesheet" />
@@ -148,7 +148,7 @@
     </form>
   </div>
 </body>
-<script type="text/javascript" src="../../static/layui/2.9.8/layui.js" charset="UTF-8"></script>
+<script type="text/javascript" src="../../static/layui/2.9.13/layui.js" charset="UTF-8"></script>
 <script type="text/javascript" src="../../static/mycuckoo.js" charset="UTF-8"></script>
 <script type="text/javascript" src="../../static/mycuckoo.api.js" charset="UTF-8"></script>
 <script type="text/html" id="ID_operator">
@@ -190,11 +190,11 @@
       });
 
       //初始化
-      $.get(api.dictionaryMgr.smallTypeUrl, {bigTypeCode: 'org_type'}).then(function(json) {
-        var $select = $form.find('select[name=type]');
-        $select.empty();
-        for (var i = 0; i < json.data.length; i++) {
-          var item = json.data[i];
+      MyCuckoo.api.getDict({typeCodes: 'org_type'}).then(function(json) {
+        var $select = $form.find('select[name=type]').empty();
+        var dict = json.data['org_type'];
+        for (var i = 0; i < dict.length; i++) {
+          var item = dict[i];
           $select.append('<option value="' + item.code + '">' + item.name + '</option>');
         }
         form.render('select');
@@ -204,7 +204,7 @@
           $.request(operatorMap['organMgr:view'], queryObj).then(json => {
             form.val('editForm', json.data);
 
-            if (action.code.endsWith('view')) {
+            if (action.code === 'organMgr:view') {
               $form.find('input, select, textarea').attr('disabled', 'disabled')
             }
           });
@@ -220,14 +220,14 @@
       //操作按钮触发事件
       $form.find('a.layui-btn:not([lay-submit])').on('click', function() {
         var event = $(this).data('event');
-        formMgr['execute']({event: event, data: this});
+        formMgr['execute']({event: event, elem: this});
       });
 
       form.on('input-affix', function(data) {
         var elem = data.elem; // 获取输入框 DOM 对象
         var affix = data.affix; // 获取输入框 lay-affix 属性值
         var event = $(elem).data('event');
-        $(elem).attr('disabled') != 'disabled' && formMgr[event]({event: event, data: this});
+        $(elem).attr('disabled') != 'disabled' && formMgr[event]({event: event, elem: this});
       });
 
       //监听提交
@@ -298,7 +298,7 @@
           return;
         }
 
-        this.openTree(api.host + action.path, {nodeId: 'belongDist', context: 'belongDistName'});
+        this.openTree(MyCuckoo.api.host + action.path, {nodeId: 'belongDist', context: 'belongDistName'});
       },
       selectOrgan: function(obj) {
         var action = operatorMap['organMgr:tree'];
@@ -307,7 +307,7 @@
           return;
         }
 
-        this.openTree(api.host + action.path, {nodeId: 'parentId', context: 'parentName'});
+        this.openTree(MyCuckoo.api.host + action.path, {nodeId: 'parentId', context: 'parentName'});
       },
       add: function(obj) {
         $.request(action, obj.data).then(json => {
@@ -330,7 +330,7 @@
         }, 1500);
       },
       //关闭当前iframe页
-      close: function(ele) {
+      close: function() {
         var index = parent.layer.getFrameIndex(window.name);
         parent.layer.close(index);
       }

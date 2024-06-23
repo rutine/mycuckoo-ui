@@ -4,7 +4,7 @@
   <meta http-equiv="Content-Type" content="text/html; charset=utf-8" />
   <title>统一用户</title>
   <link type="image/x-icon" href="../../static/images/favicon.ico" rel="shortcut icon" />
-  <link type="text/css" href="../../static/layui/2.9.8/css/layui.css" rel="stylesheet" />
+  <link type="text/css" href="../../static/layui/2.9.13/css/layui.css" rel="stylesheet" />
   <link type="text/css" href="../../static/css/mycuckoo.css" rel="stylesheet" />
   <link type="text/css" href="../../static/dtree/css/dtree.css" rel="stylesheet" />
   <link type="text/css" href="../../static/dtree/css/font/dtreefont.css" rel="stylesheet" />
@@ -49,7 +49,7 @@
   </div>
 </div>
 </body>
-<script type="text/javascript" src="../../static/layui/2.9.8/layui.js" charset="UTF-8"></script>
+<script type="text/javascript" src="../../static/layui/2.9.13/layui.js" charset="UTF-8"></script>
 <script type="text/javascript" src="../../static/mycuckoo.js" charset="UTF-8"></script>
 <script type="text/javascript" src="../../static/mycuckoo.api.js" charset="UTF-8"></script>
 <script type="text/html" id="toolbar">
@@ -92,7 +92,7 @@
     var treeObj = tree.render({
       elem: '#tree',
       method: 'get',
-      url: MyCuckoo.resolvePlaceholder(api.deptMgr.childNodesUrl, {id: 0}),
+      url: MyCuckoo.resolvePlaceholder(MyCuckoo.api.deptMgr.childNodesUrl, {id: 0}),
       request: {isCheckbox: 'N'},
       dataStyle: 'layuiStyle',
       response: { statusCode: 0, treeId: 'id', title: 'text', isLast: 'isLeaf', checkArr: 'checkbox'},
@@ -114,7 +114,7 @@
     table.render({
       id: 'table',
       elem: '#table',
-      url: api.organRoleMgr.url,
+      url: MyCuckoo.api.organRoleMgr.url,
       method: 'get',
       cellMinWidth: 100,
       height: MyCuckoo.tableHeight,
@@ -206,7 +206,7 @@
 
             var orgId = selectNode.nodeId;
             var params = roleIdList;
-            $.delete(api.organRoleMgr.url + '/' + orgId, params).then(json => {
+            $.delete(MyCuckoo.api.organRoleMgr.url + '/' + orgId, params).then(json => {
               MyCuckoo.msg({ msg: json.data });
 
               _this.reload(); // 刷新列表

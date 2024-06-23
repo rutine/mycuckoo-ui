@@ -4,7 +4,7 @@
   <meta http-equiv="Content-Type" content="text/html; charset=utf-8" />
   <title>选择用户</title>
   <link type="image/x-icon" href="../../static/images/favicon.ico" rel="shortcut icon" />
-  <link type="text/css" href="../../static/layui/2.9.8/css/layui.css" rel="stylesheet" />
+  <link type="text/css" href="../../static/layui/2.9.13/css/layui.css" rel="stylesheet" />
   <link type="text/css" href="../../static/css/mycuckoo.css" rel="stylesheet" />
 </head>
 <body>
@@ -41,7 +41,7 @@
   </form>
 </div>
 </body>
-<script type="text/javascript" src="../../static/layui/2.9.8/layui.js" charset="UTF-8"></script>
+<script type="text/javascript" src="../../static/layui/2.9.13/layui.js" charset="UTF-8"></script>
 <script type="text/javascript" src="../../static/mycuckoo.js" charset="UTF-8"></script>
 <script type="text/javascript" src="../../static/mycuckoo.api.js" charset="UTF-8"></script>
 <script type="text/javascript">
@@ -62,17 +62,14 @@
     table.render({
       id: 'table',
       elem: '#ID_table',
-      url: api.host + operatorMap['systemConfigMgr:selector'].path,
+      url: MyCuckoo.api.host + operatorMap['systemConfigMgr:selector'].path,
       method: 'get',
       cellMinWidth: 100,
       cols: [[
         {type: 'numbers'},
         {type: 'radio'},
-        {field: 'code', title: 'text', title: '用户号'},
-        {field: 'name', title: 'text', title: '用户名'},
-        {field: 'position', title: 'text', title: '职位'},
-        {field: 'orgName', title: '所属机构'},
-        {field: 'roleName', title: '所属角色'}
+        {field: 'account', title: 'text', title: '账号'},
+        {field: 'loginTime', title: '最近登录时间'}
       ]],
       where: queryObj,
       page: true,
@@ -89,7 +86,6 @@
         }
       }
     });
-
 
     var FormMgr = function() {
       form.on('submit(search)', function(data) {
@@ -109,13 +105,13 @@
       //操作按钮触发事件
       $('form a.layui-btn').on('click', function() {
         var event = $(this).data('event');
-        formMgr[event] && formMgr[event](this);
+        formMgr[event] && formMgr[event]({elem: this});
       });
     }
 
     FormMgr.prototype = {
       constructor: FormMgr,
-      save: function(ele) {
+      save: function(obj) {
         var data = table.checkStatus('table').data;
         if(data.length == 0) {
           MyCuckoo.alert({title: '提示', msg: '请选择一条或多条记录!'});
@@ -124,7 +120,7 @@
 
         var codes = [];
         data.forEach(item => {
-          codes.push(item.code);
+          codes.push(item.account);
         });
         var params = {'userAddDelFlag': queryObj['q[userAddDelFlag]'], systemMgr : codes};
         $.request(action, params).then(json => {
@@ -140,7 +136,7 @@
         }, 1500);
       },
       //关闭当前iframe页
-      close: function(ele) {
+      close: function() {
         var index = parent.layer.getFrameIndex(window.name);
         parent.layer.close(index);
       }

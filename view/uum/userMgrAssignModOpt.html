@@ -4,7 +4,7 @@
   <meta http-equiv="Content-Type" content="text/html; charset=utf-8" />
   <title>分配权限</title>
   <link type="image/x-icon" href="../../static/images/favicon.ico" rel="shortcut icon" />
-  <link type="text/css" href="../../static/layui/2.9.8/css/layui.css" rel="stylesheet" />
+  <link type="text/css" href="../../static/layui/2.9.13/css/layui.css" rel="stylesheet" />
   <link type="text/css" href="../../static/css/mycuckoo.css" rel="stylesheet" />
   <link type="text/css" href="../../static/dtree/css/dtree.css" rel="stylesheet" />
   <link type="text/css" href="../../static/dtree/css/font/dtreefont.css" rel="stylesheet" />
@@ -111,7 +111,7 @@
   </div>
 </div>
 </body>
-<script type="text/javascript" src="../../static/layui/2.9.8/layui.js" charset="UTF-8"></script>
+<script type="text/javascript" src="../../static/layui/2.9.13/layui.js" charset="UTF-8"></script>
 <script type="text/javascript" src="../../static/mycuckoo.js" charset="UTF-8"></script>
 <script type="text/javascript" src="../../static/mycuckoo.api.js" charset="UTF-8"></script>
 <script type="text/javascript">
@@ -169,7 +169,7 @@
       //操作按钮触发事件
       $tab.find('form a.layui-btn:not([lay-submit])').on('click', function() {
         var event = $(this).data('event');
-        formMgr[event] && formMgr[event]({event: event, data: this});
+        formMgr[event] && formMgr[event]({event: event, elem: this});
       });
 
       //监听提交
@@ -221,7 +221,7 @@
               checkNodes.push(item.id);
             });
             var action = operatorMap['deptMgr:tree'];
-            that.openTree(api.host + action.path, {id: id, data: checkNodes});
+            that.openTree(MyCuckoo.api.host + action.path, {id: id, data: checkNodes});
           }
           else if(privilegeType == 'rol') {
             var checkNodes = [];
@@ -229,7 +229,7 @@
               checkNodes.push('id-leaf-' + item.id);
             });
             var action = operatorMap['deptMgr:tree'];
-            that.openTree(api.host + action.path, {id: id, data: checkNodes, withRole: true});
+            that.openTree(MyCuckoo.api.host + action.path, {id: id, data: checkNodes, withRole: true});
           }
           else {
             var nodes = data.privileges;
@@ -321,7 +321,7 @@
         }, 1500);
       },
       //关闭当前iframe页
-      close: function(ele) {
+      close: function() {
         var index = parent.layer.getFrameIndex(window.name);
         parent.layer.close(index);
       }

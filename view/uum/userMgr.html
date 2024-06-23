@@ -4,7 +4,7 @@
   <meta http-equiv="Content-Type" content="text/html; charset=utf-8" />
   <title>统一用户</title>
   <link type="image/x-icon" href="../../static/images/favicon.ico" rel="shortcut icon" />
-  <link type="text/css" href="../../static/layui/2.9.8/css/layui.css" rel="stylesheet" />
+  <link type="text/css" href="../../static/layui/2.9.13/css/layui.css" rel="stylesheet" />
   <link type="text/css" href="../../static/dtree/css/dtree.css" rel="stylesheet" />
   <link type="text/css" href="../../static/dtree/css/font/dtreefont.css" rel="stylesheet" />
   <link type="text/css" href="../../static/css/mycuckoo.css" rel="stylesheet" />
@@ -44,7 +44,7 @@
   <table id="ID_table" class="layui-hide" lay-filter="table"></table>
 </div>
 </body>
-<script type="text/javascript" src="../../static/layui/2.9.8/layui.js" charset="UTF-8"></script>
+<script type="text/javascript" src="../../static/layui/2.9.13/layui.js" charset="UTF-8"></script>
 <script type="text/javascript" src="../../static/mycuckoo.js" charset="UTF-8"></script>
 <script type="text/javascript" src="../../static/mycuckoo.api.js" charset="UTF-8"></script>
 <script type="text/html" id="ID_toolbar">
@@ -113,7 +113,7 @@
     table.render({
       id: 'table',
       elem: '#ID_table',
-      url: api.host + action.path,
+      url: MyCuckoo.api.host + action.path,
       method: action.method,
       cellMinWidth: 100,
       height: MyCuckoo.tableHeight,
@@ -122,7 +122,6 @@
       cols: [[
         {type: 'numbers'},
         {type: 'radio'},
-        {field: 'code', title: '编号'},
         {field: 'name', title: '名称'},
         {field: 'gender', title: '性别',
           templet: function(d) {
@@ -134,9 +133,8 @@
           }
         },
         {field: 'position', title: '职位'},
-        {field: 'qq', title: 'QQ'},
-        {field: 'phone', title: '手机'},
-        {field: 'mail', title: '邮件'},
+        {field: 'phone', title: '手机号'},
+        {field: 'email', title: '邮箱'},
         {field: 'orgName', title: '所属机构'},
         {field: 'roleName', title: '所属角色'},
         {field: 'status', title: '用户状态',
@@ -148,7 +146,6 @@
             }
           }
         },
-        {field: 'creator', title: '创建人'},
         {field: 'createTime', title: '创建日期', sort: true},
         {fixed: "right", title: "操作", align: "center", width: 120, toolbar: '#ID_tool', operator: operator}
       ]],
@@ -189,7 +186,7 @@
 
       //单元格工具事件
       table.on('tool(table)', function (obj) {
-        obj.othis = this;
+        obj.elem = this;
         that['execute'](obj);
       });
 
@@ -317,7 +314,7 @@
               elem: '#ID_tree',
               method: 'get',
               type: 'all',
-              url: MyCuckoo.resolve(api.host + action.path, {id: 1}),
+              url: MyCuckoo.resolve(MyCuckoo.api.host + action.path, {id: 1}),
               request: {isCheckbox: true, withRole: true},
               dataStyle: 'layuiStyle',
               response: { statusCode: 0, treeId: 'id', title: 'text', isLast: 'isLeaf', checkArr: 'checkbox'},
@@ -368,8 +365,8 @@
           btns.push(item);
         });
         dropdown.render({
-          elem: obj.othis, // 触发事件的 DOM 对象
-          show: true, // 外部事件触发即显示
+          elem: obj.elem,
+          show: true,
           data: btns,
           customName: {
             title: 'name'

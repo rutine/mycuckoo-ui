@@ -12,15 +12,15 @@ layui.use(['jquery'], function () {
         layer.closeAll();
         layer.open({
           title: '未登录',
-          content: xhr.responseJSON.message,
+          content: xhr.responseJSON.msg,
           end: function () {
-            parent.location.href = parent.location.protocol + '/login.html';
+            top.parent.location.href = parent.location.protocol + '/login.html';
           },
         });
       },
       500: function(xhr) {
         layer.closeAll();
-        layer.open({title: '错误', content: xhr.responseJSON.message});
+        layer.open({title: '错误', content: xhr.responseJSON.msg});
       }
     },
     error: function(xhr, status, thrown) {
@@ -72,7 +72,6 @@ layui.use(['jquery'], function () {
   }
 
   $.postJson = function (url, uriVariables, params) {
-    console.log(url)
     if (!params) {
       params = uriVariables;
     }
@@ -116,23 +115,23 @@ layui.use(['jquery'], function () {
   var api = {
     host: host,
 
-    login: {
-      loginUrl: host + '/login',
-      selectOrgUrl: host + '/login/orgs',
-      thirdStepUrl: host + '/login/menus'
-    },
-
     postLogin: function(params) {
-      return $.post(host + '/login', params).then(res => res.data);
+      return $.post(host + '/login', params);
     },
-    postSelectOrg: function(params) {
-      return $.postJson(host + '/login/orgs', params).then(res => res.data);
+    postOrg: function(params) {
+      return $.postJson(host + '/login/orgs', params);
     },
     postMenu: function(params) {
       return $.post(host + '/login/menus', params).then(res => res.data);
     },
     getLogout: function() {
-      return $.get(host + '/login/logout').then(res => res.data);
+      return $.get(host + '/login/logout');
+    },
+    postTable: function (params) {
+      return $.postJson(host + '/platform/config/list-table-config?tableCode={code}', params);
+    },
+    getDict: function (params) {
+      return $.get(host + '/platform/system/dictionary/mgr/small-type', params);
     },
 
     //公共
@@ -171,7 +170,6 @@ layui.use(['jquery'], function () {
       saveOptPrivilegeUrl: host + '/uum/user/mgr/{id}/opt-privilege/{privilegeScope}',
       saveRowPrivilegeUrl: host + '/uum/user/mgr/{id}/row-privilege/{privilegeScope}'
     },
-
     moduleMgr: {
       url: host + '/platform/module/mgr',
       disEnableUrl: host + '/platform/module/mgr/{id}/disEnable/{disEnableFlag}',
@@ -213,7 +211,7 @@ layui.use(['jquery'], function () {
     },
     dictionaryMgr: {
       url: host + '/platform/system/dictionary/mgr/',
-      smallTypeUrl: host + '/platform/system/dictionary/mgr/{bigTypeCode}/small-type',
+      smallTypeMapUrl: host + '/platform/system/dictionary/mgr/small-type',
       disEnableUrl: host + '/platform/system/dictionary/mgr/{id}/disEnable/{disEnableFlag}'
     },
     schedulerMgr: {
@@ -239,5 +237,8 @@ layui.use(['jquery'], function () {
     }
   }
 
-  window.api = api;
+  var MyCuckoo = window.MyCuckoo || {}
+  MyCuckoo.api = api;
+
+  window.MyCuckoo = MyCuckoo;
 });

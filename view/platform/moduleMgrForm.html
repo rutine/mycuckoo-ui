@@ -4,7 +4,7 @@
   <meta http-equiv="Content-Type" content="text/html; charset=utf-8" />
   <title>模块信息</title>
   <link type="image/x-icon" href="../../static/images/favicon.ico" rel="shortcut icon" />
-  <link type="text/css" href="../../static/layui/2.9.8/css/layui.css" rel="stylesheet" />
+  <link type="text/css" href="../../static/layui/2.9.13/css/layui.css" rel="stylesheet" />
   <link type="text/css" href="../../static/css/mycuckoo.css" rel="stylesheet" />
   <link type="text/css" href="../../static/dtree/css/dtree.css" rel="stylesheet" />
   <link type="text/css" href="../../static/dtree/css/font/dtreefont.css" rel="stylesheet" />
@@ -106,7 +106,7 @@
     </form>
   </div>
 </body>
-<script type="text/javascript" src="../../static/layui/2.9.8/layui.js" charset="UTF-8"></script>
+<script type="text/javascript" src="../../static/layui/2.9.13/layui.js" charset="UTF-8"></script>
 <script type="text/javascript" src="../../static/mycuckoo.js" charset="UTF-8"></script>
 <script type="text/javascript" src="../../static/mycuckoo.api.js" charset="UTF-8"></script>
 <script type="text/html" id="ID_operator">
@@ -146,41 +146,49 @@
       });
 
       //初始化
-      $.get(api.dictionaryMgr.smallTypeUrl, {bigTypeCode: 'system_type'}).then(function(json) {
-        var $select = $form.find('select[name=belongSys]');
-        $select.empty();
-        for (var i = 0; i < json.data.length; i++) {
-          var item = json.data[i];
-          $select.append('<option value="' + item.code + '">' + item.name + '</option>');
+      MyCuckoo.api.getDict({typeCodes: 'system_type,mod_page_type'}).then(function(json) {
+        var selects = {
+          system_type: $form.find('select[name=belongSys]').empty(),
+          mod_page_type: $form.find('select[name=pageType]').empty()
+        }
+        for (var key in json.data) {
+          var $select = selects[key];
+          var dict = json.data[key];
+          for (var i = 0; i < dict.length; i++) {
+            var item = dict[i];
+            $select.append('<option value="' + item.code + '">' + item.name + '</option>');
+          }
         }
         form.render('select');
 
-        $.get(api.dictionaryMgr.smallTypeUrl, {bigTypeCode: 'mod_page_type'}).then(function(json) {
-          var $select = $form.find('select[name=pageType]');
-          $select.empty();
-          for (var i = 0; i < json.data.length; i++) {
-            var item = json.data[i];
-            $select.append('<option value="' + item.code + '">' + item.name + '</option>');
+        //表单初始赋值
+        if (queryObj.id && action) {
+          if (action.code !== 'moduleMgr:add') {
+            $form.find('input[name=code]').attr('disabled', 'disabled')
           }
-          form.render('select');
 
-          //表单初始赋值
-          initForm();
-        });
+          $.request(operatorMap['moduleMgr:view'], queryObj).then(json => {
+            form.val('editForm', json.data);
+
+            if (action.code === 'moduleMgr:view') {
+              $form.find('input, select, textarea').attr('disabled', 'disabled')
+            }
+          });
+        }
       });
 
       //操作按钮触发事件
       var formMgr = this;
       $form.find('a.layui-btn:not([lay-submit])').on('click', function() {
         var event = $(this).data('event');
-        formMgr['execute']({event: event, data: this});
+        formMgr['execute']({event: event, elem: this});
       });
 
       form.on('input-affix', function(data) {
         var elem = data.elem; // 获取输入框 DOM 对象
         var affix = data.affix; // 获取输入框 lay-affix 属性值
         var event = $(elem).data('event');
-        $(elem).attr('disabled') != 'disabled' && formMgr['execute']({event: event, data: this});
+        $(elem).attr('disabled') != 'disabled' && formMgr['execute']({event: event, elem: this});
       });
 
       //监听提交
@@ -190,19 +198,6 @@
 
         return false;
       });
-    }
-
-    //表单初始赋值
-    function initForm() {
-      if (queryObj.id && action) {
-        $.request(operatorMap['moduleMgr:view'], queryObj).then(json => {
-          form.val('editForm', json.data);
-
-          if (action.code.endsWith('view')) {
-            $form.find('input, select, textarea').attr('disabled', 'disabled')
-          }
-        });
-      }
     }
 
     FormMgr.prototype = {
@@ -272,7 +267,7 @@
           return;
         }
 
-        this.openTree(api.host + action.path, {nodeId: 'parentId', context: 'parentName'});
+        this.openTree(MyCuckoo.api.host + action.path, {nodeId: 'parentId', context: 'parentName'});
       },
       add(obj) {
         $.request(action, obj.data).then(json => {
@@ -297,7 +292,7 @@
         }, 1500);
       },
       //关闭当前iframe页
-      close: function(ele) {
+      close: function() {
         var index = parent.layer.getFrameIndex(window.name);
         parent.layer.close(index);
       }

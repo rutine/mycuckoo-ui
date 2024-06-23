@@ -6,7 +6,7 @@
   <title>系统平台</title>
   <link type="image/x-icon" href="static/images/favicon.ico" rel="shortcut icon" />
   <link type="text/css" href="static/css/font.css" rel="stylesheet" />
-  <link type="text/css" href="static/layui/2.9.8/css/layui.css" rel="stylesheet" />
+  <link type="text/css" href="static/layui/2.9.13/css/layui.css" rel="stylesheet" />
   <link type="text/css" href="static/css/mycuckoo.css" rel="stylesheet" />
 </head>
 <body>
@@ -60,12 +60,12 @@
     <div class="layui-body mycuckoo-body">
       <div class="layui-tab mycuckoo-tab" lay-filter="mycuckoo-tab" lay-allowclose="true">
         <ul class="layui-tab-title">
-          <!--<li class="layui-this welcome">我的桌面</li>-->
+          <li class="layui-this welcome" lay-allowclose="false">我的桌面</li>
         </ul>
         <div class="layui-tab-content">
-          <!--<div class="layui-tab-item layui-show">
+          <div class="layui-tab-item layui-show">
             <iframe class="mycuckoo-frame" src='welcome.html' frameborder="0" scrolling="yes"></iframe>
-          </div>-->
+          </div>
         </div>
       </div>
     </div>
@@ -81,7 +81,7 @@
   <li data-type="closeAll">关闭所有</li>
 </ul>
 </body>
-<script type="text/javascript" src="static/layui/2.9.8/layui.js" charset="UTF-8"></script>
+<script type="text/javascript" src="static/layui/2.9.13/layui.js" charset="UTF-8"></script>
 <script type="text/javascript" src="static/mycuckoo.js" charset="UTF-8"></script>
 <script type="text/javascript" src="static/mycuckoo.api.js" charset="UTF-8"></script>
 <script type="text/javascript">
@@ -97,7 +97,7 @@
       laytpl = layui.laytpl,
       upload = layui.upload;
 
-    window.MyCuckoo.tab = function (code, title, url) {
+    window.MyCuckoo.tab = function (code, title, url, hideClose) {
       var $tabs = $('.mycuckoo-frame');
       var tabId = 'mycuckoo-tab-' + code;
       for (var i = 0; i < $tabs.length; i++) {
@@ -107,14 +107,14 @@
         }
       }
 
-      tab.tabAdd(title, url, tabId);
+      tab.tabAdd(title, url, tabId, hideClose);
       tab.tabChange(tabId);
     };
-    MyCuckoo.tab('welcome', '我的桌面', 'welcome.html');
+//    MyCuckoo.tab('welcome', '我的桌面', 'welcome.html', true);
 
     var MenuMgr = function() {
       var menuMgr = this;
-      api.postMenu(null).then(function(json) {
+      MyCuckoo.api.postMenu(null).then(function(json) {
         var menu = json.menu;
         menuMgr.renderNavBar(menu);
         menuMgr.renderSideNav(menu);
@@ -136,12 +136,12 @@
         //更换头像
         upload.render({
           elem: '#filePicker',
-          url: api.fileMgr.url,
+          url: MyCuckoo.api.fileMgr.url,
           accept: 'images',
           data: {business: 'photo'},
           done: function(res, index, upload) {
             if(res.code == 0) { //上传成功
-              $.put(api.userMgr.updatePhoto, {photo: res.data.url}).then(function(json) {
+              $.put(MyCuckoo.api.userMgr.updatePhoto, {photo: res.data.url}).then(function(json) {
                 $('img#filePicker').attr('src', res.data.url);
                 MyCuckoo.msg({ msg: '成功更换头像' });
               });
@@ -168,7 +168,7 @@
       },
       //注销登录
       logout: function(el) {
-        api.getLogout().then(function(json) {  window.location.href = './login.html'; });
+        MyCuckoo.api.getLogout().then(function(json) {  window.location.href = './login.html'; });
       },
 
       activeMenu: function(el) {

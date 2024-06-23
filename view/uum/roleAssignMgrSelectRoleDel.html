@@ -4,7 +4,7 @@
   <meta http-equiv="Content-Type" content="text/html; charset=utf-8" />
   <title>选择角色信息</title>
   <link type="image/x-icon" href="../../static/images/favicon.ico" rel="shortcut icon" />
-  <link type="text/css" href="../../static/layui/2.9.8/css/layui.css" rel="stylesheet" />
+  <link type="text/css" href="../../static/layui/2.9.13/css/layui.css" rel="stylesheet" />
   <link type="text/css" href="../../static/css/mycuckoo.css" rel="stylesheet" />
 </head>
 <body>
@@ -23,7 +23,7 @@
   <table id="table" class="layui-hide" lay-filter="table"></table>
 </div>
 </body>
-<script type="text/javascript" src="../../static/layui/2.9.8/layui.js" charset="UTF-8"></script>
+<script type="text/javascript" src="../../static/layui/2.9.13/layui.js" charset="UTF-8"></script>
 <script type="text/javascript" src="../../static/mycuckoo.js" charset="UTF-8"></script>
 <script type="text/javascript" src="../../static/mycuckoo.api.js" charset="UTF-8"></script>
 <script type="text/javascript">
@@ -41,7 +41,7 @@
     table.render({
       id: 'table',
       elem: '#table',
-      url: MyCuckoo.resolvePlaceholder(api.organRoleMgr.unSelectRoleUrl, queryObj),
+      url: MyCuckoo.resolvePlaceholder(MyCuckoo.api.organRoleMgr.unSelectRoleUrl, queryObj),
       method: 'get',
       cellMinWidth: 100,
       height: MyCuckoo.tableHeight,
@@ -100,7 +100,7 @@
           roleIdList.push(item.roleId);
         });
         var params = {id : queryObj.orgId, roleIdList : roleIdList};
-        $.put(api.organRoleMgr.url, params).then(json => {
+        $.put(MyCuckoo.api.organRoleMgr.url, params).then(json => {
           MyCuckoo.msg({msg: json.data});
 
           this.refresh();

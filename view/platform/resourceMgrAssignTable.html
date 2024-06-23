@@ -4,7 +4,7 @@
   <meta http-equiv="Content-Type" content="text/html; charset=utf-8" />
   <title>表头信息</title>
   <link type="image/x-icon" href="../../static/images/favicon.ico" rel="shortcut icon" />
-  <link type="text/css" href="../../static/layui/2.9.8/css/layui.css" rel="stylesheet" />
+  <link type="text/css" href="../../static/layui/2.9.13/css/layui.css" rel="stylesheet" />
   <link type="text/css" href="../../static/css/mycuckoo.css" rel="stylesheet" />
 </head>
 <body>
@@ -32,7 +32,7 @@
   </form>
 </div>
 </body>
-<script type="text/javascript" src="../../static/layui/2.9.8/layui.js" charset="UTF-8"></script>
+<script type="text/javascript" src="../../static/layui/2.9.13/layui.js" charset="UTF-8"></script>
 <script type="text/javascript" src="../../static/mycuckoo.js" charset="UTF-8"></script>
 <script type="text/javascript" src="../../static/mycuckoo.api.js" charset="UTF-8"></script>
 <script type="text/html" id="ID_operator">
@@ -67,6 +67,7 @@
 
     var types = [
       {code: 'seq', name: '序号'},
+      {code: 'id', name: '主键'},
       {code: 'number', name: '数字'},
       {code: 'text', name: '文本'},
       {code: 'date', name: '时间'},
@@ -89,12 +90,25 @@
     var tableInst = table.render({
       id: 'table',
       elem: '#ID_table',
-      url: MyCuckoo.resolve(api.host + operatorMap['resourceMgr:selector'].path, queryObj),
+      url: MyCuckoo.resolve(MyCuckoo.api.host + operatorMap['resourceMgr:selector'].path, queryObj),
       method: 'get',
       height: MyCuckoo.tableHeight,
+      css: [
+        '.layui-table-cell{height: 50px; line-height: 40px;}',
+        '.layui-table-cell select{height: 36px; padding: 0 5px;}'
+      ].join(''),
       toolbar: '<div class="layui-btn-container"><a class="layui-btn layui-btn-warm layui-btn-xs" lay-event="addRow">新增行</a></div>',
       cols: [[
         {field: 'type', title: '类型', templet: function(d) {
+//          var arr = ['<select name="type" lay-filter="table-col-filter" lay-append-to="body"><option value="">请选择</option>']
+//          for (var i = 0; i < types.length; i++) {
+//            var item = types[i];
+//            arr.push('<option value="' + item['code'] + '" ' + (d.type === item['code'] ? 'selected' : '') + '>' + item['name'] + '</option>')
+//          }
+//          arr.push('</select>')
+//
+//          return arr.join('');
+
           var name = typeMap[d.type] ? typeMap[d.type]['name'] : d.type;
           var arr = ['<a class="layui-btn layui-btn-primary table-col-dropdown-type">',
             '<span>' + name + '</span>',
@@ -153,6 +167,13 @@
             }
           });
         }
+
+        //select事件
+        form.on('select(table-col-filter)', function(obj) {
+          var value = obj.value;
+          var data = tableInst.getRowData(options.id, obj.elem);
+          data[obj.elem.name] = value;
+        });
 
         //radio开关
         form.on('switch(table-col-filter)', function(obj) {

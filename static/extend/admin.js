@@ -63,7 +63,7 @@ layui.define(['jquery', 'layer', 'element'], function (exports) {
     var menu = menuStorage.getAllMenus();
     if (menu) {
       for (var i = 0; i < menu.length; i++) {
-        tab.tabAdd(menu[i].title, menu[i].url, menu[i].id);
+        tab.tabAdd(menu[i].title, menu[i].url, menu[i].id, menu[i].hideClose);
       }
     } else {
       return false;
@@ -196,7 +196,7 @@ layui.define(['jquery', 'layer', 'element'], function (exports) {
         $tabContainer.find('.layui-show').children().attr('src', src);
       }
     },
-    tabAdd: function(title, url, id) {
+    tabAdd: function(title, url, id, hideClose) {
       //判断当前id的元素是否存在于tab中
       var li = $tabContainer.find('.mycuckoo-tab li[lay-id=' + id + ']').length;
       if (li > 0) {
@@ -207,10 +207,11 @@ layui.define(['jquery', 'layer', 'element'], function (exports) {
         element.tabAdd('mycuckoo-tab', {
           id: id,
           title: title,
+          allowClose: !hideClose,
           content: '<iframe class="mycuckoo-frame" tab-id="' + id + '" frameborder="0" src="' + url + '" scrolling="no"></iframe>'
         });
         //当前窗口内容
-        menuStorage.addMenu(title, url, id);
+        menuStorage.addMenu(title, url, id, hideClose);
       }
 
       showTabPopupMenu(id); //绑定右键菜单
@@ -256,7 +257,7 @@ layui.define(['jquery', 'layer', 'element'], function (exports) {
      *@todo 本地存储 localStorage
      * 为了保持统一，将sessionStorage更换为存储周期更长的localStorage
      */
-    addMenu: function(title, url, id) {
+    addMenu: function(title, url, id, hideClose) {
       var menu = JSON.parse(sessionStorage.getItem('menu'));
       if (menu) {
         var deep = false;
@@ -266,13 +267,14 @@ layui.define(['jquery', 'layer', 'element'], function (exports) {
             menu[i].id = id;
             menu[i].title = title;
             menu[i].url = url;
+            menu[i].hideClose = hideClose;
           }
         }
         if (!deep) {
-          menu.push({id: id, title: title, url: url})
+          menu.push({id: id, title: title, url: url, hideClose: hideClose})
         }
       } else {
-        var menu = [{id: id, title: title, url: url}]
+        var menu = [{id: id, title: title, url: url, hideClose: hideClose}]
       }
       sessionStorage.setItem('menu', JSON.stringify(menu));
     },

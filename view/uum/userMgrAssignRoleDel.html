@@ -76,7 +76,7 @@
   </form>
 </div>
 </body>
-<script type="text/javascript" src="../../static/layui/2.9.8/layui.js" charset="UTF-8"></script>
+<script type="text/javascript" src="../../static/layui/2.9.13/layui.js" charset="UTF-8"></script>
 <script type="text/javascript" src="../../static/mycuckoo.js" charset="UTF-8"></script>
 <script type="text/javascript" src="../../static/mycuckoo.api.js" charset="UTF-8"></script>
 <script type="text/javascript">
@@ -114,11 +114,11 @@
     var FormMgr = function () {
       //表单初始赋值
       if (queryObj.id) {
-        $.get(api.userMgr.url + '/' + queryObj.id).then(function(json) {
+        $.get(MyCuckoo.api.userMgr.url + '/' + queryObj.id).then(function(json) {
           form.val('editForm', json.data);
         });
 
-        $.get(api.userMgr.rolePrivilegeUrl, queryObj).then(function(json) {
+        $.get(MyCuckoo.api.userMgr.rolePrivilegeUrl, queryObj).then(function(json) {
           //初始化结构树
           treeObj = tree.render({
             elem: '#ID_left_role_tree',
@@ -265,7 +265,7 @@
         } else {
           var roleIds = [];
           selectedData.forEach(item => roleIds.push(item.orgRoleId));
-          $.postJson(api.userMgr.saveRolePrivilegeUrl, data, roleIds).then(json => {
+          $.postJson(MyCuckoo.api.userMgr.saveRolePrivilegeUrl, data, roleIds).then(json => {
             MyCuckoo.msg({msg: json.data});
 
             this.refresh();

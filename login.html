@@ -9,7 +9,7 @@
   <title>登陆界面</title>
   
   <link type="image/x-icon" href="static/images/favicon.ico" rel="shortcut icon">
-  <link type="text/css" href="static/layui/2.9.8/css/layui.css" rel="stylesheet" />
+  <link type="text/css" href="static/layui/2.9.13/css/layui.css" rel="stylesheet" />
   <link type="text/css" href="static/css/font.css" rel="stylesheet" />
   <link type="text/css" href="static/css/mycuckoo.css" rel="stylesheet" />
   <link type="text/css" href="static/css/login.css" rel="stylesheet" />
@@ -59,7 +59,7 @@
     </div>
     
   </div>
-  <script type="text/javascript" src="static/layui/2.9.8/layui.js" charset="UTF-8"></script>
+  <script type="text/javascript" src="static/layui/2.9.13/layui.js" charset="UTF-8"></script>
   <script type="text/javascript" src="static/mycuckoo.api.js" charset="UTF-8"></script>
   <script type="text/javascript">
     layui.config({
@@ -119,7 +119,7 @@
           account: account,
           password: password
         }
-        $.post(api.login.loginUrl, params).then(function(json) {
+        MyCuckoo.api.postLogin(params).then(function(json) {
           if(json.code != 0) {
             loginError(json.code, json.msg);
             $bground.remove();
@@ -160,7 +160,7 @@
       };
 
       var loginSys = function(org) {
-        $.postJson(api.login.selectOrgUrl, org.userId).then(function(json) {
+        MyCuckoo.api.postOrg(org.userId).then(function(json) {
           var code = json.code;
           var msg = json.msg;
           if(code != 0) {

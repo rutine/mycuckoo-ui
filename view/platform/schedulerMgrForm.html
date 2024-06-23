@@ -4,7 +4,7 @@
   <meta http-equiv="Content-Type" content="text/html; charset=utf-8" />
   <title>任务调度信息</title>
   <link type="image/x-icon" href="../../static/images/favicon.ico" rel="shortcut icon" />
-  <link type="text/css" href="../../static/layui/2.9.8/css/layui.css" rel="stylesheet" />
+  <link type="text/css" href="../../static/layui/2.9.13/css/layui.css" rel="stylesheet" />
   <link type="text/css" href="../../static/css/mycuckoo.css" rel="stylesheet" />
 </head>
 <body>
@@ -94,7 +94,7 @@
   </form>
 </div>
 </body>
-<script type="text/javascript" src="../../static/layui/2.9.8/layui.js" charset="UTF-8"></script>
+<script type="text/javascript" src="../../static/layui/2.9.13/layui.js" charset="UTF-8"></script>
 <script type="text/javascript" src="../../static/mycuckoo.js" charset="UTF-8"></script>
 <script type="text/javascript" src="../../static/mycuckoo.api.js" charset="UTF-8"></script>
 <script type="text/html" id="ID_operator">
@@ -141,7 +141,7 @@
           var triggerType = json.data.triggerType.toLowerCase();
           $form.find('.scheduler-trigger-type-' + triggerType).removeClass('layui-hide');
 
-          if (action.code.endsWith('view')) {
+          if (action.code === 'schedulerMgr:view') {
             $form.find('input, select, textarea').attr('disabled', 'disabled')
           }
         });
@@ -168,7 +168,7 @@
       //操作按钮触发事件
       $form.find('a.layui-btn:not([lay-submit])').on('click', function() {
         var event = $(this).data('event');
-        formMgr['execute']({event: event, data: this});
+        formMgr['execute']({event: event, elem: this});
       });
 
       //监听提交
@@ -246,7 +246,7 @@
         }, 1500);
       },
       //关闭当前iframe页
-      close: function(ele) {
+      close: function() {
         var index = parent.layer.getFrameIndex(window.name);
         parent.layer.close(index);
       }

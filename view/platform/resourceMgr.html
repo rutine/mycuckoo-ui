@@ -4,7 +4,7 @@
   <meta http-equiv="Content-Type" content="text/html; charset=utf-8" />
   <title>系统平台</title>
   <link type="image/x-icon" href="../../static/images/favicon.ico" rel="shortcut icon" />
-  <link type="text/css" href="../../static/layui/2.9.8/css/layui.css" rel="stylesheet" />
+  <link type="text/css" href="../../static/layui/2.9.13/css/layui.css" rel="stylesheet" />
   <link type="text/css" href="../../static/css/mycuckoo.css" rel="stylesheet" />
 </head>
 <body>
@@ -39,7 +39,7 @@
   <table id="ID_table" class="layui-hide" lay-filter="table"></table>
 </div>
 </body>
-<script type="text/javascript" src="../../static/layui/2.9.8/layui.js" charset="UTF-8"></script>
+<script type="text/javascript" src="../../static/layui/2.9.13/layui.js" charset="UTF-8"></script>
 <script type="text/javascript" src="../../static/mycuckoo.js" charset="UTF-8"></script>
 <script type="text/javascript" src="../../static/mycuckoo.api.js" charset="UTF-8"></script>
 <script type="text/html" id="ID_toolbar">
@@ -94,7 +94,7 @@
     var tableInst = table.render({
       id: 'table',
       elem: '#ID_table',
-      url: api.host + action.path,
+      url: MyCuckoo.api.host + action.path,
       method: action.method,
       cellMinWidth: 100,
       height: MyCuckoo.tableHeight,
@@ -119,7 +119,6 @@
         {field: 'status', title: '状态', templet: function(d) {
             return d.method ? (d.status == 'enable' ? '启用' : '停用') : ''
         }},
-        {field: 'creator', title: '创建人', templet: function(d) { return d.method ? d.creator : '' }},
         {field: 'createTime', title: '创建日期', templet: function(d) { return d.method ? d.createTime : '' }},
         {fixed: "right", title: "操作", width: 190, align: "center", toolbar: '#ID_tool', operator: operator}
       ]],
@@ -197,7 +196,7 @@
       },
       //分配
       assign: function(obj) {
-        var url = MyCuckoo.resolve('resourceMgrAssignTableConfig.html?action={action}&opt={opt}&moduleId={id}&moduleName={name}',
+        var url = MyCuckoo.resolve('resourceMgrAssignTable.html?action={action}&opt={opt}&moduleId={id}&moduleName={name}',
           {'action': obj.event, 'opt': queryObj.id, 'id': obj.data.id, 'name': obj.data.text})
         MyCuckoo.dialog('表头信息', url);
       },

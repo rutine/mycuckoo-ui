@@ -4,7 +4,7 @@
   <meta http-equiv="Content-Type" content="text/html; charset=utf-8" />
   <title>系统公告信息</title>
   <link type="image/x-icon" href="../../static/images/favicon.ico" rel="shortcut icon" />
-  <link type="text/css" href="../../static/layui/2.9.8/css/layui.css" rel="stylesheet" />
+  <link type="text/css" href="../../static/layui/2.9.13/css/layui.css" rel="stylesheet" />
   <link type="text/css" href="../../static/css/mycuckoo.css" rel="stylesheet" />
 </head>
 <body>
@@ -71,7 +71,7 @@
   </form>
 </div>
 </body>
-<script type="text/javascript" src="../../static/layui/2.9.8/layui.js" charset="UTF-8"></script>
+<script type="text/javascript" src="../../static/layui/2.9.13/layui.js" charset="UTF-8"></script>
 <script type="text/javascript" src="../../static/mycuckoo.js" charset="UTF-8"></script>
 <script type="text/javascript" src="../../static/mycuckoo.api.js" charset="UTF-8"></script>
 <script type="text/html" id="ID_operator">
@@ -116,7 +116,7 @@
       var formMgr = this;
       //表单初始赋值
       if (queryObj.id && action) {
-        if(action.code.endsWith('view')) {
+        if(action.code === 'afficheMgr:view') {
           $('#ID_filePicker').addClass('layui-hide');
           $('#ID_uploadStart').addClass('layui-hide');
           $form.find('input, select, textarea').attr('disabled', 'disabled')
@@ -130,14 +130,14 @@
               '<tr>',
               '<td>',
               ' <input type="hidden" name="accessoryName" value="' + item.accessoryName + '">',
-              ' <a href="' + api.fileMgr.url + '?business=document&filename=' + item.accessoryName + '" target="_blank">',
+              ' <a href="' + MyCuckoo.api.fileMgr.url + '?business=document&filename=' + item.accessoryName + '" target="_blank">',
               ' <img src="' + formMgr.getThumbnail(item.accessoryName) + '">&nbsp;&nbsp;',
               ' <span>' + item.accessoryName + '</span>',
               ' </a>',
               '</td>',
               '<td></td>',
               '<td></td>',
-              action.code.endsWith('view') ? '<td></td>' : '<td><button class="layui-btn layui-btn-xs layui-btn-danger btn-delete">删除</button></td>',
+              (action.code === 'afficheMgr:view') ? '<td></td>' : '<td><button class="layui-btn layui-btn-xs layui-btn-danger btn-delete">删除</button></td>',
               '</tr>'
             ].join(''));
 
@@ -162,7 +162,7 @@
       //操作按钮触发事件
       $form.find('a.layui-btn:not([lay-submit])').on('click', function() {
         var event = $(this).data('event');
-        formMgr['execute']({event: event, data: this});
+        formMgr['execute']({event: event, elem: this});
       });
 
       //监听提交
@@ -188,7 +188,7 @@
         //多文件列表示例
         var uploader = upload.render({
           elem: '#ID_filePicker',
-          url: api.fileMgr.url,
+          url: MyCuckoo.api.fileMgr.url,
           accept: 'file',
           multiple: true,
           auto: false,
@@ -287,7 +287,7 @@
       },
       // 删除附件
       deleteAccessory: function(accessoryId) {
-        $.delete(api.accessoryMgr.url + '/' + accessoryId, {}).then(json => {
+        $.request(operatorMap['afficheMgr:deleteAccessory'], {filenameOrId: accessoryId}).then(json => {
           MyCuckoo.msg({msg: json.msg});
         });
       },
@@ -298,7 +298,7 @@
         }, 1500);
       },
       //关闭当前iframe页
-      close: function(ele) {
+      close: function() {
         var index = parent.layer.getFrameIndex(window.name);
         parent.layer.close(index);
       }
