@@ -90,7 +90,7 @@
       $form = $('form[name=editForm]');
 
     var FormMgr = function() {
-      if (action.code !== 'dictionaryMgr:view') {
+      if (action.code !== 'res:dictionaryMgr:view') {
         $form.find('a[data-event=addRow]').removeClass('layui-hide');
       }
 
@@ -101,12 +101,12 @@
 
       //表单初始赋值
       if (queryObj.id && action) {
-        $.request(operatorMap['dictionaryMgr:view'], queryObj).then(function(json) {
+        $.request(operatorMap['res:dictionaryMgr:view'], queryObj).then(function(json) {
           form.val('editForm', json.data);
 
           formMgr.smallTypeGrid(json.data.smallTypes);
 
-          if (action.code === 'dictionaryMgr:view') {
+          if (action.code === 'res:dictionaryMgr:view') {
             $form.find('input, select, textarea').attr('disabled', 'disabled')
           }
         });
@@ -141,7 +141,7 @@
         var that = this;
         var $ele = $form.find('#ID_mycuckoo_dict_small_type_content');
         smallTypes.forEach(function(item, index) {
-          if (action.code === 'dictionaryMgr:view') {
+          if (action.code === 'res:dictionaryMgr:view') {
             var tr = $([
               '<tr>',
               '<td>' + item.code + '</td>',

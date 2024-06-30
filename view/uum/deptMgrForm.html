@@ -89,10 +89,10 @@
       //初始化
       //表单初始赋值
       if (queryObj.id && action) {
-        $.request(operatorMap['deptMgr:view'], queryObj).then(json => {
+        $.request(operatorMap['res:deptMgr:view'], queryObj).then(json => {
           form.val('editForm', json.data);
 
-          if (action.code === 'deptMgr:view') {
+          if (action.code === 'res:deptMgr:view') {
             $form.find('input, select, textarea').attr('disabled', 'disabled')
           }
         });
@@ -152,7 +152,7 @@
               elem: '#ID_tree',
               method: 'get',
               type: 'all',
-              url: MyCuckoo.resolvePlaceholder(url, {id: 0, isCheckbox: true}),
+              url: MyCuckoo.resolvePlaceholder(url, {id: 1, isCheckbox: true}),
               dataStyle: 'layuiStyle',
               response: { statusCode: 0, treeId: 'id', title: 'text'}
             });
@@ -175,7 +175,7 @@
         });
       },
       selectDept: function(obj) {
-        var action = operatorMap['deptMgr:tree'];
+        var action = operatorMap['res:deptMgr:tree'];
         if (!action) {
           MyCuckoo.msg({msg: '无权访问此资源'});
           return;

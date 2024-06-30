@@ -20,26 +20,26 @@
         </div>
       </div>
       <div class="layui-inline">
-        <label class="layui-form-label">参数键</label>
+        <label class="layui-form-label">系统类别</label>
         <div class="layui-input-inline">
-          <input type="text" name="key" class="layui-input" lay-verify="required" maxlength="20" />
+          <select name="type" lay-verify="required">
+            <option value=""></option>
+          </select>
         </div>
       </div>
     </div>
 
     <div class="layui-form-item">
       <div class="layui-inline">
-        <label class="layui-form-label">参数键值</label>
+        <label class="layui-form-label">参数键</label>
         <div class="layui-input-inline">
-          <input type="text" name="value" class="layui-input" />
+          <input type="text" name="key" class="layui-input" lay-verify="required" maxlength="20" />
         </div>
       </div>
       <div class="layui-inline">
-        <label class="layui-form-label">系统类别</label>
+        <label class="layui-form-label">参数键值</label>
         <div class="layui-input-inline">
-          <select name="type" lay-verify="required">
-            <option value=""></option>
-          </select>
+          <input type="text" name="value" class="layui-input" />
         </div>
       </div>
     </div>
@@ -106,14 +106,14 @@
 
         //表单初始赋值
         if (queryObj.id && action) {
-          if (action.code !== 'systemParameterMgr:add') {
-            $form.find('input[name=key]').attr('readonly', true);
+          if (action.code !== 'res:systemParameterMgr:add') {
+            $form.find('input[name=key]').attr('disabled', 'disabled');
           }
 
-          $.request(operatorMap['systemParameterMgr:view'], queryObj).then(json => {
+          $.request(operatorMap['res:systemParameterMgr:view'], queryObj).then(json => {
             form.val('editForm', json.data);
 
-            if (action.code === 'systemParameterMgr:view') {
+            if (action.code === 'res:systemParameterMgr:view') {
               $form.find('input, select, textarea').attr('disabled', 'disabled')
             }
           });

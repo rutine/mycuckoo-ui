@@ -135,13 +135,13 @@
 
       //表单初始赋值
       if (queryObj.id && action) {
-        $.request(operatorMap['schedulerMgr:view'], queryObj).then(json => {
+        $.request(operatorMap['res:schedulerMgr:view'], queryObj).then(json => {
           form.val('editForm', json.data);
 
           var triggerType = json.data.triggerType.toLowerCase();
           $form.find('.scheduler-trigger-type-' + triggerType).removeClass('layui-hide');
 
-          if (action.code === 'schedulerMgr:view') {
+          if (action.code === 'res:schedulerMgr:view') {
             $form.find('input, select, textarea').attr('disabled', 'disabled')
           }
         });

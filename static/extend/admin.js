@@ -52,8 +52,9 @@ layui.define(['jquery', 'layer', 'element'], function (exports) {
    * @todo 重新计算iframe高度
    */
   function resizeFrame() {
-    var h = $(window).height() - 164;
-    $('iframe').css('height', h + 'px');
+    // var h = $(window).height() - 100;
+    // $('iframe').css('height', h + 'px');
+    $('iframe').css('height', '100%');
   }
 
   var Admin = function() {
@@ -90,7 +91,13 @@ layui.define(['jquery', 'layer', 'element'], function (exports) {
     });
   }
 
-  Admin.prototype.rendSidebar = function() {
+  Admin.prototype.render = function() {
+    this.renderSidebar();
+    this.renderPopupMenu();
+    this.renderTab();
+  }
+
+  Admin.prototype.renderSidebar = function() {
     /*
      * @todo 左侧导航菜单的显示和隐藏
      */
@@ -122,7 +129,7 @@ layui.define(['jquery', 'layer', 'element'], function (exports) {
     });
   }
 
-  Admin.prototype.rendPopupMenu = function() {
+  Admin.prototype.renderPopupMenu = function() {
     /*
    * @todo 选项卡右击菜单
    */
@@ -160,7 +167,7 @@ layui.define(['jquery', 'layer', 'element'], function (exports) {
     });
   }
 
-  Admin.prototype.rendTab = function() {
+  Admin.prototype.renderTab = function() {
     /**
      *@todo tab切换监听
      * tab切换监听不能写字初始化加载$(function())方法内，否则不执行
@@ -307,11 +314,6 @@ layui.define(['jquery', 'layer', 'element'], function (exports) {
     }
   }
 
-  var admin = new Admin();
-  admin.rendSidebar();
-  admin.rendPopupMenu();
-  admin.rendTab();
-
   $(window).resize(function () {
     resizeFrame();
   });
@@ -321,5 +323,5 @@ layui.define(['jquery', 'layer', 'element'], function (exports) {
    *@todo Frame内部的按钮点击打开其他frame的tab
    */
 
-  exports('admin', {tab: tab});
+  exports('admin', {admin: Admin, tab: tab});
 });

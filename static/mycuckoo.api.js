@@ -18,8 +18,10 @@ layui.use(['jquery'], function () {
           },
         });
       },
+      403: function(xhr) {
+        layer.open({title: '警告', content: xhr.responseJSON.msg});
+      },
       500: function(xhr) {
-        layer.closeAll();
         layer.open({title: '错误', content: xhr.responseJSON.msg});
       }
     },
@@ -33,7 +35,7 @@ layui.use(['jquery'], function () {
     var path = uri;
     for (var variable in uriVariables) {
       var witch = typeof variable;
-      if ("string" == witch || 'number' == witch) {
+      if ('string' == witch || 'number' == witch) {
         path = path.replace('{' + variable + '}', uriVariables[variable]);
       }
     }

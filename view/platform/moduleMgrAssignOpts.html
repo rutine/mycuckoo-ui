@@ -83,7 +83,7 @@
       } else {
         $form.parent().find('legend').text(queryObj.name);
 
-        $.request(operatorMap['moduleMgr:optSelector'], queryObj).then(function(json) {
+        $.request(operatorMap['res:moduleMgr:optSelector'], queryObj).then(function(json) {
           var data = json.data.source;
           var assign = json.data.assign || [];
           var $checkbox = $('<div></div>');

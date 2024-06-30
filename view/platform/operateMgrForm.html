@@ -120,14 +120,14 @@
 
       //表单初始赋值
       if (queryObj.id && action) {
-        if (action.code !== 'operateMgr:add') {
+        if (action.code !== 'res:operateMgr:add') {
           $form.find('input[name=code]').attr('disabled', 'disabled')
         }
 
-        $.request(operatorMap['operateMgr:view'], queryObj).then(json => {
+        $.request(operatorMap['res:operateMgr:view'], queryObj).then(json => {
           form.val('editForm', json.data);
 
-          if (action.code === 'operateMgr:view') {
+          if (action.code === 'res:operateMgr:view') {
             $form.find('input, select, textarea').attr('disabled', 'disabled')
           }
         });

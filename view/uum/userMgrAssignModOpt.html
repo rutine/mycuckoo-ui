@@ -138,7 +138,7 @@
       //表单初始赋值
       if (queryObj.id) {
         $('fieldset > legend').text('用户名称:' + queryObj.name);
-        $.request(operatorMap['userMgr:resSelector'], queryObj).then(json => {
+        $.request(operatorMap['res:userMgr:resSelector'], queryObj).then(json => {
           form.val('userAssignModOpt', json.data);
           form.val('userAssignRowPriv', json.data);
 
@@ -203,7 +203,7 @@
       },
       selectRowPrivilege: function(privilegeType) {
         var that = this;
-        $.request(operatorMap['userMgr:rowSelector'], queryObj).then(json => {
+        $.request(operatorMap['res:userMgr:rowSelector'], queryObj).then(json => {
           var data = json.data;
           var selectedPrivilegeType = data.privilegeScope;
 
@@ -220,7 +220,7 @@
             data.privileges.forEach(item => {
               checkNodes.push(item.id);
             });
-            var action = operatorMap['deptMgr:tree'];
+            var action = operatorMap['res:deptMgr:tree'];
             that.openTree(MyCuckoo.api.host + action.path, {id: id, data: checkNodes});
           }
           else if(privilegeType == 'rol') {
@@ -228,7 +228,7 @@
             data.privileges.forEach(item => {
               checkNodes.push('id-leaf-' + item.id);
             });
-            var action = operatorMap['deptMgr:tree'];
+            var action = operatorMap['res:deptMgr:tree'];
             that.openTree(MyCuckoo.api.host + action.path, {id: id, data: checkNodes, withRole: true});
           }
           else {
@@ -255,7 +255,7 @@
       },
       //查询用户
       selectUsers: function(ele) {
-        $.request(operatorMap['userMgr:selector'], {userName: $tab.find('input[name=searchUsr]').val()}).then(json => {
+        $.request(operatorMap['res:userMgr:selector'], {userName: $tab.find('input[name=searchUsr]').val()}).then(json => {
           var nodes = [];
           json.data.forEach(item => nodes.push({
             id: item.userId,
@@ -283,7 +283,7 @@
 
         var optIds = [];
         selectedNodes.forEach(item => item.isLeaf && optIds.push(item.nodeId));
-        $.request(operatorMap['userMgr:assignRes'], data, optIds).then(json => {
+        $.request(operatorMap['res:userMgr:assignRes'], data, optIds).then(json => {
           MyCuckoo.msg({msg: json.msg});
 
           this.refresh();
@@ -308,7 +308,7 @@
           var index = !isNaN(id) ? -1 : id.indexOf('_');
           rowIds.push(item.isLeaf && index != -1 ? id.substr(index + 1) : id);
         });
-        $.request(operatorMap['userMgr:assignRow'], data, rowIds).then(json => {
+        $.request(operatorMap['res:userMgr:assignRow'], data, rowIds).then(json => {
           MyCuckoo.msg({msg: json.msg});
 
           this.refresh();

@@ -100,7 +100,7 @@
       //表单初始赋值
       if (queryObj.id) {
         $('fieldset > legend').text('角色名称: ' + queryObj.name);
-        $.request(operatorMap['roleMgr:resSelector'], queryObj).then(json => {
+        $.request(operatorMap['res:roleMgr:resSelector'], queryObj).then(json => {
           form.val('roleAssignModOpt', json.data);
           form.val('roleAssignRowPriv', json.data);
 
@@ -158,7 +158,7 @@
 
         var optIds = [];
         selectedNodes.forEach(item => item.isLeaf && optIds.push(item.nodeId));
-        $.request(operatorMap['roleMgr:assignRes'], data, optIds).then(json => {
+        $.request(operatorMap['res:roleMgr:assignRes'], data, optIds).then(json => {
           MyCuckoo.msg({msg: json.msg});
 
           this.refresh();
@@ -172,7 +172,7 @@
           return;
         }
 
-        $.request(operatorMap['roleMgr:assignRow'], data, rowIds).then(json => {
+        $.request(operatorMap['res:roleMgr:assignRow'], data, rowIds).then(json => {
           MyCuckoo.msg({msg: json.msg});
 
           this.refresh();

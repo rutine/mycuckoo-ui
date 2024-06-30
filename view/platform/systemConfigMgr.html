@@ -246,7 +246,7 @@
 
       //设置
       modify(obj) {
-        $.request(operatorMap['systemConfigMgr:modify'], obj.data).then(json => {
+        $.request(operatorMap['res:systemConfigMgr:modify'], obj.data).then(json => {
           MyCuckoo.msg({msg: json.msg});
 
           this.reload();
@@ -260,13 +260,13 @@
       },
       //选择管理员
       selectAdmin(userAddDelFlag) {
-        var url = MyCuckoo.resolve('systemConfigMgrAssignUser.html?action=systemConfigMgr:modify&opt={opt}&q[userAddDelFlag]={flag}',
+        var url = MyCuckoo.resolve('systemConfigMgrAssignUser.html?action=res:systemConfigMgr:modify&opt={opt}&q[userAddDelFlag]={flag}',
           {'opt': queryObj.id, 'flag': userAddDelFlag})
         MyCuckoo.dialog('选择用户', url);
       },
       // 系统监控设置
       startJConsole(obj) {
-        $.request(operatorMap['systemConfigMgr:' +  obj.event], {}).then(json => {
+        $.request(operatorMap['res:systemConfigMgr:' +  obj.event], {}).then(json => {
           MyCuckoo.msg({msg: json.msg});
         });
       },

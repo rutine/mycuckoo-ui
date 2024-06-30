@@ -201,10 +201,10 @@
 
         //表单初始赋值
         if (queryObj.id && action) {
-          $.request(operatorMap['organMgr:view'], queryObj).then(json => {
+          $.request(operatorMap['res:organMgr:view'], queryObj).then(json => {
             form.val('editForm', json.data);
 
-            if (action.code === 'organMgr:view') {
+            if (action.code === 'res:organMgr:view') {
               $form.find('input, select, textarea').attr('disabled', 'disabled')
             }
           });
@@ -292,7 +292,7 @@
         });
       },
       selectBelongDist: function(obj) {
-        var action = operatorMap['districtMgr:tree'];
+        var action = operatorMap['res:districtMgr:tree'];
         if (!action) {
           MyCuckoo.msg({msg: '无权访问此资源'});
           return;
@@ -301,7 +301,7 @@
         this.openTree(MyCuckoo.api.host + action.path, {nodeId: 'belongDist', context: 'belongDistName'});
       },
       selectOrgan: function(obj) {
-        var action = operatorMap['organMgr:tree'];
+        var action = operatorMap['res:organMgr:tree'];
         if (!action) {
           MyCuckoo.msg({msg: '无权访问此资源'});
           return;

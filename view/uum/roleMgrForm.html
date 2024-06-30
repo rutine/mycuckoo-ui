@@ -86,10 +86,10 @@
 
       //表单初始赋值
       if (queryObj.id && action) {
-        $.request(operatorMap['roleMgr:view'], queryObj).then(json => {
+        $.request(operatorMap['res:roleMgr:view'], queryObj).then(json => {
           form.val('editForm', json.data);
 
-          if (action.code === 'roleMgr:view') {
+          if (action.code === 'res:roleMgr:view') {
             $form.find('input, select, textarea').attr('disabled', 'disabled')
           }
         });

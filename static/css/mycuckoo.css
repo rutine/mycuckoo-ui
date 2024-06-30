@@ -22,7 +22,7 @@
 .mycuckoo-container .sidebar-open i { display: block; background: rgba(255, 255, 255, 0.1) 0 0 no-repeat; color: #fff; width: 32px; height: 32px; line-height: 32px; border-radius: 3px; text-align: center; margin: 15px; cursor: pointer; }
 .mycuckoo-container .sidebar-open i:hover { background: rgba(255, 255, 255, 0.3) 0 0 no-repeat; }
 .mycuckoo-container .layui-side { width: 220px; }
-.layui-side .layui-nav { position: absolute; top: 0px; bottom: 42px; left: 0; z-index: 2; padding-top: 10px; background-color: #EEE; width: 220px; max-width: 220px; overflow: auto; overflow-x: hidden; border-right: 1px solid #e5e5e5; }
+.layui-side .layui-nav { position: absolute; top: 0px; bottom: 42px; left: 0; z-index: 2; padding-top: 10px; background-color: #EEE; width: 220px; max-width: 220px; height: 100%; overflow: auto; overflow-x: hidden; border-right: 1px solid #e5e5e5; }
 .layui-side .layui-nav .layui-nav-item a { color: #555; }
 .layui-side .layui-nav .layui-nav-item a:hover, .layui-side .layui-nav .layui-this a { color:#000; }
 .layui-side .layui-nav .layui-nav-item { border-bottom: 1px solid #ddd; }
@@ -37,7 +37,7 @@
 .layui-side .layui-nav .layui-nav-item > .layui-nav-child a:hover { color: #999; }
 
 /*--------------------------------tab-----------------------------------*/
-.mycuckoo-container .layui-body { position: absolute; top: 60px; right: 0; bottom: 42px; left: 221px; overflow: hidden; z-index: 1; }
+.mycuckoo-container .layui-body { position: absolute; top: 60px; right: 0; padding-bottom: 0px; left: 221px; height: 85%; overflow: hidden; z-index: 1; }
 .mycuckoo-body-bg { position: absolute; top: 46px; right: 0; bottom: 42px; left: 221px; background: rgba(0, 0, 0, 0.5) 0 0 no-repeat; overflow: hidden; z-index: 100; display: none; }
 .mycuckoo-body .layui-tab { height: 100%; width: 100%; background: #EFEEF0 0 0 no-repeat; margin: 0px; }
 .mycuckoo-body .layui-tab-title { height: 35px; background: #EFEEF0 0 0 no-repeat; position: relative; z-index: 100; }

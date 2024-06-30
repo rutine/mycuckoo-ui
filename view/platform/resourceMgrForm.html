@@ -122,11 +122,11 @@
     //表单初始赋值
     function initForm() {
       if (queryObj.id) {
-        $.request(operatorMap['resourceMgr:view'], queryObj).then(json => {
+        $.request(operatorMap['res:resourceMgr:view'], queryObj).then(json => {
           json.data.moduleId = queryObj.moduleId;
           form.val('editForm', json.data);
 
-          if (action.code === 'resourceMgr:view') {
+          if (action.code === 'res:resourceMgr:view') {
             $form.find('input, select, textarea').attr('disabled', 'disabled')
           }
         });
@@ -144,7 +144,7 @@
       });
 
       //初始化
-      $.request(operatorMap['moduleMgr:optSelector'], {id: queryObj.moduleId}).then(function(json) {
+      $.request(operatorMap['res:moduleMgr:optSelector'], {id: queryObj.moduleId}).then(function(json) {
         var $select = $form.find('select[name=operateId]');
         $select.empty();
         $select.append('<option value="">请选择或搜索</option>');

@@ -305,12 +305,12 @@
 
       //表单初始赋值
       if (queryObj.id && action) {
-        $.request(operatorMap['codeMgr:view'], queryObj).then(function(json) {
+        $.request(operatorMap['res:codeMgr:view'], queryObj).then(function(json) {
           new PartSelector().render({elem: '#ID_selector', data: json.data, form: form});
 
           form.val('editForm', json.data);
 
-          if (action.code === 'codeMgr:view') {
+          if (action.code === 'res:codeMgr:view') {
             $form.find('input, select, textarea').attr('disabled', 'disabled')
           }
         });
@@ -402,7 +402,7 @@
         });
       },
       selectModule: function(obj) {
-        var action = operatorMap['moduleMgr:tree'];
+        var action = operatorMap['res:moduleMgr:tree'];
         if (!action) {
           MyCuckoo.msg({msg: '无权访问此资源'});
           return;

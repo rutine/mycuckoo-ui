@@ -103,7 +103,7 @@
       //表单初始赋值
       if (queryObj.id) {
         $form.parent().find('fieldset > legend').text('模块: ' + queryObj.name);
-        $.request(operatorMap['moduleMgr:resSelector'], queryObj).then(function(json) {
+        $.request(operatorMap['res:moduleMgr:resSelector'], queryObj).then(function(json) {
           var source = json.data.source;
           var $elem = $form.find('.layui-col-md9');
           that.rend($elem, source, false, source);

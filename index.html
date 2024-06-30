@@ -93,6 +93,7 @@
   layui.use(['jquery', 'element', 'admin', 'upload', 'laytpl'], function(){
     var $ = layui.jquery,
       element = layui.element,
+      admin = layui.admin.admin,
       tab = layui.admin.tab,
       laytpl = layui.laytpl,
       upload = layui.upload;
@@ -153,6 +154,8 @@
             MyCuckoo.alert({title : '提示', msg : '上传头像失败!' });
           }
         });
+
+        new admin().render();
       });
     }
 

@@ -124,6 +124,17 @@
       ]],
       page: false,
       done: function(res, curr, count) {
+        function expandTree(trees) {
+          trees && trees.length > 0 && trees.map(tree => {
+            if (!tree.spread) {
+              table.expandNode('table', {index: tree.LAY_DATA_INDEX});
+            } else {
+              expandTree(tree.children);
+            }
+          })
+        }
+        expandTree(table.getData('table'));
+
         new IndexMgr();
       }
     });

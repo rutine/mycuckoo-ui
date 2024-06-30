@@ -1,7 +1,7 @@
 layui.use(['jquery', 'layer'], function() {
   var $ = layui.jquery;
   var MyCuckoo = {
-    tableHeight: 'full-90',
+    tableHeight: 'full-94',
 
     /**
      * 设置会话信息
@@ -32,10 +32,10 @@ layui.use(['jquery', 'layer'], function() {
     getOperation: function(key) {
       var menu = this.getSession('myMenu');
       if (menu && menu.fourth) {
-        return menu.fourth[key];
+        return menu.fourth[key] || [];
       }
 
-      return null;
+      return null || [];
     },
 
     /**
