@@ -1,0 +1,269 @@
+<!DOCTYPE html>
+<html>
+<head>
+  <meta http-equiv="Content-Type" content="text/html; charset=UTF-8">
+  <meta name="renderer" content="webkit|ie-comp|ie-stand">
+  <meta http-equiv="X-UA-Compatible" content="IE=edge,chrome=1">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, minimum-scale=1.0, maximum-scale=1.0, user-scalable=0">
+  <meta http-equiv="Cache-Control" content="no-siteapp" />
+  <title>注册新账号</title>
+
+  <link type="image/x-icon" href="static/images/favicon.ico" rel="shortcut icon">
+  <link type="text/css" href="static/layui/2.9.13/css/layui.css" rel="stylesheet" />
+  <link type="text/css" href="static/css/font.css" rel="stylesheet" />
+  <link type="text/css" href="static/css/mycuckoo.css" rel="stylesheet" />
+  <link type="text/css" href="static/css/login.css" rel="stylesheet" />
+
+  <style>
+    .mycuckoo-reg-container {  width: 320px; margin: 21px auto 0;  }
+  </style>
+</head>
+<body>
+<div class="layui-container">
+  <div class="layui-row">
+    <div class="layui-col-md8 layui-col-md-offset2">
+      <form class="layui-form" name="regForm" action="/register" method="post" >
+        <div class="mycuckoo-reg-container">
+          <div class="layui-form-item">
+            <div class="layui-input-wrap">
+              <div class="layui-input-prefix">
+                <i class="layui-icon layui-icon-username"></i>
+              </div>
+              <input class="layui-input" type="text" name="username" value="" placeholder="名称" lay-verify="required" autocomplete="off" lay-affix="clear">
+            </div>
+          </div>
+
+          <div class="layui-form-item">
+            <div class="layui-input-wrap">
+              <div class="layui-input-prefix">
+                <i class="layui-icon layui-icon-cellphone"></i>
+              </div>
+              <input class="layui-input" type="text" name="phone" value="" placeholder="手机号" lay-reqtext="请填写手机号" lay-verify="required|phone" autocomplete="off" >
+            </div>
+          </div>
+
+          <div class="layui-form-item">
+            <div class="layui-input-wrap">
+              <div class="layui-input-prefix">
+                <i class="layui-icon layui-icon-password"></i>
+              </div>
+              <input class="layui-input" type="password" name="password" value="" placeholder="密码" lay-verify="required" autocomplete="off" lay-affix="eye">
+            </div>
+          </div>
+
+          <div class="layui-form-item">
+            <div class="layui-input-wrap">
+              <div class="layui-input-prefix">
+                <i class="layui-icon layui-icon-password"></i>
+              </div>
+              <input class="layui-input" type="password" name="confirmPassword" value="" placeholder="确认密码" lay-verify="required|confirmPassword" autocomplete="off" lay-affix="eye">
+            </div>
+          </div>
+
+          <div class="layui-form-item">
+            <div class="layui-input-wrap">
+              <div class="layui-input-prefix">
+                <i class="layui-icon layui-icon-senior"></i>
+              </div>
+              <input class="layui-input" type="text" name="orgName" value="" lay-verify="required" placeholder="企业名称" autocomplete="off" lay-affix="clear">
+            </div>
+          </div>
+
+          <div class="layui-form-item">
+            <div class="layui-row">
+              <div class="layui-col-xs7">
+                <div class="layui-input-wrap">
+                  <div class="layui-input-prefix">
+                    <i class="layui-icon layui-icon-vercode"></i>
+                  </div>
+                  <input class="layui-input" type="text" name="code" value="" placeholder="验证码" lay-reqtext="请填写验证码" lay-verify="required" autocomplete="off" >
+                </div>
+              </div>
+              <div class="layui-col-xs5">
+                <div style="margin-left: 11px;">
+                  <button type="button" class="layui-btn layui-btn-fluid layui-btn-primary layui-border-orange" lay-on="get-reg-code">获取验证码</button>
+                </div>
+              </div>
+            </div>
+          </div>
+
+          <div class="layui-form-item">
+            <input type="checkbox" name="agreement" title="同意" lay-verify="required" lay-skin="primary">
+            <a href="javascript:" style="position: relative; top: 6px; left: -15px; color: red">
+              <ins>用户协议</ins>
+            </a>
+          </div>
+
+          <div class="layui-form-item">
+            <button class="layui-btn layui-btn-fluid" lay-filter="reg" lay-submit>注册</button>
+          </div>
+
+          <div class="layui-form-item">
+            <!-- <label>社交账号注册</label>
+             <span style="padding: 0 21px 0 6px;">
+               <a href="javascript:;"><i class="layui-icon layui-icon-login-qq" style="color: #3492ed;"></i></a>
+               <a href="javascript:;"><i class="layui-icon layui-icon-login-wechat" style="color: #4daf29;"></i></a>
+               <a href="javascript:;"><i class="layui-icon layui-icon-login-weibo" style="color: #cf1900;"></i></a>
+             </span>-->
+            <a href="login.html" style="color: snow">登录已有帐号</a>
+          </div>
+        </div>
+      </form>
+    </div>
+  </div>
+
+  <div class="layui-row captcha-pane" style="display: none;">
+    <div id="ID_captcha_box" class="layui-col-md4 layui-col-md-offset4"></div>
+  </div>
+
+</div>
+<script type="text/javascript" src="static/layui/2.9.13/layui.js" charset="UTF-8"></script>
+<script type="text/javascript" src="static/mycuckoo.api.js" charset="UTF-8"></script>
+<script type="text/javascript">
+  layui.config({
+    base: 'static/extend/',
+    version: '101100'
+  });
+
+  layui.use(['jquery', 'form'], function() {
+    var $ = layui.jquery;
+    var util = layui.util;
+    var form = layui.form;
+
+    var $bground = $('<div class="background"></div>');
+    var $regForm = $('form[name=regForm]');
+    var $phone = $regForm.find('input[name=phone]');
+    var $password = $regForm.find('input[name=password]');
+    var $phoneCode = $regForm.find('input[name=code]');
+    var $captchaPane = $('.captcha-pane');
+
+    // 自定义验证规则
+    form.verify({
+      // 确认密码
+      confirmPassword: function(value, item) {
+        if(value !== $password.val()){
+          return '两次密码输入不一致';
+        }
+      }
+    });
+
+    // 普通事件
+    util.on('lay-on', {
+      // 获取验证码
+      'get-reg-code': function(othis) {
+          if(!form.validate($phone)) {
+            return;
+          }
+
+        layer.open({
+          type: 5,
+          title: '您是人类么',
+          area: ['360px', '20%'],
+          content: ['<form class="layui-form">',
+            ' <div class="layui-form-item">',
+            '   <div class="layui-row">',
+            '     <div class="layui-col-xs7">',
+            '       <div class="layui-input-wrap">',
+            '         <div class="layui-input-prefix">',
+            '           <i class="layui-icon layui-icon-vercode"></i>',
+            '         </div>',
+            '         <input class="layui-input" type="text" name="code" value="" placeholder="验证码" lay-reqtext="请填写验证码" lay-verify="required" autocomplete="off" >',
+            '       </div>',
+            '     </div>',
+            '     <div class="layui-col-xs5">',
+            '       <div style="margin-left: 11px;">',
+            '         <img src="https://www.oschina.net/action/user/captcha" height="36" width="106">',
+            '       </div>',
+            '     </div>',
+            '   </div>',
+            ' </div>',
+            '</form>'].join(''),
+          btn: ['确认'],
+          success: function(layero, index) {
+            var $form = layero.find('form');
+            $form.find('img').on('click', function(el) {
+              $.request({path: '/captcha/image', method: 'post'}).then(json => {
+                if (json.code != 0) {
+                  return;
+                }
+
+                $(el.target).data(json.data).attr('src', json.data.code);
+              });
+            }).click();
+          },
+          yes: function(index, layero) {
+            var $form = layero.find('form');
+            var $code = $form.find('input[name=code]');
+            if(!form.validate($code)) {
+              return;
+            }
+
+            var id = $form.find('img').data().id;
+            $.request({path: '/captcha/check', method: 'post'}, {id: id, code: $code.val()}).then(json => {
+              if (json.code != 0) {
+                $form.find('img').click();
+                return;
+              }
+
+              $.request({path: '/captcha/code', method: 'post'}, {captchaId: id, phone: $phone.val()}).then(json => {
+                if (json.code != 0) {
+                  $form.find('img').click();
+                  return;
+                }
+
+                $phone.data(json.data);
+                //调试, 直接赋值
+                $phoneCode.val(json.data.code);
+
+                layer.close(index);
+              });
+            });
+          }
+        });
+      }
+    });
+
+    // 注册
+    form.on('submit(reg)', function(data) {
+      var field = data.field; // 获取表单字段值
+      if(!field.agreement){
+        layer.msg('您必须勾选同意用户协议才能注册');
+        return false;
+      }
+
+      if (!$phone.data()['id']) {
+        layer.msg('请获取验证码!');
+        return false;
+      }
+
+      $captchaPane.show();
+
+      field['captchaId'] = $phone.data()['id'];
+      postReg(field);
+
+      return false;
+    });
+
+    var postReg = function(data) {
+      $bground.appendTo(($('body')));
+      layer.msg('提交中,请稍候... ');
+
+      MyCuckoo.api.postRegister(data).then(json => {
+        if(json.code != 0) {
+          layer.open({title: '提示', content: json.msg});
+          $bground.remove();
+          return;
+        }
+
+        window.location.href = './login.html';
+      }).always(function() {
+        $bground.remove();
+        layer.closeAll();
+      });
+    };
+
+    // end
+  });
+</script>
+</body>
+</html>

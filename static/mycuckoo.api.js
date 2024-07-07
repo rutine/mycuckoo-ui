@@ -117,6 +117,9 @@ layui.use(['jquery'], function () {
   var api = {
     host: host,
 
+    postRegister: function(params) {
+      return $.postJson(host + '/register', params);
+    },
     postLogin: function(params) {
       return $.post(host + '/login', params);
     },

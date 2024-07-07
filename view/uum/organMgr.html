@@ -121,6 +121,7 @@
         {type: 'radio'},
         {field: 'simpleName', title: '机构简称'},
         {field: 'code', title: '机构代码'},
+        {field: 'roleName', title: '机构角色'},
         {field: 'address1', title: '联系地址1'},
         {field: 'tel1', title: '联系电话1'},
         {field: 'beginDate', title: '成立日期'},
@@ -267,6 +268,29 @@
             that.reload();
           });
         }});
+      },
+      more: function (obj) {
+        var that = this;
+        var btns = [];
+        var i = 0;
+        layui.each(operator, function(index, item) {
+          if ((item.group & 4) != 4 || i++ == 0) {
+            return;
+          }
+          btns.push(item);
+        });
+        dropdown.render({
+          elem: obj.elem,
+          show: true,
+          data: btns,
+          customName: {
+            title: 'name'
+          },
+          click: function(menudata) {
+            obj.event = menudata.code;
+            that['execute'](obj);
+          }
+        });
       }
     }
     // the end
