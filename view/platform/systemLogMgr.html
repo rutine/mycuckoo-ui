@@ -6,6 +6,7 @@
   <link type="image/x-icon" href="../../static/images/favicon.ico" rel="shortcut icon" />
   <link type="text/css" href="../../static/layui/2.9.13/css/layui.css" rel="stylesheet" />
   <link type="text/css" href="../../static/css/mycuckoo.css" rel="stylesheet" />
+  <link type="text/css" href="../../static/css/searchInput.css" rel="stylesheet" />
 </head>
 <body>
 <div class="mycuckoo-site-nav">
@@ -23,15 +24,10 @@
 <div class="mycuckoo-main">
   <div class="layui-row">
     <form class="layui-col-md12 layui-form mycuckoo-search">
+
       <div class="layui-inline">
-        <div class="layui-input-inline">
-          <input class="layui-input" name="q[modName]" placeholder="模块">
-        </div>
-        <div class="layui-input-inline">
-          <input class="layui-input" name="q[name]" placeholder="操作">
-        </div>
-        <div class="layui-input-inline">
-          <input class="layui-input" name="q[userName]" placeholder="操作人姓名">
+        <div class="search-tag-container layui-input-inline">
+          <input class="search-tag-input" type="text" name="q[modName]" placeholder="请输入搜索关键词">
         </div>
         <div class="layui-input-inline">
           <button class="layui-btn" lay-filter="search" lay-submit>
@@ -65,10 +61,11 @@
     version: '101100'
   });
 
-  layui.use(['jquery', 'form', 'table'], function() {
+  layui.use(['jquery', 'form', 'table', 'searchInput'], function() {
     var $ = layui.jquery,
       form = layui.form,
-      table = layui.table;
+      table = layui.table,
+      searchInput = layui.searchInput;
 
     //本地缓存数据
     var queryObj = MyCuckoo.getQueryObject(location.search);
@@ -120,6 +117,21 @@
         return;
       }
       var that = indexMgrInst = this;
+
+      var searchInst = searchInput.render({
+        elem: 'input.search-tag-input',
+        data: [//初始值
+          {field: 'q[modName]', name: '模块'},
+          {field: 'q[name]', name: '操作'},
+          {field: 'q[userName]', name: '操作人姓名'}
+        ],
+        beforeCreate: function (data, value) {
+          return value;
+        },
+        onChange: function (data, value, type) {
+
+        }
+      });
 
       form.on('submit(search)', function(data) {
         //执行重载

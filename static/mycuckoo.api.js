@@ -139,32 +139,13 @@ layui.use(['jquery'], function () {
       return $.get(host + '/platform/system/dictionary/mgr/small-type', params);
     },
 
-    //公共
-    configMgr: {
-      tableConfigUrl: host + '/platform/config/list-table-config',
-    },
-
-    organMgr: {
-      url: host + '/uum/organ/mgr',
-      childNodesUrl: host + '/uum/organ/mgr/{id}/child/nodes',
-      disEnableUrl: host + '/uum/organ/mgr/{id}/disEnable/{disEnableFlag}',
-    },
-    roleMgr: {
-      url: host + '/uum/role/mgr',
-      disEnableUrl: host + '/uum/role/mgr/{id}/disEnable/{disEnableFlag}',
-      rolePrivilegeUrl: host + '/uum/role/mgr/{id}/role-privilege',
-      saveOptPrivilegeUrl: host + '/uum/role/mgr/{id}/opt-privilege/{privilegeScope}',
-      saveRowPrivilegeUrl: host + '/uum/role/mgr/{id}/row-privilege',
-    },
     deptMgr: {
       url: host + '/uum/dept/mgr',
       childNodesUrl: host + '/uum/dept/mgr/{id}/child/nodes',
-      disEnableUrl: host + '/uum/dept/mgr/{id}/disEnable/{disEnableFlag}',
-      assignUrl: host + '/uum/dept/mgr/{id}/assign',
+      disEnableUrl: host + '/uum/dept/mgr/{id}/disEnable/{disEnableFlag}'
     },
     userMgr: {
       url: host + '/uum/user/mgr',
-      selectorUrl: host + '/uum/user/mgr/selector',
       updatePhoto: host + '/uum/user/mgr/update/photo',
       updatePwdUrl: host + '/uum/user/mgr/update/password',
       updateRoleUrl: host + '/uum/user/mgr/update/role',
@@ -175,70 +156,8 @@ layui.use(['jquery'], function () {
       saveOptPrivilegeUrl: host + '/uum/user/mgr/{id}/opt-privilege/{privilegeScope}',
       saveRowPrivilegeUrl: host + '/uum/user/mgr/{id}/row-privilege/{privilegeScope}'
     },
-    moduleMgr: {
-      url: host + '/platform/module/mgr',
-      disEnableUrl: host + '/platform/module/mgr/{id}/disEnable/{disEnableFlag}',
-      childNodesUrl: host + '/platform/module/mgr/{id}/child/nodes',
-      operationUrl: host + '/platform/module/mgr/{id}/operation',
-      resourceUrl: host + '/platform/module/mgr/{id}/resource',
-      saveModuleOptRefsUrl: host + '/platform/module/mgr/{id}/module-opt-ref',
-      saveModuleResRefsUrl: host + '/platform/module/mgr/{id}/module-res-ref',
-    },
-    operateMgr: {
-      url: host + '/platform/operate/mgr',
-      disEnableUrl: host + '/platform/operate/mgr/{id}/disEnable/{disEnableFlag}',
-    },
-    resourceMgr: {
-      url: host + '/platform/resource/mgr',
-      disEnableUrl: host + '/platform/resource/mgr/{id}/disEnable/{disEnableFlag}',
-    },
-    tableConfigMgr: {
-      url: host + '/platform/table-config/mgr',
-      listUrl: host + '/platform/table-config/mgr/{moduleId}/list',
-    },
-    afficheMgr: {
-      url: host + '/platform/affiche/mgr'
-    },
-    accessoryMgr: {
-      url: host + '/platform/accessory/mgr'
-    },
     fileMgr: {
       url: host + '/file'
-    },
-    codeMgr: {
-      url: host + '/platform/code/mgr',
-      disEnableUrl: host + '/platform/code/mgr/{id}/disEnable/{disEnableFlag}'
-    },
-    districtMgr: {
-      url: host + '/platform/district/mgr',
-      childNodesUrl: host + '/platform/district/mgr/{id}/child/nodes',
-      disEnableUrl: host + '/platform/district/mgr/{id}/disEnable/{disEnableFlag}'
-    },
-    dictionaryMgr: {
-      url: host + '/platform/system/dictionary/mgr/',
-      smallTypeMapUrl: host + '/platform/system/dictionary/mgr/small-type',
-      disEnableUrl: host + '/platform/system/dictionary/mgr/{id}/disEnable/{disEnableFlag}'
-    },
-    schedulerMgr: {
-      url: host + '/platform/system/scheduler/mgr',
-      disEnableUrl: host + '/platform/system/scheduler/mgr/{id}/disEnable/{disEnableFlag}',
-      startJobUrl: host + '/platform/system/scheduler/mgr/{id}/start-job',
-      stopJobUrl: host + '/platform/system/scheduler/mgr/{id}/stop-job',
-      startSchedulerUrl: host + '/platform/system/scheduler/mgr/start-scheduler',
-      stopSchedulerUrl: host + '/platform/system/scheduler/mgr/stop-scheduler',
-      schedulerStatusUrl: host + '/platform/system/scheduler/mgr/scheduler-status'
-    },
-    systemConfigMgr: {
-      url: host + '/platform/system/config/mgr',
-      userUrl: host + '/platform/system/config/mgr/users',
-      startJConsoleUrl: host + '/platform/system/config/mgr/start-jconsole',
-    },
-    systemLogMgr: {
-      url: host + '/platform/system/log/mgr',
-    },
-    systemParameterMgr: {
-      url: host + '/platform/system/parameter/mgr',
-      disEnableUrl: host + '/platform/system/parameter/mgr/{id}/disEnable/{disEnableFlag}',
     }
   }
 
