@@ -171,7 +171,9 @@
       },
       //注销登录
       logout: function(el) {
-        MyCuckoo.api.getLogout().then(function(json) {  window.location.href = './login.html'; });
+        MyCuckoo.api.getLogout().then(function(json) {
+          MyCuckoo.setSession('token', '');
+          window.location.href = './login.html'; });
       },
 
       activeMenu: function(el) {

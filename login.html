@@ -69,6 +69,7 @@
     
   </div>
   <script type="text/javascript" src="static/layui/2.9.13/layui.js" charset="UTF-8"></script>
+  <script type="text/javascript" src="static/mycuckoo.js" charset="UTF-8"></script>
   <script type="text/javascript" src="static/mycuckoo.api.js" charset="UTF-8"></script>
   <script type="text/javascript">
     layui.config({
@@ -135,10 +136,12 @@
             return;
           }
 
+          MyCuckoo.setSession("token", json.data.token);
+
           // 角色列表
-          if(json.data) {
-            for(var i = 0, len = json.data.length; i < len; i++) {
-              var org = json.data[i];
+          if(json.data.orgs) {
+            for(var i = 0, len = json.data.orgs.length; i < len; i++) {
+              var org = json.data.orgs[i];
               $('<div class="layui-col-sm6 layui-col-md3">'
                 + '  <ul class="site-doc-icon site-doc-anim">'
                 + '    <li>'
@@ -170,6 +173,7 @@
           if(code != 0) {
             loginError(code, msg);
           } else {
+            MyCuckoo.setSession("token", json.data);
             window.location.href = './index.html';
           }
         });

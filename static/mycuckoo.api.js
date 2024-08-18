@@ -25,6 +25,11 @@ layui.use(['jquery'], function () {
         layer.open({title: '错误', content: xhr.responseJSON.msg});
       }
     },
+    beforeSend: function(xhr) {
+      if (MyCuckoo.getSession('token')) {
+        xhr.setRequestHeader('Authorization', 'Bearer ' + MyCuckoo.getSession('token'));
+      }
+    },
     error: function(xhr, status, thrown) {
       console.log(xhr);
     }
