@@ -76,28 +76,23 @@
   </form>
 </div>
 </body>
-<script type="text/javascript" src="../../static/layui/2.9.13/layui.js" charset="UTF-8"></script>
+<script type="text/javascript" src="../../static/layui/2.11.4/layui.js" charset="UTF-8"></script>
 <script type="text/javascript" src="../../static/mycuckoo.js" charset="UTF-8"></script>
 <script type="text/javascript" src="../../static/mycuckoo.api.js" charset="UTF-8"></script>
 <script type="text/javascript">
-  layui.config({
-    base: '../../static/extend/',
-    version: '101100'
-  });
-
   layui.use(['jquery', 'form', 'dtree', 'selectM'], function() {
-    var $ = layui.jquery,
+    const $ = layui.jquery,
       form = layui.form,
       tree = layui.dtree,
       select = layui.selectM,
       queryObj = MyCuckoo.getQueryObject(location.search);
 
-    var treeObj;
-    var multiSelectObj;
-    var reloadMultiSelect = function(roles) {
+    let treeObj;
+    let multiSelectObj;
+    const reloadMultiSelect = function(roles) {
       $('#ID_right_role_multi_select').off().empty();
 
-      var names = [];
+      let names = [];
       roles.forEach(item => {
         item.name = (item.orgName ? item.orgName + '-' + item.roleName : item.roleName);
         names.push(item.name);
@@ -111,7 +106,7 @@
       });
     }
 
-    var FormMgr = function () {
+    const FormMgr = function () {
       //表单初始赋值
       if (queryObj.id) {
         $.get(MyCuckoo.api.userMgr.url + '/' + queryObj.id).then(function(json) {
@@ -139,22 +134,22 @@
         return;
       }
 
-      var formMgr = this;
+      const formMgr = this;
       //操作按钮触发事件
       $('.select-opt p').on('click', function() {
-        var type = $(this).data('type');
+        let type = $(this).data('type');
         formMgr[type](multiSelectObj, treeObj);
       });
 
       //操作按钮触发事件
       $('form a.layui-btn:not([lay-submit])').on('click', function() {
-        var type = $(this).data('type');
+        let type = $(this).data('type');
         formMgr[type] && formMgr[type](this);
       });
 
       //监听提交
       form.on('submit', function(data) {
-        var type = $(this).data('type');
+        let type = $(this).data('type');
         formMgr[type] && formMgr[type]($.extend({}, data.field, queryObj));
 
         return false;
@@ -171,25 +166,25 @@
        * @param 机构角色树
        */
       selected: function(multiSelectObj, treeObj) {
-        var selectedNodes = treeObj.getCheckbarNodesParam();
+        let selectedNodes = treeObj.getCheckbarNodesParam();
         if(selectedNodes.length == 0) {
           MyCuckoo.alert({ title : '提示', msg : '请您选择相应角色!' });
           return;
         }
 
-        var selectedData = multiSelectObj.config.data;
-        for (var i = 0; i < selectedNodes.length; i++) {
-          var selectedNode = selectedNodes[i];
-          var parentNode = treeObj.getParentParam(selectedNode.nodeId);
-          var orgRoleId = selectedNode.nodeId.substr(selectedNode.nodeId.indexOf('_') + 1);
+        let selectedData = multiSelectObj.config.data;
+        for (let i = 0; i < selectedNodes.length; i++) {
+          let selectedNode = selectedNodes[i];
+          let parentNode = treeObj.getParentParam(selectedNode.nodeId);
+          let orgRoleId = selectedNode.nodeId.substr(selectedNode.nodeId.indexOf('_') + 1);
 
-          var exits = false;
+          let exits = false;
           selectedData.forEach((item,index) => {
             exits = item.orgRoleId == orgRoleId;
           });
 
           if (!exits) {
-            var obj = {
+            let obj = {
               orgRoleId: orgRoleId,
               orgName: parentNode ? parentNode.context : '',
               roleName: selectedNode.context
@@ -201,7 +196,7 @@
         }
 
         if(selectedData.length == 1) {
-          var obj = selectedData;
+          let obj = selectedData;
           form.val('editForm', {orgRoleId: obj.orgRoleId, roleName: obj.name});
         }
         form.render('select');
@@ -213,15 +208,15 @@
        * @param 机构角色树
        */
       unselected: function(multiSelectObj, treeObj) {
-        var selectedData = multiSelectObj.selected;
+        let selectedData = multiSelectObj.selected;
         if (!selectedData.length) {
           MyCuckoo.alert({ title : '提示', msg : '请您选择角色列表!' });
           return;
         }
 
-        var allData = multiSelectObj.config.data;
+        let allData = multiSelectObj.config.data;
         selectedData.forEach((item, index) => {
-          var obj = item;
+          let obj = item;
           treeObj.chooseDataInit('orgRoleId_' + obj.orgRoleId);
 
           if($('input[name=orgRoleId]').val() == obj.orgRoleId) {
@@ -237,7 +232,7 @@
         reloadMultiSelect(allData);
 
         if(allData.length == 1) {
-          var obj = allData[0];
+          let obj = allData[0];
           form.val('editForm', {orgRoleId: obj.orgRoleId, roleName: obj.name});
         } else {
           form.val('editForm', {orgRoleId: '', roleName: ''});
@@ -245,25 +240,25 @@
       },
       //设置默认角色
       setDefaultRole: function(data) {
-        var selectedData = multiSelectObj.selected;
+        let selectedData = multiSelectObj.selected;
         if(selectedData.length != 1) {
           MyCuckoo.alert({ title : '提示', msg : '请您在右边列表选择一个角色!' });
           return;
         }
 
-        var obj = selectedData[0];
+        let obj = selectedData[0];
         form.val('editForm', {orgRoleId: obj.orgRoleId, roleName: obj.name});
       },
       //保存角色
       save: function(data) {
-        var selectedData = multiSelectObj.config.data;
+        let selectedData = multiSelectObj.config.data;
         data.defaultRoleId = data.orgRoleId;
         if(!data.defaultRoleId) {
           MyCuckoo.alert({ title : '提示', msg : '请为用户选择一个默认角色!' });
         } else if(!selectedData.length) {
           MyCuckoo.alert({ title : '提示', msg : '请为用户分配一个角色!' });
         } else {
-          var roleIds = [];
+          let roleIds = [];
           selectedData.forEach(item => roleIds.push(item.orgRoleId));
           $.postJson(MyCuckoo.api.userMgr.saveRolePrivilegeUrl, data, roleIds).then(json => {
             MyCuckoo.msg({msg: json.data});
@@ -281,7 +276,7 @@
       },
       //关闭当前iframe页
       close: function(ele) {
-        var index = parent.layer.getFrameIndex(window.name);
+        let index = parent.layer.getFrameIndex(window.name);
         parent.layer.close(index);
       }
       //end

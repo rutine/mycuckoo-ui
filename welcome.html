@@ -4,7 +4,7 @@
   <meta http-equiv="Content-Type" content="text/html; charset=utf-8" />
   <title>系统平台</title>
   <link type="image/x-icon" href="static/images/favicon.ico" rel="shortcut icon" />
-  <link type="text/css" href="static/layui/2.9.13/css/layui.css" rel="stylesheet" />
+  <link type="text/css" href="static/layui/2.11.4/css/layui.css" rel="stylesheet" />
   <link type="text/css" href="static/css/mycuckoo.css" rel="stylesheet" />
 </head>
 <body>
@@ -69,19 +69,14 @@
     </ul>
   </div>
 </body>
-<script type="text/javascript" src="static/layui/2.9.13/layui.js" charset="UTF-8"></script>
+<script type="text/javascript" src="static/layui/2.11.4/layui.js" charset="UTF-8"></script>
 <script type="text/javascript" src="static/mycuckoo.js" charset="UTF-8"></script>
 <script type="text/javascript">
-  layui.config({
-    base: 'static/extend/',
-    version: '101100'
-  });
-
   layui.use(['form', 'table'], function() {
-    var $ = layui.$;
-    var table = layui.table; //表格
-    var form = layui.form;
-    var laydate = layui.laydate;
+    const $ = layui.$;
+    const table = layui.table; //表格
+    const form = layui.form;
+    const laydate = layui.laydate;
 
     // 日期范围
     laydate.render({
@@ -100,7 +95,7 @@
 
     //演示动画
     $('.site-doc-anim .layui-anim').on('click', function(){
-      var that = $(this),
+      let that = $(this),
           anim = that.data('anim');
 
       //停止循环

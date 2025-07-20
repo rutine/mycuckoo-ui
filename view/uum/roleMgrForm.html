@@ -4,7 +4,7 @@
   <meta http-equiv="Content-Type" content="text/html; charset=utf-8" />
   <title>角色信息</title>
   <link type="image/x-icon" href="../../static/images/favicon.ico" rel="shortcut icon" />
-  <link type="text/css" href="../../static/layui/2.9.13/css/layui.css" rel="stylesheet" />
+  <link type="text/css" href="../../static/layui/2.11.4/css/layui.css" rel="stylesheet" />
   <link type="text/css" href="../../static/css/mycuckoo.css" rel="stylesheet" />
 </head>
 <body>
@@ -47,30 +47,12 @@
     </form>
   </div>
 </body>
-<script type="text/javascript" src="../../static/layui/2.9.13/layui.js" charset="UTF-8"></script>
+<script type="text/javascript" src="../../static/layui/2.11.4/layui.js" charset="UTF-8"></script>
 <script type="text/javascript" src="../../static/mycuckoo.js" charset="UTF-8"></script>
 <script type="text/javascript" src="../../static/mycuckoo.api.js" charset="UTF-8"></script>
-<script type="text/html" id="ID_operator">
-  <div class="layui-btn-container" style="margin-bottom: 6px; text-align: center;">
-    {{# if((d.group & 8) === 8) { }}
-    <a href="javascript: " class="layui-btn layui-btn-sm" data-event="{{= d.code }}" lay-submit>
-      <i class="layui-icon layui-icon-ok"></i>{{= d.name }}
-    </a>
-    {{# } }}
-    <a href="javascript:" class="layui-btn layui-btn-sm" data-event="close">
-      <i class="layui-icon layui-icon-close"></i>关闭
-    </a>
-  </div>
-</script>
 <script type="text/javascript">
-  layui.config({
-    base: '../../static/extend/',
-    version: '101100'
-  });
-
-  layui.use(['jquery', 'laytpl', 'form'], function() {
-    var $ = layui.jquery,
-      laytpl = layui.laytpl,
+  layui.use(['jquery', 'form'], function() {
+    const $ = layui.jquery,
       form = layui.form,
       queryObj = MyCuckoo.getQueryObject(location.search),
       operator = MyCuckoo.getOperation(queryObj.opt),
@@ -78,11 +60,11 @@
       action = operatorMap[queryObj.action],
       $form = $('form[name=editForm]');
 
-    var FormMgr = function () {
+    const FormMgr = function () {
+      const that = this;
+
       //渲染操作按钮
-      laytpl(ID_operator.innerHTML).render(action, function(html) {
-        $form.find('.toolbar').html(html);
-      });
+      $form.find('.toolbar').html(MyCuckoo.getActions(action || {}, 'form'));
 
       //表单初始赋值
       if (queryObj.id && action) {
@@ -96,16 +78,15 @@
       }
 
       //操作按钮触发事件
-      var formMgr = this;
       $form.find('a.layui-btn:not([lay-submit])').on('click', function() {
-        var event = $(this).data('event');
-        formMgr['execute']({event: event, elem: this});
+        let event = $(this).data('event');
+        that.on({event: event, elem: this});
       });
 
       //监听提交
       form.on('submit', function(data) {
-        var event = $(this).data('event');
-        formMgr['execute']({event: event, data: data.field});
+        let event = $(this).data('event');
+        that.on({event: event, data: data.field});
 
         return false;
       });
@@ -113,9 +94,9 @@
 
     FormMgr.prototype = {
       constructor: FormMgr,
-      execute: function(obj) {
-        var arr = obj.event.split(':');
-        var event = arr[arr.length - 1];
+      on: function(obj) {
+        let arr = obj.event.split(':');
+        let event = arr[arr.length - 1];
 
         this[event] && this[event](obj);
       },
@@ -141,7 +122,7 @@
       },
       //关闭当前iframe页
       close: function() {
-        var index = parent.layer.getFrameIndex(window.name);
+        let index = parent.layer.getFrameIndex(window.name);
         parent.layer.close(index);
       }
     }

@@ -4,7 +4,7 @@
   <meta http-equiv="Content-Type" content="text/html; charset=utf-8" />
   <title>分配权限</title>
   <link type="image/x-icon" href="../../static/images/favicon.ico" rel="shortcut icon" />
-  <link type="text/css" href="../../static/layui/2.9.13/css/layui.css" rel="stylesheet" />
+  <link type="text/css" href="../../static/layui/2.11.4/css/layui.css" rel="stylesheet" />
   <link type="text/css" href="../../static/css/mycuckoo.css" rel="stylesheet" />
   <link type="text/css" href="../../static/dtree/css/dtree.css" rel="stylesheet" />
   <link type="text/css" href="../../static/dtree/css/font/dtreefont.css" rel="stylesheet" />
@@ -75,18 +75,12 @@
     </div>
   </div>
 </body>
-<script type="text/javascript" src="../../static/layui/2.9.13/layui.js" charset="UTF-8"></script>
+<script type="text/javascript" src="../../static/layui/2.11.4/layui.js" charset="UTF-8"></script>
 <script type="text/javascript" src="../../static/mycuckoo.js" charset="UTF-8"></script>
 <script type="text/javascript" src="../../static/mycuckoo.api.js" charset="UTF-8"></script>
 <script type="text/javascript">
-  layui.config({
-    base: '../../static/extend/',
-    version: '101100'
-  });
-
-  layui.use(['jquery', 'element', 'form', 'dtree'], function() {
-    var $ = layui.jquery,
-      element = layui.element,
+  layui.use(['jquery', 'form', 'dtree'], function() {
+    const $ = layui.jquery,
       form = layui.form,
       tree = layui.dtree,
       queryObj = MyCuckoo.getQueryObject(location.search),
@@ -95,8 +89,8 @@
       $main = $('.mycuckoo-main');
 
 
-    var treeObj;
-    var FormMgr = function () {
+    let treeObj;
+    const FormMgr = function () {
       //表单初始赋值
       if (queryObj.id) {
         $('fieldset > legend').text('角色名称: ' + queryObj.name);
@@ -124,16 +118,16 @@
         return;
       }
 
-      var formMgr = this;
+      const formMgr = this;
       //操作按钮触发事件
       $main.find('a.layui-btn:not([lay-submit])').on('click', function() {
-        var event = $(this).data('event');
+        let event = $(this).data('event');
         formMgr[event] && formMgr[event]({event: event, elem: this});
       });
 
       //监听提交
       form.on('submit', function(data) {
-        var event = $(this).data('event');
+        let event = $(this).data('event');
         formMgr[event] && formMgr[event]({event: event, data: $.extend({}, data.field, queryObj)});
 
         return false;
@@ -144,19 +138,19 @@
       constructor: FormMgr,
       //保存用户权限
       assignRes: function(obj) {
-        var data = obj.data;
+        let data = obj.data;
         if(!data.privilegeScope) {
           MyCuckoo.alert({ title : '提示', msg : '请选择权限范围!' });
           return;
         }
 
-        var selectedNodes = treeObj.getCheckbarNodesParam();
+        let selectedNodes = treeObj.getCheckbarNodesParam();
         if(!selectedNodes.length) {
           MyCuckoo.alert({ title : '提示', msg : '请选择权限!' });
           return;
         }
 
-        var optIds = [];
+        let optIds = [];
         selectedNodes.forEach(item => item.isLeaf && optIds.push(item.nodeId));
         $.request(operatorMap['res:roleMgr:assignRes'], data, optIds).then(json => {
           MyCuckoo.msg({msg: json.msg});
@@ -166,7 +160,7 @@
       },
       //保存行权限
       assignRow: function(obj) {
-        var data = obj.data;
+        let data = obj.data;
         if(!data.rowPrivilege) {
           MyCuckoo.alert({ title : '提示', msg : '请选择行权限类别!' });
           return;
@@ -186,7 +180,7 @@
       },
       //关闭当前iframe页
       close: function() {
-        var index = parent.layer.getFrameIndex(window.name);
+        let index = parent.layer.getFrameIndex(window.name);
         parent.layer.close(index);
       }
     }

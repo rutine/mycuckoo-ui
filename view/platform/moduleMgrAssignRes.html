@@ -4,7 +4,7 @@
   <meta http-equiv="Content-Type" content="text/html; charset=utf-8" />
   <title>分配资源</title>
   <link type="image/x-icon" href="../../static/images/favicon.ico" rel="shortcut icon" />
-  <link type="text/css" href="../../static/layui/2.9.13/css/layui.css" rel="stylesheet" />
+  <link type="text/css" href="../../static/layui/2.11.4/css/layui.css" rel="stylesheet" />
   <link type="text/css" href="../../static/css/mycuckoo.css" rel="stylesheet" />
   <!-- 标签风格 -->
   <style>
@@ -58,30 +58,12 @@
     </form>
   </div>
 </body>
-<script type="text/javascript" src="../../static/layui/2.9.13/layui.js" charset="UTF-8"></script>
+<script type="text/javascript" src="../../static/layui/2.11.4/layui.js" charset="UTF-8"></script>
 <script type="text/javascript" src="../../static/mycuckoo.js" charset="UTF-8"></script>
 <script type="text/javascript" src="../../static/mycuckoo.api.js" charset="UTF-8"></script>
-<script type="text/html" id="ID_operator">
-  <div class="layui-btn-container" style="margin-bottom: 6px; text-align: center;">
-    {{# if((d.group & 8) === 8) { }}
-    <a href="javascript: " class="layui-btn layui-btn-sm" data-event="{{= d.code }}" lay-submit>
-      <i class="layui-icon layui-icon-ok"></i>{{= d.name }}
-    </a>
-    {{# } }}
-    <a href="javascript:" class="layui-btn layui-btn-sm" data-event="close">
-      <i class="layui-icon layui-icon-close"></i>关闭
-    </a>
-  </div>
-</script>
 <script type="text/javascript">
-  layui.config({
-    base: '../../static/extend/',
-    version: '101100'
-  });
-
-  layui.use(['jquery', 'laytpl', 'form', 'tree'], function() {
-    var $ = layui.jquery,
-      laytpl = layui.laytpl,
+  layui.use(['jquery', 'form', 'tree'], function() {
+    const $ = layui.jquery,
       form = layui.form,
       tree = layui.tree,
       queryObj = MyCuckoo.getQueryObject(location.search),
@@ -90,13 +72,11 @@
       action = operatorMap[queryObj.action],
       $form = $('form[name=editForm]');
 
-    var FormMgr = function () {
-      var that = this;
+    const FormMgr = function () {
+      const that = this;
 
       //渲染操作按钮
-      laytpl(ID_operator.innerHTML).render(action || {}, function(html) {
-        $form.find('.toolbar').html(html);
-      });
+      $form.find('.toolbar').html(MyCuckoo.getActions(action || {}, 'form'));
 
       $form.find('#ID_mycuckoo-tree').height($(window).height());
 
@@ -104,8 +84,8 @@
       if (queryObj.id) {
         $form.parent().find('fieldset > legend').text('模块: ' + queryObj.name);
         $.request(operatorMap['res:moduleMgr:resSelector'], queryObj).then(function(json) {
-          var source = json.data.source;
-          var $elem = $form.find('.layui-col-md9');
+          let source = json.data.source;
+          let $elem = $form.find('.layui-col-md9');
           that.rend($elem, source, false, source);
 
           //初始化结构树
@@ -119,7 +99,7 @@
               title: 'text'
             },
             oncheck: function(obj) {
-              var data = obj.data;
+              let data = obj.data;
 
               that.rend($elem, data, obj.checked, source);
 
@@ -133,18 +113,17 @@
         MyCuckoo.alert({ title : '提示', msg : '请关闭后选择模块!' });
         return;
       }
-      
-      var formMgr = this;
+
       //操作按钮触发事件
       $form.find('a.layui-btn:not([lay-submit])').on('click', function() {
-        var event = $(this).data('event');
-        formMgr['execute']({event: event, elem: this});
+        let event = $(this).data('event');
+        that.on({event: event, elem: this});
       });
 
       //监听提交
       form.on('submit', function(data) {
-        var event = $(this).data('event');
-        formMgr['execute']({event: event, data: $.extend({}, data.field, queryObj)});
+        let event = $(this).data('event');
+        that.on({event: event, data: $.extend({}, data.field, queryObj)});
 
         return false;
       });
@@ -152,23 +131,23 @@
 
     FormMgr.prototype = {
       constructor: FormMgr,
-      execute: function(obj) {
-        var arr = obj.event.split(':');
-        var event = arr[arr.length - 1];
+      on: function(obj) {
+        let arr = obj.event.split(':');
+        let event = arr[arr.length - 1];
 
         this[event] && this[event](obj);
       },
       rend: function (elem, data, checked, source) {
-        var hideBi = 1 << 9;
+        let hideBi = 1 << 9;
         if (data && data.children && data.children.length > 0) {
-          for (var p in data.children) {
+          for (let p in data.children) {
             this.rend(elem, data.children[p], checked, source);
           }
         } else {
           checked = checked || data.checked;
           delete data.checked;
 
-          var $checkbox = elem.find('.mycuckoo-checkbox-set-' + data.id);
+          let $checkbox = elem.find('.mycuckoo-checkbox-set-' + data.id);
           if (!checked) {
             $checkbox.addClass('layui-hide');
             return
@@ -177,8 +156,8 @@
             $checkbox.removeClass('layui-hide');
             return;
           }
-          var arr = []
-          var text = this.getParentText(data.parentId, source)
+          let arr = []
+          let text = this.getParentText(data.parentId, source)
           if (text) {
             arr.push(text);
           }
@@ -209,8 +188,8 @@
       },
       getParentText: function (parentId, data) {
         if (Array.isArray(data)) {
-          for (var one in data) {
-            var text = this.getParentText(parentId, data[one]);
+          for (let one in data) {
+            let text = this.getParentText(parentId, data[one]);
             if (text) {
               return text
             }
@@ -222,8 +201,8 @@
           return null;
         }
 
-        for (var one in data.children) {
-          var text = this.getParentText(parentId, data.children[one]);
+        for (let one in data.children) {
+          let text = this.getParentText(parentId, data.children[one]);
           if (text) {
             return text
           }
@@ -237,26 +216,26 @@
       },
       //保存用户权限
       assignRes: function(obj) {
-        var main = 0;
-        var resource = [];
+        let main = 0;
+        let resource = [];
         $checkboxSet = $form.find('.mycuckoo-checkbox-set:not(.layui-hide)');
         if(!$checkboxSet.length) {
           MyCuckoo.alert({ title : '提示', msg : '请选择资源!' });
           return;
         }
 
-        for (var i = 0; i < $checkboxSet.length; i++) {
-          var $ele = $checkboxSet.eq(i);
-          var $checkGrp = $ele.find('input:checkbox:checked');
+        for (let i = 0; i < $checkboxSet.length; i++) {
+          let $ele = $checkboxSet.eq(i);
+          let $checkGrp = $ele.find('input:checkbox:checked');
           if (!$checkGrp.length) {
             MyCuckoo.msg({ title : '提示', msg : '请给[' + $ele.find('.layui-col-sm3').text() + ']配置应用位置!' });
             return;
           }
 
-          var grp = 0;
-          for (var ii = 0; ii < $checkGrp.length; ii++) {
-            var elee = $checkGrp[ii];
-            var value = parseInt(elee.value);
+          let grp = 0;
+          for (let ii = 0; ii < $checkGrp.length; ii++) {
+            let elee = $checkGrp[ii];
+            let value = parseInt(elee.value);
             if (main == 0 && value == 1) {
               main =  value;
             } else if (main == value && value == 1) {
@@ -266,14 +245,14 @@
             grp |= value
           }
 
-          var id = $ele.data('id');
+          let id = $ele.data('id');
           resource.push({
             resourceId: id.indexOf('id-leaf-') >= 0 ? id.substr('id-leaf-'.length) : id,
             group: grp
           })
         }
 
-        var that = this;
+        let that = this;
         $.request(action, obj.data, resource).then(json => {
           MyCuckoo.msg({msg: json.msg});
 
@@ -290,7 +269,7 @@
       },
       //关闭当前iframe页
       close: function() {
-        var index = parent.layer.getFrameIndex(window.name);
+        let index = parent.layer.getFrameIndex(window.name);
         parent.layer.close(index);
       }
     }

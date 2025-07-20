@@ -9,7 +9,7 @@
   <title>登陆界面</title>
   
   <link type="image/x-icon" href="static/images/favicon.ico" rel="shortcut icon">
-  <link type="text/css" href="static/layui/2.9.13/css/layui.css" rel="stylesheet" />
+  <link type="text/css" href="static/layui/2.11.4/css/layui.css" rel="stylesheet" />
   <link type="text/css" href="static/css/font.css" rel="stylesheet" />
   <link type="text/css" href="static/css/mycuckoo.css" rel="stylesheet" />
   <link type="text/css" href="static/css/login.css" rel="stylesheet" />
@@ -68,7 +68,7 @@
     </div>
     
   </div>
-  <script type="text/javascript" src="static/layui/2.9.13/layui.js" charset="UTF-8"></script>
+  <script type="text/javascript" src="static/layui/2.11.4/layui.js" charset="UTF-8"></script>
   <script type="text/javascript" src="static/mycuckoo.js" charset="UTF-8"></script>
   <script type="text/javascript" src="static/mycuckoo.api.js" charset="UTF-8"></script>
   <script type="text/javascript">
@@ -78,15 +78,15 @@
     });
 
     layui.use(['jquery', 'form'], function() {
-      var $ = layui.jquery;
-      var form = layui.form;
+      const $ = layui.jquery;
+      const form = layui.form;
 
-      var $bground = $('<div class="background"></div>');
-      var $signForm = $('form[name=signForm]');
-      var $account = $signForm.find('input[name=account]');
-      var $password = $signForm.find('input[name=password]');
-      var $helpText = $signForm.find('.layui-form-mid');
-      var $rolePane = $('.role-pane');
+      let $bground = $('<div class="background"></div>');
+      let $signForm = $('form[name=signForm]');
+      let $account = $signForm.find('input[name=account]');
+      let $password = $signForm.find('input[name=password]');
+      let $helpText = $signForm.find('.layui-form-mid');
+      let $rolePane = $('.role-pane');
 
       // 用户改变事件
       $account.on('blur', function() {
@@ -119,13 +119,13 @@
       });
 
 
-      var preLogin = function() {
+      const preLogin = function() {
         $bground.appendTo(($('body')));
         layer.msg('预登录中,请稍候... ');
 
-        var account = $account.val();
-        var password = $password.val();
-        var params = {
+        let account = $account.val();
+        let password = $password.val();
+        let params = {
           account: account,
           password: password
         }
@@ -140,8 +140,8 @@
 
           // 角色列表
           if(json.data.orgs) {
-            for(var i = 0, len = json.data.orgs.length; i < len; i++) {
-              var org = json.data.orgs[i];
+            for(let i = 0, len = json.data.orgs.length; i < len; i++) {
+              let org = json.data.orgs[i];
               $('<div class="layui-col-sm6 layui-col-md3">'
                 + '  <ul class="site-doc-icon site-doc-anim">'
                 + '    <li>'
@@ -166,10 +166,10 @@
         });
       };
 
-      var loginSys = function(org) {
+      const loginSys = function(org) {
         MyCuckoo.api.postOrg(org.userId).then(function(json) {
-          var code = json.code;
-          var msg = json.msg;
+          let code = json.code;
+          let msg = json.msg;
           if(code != 0) {
             loginError(code, msg);
           } else {
@@ -179,7 +179,7 @@
         });
       };
 
-      var loginError = function(code, msg) {
+      const loginError = function(code, msg) {
         switch(code) {
           case 1:
             msg = '对不起,您输入的用户名或密码有误!';

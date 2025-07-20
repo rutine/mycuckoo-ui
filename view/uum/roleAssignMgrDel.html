@@ -4,7 +4,7 @@
   <meta http-equiv="Content-Type" content="text/html; charset=utf-8" />
   <title>统一用户</title>
   <link type="image/x-icon" href="../../static/images/favicon.ico" rel="shortcut icon" />
-  <link type="text/css" href="../../static/layui/2.9.13/css/layui.css" rel="stylesheet" />
+  <link type="text/css" href="../../static/layui/2.11.4/css/layui.css" rel="stylesheet" />
   <link type="text/css" href="../../static/css/mycuckoo.css" rel="stylesheet" />
   <link type="text/css" href="../../static/dtree/css/dtree.css" rel="stylesheet" />
   <link type="text/css" href="../../static/dtree/css/font/dtreefont.css" rel="stylesheet" />
@@ -49,7 +49,7 @@
   </div>
 </div>
 </body>
-<script type="text/javascript" src="../../static/layui/2.9.13/layui.js" charset="UTF-8"></script>
+<script type="text/javascript" src="../../static/layui/2.11.4/layui.js" charset="UTF-8"></script>
 <script type="text/javascript" src="../../static/mycuckoo.js" charset="UTF-8"></script>
 <script type="text/javascript" src="../../static/mycuckoo.api.js" charset="UTF-8"></script>
 <script type="text/html" id="toolbar">
@@ -62,20 +62,15 @@
   </div>
 </script>
 <script type="text/javascript">
-  layui.config({
-    base: '../../static/extend/',
-    version: '101100'
-  });
-
   layui.use(['jquery', 'form', 'table', 'dtree'], function() {
-    var $ = layui.jquery,
+    const $ = layui.jquery,
       form = layui.form,
       table = layui.table,
       tree = layui.dtree;
 
     //本地缓存数据
-    var queryObj = MyCuckoo.getQueryObject(location.search);
-    var operator = MyCuckoo.getOperation(queryObj.id);
+    const queryObj = MyCuckoo.getQueryObject(location.search);
+    const operator = MyCuckoo.getOperation(queryObj.id);
 
     //搜索
     form.on('submit(search)', function(data) {
@@ -88,8 +83,8 @@
     });
 
     //初始化结构树
-    var selectNode = null;
-    var treeObj = tree.render({
+    let selectNode = null;
+    const treeObj = tree.render({
       elem: '#tree',
       method: 'get',
       url: MyCuckoo.resolvePlaceholder(MyCuckoo.api.deptMgr.childNodesUrl, {id: 0}),
@@ -101,7 +96,7 @@
       //icon: ['-1', '1']
     });
     tree.on('node(tree)', function(obj) {
-      var data = obj.param;
+      let data = obj.param;
       selectNode = data;
       table.reload('table', {
         page: { pageNo: 1 },
@@ -160,7 +155,7 @@
         return;
       }
 
-      var data = table.checkStatus(obj.config.id).data;
+      let data = table.checkStatus(obj.config.id).data;
       if (!data.length) {
         MyCuckoo.alert({title : '提示', msg : '请选择记录' });
         return;
@@ -176,36 +171,36 @@
     });
 
 
-    var active = {
+    const active = {
       reload: function() {
         table.reload('table', { page: { pageNo: 1 } });
       },
       //分配角色
       roleassign: function(obj) {
-        var data = obj.data;
-        var nodes = selectNode;
+        let data = obj.data;
+        let nodes = selectNode;
         if(nodes == null) {
           MyCuckoo.alert({ title : '提示', msg : '请选择要分配角色的机构' });
           return;
         }
 
-        var url = MyCuckoo.resolve('roleAssignMgrSelectRole.html?action={_event}&opt={_opt}&orgId={id}',
+        let url = MyCuckoo.resolve('roleAssignMgrSelectRole.html?action={_event}&opt={_opt}&orgId={id}',
             {'_event': obj.event, '_opt': queryObj.id, 'id': nodes.nodeId})
         MyCuckoo.dialog('选择角色信息', url);
       },
       //删除角色
       roledel: function(obj) {
-        var data = obj.data;
-        var _this = this;
+        let data = obj.data;
+        let _this = this;
         MyCuckoo.confirm({title: '警告提示', msg: '您确认删除此记录吗?',
           okBtn: '是', cancelBtn: '否', ok: function() {
-            var roleIdList = [];
-            for (var index in data) {
+            let roleIdList = [];
+            for (let index in data) {
               roleIdList.push(data[index].roleId);
             }
 
-            var orgId = selectNode.nodeId;
-            var params = roleIdList;
+            let orgId = selectNode.nodeId;
+            let params = roleIdList;
             $.delete(MyCuckoo.api.organRoleMgr.url + '/' + orgId, params).then(json => {
               MyCuckoo.msg({ msg: json.data });
 

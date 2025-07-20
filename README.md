@@ -28,3 +28,13 @@ MyCuckoo-UI
 
 系统配置:
 ![系统配置](static/demo/systemConfig.png)
+
+# 更新记录
+
+2025.07.20
+Layui 基础版本更新
+- layui基础版本更新为 V2.11.4
+- admin使用新型 tabs 组件，替代原 element 模块中的 tab 组件
+- 按钮权限控制组件化
+- `var`关键词更新为`let`或`const`
+- 优化了页面，去掉面包屑导航提示

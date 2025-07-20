@@ -4,7 +4,7 @@
   <meta http-equiv="Content-Type" content="text/html; charset=utf-8" />
   <title>选择角色信息</title>
   <link type="image/x-icon" href="../../static/images/favicon.ico" rel="shortcut icon" />
-  <link type="text/css" href="../../static/layui/2.9.13/css/layui.css" rel="stylesheet" />
+  <link type="text/css" href="../../static/layui/2.11.4/css/layui.css" rel="stylesheet" />
   <link type="text/css" href="../../static/css/mycuckoo.css" rel="stylesheet" />
 </head>
 <body>
@@ -23,17 +23,12 @@
   <table id="table" class="layui-hide" lay-filter="table"></table>
 </div>
 </body>
-<script type="text/javascript" src="../../static/layui/2.9.13/layui.js" charset="UTF-8"></script>
+<script type="text/javascript" src="../../static/layui/2.11.4/layui.js" charset="UTF-8"></script>
 <script type="text/javascript" src="../../static/mycuckoo.js" charset="UTF-8"></script>
 <script type="text/javascript" src="../../static/mycuckoo.api.js" charset="UTF-8"></script>
 <script type="text/javascript">
-  layui.config({
-    base: '../../static/extend/',
-    version: '101100'
-  });
-
   layui.use(['jquery', 'form', 'table'], function() {
-    var $ = layui.jquery,
+    const $ = layui.jquery,
       form = layui.form,
       table = layui.table,
       queryObj = MyCuckoo.getQueryObject(location.search);
@@ -77,11 +72,11 @@
     });
 
 
-    var FormMgr = function () {
-      var formMgr = this;
+    const FormMgr = function () {
+      const formMgr = this;
       //操作按钮触发事件
       $('form a.layui-btn').on('click', function(ev) {
-        var type = $(this).data('type');
+        let type = $(this).data('type');
         formMgr[type] && formMgr[type](this);
       });
     }
@@ -89,17 +84,17 @@
     FormMgr.prototype = {
       constructor: FormMgr,
       save: function(ele) {
-        var data = table.checkStatus('table').data;
+        let data = table.checkStatus('table').data;
         if(data.length == 0) {
           MyCuckoo.alert({title: '提示', msg: '请选择一条或多条记录!'});
           return;
         }
 
-        var roleIdList = [];
+        let roleIdList = [];
         data.forEach(item => {
           roleIdList.push(item.roleId);
         });
-        var params = {id : queryObj.orgId, roleIdList : roleIdList};
+        let params = {id : queryObj.orgId, roleIdList : roleIdList};
         $.put(MyCuckoo.api.organRoleMgr.url, params).then(json => {
           MyCuckoo.msg({msg: json.data});
 
@@ -115,7 +110,7 @@
       },
       //关闭当前iframe页
       reback: function(ele) {
-        var index = parent.layer.getFrameIndex(window.name);
+        let index = parent.layer.getFrameIndex(window.name);
         parent.layer.close(index);
       }
     }

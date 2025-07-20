@@ -6,7 +6,7 @@
   <title>系统平台</title>
   <link type="image/x-icon" href="static/images/favicon.ico" rel="shortcut icon" />
   <link type="text/css" href="static/css/font.css" rel="stylesheet" />
-  <link type="text/css" href="static/layui/2.9.13/css/layui.css" rel="stylesheet" />
+  <link type="text/css" href="static/layui/2.11.4/css/layui.css" rel="stylesheet" />
   <link type="text/css" href="static/css/mycuckoo.css" rel="stylesheet" />
 </head>
 <body>
@@ -58,13 +58,14 @@
     </section>
 
     <div class="layui-body mycuckoo-body">
-      <div class="layui-tab mycuckoo-tab" lay-filter="mycuckoo-tab" lay-allowclose="true">
-        <ul class="layui-tab-title">
-          <li class="layui-this welcome" lay-allowclose="false">我的桌面</li>
+      <div class="layui-tabs layui-hide-v mycuckoo-tab" id="mycuckoo-tab" lay-options="{closable: true, headerMode:'scroll'}">
+        <ul class="layui-tabs-header">
+          <li class="layui-this welcome" lay-id="welcome" lay-closable="false">我的桌面</li>
         </ul>
-        <div class="layui-tab-content">
-          <div class="layui-tab-item layui-show">
-            <iframe class="mycuckoo-frame" src='welcome.html' frameborder="0" scrolling="yes"></iframe>
+
+        <div class="layui-tabs-body">
+          <div class="layui-tabs-item layui-show" lay-id="welcome" >
+            <iframe class="mycuckoo-frame" src='welcome.html'></iframe>
           </div>
         </div>
       </div>
@@ -73,25 +74,13 @@
     <div class="mycuckoo-body-bg"></div>
   </div>
 </div>
-<!--Tab菜单右键弹出菜单-->
-<ul class="tab-popup-menu">
-  <li data-type="refresh">刷新</li>
-  <li data-type="close">关闭当前</li>
-  <li data-type="closeOther">关闭其它</li>
-  <li data-type="closeAll">关闭所有</li>
-</ul>
 </body>
-<script type="text/javascript" src="static/layui/2.9.13/layui.js" charset="UTF-8"></script>
+<script type="text/javascript" src="static/layui/2.11.4/layui.js" charset="UTF-8"></script>
 <script type="text/javascript" src="static/mycuckoo.js" charset="UTF-8"></script>
 <script type="text/javascript" src="static/mycuckoo.api.js" charset="UTF-8"></script>
 <script type="text/javascript">
-  layui.config({
-    base: 'static/extend/',
-    version: '101100'
-  });
-
   layui.use(['jquery', 'element', 'admin', 'upload', 'laytpl'], function(){
-    var $ = layui.jquery,
+    const $ = layui.jquery,
       element = layui.element,
       admin = layui.admin.admin,
       tab = layui.admin.tab,
@@ -99,24 +88,24 @@
       upload = layui.upload;
 
     window.MyCuckoo.tab = function (code, title, url, hideClose) {
-      var $tabs = $('.mycuckoo-frame');
-      var tabId = 'mycuckoo-tab-' + code;
-      for (var i = 0; i < $tabs.length; i++) {
+      let $tabs = $('.mycuckoo-frame');
+      let tabId = 'mycuckoo-tab-' + code;
+      for (let i = 0; i < $tabs.length; i++) {
         if ($tabs.eq(i).attr('tab-id') == tabId) {
-          tab.tabChange(tabId);
+          tab.change(tabId);
           return;
         }
       }
 
-      tab.tabAdd(title, url, tabId, hideClose);
-      tab.tabChange(tabId);
+      tab.add(title, url, tabId, hideClose);
     };
-//    MyCuckoo.tab('welcome', '我的桌面', 'welcome.html', true);
 
-    var MenuMgr = function() {
-      var menuMgr = this;
+    // MyCuckoo.tab('welcome1', '我的桌面1', 'login.html', false);
+
+    const MenuMgr = function() {
+      const menuMgr = this;
       MyCuckoo.api.postMenu(null).then(function(json) {
-        var menu = json.menu;
+        let menu = json.menu;
         menuMgr.renderNavBar(menu);
         menuMgr.renderSideNav(menu);
         menuMgr.user = json.user;
@@ -125,7 +114,7 @@
         MyCuckoo.setSession('userInfo', json.user);
 
         element.on('nav(mycuckoo-nav-right)', function(data) {
-          var type = $(this).data('type');
+          let type = $(this).data('type');
           menuMgr[type] && menuMgr[type](this);
         });
 
@@ -177,19 +166,19 @@
       },
 
       activeMenu: function(el) {
-        var sidebarIdForShow = $(el).attr('href');
+        let sidebarIdForShow = $(el).attr('href');
         $(sidebarIdForShow).siblings(':not(.layui-hide)').addClass('layui-hide');
         $(sidebarIdForShow).removeClass('layui-hide');
       },
       //顶部导航条
       renderNavBar: function(menu) {
-        var tpl = '<li class="layui-nav-item {{= d.hideCls }}">'
+        let tpl = '<li class="layui-nav-item {{= d.hideCls }}">'
             + '<a href="#side_nav_{{= d.id }}" class="{{= d.iconCls }}-hide">{{= d.name }}</a>'
             + '</li>';
 
-        var liHtm = '';
-        for (var i = 0; i < menu.first.length; i++) {
-          var first = menu.first[i];
+        let liHtm = '';
+        for (let i = 0; i < menu.first.length; i++) {
+          let first = menu.first[i];
           liHtm += laytpl(tpl).render({
             id: first.moduleId,
             name: first.name,
@@ -206,45 +195,45 @@
         if (el.siblings('.layui-nav-child').length) {
 
         } else {
-          var code = el.data('code');
-          var url = el.data('url');
-          var title = el.html();
-          var index = $('.mycuckoo-sidebar a').index(el);
-          var $tabs = $('.mycuckoo-frame');
-          var tabId = 'mycuckoo-tab-' + code ? code : index;
-          for (var i = 0; i < $tabs.length; i++) {
+          let code = el.data('code');
+          let url = el.data('url');
+          let title = el.html();
+          let index = $('.mycuckoo-sidebar a').index(el);
+          let $tabs = $('.mycuckoo-frame');
+          let tabId = 'mycuckoo-tab-' + code ? code : index;
+          for (let i = 0; i < $tabs.length; i++) {
             if ($tabs.eq(i).attr('tab-id') == tabId) {
-              tab.tabChange(tabId);
+              tab.change(tabId);
               return;
             }
           }
 
-          tab.tabAdd(title, url, tabId);
-          tab.tabChange(tabId);
+          tab.add(title, url, tabId);
+          tab.change(tabId);
         }
       },
       //左侧导航栏
       renderSideNav: function(menu) {
-        var navTpl = '<div id="side_nav_{{= d.id }}"  class="{{= d.hideCls }}">'
+        let navTpl = '<div id="side_nav_{{= d.id }}"  class="{{= d.hideCls }}">'
             + '<ul class="layui-nav layui-nav-tree" lay-filter="mycuckoo-side-nav">{{- d.innerHtml }}</ul>'
             + '</div>';
-        var itemTpl = '<li class="layui-nav-item">'
+        let itemTpl = '<li class="layui-nav-item">'
             + '<a class="{{= d.iconCls }}-hide" href="javascript:;">{{= d.name }}</a>'
             + '<dl class="layui-nav-child">{{- d.innerHtml }}</dl>'
             + '</li>';
-        var subItemTpl = '<dd><a data-url="{{= d.href }}" data-code="{{= d.code }}" class="{{= d.iconCls }}-hide">{{= d.name }}</a></dd>'
+        let subItemTpl = '<dd><a data-url="{{= d.href }}" data-code="{{= d.code }}" class="{{= d.iconCls }}-hide">{{= d.name }}</a></dd>'
 
         //左侧导航栏
-        var div = '';
-        for (var i = 0; i < menu.first.length; i++) {
-          var first = menu.first[i];
-          var itemHtm = '';
-          for (var ii = 0; ii < menu.second[first.moduleId].length; ii++) {
-            var second = menu.second[first.moduleId][ii];
-            var subItemHtm = '';
-            for (var iii = 0; iii < menu.third[second.moduleId].length; iii++) {
-              var third = menu.third[second.moduleId][iii];
-              var href = 'view/' + third.belongSys + '/' + third.code + '.html?id=' + third.moduleId;
+        let div = '';
+        for (let i = 0; i < menu.first.length; i++) {
+          let first = menu.first[i];
+          let itemHtm = '';
+          for (let ii = 0; ii < menu.second[first.moduleId].length; ii++) {
+            let second = menu.second[first.moduleId][ii];
+            let subItemHtm = '';
+            for (let iii = 0; iii < menu.third[second.moduleId].length; iii++) {
+              let third = menu.third[second.moduleId][iii];
+              let href = 'view/' + third.belongSys + '/' + third.code + '.html?id=' + third.moduleId;
               subItemHtm += laytpl(subItemTpl).render({
                 href: href,
                 iconCls: third.iconCls,

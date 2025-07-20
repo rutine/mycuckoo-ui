@@ -4,7 +4,7 @@
   <meta http-equiv="Content-Type" content="text/html; charset=utf-8" />
   <title>表头信息</title>
   <link type="image/x-icon" href="../../static/images/favicon.ico" rel="shortcut icon" />
-  <link type="text/css" href="../../static/layui/2.9.13/css/layui.css" rel="stylesheet" />
+  <link type="text/css" href="../../static/layui/2.11.4/css/layui.css" rel="stylesheet" />
   <link type="text/css" href="../../static/css/mycuckoo.css" rel="stylesheet" />
 </head>
 <body>
@@ -32,30 +32,12 @@
   </form>
 </div>
 </body>
-<script type="text/javascript" src="../../static/layui/2.9.13/layui.js" charset="UTF-8"></script>
+<script type="text/javascript" src="../../static/layui/2.11.4/layui.js" charset="UTF-8"></script>
 <script type="text/javascript" src="../../static/mycuckoo.js" charset="UTF-8"></script>
 <script type="text/javascript" src="../../static/mycuckoo.api.js" charset="UTF-8"></script>
-<script type="text/html" id="ID_operator">
-  <div class="layui-btn-container" style="margin-bottom: 6px; text-align: center;">
-    {{# if((d.group & 8) === 8) { }}
-    <a href="javascript: " class="layui-btn layui-btn-sm" data-event="{{= d.code }}" lay-submit>
-      <i class="layui-icon layui-icon-ok"></i>{{= d.name }}
-    </a>
-    {{# } }}
-    <a href="javascript:" class="layui-btn layui-btn-sm" data-event="close">
-      <i class="layui-icon layui-icon-close"></i>关闭
-    </a>
-  </div>
-</script>
 <script type="text/javascript">
-  layui.config({
-    base: '../../static/extend/',
-    version: '101100'
-  });
-
-  layui.use(['jquery', 'laytpl', 'form', 'dropdown', 'table'], function() {
-    var $ = layui.jquery,
-      laytpl = layui.laytpl,
+  layui.use(['jquery', 'form', 'dropdown', 'table'], function() {
+    const $ = layui.jquery,
       form = layui.form,
       dropdown = layui.dropdown,
       table = layui.table,
@@ -65,7 +47,7 @@
       action = operatorMap[queryObj.action],
       $form = $('form[name=editForm]');
 
-    var types = [
+    const types = [
       {code: 'seq', name: '序号'},
       {code: 'id', name: '主键'},
       {code: 'number', name: '数字'},
@@ -74,7 +56,7 @@
       {code: 'bool', name: '布尔'},
       {code: 'dict', name: '字典'}
     ];
-    var filterTypes = [
+    const filterTypes = [
       {code: 'eq', name: '等于'},
       {code: 'like', name: '前缀匹配'},
       {code: 'text', name: '模糊'},
@@ -84,10 +66,10 @@
       {code: 'province_city_area', name: '三级地区'},
       {code: 'bool', name: '是否'}
     ];
-    var typeMap = MyCuckoo.getDictMap(types);
-    var filterTypeMap = MyCuckoo.getDictMap(filterTypes);
+    const typeMap = MyCuckoo.getDictMap(types);
+    const filterTypeMap = MyCuckoo.getDictMap(filterTypes);
 
-    var tableInst = table.render({
+    const tableInst = table.render({
       id: 'table',
       elem: '#ID_table',
       url: MyCuckoo.resolve(MyCuckoo.api.host + operatorMap['res:resourceMgr:selector'].path, queryObj),
@@ -100,17 +82,17 @@
       toolbar: '<div class="layui-btn-container"><a class="layui-btn layui-btn-warm layui-btn-xs" lay-event="addRow">新增行</a></div>',
       cols: [[
         {field: 'type', title: '类型', templet: function(d) {
-//          var arr = ['<select name="type" lay-filter="table-col-filter" lay-append-to="body"><option value="">请选择</option>']
-//          for (var i = 0; i < types.length; i++) {
-//            var item = types[i];
+//          let arr = ['<select name="type" lay-filter="table-col-filter" lay-append-to="body"><option value="">请选择</option>']
+//          for (let i = 0; i < types.length; i++) {
+//            let item = types[i];
 //            arr.push('<option value="' + item['code'] + '" ' + (d.type === item['code'] ? 'selected' : '') + '>' + item['name'] + '</option>')
 //          }
 //          arr.push('</select>')
 //
 //          return arr.join('');
 
-          var name = typeMap[d.type] ? typeMap[d.type]['name'] : d.type;
-          var arr = ['<a class="layui-btn layui-btn-primary table-col-dropdown-type">',
+          let name = typeMap[d.type] ? typeMap[d.type]['name'] : d.type;
+          let arr = ['<a class="layui-btn layui-btn-primary table-col-dropdown-type">',
             '<span>' + name + '</span>',
             '<i class="layui-icon layui-icon-down layui-font-12"></i>',
             '</a>'
@@ -120,8 +102,8 @@
         {field: 'field', title: '字段', edit: 'text'},
         {field: 'title', title: '标题', edit: 'text'},
         {field: 'filterType', title: '过滤类型', templet: function(d) {
-          var name = filterTypeMap[d.filterType] ? filterTypeMap[d.filterType]['name'] : d.filterType;
-          var arr = ['<a class="layui-btn layui-btn-primary table-col-dropdown-filterType">',
+          let name = filterTypeMap[d.filterType] ? filterTypeMap[d.filterType]['name'] : d.filterType;
+          let arr = ['<a class="layui-btn layui-btn-primary table-col-dropdown-filterType">',
                       '<span>' + name + '</span>',
                       '<i class="layui-icon layui-icon-down layui-font-12"></i>',
                     '</a>'
@@ -154,14 +136,14 @@
       ]],
       page: false,
       done: function(res, curr, count) {
-        var options = this;
-        var commDropdown = function (config) {
+        let options = this;
+        let commDropdown = function (config) {
           dropdown.render({
             elem: config.elem,
             data: config.data,
             customName: {id: 'code', title: 'name'},
             click: function(obj) {
-              var data = tableInst.getRowData(options.id, this.elem);
+              let data = tableInst.getRowData(options.id, this.elem);
               this.elem.find('span').html(obj.name);
               data[config.field] = obj.code;
             }
@@ -170,14 +152,14 @@
 
         //select事件
         form.on('select(table-col-filter)', function(obj) {
-          var value = obj.value;
-          var data = tableInst.getRowData(options.id, obj.elem);
+          let value = obj.value;
+          let data = tableInst.getRowData(options.id, obj.elem);
           data[obj.elem.name] = value;
         });
 
         //radio开关
         form.on('switch(table-col-filter)', function(obj) {
-          var data = tableInst.getRowData(options.id, obj.elem);
+          let data = tableInst.getRowData(options.id, obj.elem);
           data[obj.elem.name] = obj.elem.checked;
         });
 
@@ -192,7 +174,7 @@
 
     // 获取当前行数据
     tableInst.getRowData = function(tableId, elem) {
-      var index = $(elem).closest('tr').data('index');
+      let index = $(elem).closest('tr').data('index');
       return table.cache[tableId][index] || {};
     };
 
@@ -211,32 +193,30 @@
       }
     });
 
-    var formMgrInst = null;
-    var FormMgr = function() {
+    let formMgrInst = null;
+    const FormMgr = function() {
       if (formMgrInst) { //实例已存在
         return;
       }
-      var formMgr = formMgrInst  = this;
+      const that = formMgrInst  = this;
 
       //渲染操作按钮
-      laytpl(ID_operator.innerHTML).render(action, function(html) {
-        $form.find('.toolbar').html(html);
-      });
+      $form.find('.toolbar').html(MyCuckoo.getActions(action || {}, 'form'));
 
       //表单初始赋值
       if (queryObj.action) {
-        var data = tableInst.getCache();
-        var one = data.length > 0 ? data[0] : {};
+        let data = tableInst.getCache();
+        let one = data.length > 0 ? data[0] : {};
         //初始化
         form.val('editForm', $.extend({}, queryObj, one));
       }
 
       // 单元格编辑后的事件
       table.on('edit(table)', function(obj) {
-        var field = obj.field; // 得到修改的字段
-        var value = obj.value // 得到修改后的值
-        var oldValue = obj.oldValue // 得到修改前的值 -- v2.8.0 新增
-        var col = obj.getCol(); // 得到当前列的表头配置属性 -- v2.8.0 新增
+        let field = obj.field; // 得到修改的字段
+        let value = obj.value // 得到修改后的值
+        let oldValue = obj.oldValue // 得到修改前的值 -- v2.8.0 新增
+        let col = obj.getCol(); // 得到当前列的表头配置属性 -- v2.8.0 新增
         if (field === 'title') {
           if (!/^[a-zA-Z0-9_\u4e00-\u9fa5\\s·]+$/.test(value)) {
             layer.tips('标题不能有特殊字符', this, {tips: 1});
@@ -251,7 +231,7 @@
           layer.tips('必须由字符数字和下划线组成, 首字符不能数字, 首尾不能下划线', this, {tips: 1});
           return obj.reedit();
         }
-        var maxLen = 30;
+        let maxLen = 30;
         if (field === 'extra') {
           maxLen = 100;
         }
@@ -264,30 +244,30 @@
       //单元格工具事件
       table.on('tool(table)', function(obj) {
         obj.othis = this;
-        formMgr['execute'](obj);
+        that.on(obj);
       });
 
       table.on('toolbar(table)', function(obj) {
-        formMgr['execute'](obj);
+        that.on(obj);
       });
 
       //操作按钮触发事件
       $form.find('a.layui-btn:not([lay-submit])').on('click', function() {
-        var event = $(this).data('event');
-        event && formMgr['execute']({event: event, data: this});
+        let event = $(this).data('event');
+        event && that.on({event: event, data: this});
       });
 
       //监听提交
       form.on('submit', function(data) {
-        var fields = [
+        let fields = [
           {key: 'type', value: '类型'},
           {key: 'field', value: '字段'},
           {key: 'title', value: '标题'},
           {key: 'filterType', value: '过滤类型'}
         ]
-        var tableData = table.cache['table'];
-        for (var i in tableData) {
-          for (var ii in fields) {
+        let tableData = table.cache['table'];
+        for (let i in tableData) {
+          for (let ii in fields) {
             if (tableData[i][fields[ii].key] === undefined || tableData[i][fields[ii].key] === '') {
               MyCuckoo.msg({ msg : '第' + (parseInt(i) + 1) + '行[' + fields[ii].value + ']不能为空!'});
               return false;
@@ -296,8 +276,8 @@
         }
 
         data.field['configs'] = tableData;
-        var event = $(this).data('event');
-        formMgr['execute']({event: event, data: data.field});
+        let event = $(this).data('event');
+        that.on({event: event, data: data.field});
 
         return false;
       });
@@ -305,9 +285,9 @@
 
     FormMgr.prototype = {
       constructor: FormMgr,
-      execute: function(obj) {
-        var arr = obj.event.split(':');
-        var event = arr[arr.length - 1];
+      on: function(obj) {
+        let arr = obj.event.split(':');
+        let event = arr[arr.length - 1];
 
         this[event] && this[event](obj);
       },
@@ -319,7 +299,7 @@
       },
       //增加
       addRow: function(obj) {
-        var data = table.cache[obj.config.id];
+        let data = table.cache[obj.config.id];
         data.push({
           type: 'text',
           field: '',
@@ -335,14 +315,14 @@
       },
       //删除行
       deleteRow: function (obj) {
-        var data = table.cache[obj.config.id];
+        let data = table.cache[obj.config.id];
         if (obj.data.tableId || obj.data.field) {
           MyCuckoo.confirm({msg : '您确认删除此记录吗?', ok : function() {
-            var item = data.splice(obj.index, 1)
+            let item = data.splice(obj.index, 1)
             table.renderData(obj.config.id);
           }});
         } else {
-          var item = data.splice(obj.index, 1)
+          let item = data.splice(obj.index, 1)
           table.renderData(obj.config.id);
         }
       },
@@ -352,14 +332,14 @@
           return
         }
 
-        var data = table.cache[obj.config.id];
-        var item = data.splice(obj.index, 1);
+        let data = table.cache[obj.config.id];
+        let item = data.splice(obj.index, 1);
         data.splice(obj.index - 1, 0, item[0]);
         table.renderData(obj.config.id);
       },
       //刷新父窗
       refresh: function() {
-        var that = this;
+        let that = this;
         setTimeout(function() {
           //parent.location.reload();
           that.close();
@@ -367,7 +347,7 @@
       },
       //关闭当前iframe页
       close: function(ele) {
-        var index = parent.layer.getFrameIndex(window.name);
+        let index = parent.layer.getFrameIndex(window.name);
         parent.layer.close(index);
       }
     }

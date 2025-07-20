@@ -4,7 +4,7 @@
   <meta http-equiv="Content-Type" content="text/html; charset=utf-8" />
   <title>选择用户</title>
   <link type="image/x-icon" href="../../static/images/favicon.ico" rel="shortcut icon" />
-  <link type="text/css" href="../../static/layui/2.9.13/css/layui.css" rel="stylesheet" />
+  <link type="text/css" href="../../static/layui/2.11.4/css/layui.css" rel="stylesheet" />
   <link type="text/css" href="../../static/css/mycuckoo.css" rel="stylesheet" />
 </head>
 <body>
@@ -41,17 +41,12 @@
   </form>
 </div>
 </body>
-<script type="text/javascript" src="../../static/layui/2.9.13/layui.js" charset="UTF-8"></script>
+<script type="text/javascript" src="../../static/layui/2.11.4/layui.js" charset="UTF-8"></script>
 <script type="text/javascript" src="../../static/mycuckoo.js" charset="UTF-8"></script>
 <script type="text/javascript" src="../../static/mycuckoo.api.js" charset="UTF-8"></script>
 <script type="text/javascript">
-  layui.config({
-    base: '../../static/extend/',
-    version: '101100'
-  });
-
   layui.use(['jquery', 'form', 'table'], function() {
-    var $ = layui.jquery,
+    const $ = layui.jquery,
       form = layui.form,
       table = layui.table,
       queryObj = MyCuckoo.getQueryObject(location.search),
@@ -87,7 +82,7 @@
       }
     });
 
-    var FormMgr = function() {
+    const FormMgr = function() {
       form.on('submit(search)', function(data) {
         table.reload('table', {
           page: {pageNo: 1},
@@ -101,28 +96,28 @@
         $('.mycuckoo-search').parent().removeClass('layui-hide');
       }
 
-      var formMgr = this;
+      const that = this;
       //操作按钮触发事件
       $('form a.layui-btn').on('click', function() {
-        var event = $(this).data('event');
-        formMgr[event] && formMgr[event]({elem: this});
+        let event = $(this).data('event');
+        that[event] && that[event]({elem: this});
       });
     }
 
     FormMgr.prototype = {
       constructor: FormMgr,
       save: function(obj) {
-        var data = table.checkStatus('table').data;
+        let data = table.checkStatus('table').data;
         if(data.length == 0) {
           MyCuckoo.alert({title: '提示', msg: '请选择一条或多条记录!'});
           return;
         }
 
-        var codes = [];
+        let codes = [];
         data.forEach(item => {
           codes.push(item.account);
         });
-        var params = {'userAddDelFlag': queryObj['q[userAddDelFlag]'], systemMgr : codes};
+        let params = {'userAddDelFlag': queryObj['q[userAddDelFlag]'], systemMgr : codes};
         $.request(action, params).then(json => {
           MyCuckoo.msg({msg: json.msg});
 
@@ -137,7 +132,7 @@
       },
       //关闭当前iframe页
       close: function() {
-        var index = parent.layer.getFrameIndex(window.name);
+        let index = parent.layer.getFrameIndex(window.name);
         parent.layer.close(index);
       }
     }

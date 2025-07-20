@@ -4,7 +4,7 @@
   <meta http-equiv="Content-Type" content="text/html; charset=utf-8" />
   <title>分配权限</title>
   <link type="image/x-icon" href="../../static/images/favicon.ico" rel="shortcut icon" />
-  <link type="text/css" href="../../static/layui/2.9.13/css/layui.css" rel="stylesheet" />
+  <link type="text/css" href="../../static/layui/2.11.4/css/layui.css" rel="stylesheet" />
   <link type="text/css" href="../../static/css/mycuckoo.css" rel="stylesheet" />
   <link type="text/css" href="../../static/dtree/css/dtree.css" rel="stylesheet" />
   <link type="text/css" href="../../static/dtree/css/font/dtreefont.css" rel="stylesheet" />
@@ -111,17 +111,12 @@
   </div>
 </div>
 </body>
-<script type="text/javascript" src="../../static/layui/2.9.13/layui.js" charset="UTF-8"></script>
+<script type="text/javascript" src="../../static/layui/2.11.4/layui.js" charset="UTF-8"></script>
 <script type="text/javascript" src="../../static/mycuckoo.js" charset="UTF-8"></script>
 <script type="text/javascript" src="../../static/mycuckoo.api.js" charset="UTF-8"></script>
 <script type="text/javascript">
-  layui.config({
-    base: '../../static/extend/',
-    version: '101100'
-  });
-
   layui.use(['jquery', 'element', 'form', 'dtree'], function() {
-    var $ = layui.jquery,
+    const $ = layui.jquery,
       element = layui.element,
       form = layui.form,
       tree = layui.dtree,
@@ -131,10 +126,10 @@
       $tab = $('.layui-tab');
 
 
-    var treeObj;
+    let treeObj;
 
-    var FormMgr = function() {
-      var formMgr = this;
+    const FormMgr = function() {
+      const formMgr = this;
       //表单初始赋值
       if (queryObj.id) {
         $('fieldset > legend').text('用户名称:' + queryObj.name);
@@ -168,13 +163,13 @@
 
       //操作按钮触发事件
       $tab.find('form a.layui-btn:not([lay-submit])').on('click', function() {
-        var event = $(this).data('event');
+        let event = $(this).data('event');
         formMgr[event] && formMgr[event]({event: event, elem: this});
       });
 
       //监听提交
       form.on('submit', function(data) {
-        var event = $(this).data('event');
+        let event = $(this).data('event');
         formMgr[event] && formMgr[event]({event: event, data: $.extend({}, data.field, queryObj)});
 
         return false;
@@ -185,7 +180,7 @@
       constructor: FormMgr,
       rowTreeObj: null,
       openTree: function(url, config) {
-        var that = this;
+        let that = this;
         that.rowTreeObj = tree.render({
           elem: '#' + config.id,
           method: 'get',
@@ -202,37 +197,37 @@
         });
       },
       selectRowPrivilege: function(privilegeType) {
-        var that = this;
+        let that = this;
         $.request(operatorMap['res:userMgr:rowSelector'], queryObj).then(json => {
-          var data = json.data;
-          var selectedPrivilegeType = data.privilegeScope;
+          let data = json.data;
+          let selectedPrivilegeType = data.privilegeScope;
 
           if(!privilegeType) {
             form.val('userAssignRowPriv', data);
             privilegeType = selectedPrivilegeType || 'dept';
           }
-          var id = 'ID_' + privilegeType + '_scope_tree';
+          let id = 'ID_' + privilegeType + '_scope_tree';
           $tab.find('.scope').addClass('layui-hide');
           $tab.find('#ID_' + privilegeType + '_scope').removeClass('layui-hide');
 
           if(privilegeType == 'dept') {
-            var checkNodes = [];
+            let checkNodes = [];
             data.privileges.forEach(item => {
               checkNodes.push(item.id);
             });
-            var action = operatorMap['res:deptMgr:tree'];
+            let action = operatorMap['res:deptMgr:tree'];
             that.openTree(MyCuckoo.api.host + action.path, {id: id, data: checkNodes});
           }
           else if(privilegeType == 'rol') {
-            var checkNodes = [];
+            let checkNodes = [];
             data.privileges.forEach(item => {
               checkNodes.push('id-leaf-' + item.id);
             });
-            var action = operatorMap['res:deptMgr:tree'];
+            let action = operatorMap['res:deptMgr:tree'];
             that.openTree(MyCuckoo.api.host + action.path, {id: id, data: checkNodes, withRole: true});
           }
           else {
-            var nodes = data.privileges;
+            let nodes = data.privileges;
             if(privilegeType == selectedPrivilegeType) {
               nodes.forEach(item => {
                 item.parentId = 0;
@@ -256,7 +251,7 @@
       //查询用户
       selectUsers: function(ele) {
         $.request(operatorMap['res:userMgr:selector'], {userName: $tab.find('input[name=searchUsr]').val()}).then(json => {
-          var nodes = [];
+          let nodes = [];
           json.data.forEach(item => nodes.push({
             id: item.userId,
             parentId: 0,
@@ -270,18 +265,18 @@
       },
       //保存用户权限
       assignRes: function(obj) {
-        var data = obj.data;
+        let data = obj.data;
         if(!data.privilegeScope) {
           MyCuckoo.alert({ title : '提示', msg : '请选择权限范围!' });
           return;
         }
-        var selectedNodes = treeObj.getCheckbarNodesParam();
+        let selectedNodes = treeObj.getCheckbarNodesParam();
         if(!selectedNodes.length) {
           MyCuckoo.alert({ title : '提示', msg : '请选择权限!' });
           return;
         }
 
-        var optIds = [];
+        let optIds = [];
         selectedNodes.forEach(item => item.isLeaf && optIds.push(item.nodeId));
         $.request(operatorMap['res:userMgr:assignRes'], data, optIds).then(json => {
           MyCuckoo.msg({msg: json.msg});
@@ -291,21 +286,21 @@
       },
       //保存行权限
       assignRow: function(obj) {
-        var data = obj.data;
+        let data = obj.data;
         if(!data.privilegeScope) {
           MyCuckoo.alert({ title : '提示', msg : '请选择行权限类别!' });
           return;
         }
-        var selectedNodes = this.rowTreeObj.getCheckbarNodesParam();
+        let selectedNodes = this.rowTreeObj.getCheckbarNodesParam();
         if(!selectedNodes.length) {
           MyCuckoo.alert({ title : '提示', msg : '请选择权限!' });
           return;
         }
 
-        var rowIds = [];
+        let rowIds = [];
         selectedNodes.forEach(item => {
-          var id = item.nodeId;
-          var index = !isNaN(id) ? -1 : id.indexOf('_');
+          let id = item.nodeId;
+          let index = !isNaN(id) ? -1 : id.indexOf('_');
           rowIds.push(item.isLeaf && index != -1 ? id.substr(index + 1) : id);
         });
         $.request(operatorMap['res:userMgr:assignRow'], data, rowIds).then(json => {
@@ -322,7 +317,7 @@
       },
       //关闭当前iframe页
       close: function() {
-        var index = parent.layer.getFrameIndex(window.name);
+        let index = parent.layer.getFrameIndex(window.name);
         parent.layer.close(index);
       }
     }

@@ -12,9 +12,6 @@
 /*提示、背景*/
 .background {position:fixed; bottom:0; left:0; right:0; top:0; opacity:0.8; background:url("../images/login/wait.gif") no-repeat scroll center 30% #000000; z-index:1060;}
 
-.tab-popup-menu { position: absolute; width: 120px; line-height: 24px; z-index: 999; background: #FFF; border: 1px solid #F2F2F2; border-bottom: none; border-radius: 3px; display: none; }
-.tab-popup-menu li { display: block; padding: 4px 10px; color: #666; border-bottom: 1px solid #F2F2F2; }
-.tab-popup-menu li:hover { background: #EEE; color: #222; }
 
 /*--------------------------------菜单-----------------------------------*/
 .mycuckoo-container .layui-header { background-color: #563d7c; }
@@ -39,18 +36,18 @@
 /*--------------------------------tab-----------------------------------*/
 .mycuckoo-container .layui-body { position: absolute; top: 60px; right: 0; padding-bottom: 0px; left: 221px; height: 85%; overflow: hidden; z-index: 1; }
 .mycuckoo-body-bg { position: absolute; top: 46px; right: 0; bottom: 42px; left: 221px; background: rgba(0, 0, 0, 0.5) 0 0 no-repeat; overflow: hidden; z-index: 100; display: none; }
-.mycuckoo-body .layui-tab { height: 100%; width: 100%; background: #EFEEF0 0 0 no-repeat; margin: 0px; }
-.mycuckoo-body .layui-tab-title { height: 35px; background: #EFEEF0 0 0 no-repeat; position: relative; z-index: 100; }
-.mycuckoo-body .layui-tab-title li { line-height: 35px; }
-.mycuckoo-body .layui-tab-title li .layui-tab-close { border-radius: 50%; }
-.mycuckoo-body .layui-tab-title .layui-this { background: #fff 0 0 no-repeat; }
-.mycuckoo-body .layui-tab-title .layui-this:after { height: 36px; }
-.mycuckoo-body .layui-tab-content { position: absolute; top: 36px; bottom: 0px; width: 100%; background: #fff 0 0 no-repeat; padding: 0px; overflow: hidden; }
-.mycuckoo-body .layui-tab-content .layui-tab-item { width: 100%; height: 100%; }
-.mycuckoo-body .layui-tab-content .layui-tab-item iframe { width: 100%; height: 100%; }
+.mycuckoo-body .layui-tabs { height: 100%; width: 100%; background: #EFEEF0 0 0 no-repeat; margin: 0px; }
+.mycuckoo-body .layui-tabs-header { height: 35px; background: #EFEEF0 0 0 no-repeat; position: relative; z-index: 100; }
+.mycuckoo-body .layui-tabs-header li { line-height: 35px; }
+.mycuckoo-body .layui-tabs-header li .layui-tab-close { border-radius: 50%; }
+.mycuckoo-body .layui-tabs-header .layui-this { background: #fff 0 0 no-repeat; }
+.mycuckoo-body .layui-tabs-header .layui-this:after { height: 36px; }
+.mycuckoo-body .layui-tabs-body { position: absolute; top: 36px; bottom: 0px; width: 100%; background: #fff 0 0 no-repeat; padding: 0px; overflow: hidden; }
+.mycuckoo-body .layui-tabs-body .layui-tabs-item { width: 100%; height: 100%; }
+.mycuckoo-body .layui-tabs-body .layui-tabs-item iframe { width: 100%; height: 100%; border: none; overflow: hidden;  }
 @media screen and (max-width: 768px) {
   .mycuckoo-body { left: 0px; }
-  .mycuckoo-body .layui-tab-content .layui-tab-item { -webkit-overflow-scrolling: touch; overflow-y: scroll; }
+  .mycuckoo-body .layui-tabs-body .layui-tabs-item { -webkit-overflow-scrolling: touch; overflow-y: scroll; }
   .mycuckoo-search .layui-input { width: 100%; margin: 6px; }
 }
 

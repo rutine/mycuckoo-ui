@@ -4,7 +4,7 @@
   <meta http-equiv="Content-Type" content="text/html; charset=utf-8" />
   <title>系统平台</title>
   <link type="image/x-icon" href="../../static/images/favicon.ico" rel="shortcut icon" />
-  <link type="text/css" href="../../static/layui/2.9.13/css/layui.css" rel="stylesheet" />
+  <link type="text/css" href="../../static/layui/2.11.4/css/layui.css" rel="stylesheet" />
   <link type="text/css" href="../../static/css/mycuckoo.css" rel="stylesheet" />
 </head>
 <body>
@@ -193,35 +193,30 @@
   </div>
 </div>
 </body>
-<script type="text/javascript" src="../../static/layui/2.9.13/layui.js" charset="UTF-8"></script>
+<script type="text/javascript" src="../../static/layui/2.11.4/layui.js" charset="UTF-8"></script>
 <script type="text/javascript" src="../../static/mycuckoo.js" charset="UTF-8"></script>
 <script type="text/javascript" src="../../static/mycuckoo.api.js" charset="UTF-8"></script>
 <script type="text/javascript">
-  layui.config({
-    base: '../../static/extend/',
-    version: '101100'
-  });
-
   layui.use(['jquery', 'form'], function() {
-    var $ = layui.jquery,
+    const $ = layui.jquery,
       form = layui.form,
       queryObj = MyCuckoo.getQueryObject(location.search);
 
-    var operator = MyCuckoo.getOperation(queryObj.id);
-    var operatorMap = MyCuckoo.getDictMap(operator);
-    var action = operator.findLast(o => (o['group'] & 1) === 1);
+    const operator = MyCuckoo.getOperation(queryObj.id);
+    const operatorMap = MyCuckoo.getDictMap(operator);
+    const action = MyCuckoo.getIndexAction(operator);
 
     $main = $('.mycuckoo-main');
     $main.height($(window).height() - 90);
 
-    var FormMgr = function() {
+    const FormMgr = function() {
       this.reload();
 
-      var formMgr = this;
+      const that = this;
       //监听提交
       form.on('submit', function(data) {
-        var event = $(this).data('event');
-        formMgr[event] && formMgr[event]({event: event, data: data.field});
+        let event = $(this).data('event');
+        that[event] && that[event]({event: event, data: data.field});
 
         return false;
       });
@@ -233,11 +228,11 @@
         $.request(action).then(json => {
           form.val('editForm', json.data);
 
-          var $select = $main.find('select[name=systemMgr]');
+          let $select = $main.find('select[name=systemMgr]');
           $select.empty();
 
-          for (var i = 0; i < json.data.systemMgr.length; i++) {
-            var item = json.data.systemMgr[i];
+          for (let i = 0; i < json.data.systemMgr.length; i++) {
+            let item = json.data.systemMgr[i];
             $select.append('<option value="' + item + '">' + item + '</option>');
           }
           form.render('select');
@@ -260,7 +255,7 @@
       },
       //选择管理员
       selectAdmin(userAddDelFlag) {
-        var url = MyCuckoo.resolve('systemConfigMgrAssignUser.html?action=res:systemConfigMgr:modify&opt={opt}&q[userAddDelFlag]={flag}',
+        let url = MyCuckoo.resolve('systemConfigMgrAssignUser.html?action=res:systemConfigMgr:modify&opt={opt}&q[userAddDelFlag]={flag}',
           {'opt': queryObj.id, 'flag': userAddDelFlag})
         MyCuckoo.dialog('选择用户', url);
       },

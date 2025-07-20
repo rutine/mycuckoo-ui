@@ -4,22 +4,10 @@
   <meta http-equiv="Content-Type" content="text/html; charset=utf-8" />
   <title>系统平台</title>
   <link type="image/x-icon" href="../../static/images/favicon.ico" rel="shortcut icon" />
-  <link type="text/css" href="../../static/layui/2.9.13/css/layui.css" rel="stylesheet" />
+  <link type="text/css" href="../../static/layui/2.11.4/css/layui.css" rel="stylesheet" />
   <link type="text/css" href="../../static/css/mycuckoo.css" rel="stylesheet" />
 </head>
 <body>
-<div class="mycuckoo-site-nav">
-    <span class="layui-breadcrumb">
-      <a href="javascript:;">我的桌面</a>
-      <a><cite>资源</cite></a>
-    </span>
-    <span class="mycuckoo-right">
-      <a class="layui-btn layui-btn-sm" href="javascript:location.replace(location.href);" title="刷新">
-        <i class="layui-icon layui-icon-refresh"></i>
-      </a>
-    </span>
-</div>
-
 <div class="mycuckoo-main">
   <div class="layui-row">
     <form class="layui-col-md12 layui-form mycuckoo-search">
@@ -33,26 +21,21 @@
           </button>
         </div>
       </div>
+
+      <div class="mycuckoo-right">
+        <a class="layui-btn layui-bg-gray" href="javascript:location.replace(location.href);" title="刷新">
+          <i class="layui-icon layui-icon-refresh"></i>
+        </a>
+      </div>
     </form>
   </div>
 
   <table id="ID_table" class="layui-hide" lay-filter="table"></table>
 </div>
 </body>
-<script type="text/javascript" src="../../static/layui/2.9.13/layui.js" charset="UTF-8"></script>
+<script type="text/javascript" src="../../static/layui/2.11.4/layui.js" charset="UTF-8"></script>
 <script type="text/javascript" src="../../static/mycuckoo.js" charset="UTF-8"></script>
 <script type="text/javascript" src="../../static/mycuckoo.api.js" charset="UTF-8"></script>
-<script type="text/html" id="ID_toolbar">
-  <div class="layui-btn-group btn-toolbar">
-    {{# layui.each(d.operator, function(index, item) {
-      if ((item.group & 2) !== 2) return;
-    }}
-    <button class="layui-btn layui-btn-sm" lay-event="{{ item.code }}">
-      <i class="layui-icon layui-icon-{{ item.iconCls }}"></i> {{ item.name }}
-    </button>
-    {{# }); }}
-  </div>
-</script>
 <script type="text/html" id="ID_tool">
   <div class="layui-clear-space">
     {{#
@@ -75,30 +58,25 @@
   </div>
 </script>
 <script type="text/javascript">
-  layui.config({
-    base: '../../static/extend/',
-    version: '101100'
-  });
-
   layui.use(['jquery', 'form', 'treeTable'], function() {
-    var $ = layui.jquery,
+    const $ = layui.jquery,
       form = layui.form,
       table = layui.treeTable;
 
     //本地缓存数据
-    var queryObj = MyCuckoo.getQueryObject(location.search);
-    var operator = MyCuckoo.getOperation(queryObj.id);
-    var operatorMap = MyCuckoo.getDictMap(operator);
-    var action = operator.findLast(o => (o['group'] & 1) === 1);
+    const queryObj = MyCuckoo.getQueryObject(location.search);
+    const operator = MyCuckoo.getOperation(queryObj.id);
+    const operatorMap = MyCuckoo.getDictMap(operator);
+    const action = MyCuckoo.getIndexAction(operator);
 
-    var tableInst = table.render({
+    const tableInst = table.render({
       id: 'table',
       elem: '#ID_table',
       url: MyCuckoo.api.host + action.path,
       method: action.method,
       cellMinWidth: 100,
       height: MyCuckoo.tableHeight,
-//      toolbar: '#ID_toolbar',
+//      toolbar: MyCuckoo.getToolbar(operator, 'table'),
       operator: operator,
       tree: {
         customName: {
@@ -139,12 +117,12 @@
       }
     });
 
-    var indexMgrInst = null;
-    var IndexMgr = function () {
+    let indexMgrInst = null;
+    const IndexMgr = function () {
       if (indexMgrInst) { //实例已存在
         return;
       }
-      var that = indexMgrInst  = this;
+      const that = indexMgrInst  = this;
 
       form.on('submit(search)', function(data) {
         //执行重载
@@ -155,12 +133,12 @@
 
       //单元格工具事件
       table.on('tool(table)', function(obj) {
-        var data = obj.data;
+        let data = obj.data;
         if (typeof data.id == 'string') {
           data.id = data.id .replace('id-leaf-', '')
         }
 
-        that['execute'](obj);
+        that.on(obj);
       });
 
       table.on('toolbar(table)', function (obj) {
@@ -168,26 +146,26 @@
           return;
         }
         if (obj.event == 'add') {
-          that['execute'](obj);
+          that.on(obj);
           return;
         }
 
-        var data = table.radioStatus(obj.config.id);
+        let data = table.radioStatus(obj.config.id);
         if (!data.resourceId) {
           MyCuckoo.alert({title : '提示', msg : '请选择一条记录' });
           return;
         }
 
         obj.data = data;
-        that['execute'](obj);
+        that.on(obj);
       });
     }
 
     IndexMgr.prototype = {
       constructor: IndexMgr,
-      execute: function(obj) {
-        var arr = obj.event.split(':');
-        var event = arr[arr.length - 1];
+      on: function(obj) {
+        let arr = obj.event.split(':');
+        let event = arr[arr.length - 1];
 
         if (!this[event]) {
           MyCuckoo.alert({title : '警示', msg : '此操作无效, 如有疑问, 请联系管理员!' });
@@ -201,36 +179,36 @@
       },
       //增加
       add: function(obj) {
-        var url = MyCuckoo.resolve('resourceMgrForm.html?action={action}&opt={opt}&moduleId={id}',
+        let url = MyCuckoo.resolve('resourceMgrForm.html?action={action}&opt={opt}&moduleId={id}',
             {'action': obj.event, 'opt': queryObj.id, 'id': obj.data.id})
         MyCuckoo.dialog('资源信息', url);
       },
       //分配
       assign: function(obj) {
-        var url = MyCuckoo.resolve('resourceMgrAssignTable.html?action={action}&opt={opt}&moduleId={id}&moduleName={name}',
+        let url = MyCuckoo.resolve('resourceMgrAssignTable.html?action={action}&opt={opt}&moduleId={id}&moduleName={name}',
           {'action': obj.event, 'opt': queryObj.id, 'id': obj.data.id, 'name': obj.data.text})
         MyCuckoo.dialog('表头信息', url);
       },
       //修改
       modify: function(obj) {
-        var data = obj.data;
+        let data = obj.data;
         data.action = obj.event;
         data.opt = queryObj.id;
-        var url = MyCuckoo.resolve('resourceMgrForm.html?action={action}&opt={opt}&id={id}&moduleId={parentId}', data)
+        let url = MyCuckoo.resolve('resourceMgrForm.html?action={action}&opt={opt}&id={id}&moduleId={parentId}', data)
         MyCuckoo.dialog('资源信息', url);
       },
       //查看
       view: function(obj) {
-        var data = obj.data;
+        let data = obj.data;
         data.action = obj.event;
         data.opt = queryObj.id;
-        var url = MyCuckoo.resolve('resourceMgrForm.html?action={action}&opt={opt}&id={id}&moduleId={parentId}', data)
+        let url = MyCuckoo.resolve('resourceMgrForm.html?action={action}&opt={opt}&id={id}&moduleId={parentId}', data)
         MyCuckoo.sideDialog('资源信息', url);
       },
       //删除
       delete: function(obj) {
-        var that = this;
-        var data = obj.data;
+        let that = this;
+        let data = obj.data;
         MyCuckoo.confirm({msg : '您确认删除此记录吗?', ok : function() {
           $.request(operatorMap[obj.event], {id: data.resourceId}).then(json => {
             MyCuckoo.msg({ msg: '资源删除成功' });
@@ -241,7 +219,7 @@
       },
       //启用
       enable: function(obj) {
-        var data = obj.data;
+        let data = obj.data;
         if(data.status == 'enable') {
           MyCuckoo.msg({ msg : '此菜单已经启用' });
           return;
@@ -251,7 +229,7 @@
           return;
         }
 
-        var that = this;
+        let that = this;
         $.request(operatorMap[obj.event], {id: data.moduleId, disEnableFlag: 'enable'}).then(json => {
           MyCuckoo.msg({ msg: '菜单启用成功' });
 
@@ -269,7 +247,7 @@
           return;
         }
 
-        var that = this;
+        let that = this;
         MyCuckoo.confirm({msg : '您确认停用此资源吗?如果停用,此资源下的操作将自动清除,并重登生效.', ok : function() {
           $.request(operatorMap[obj.event], {id: obj.data.moduleId, disEnableFlag: 'disable'}).then(json => {
             MyCuckoo.msg({ msg: '资源停用成功' });

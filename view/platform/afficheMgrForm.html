@@ -4,7 +4,7 @@
   <meta http-equiv="Content-Type" content="text/html; charset=utf-8" />
   <title>系统公告信息</title>
   <link type="image/x-icon" href="../../static/images/favicon.ico" rel="shortcut icon" />
-  <link type="text/css" href="../../static/layui/2.9.13/css/layui.css" rel="stylesheet" />
+  <link type="text/css" href="../../static/layui/2.11.4/css/layui.css" rel="stylesheet" />
   <link type="text/css" href="../../static/css/mycuckoo.css" rel="stylesheet" />
 </head>
 <body>
@@ -71,30 +71,12 @@
   </form>
 </div>
 </body>
-<script type="text/javascript" src="../../static/layui/2.9.13/layui.js" charset="UTF-8"></script>
+<script type="text/javascript" src="../../static/layui/2.11.4/layui.js" charset="UTF-8"></script>
 <script type="text/javascript" src="../../static/mycuckoo.js" charset="UTF-8"></script>
 <script type="text/javascript" src="../../static/mycuckoo.api.js" charset="UTF-8"></script>
-<script type="text/html" id="ID_operator">
-  <div class="layui-btn-container" style="margin-bottom: 6px; text-align: center;">
-    {{# if((d.group & 8) === 8) { }}
-    <a href="javascript: " class="layui-btn layui-btn-sm" data-event="{{= d.code }}" lay-submit>
-      <i class="layui-icon layui-icon-ok"></i>{{= d.name }}
-    </a>
-    {{# } }}
-    <a href="javascript:" class="layui-btn layui-btn-sm" data-event="close">
-      <i class="layui-icon layui-icon-close"></i>关闭
-    </a>
-  </div>
-</script>
 <script type="text/javascript">
-  layui.config({
-    base: '../../static/extend/',
-    version: '101100'
-  });
-
-  layui.use(['jquery', 'laytpl', 'form', 'laydate', 'upload'], function() {
-    var $ = layui.jquery,
-      laytpl = layui.laytpl,
+  layui.use(['jquery', 'form', 'laydate', 'upload'], function() {
+    const $ = layui.jquery,
       form = layui.form,
       layDate = layui.laydate,
       upload = layui.upload,
@@ -104,16 +86,14 @@
       action = operatorMap[queryObj.action],
       $form = $('form[name=editForm]');
 
-    var $fileList = $('#ID_fileList');
-    var accessories = [];
+    let $fileList = $('#ID_fileList');
+    let accessories = [];
 
-    var FormMgr = function () {
+    const FormMgr = function () {
+      let that = this;
       //渲染操作按钮
-      laytpl(ID_operator.innerHTML).render(action, function(html) {
-        $form.find('.toolbar').html(html);
-      });
+      $form.find('.toolbar').html(MyCuckoo.getActions(action || {}, 'form'));
 
-      var formMgr = this;
       //表单初始赋值
       if (queryObj.id && action) {
         if(action.code === 'res:afficheMgr:view') {
@@ -126,12 +106,12 @@
           form.val('editForm', json.data);
 
           json.data.accessories.forEach(function(item, index) {
-            var tr = $([
+            let tr = $([
               '<tr>',
               '<td>',
               ' <input type="hidden" name="accessoryName" value="' + item.accessoryName + '">',
               ' <a href="' + MyCuckoo.api.fileMgr.url + '?business=document&filename=' + item.accessoryName + '" target="_blank">',
-              ' <img src="' + formMgr.getThumbnail(item.accessoryName) + '">&nbsp;&nbsp;',
+              ' <img src="' + that.getThumbnail(item.accessoryName) + '">&nbsp;&nbsp;',
               ' <span>' + item.accessoryName + '</span>',
               ' </a>',
               '</td>',
@@ -143,7 +123,7 @@
 
             //删除
             tr.find('.btn-delete').on('click', function () {
-              formMgr.deleteAccessory(item.accessoryId);
+              that.deleteAccessory(item.accessoryId);
               tr.remove();
             });
 
@@ -157,18 +137,18 @@
         elem: 'input[name=invalidate]'
       });
 
-      this.init();
+      that.init();
 
       //操作按钮触发事件
       $form.find('a.layui-btn:not([lay-submit])').on('click', function() {
-        var event = $(this).data('event');
-        formMgr['execute']({event: event, elem: this});
+        let event = $(this).data('event');
+        that.on({event: event, elem: this});
       });
 
       //监听提交
       form.on('submit', function(data) {
-        var event = $(this).data('event');
-        formMgr['execute']({event: event, data: $.extend({accessories: accessories}, data.field)});
+        let event = $(this).data('event');
+        that.on({event: event, data: $.extend({accessories: accessories}, data.field)});
 
         return false;
       });
@@ -176,17 +156,17 @@
 
     FormMgr.prototype = {
       constructor: FormMgr,
-      execute: function(obj) {
-        var arr = obj.event.split(':');
-        var event = arr[arr.length - 1];
+      on: function(obj) {
+        let arr = obj.event.split(':');
+        let event = arr[arr.length - 1];
 
         this[event] && this[event](obj);
       },
       init: function() {
-        var formMgr = this;
+        let formMgr = this;
 
         //多文件列表示例
-        var uploader = upload.render({
+        let uploader = upload.render({
           elem: '#ID_filePicker',
           url: MyCuckoo.api.fileMgr.url,
           accept: 'file',
@@ -195,10 +175,10 @@
           data: {business: 'document'},
           bindAction: '#ID_uploadStart',
           choose: function(obj) {
-            var files = this.files = obj.pushFile(); //将每次选择的文件追加到文件队列
+            let files = this.files = obj.pushFile(); //将每次选择的文件追加到文件队列
             //读取本地文件
             obj.preview(function(index, file, result) {
-              var tr = $([
+              let tr = $([
                 '<tr id="ID_upload_'+ index +'">',
                 '<td>',
                 ' <img src="' + formMgr.getThumbnail(file.name) + '">&nbsp;&nbsp;',
@@ -233,7 +213,7 @@
             if(res.code == 0) { //上传成功
               accessories.push({accessoryName: this.files[index].name});
 
-              var tr = $fileList.find('tr#ID_upload_'+ index),
+              let tr = $fileList.find('tr#ID_upload_'+ index),
                 tds = tr.children();
               tds.eq(2).html('<span style="color: #5FB878;">上传成功</span>');
               tds.eq(3).html(''); //清空操作
@@ -242,7 +222,7 @@
             this.error(index, upload);
           },
           error: function(index, upload) {
-            var tr = $fileList.find('tr#ID_upload_'+ index),
+            let tr = $fileList.find('tr#ID_upload_'+ index),
               tds = tr.children();
             tds.eq(2).html('<span style="color: #FF5722;">上传失败</span>');
             tds.eq(3).find('.btn-upload').removeClass('layui-hide'); //显示重传
@@ -251,11 +231,11 @@
       },
       // 附件图标
       getThumbnail: function(filename) {
-        var baseUrl = '../../static/images/button/';
-        var splitFlag = filename.indexOf('_');
+        let baseUrl = '../../static/images/button/';
+        let splitFlag = filename.indexOf('_');
         filename = filename.substr(splitFlag + 1);
-        var suffixName = filename.substr(filename.lastIndexOf('.') + 1);
-        var imgPictureUrl = baseUrl + 'no-format.png';
+        let suffixName = filename.substr(filename.lastIndexOf('.') + 1);
+        let imgPictureUrl = baseUrl + 'no-format.png';
         if (suffixName == 'docx' || suffixName == 'doc') {
           imgPictureUrl = baseUrl + 'word.png';
         } else if (suffixName == 'pdf') {
@@ -268,7 +248,7 @@
         return imgPictureUrl;
       },
       add: function(obj) {
-        var data = obj.data;
+        let data = obj.data;
         data.publish = (data.publish != 0)
         $.request(action, obj.data).then(json => {
           MyCuckoo.msg({msg: json.msg});
@@ -277,7 +257,7 @@
         });
       },
       modify: function(obj) {
-        var data = obj.data;
+        let data = obj.data;
         data.publish = (data.publish != 0)
         $.request(action, obj.data).then(json => {
           MyCuckoo.msg({msg: json.msg});
@@ -299,7 +279,7 @@
       },
       //关闭当前iframe页
       close: function() {
-        var index = parent.layer.getFrameIndex(window.name);
+        let index = parent.layer.getFrameIndex(window.name);
         parent.layer.close(index);
       }
     }

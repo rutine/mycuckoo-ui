@@ -4,22 +4,10 @@
   <meta http-equiv="Content-Type" content="text/html; charset=utf-8" />
   <title>系统平台</title>
   <link type="image/x-icon" href="../../static/images/favicon.ico" rel="shortcut icon" />
-  <link type="text/css" href="../../static/layui/2.9.13/css/layui.css" rel="stylesheet" />
+  <link type="text/css" href="../../static/layui/2.11.4/css/layui.css" rel="stylesheet" />
   <link type="text/css" href="../../static/css/mycuckoo.css" rel="stylesheet" />
 </head>
 <body>
-<div class="mycuckoo-site-nav">
-    <span class="layui-breadcrumb">
-      <a href="javascript:;">我的桌面</a>
-      <a><cite>公告</cite></a>
-    </span>
-  <span class="right">
-      <a class="layui-btn layui-btn-sm" href="javascript:location.replace(location.href);" title="刷新">
-        <i class="layui-icon layui-icon-refresh"></i>
-      </a>
-    </span>
-</div>
-
 <div class="mycuckoo-main">
   <div class="layui-row">
     <form class="layui-col-md12 layui-form mycuckoo-search">
@@ -37,76 +25,33 @@
           </button>
         </div>
       </div>
+
+      <div class="mycuckoo-right">
+        <a class="layui-btn layui-bg-gray" href="javascript:location.replace(location.href);" title="刷新">
+          <i class="layui-icon layui-icon-refresh"></i>
+        </a>
+      </div>
     </form>
   </div>
 
   <table id="ID_table" class="layui-hide" lay-filter="table"></table>
 </div>
 </body>
-<script type="text/javascript" src="../../static/layui/2.9.13/layui.js" charset="UTF-8"></script>
+<script type="text/javascript" src="../../static/layui/2.11.4/layui.js" charset="UTF-8"></script>
 <script type="text/javascript" src="../../static/mycuckoo.js" charset="UTF-8"></script>
 <script type="text/javascript" src="../../static/mycuckoo.api.js" charset="UTF-8"></script>
-<script type="text/html" id="ID_toolbar">
-  <div class="layui-btn-group btn-toolbar">
-    {{# layui.each(d.operator, function(index, item) {
-      if ((item.group & 2) !== 2) return;
-    }}
-    <button class="layui-btn layui-btn-sm" lay-event="{{ item.code }}">
-      <i class="layui-icon layui-icon-{{ item.iconCls }}"></i> {{ item.name }}
-    </button>
-    {{# }); }}
-  </div>
-</script>
-<script type="text/html" id="ID_tool">
-  <div class="layui-clear-space">
-    {{#
-      var i = 0;
-      var count = 0;
-      layui.each(d.LAY_COL.operator, function(index, item) {
-        if ((item.group & 4) === 4) {
-          count++;
-        }
-      });
-
-      layui.each(d.LAY_COL.operator, function(index, item) {
-        if ((item.group & 4) !== 4) {
-          return;
-        } else if (i === 0) {
-          i++;
-    }}
-    <a class="layui-btn layui-btn-xs" lay-event="{{ item.code }}">
-      <i class="layui-icon layui-icon-{{ item.iconCls }}"></i> {{ item.name }}
-    </a>
-    {{#
-        } else if (i === 1) {
-          i++;
-    }}
-    <a class="layui-btn layui-btn-xs" lay-event="more">更多
-      <i class="layui-icon layui-icon-down"></i>
-    </a>
-    {{#
-        }
-      });
-    }}
-  </div>
-</script>
 <script type="text/javascript">
-  layui.config({
-    base: '../../static/extend/',
-    version: '101100'
-  });
-
   layui.use(['jquery', 'form', 'dropdown', 'table'], function() {
-    var $ = layui.jquery,
+    const $ = layui.jquery,
       form = layui.form,
       dropdown = layui.dropdown,
       table = layui.table;
 
     //本地缓存数据
-    var queryObj = MyCuckoo.getQueryObject(location.search);
-    var operator = MyCuckoo.getOperation(queryObj.id);
-    var operatorMap = MyCuckoo.getDictMap(operator);
-    var action = operator.findLast(o => (o['group'] & 1) === 1);
+    const queryObj = MyCuckoo.getQueryObject(location.search);
+    const operator = MyCuckoo.getOperation(queryObj.id);
+    const operatorMap = MyCuckoo.getDictMap(operator);
+    const action = MyCuckoo.getIndexAction(operator);
 
     table.render({
       id: 'table',
@@ -115,7 +60,7 @@
       method: action.method,
       cellMinWidth: 100,
       height: MyCuckoo.tableHeight,
-      toolbar: '#ID_toolbar',
+      toolbar: MyCuckoo.getActions(operator, 'table'),
       operator: operator,
       cols: [[
         {type: 'numbers'},
@@ -131,7 +76,7 @@
             }
           }
         },
-        {fixed: "right", title: "操作", align: "center", width: 120, toolbar: '#ID_tool', operator: operator}
+        {fixed: "right", title: "操作", align: "center", width: 120, toolbar: MyCuckoo.getActions(operator, 'col'), operator: operator}
       ]],
       page: true,
       request: {
@@ -151,12 +96,12 @@
       }
     });
 
-    var indexMgrInst = null;
-    var IndexMgr = function () {
+    let indexMgrInst = null;
+    const IndexMgr = function () {
       if (indexMgrInst) { //实例已存在
         return;
       }
-      var that = indexMgrInst = this;
+      const that = indexMgrInst = this;
 
       form.on('submit(search)', function(data) {
         //执行重载
@@ -171,7 +116,7 @@
       //单元格工具事件
       table.on('tool(table)', function (obj) {
         obj.elem = this;
-        that['execute'](obj);
+        that.on(obj);
       });
 
       table.on('toolbar(table)', function (obj) {
@@ -179,26 +124,26 @@
           return;
         }
         if (obj.event.endsWith('add')) {
-          that['execute'](obj);
+          that.on(obj);
           return;
         }
 
-        var data = table.checkStatus(obj.config.id).data;
+        let data = table.checkStatus(obj.config.id).data;
         if (data.length != 1) {
           MyCuckoo.alert({title : '提示', msg : '请选择一条记录' });
           return;
         }
 
         obj.data = data[0]
-        that['execute'](obj);
+        that.on(obj);
       });
     }
 
     IndexMgr.prototype = {
       constructor: IndexMgr,
-      execute: function(obj) {
-        var arr = obj.event.split(':');
-        var event = arr[arr.length - 1];
+      on: function(obj) {
+        let arr = obj.event.split(':');
+        let event = arr[arr.length - 1];
 
         if (!this[event]) {
           MyCuckoo.alert({title : '警示', msg : '此操作无效, 如有疑问, 请联系管理员!' });
@@ -212,29 +157,29 @@
       },
       //增加
       add: function(obj) {
-        var url = MyCuckoo.resolve('afficheMgrForm.html?action={action}&opt={opt}',
+        let url = MyCuckoo.resolve('afficheMgrForm.html?action={action}&opt={opt}',
             {'action': obj.event, 'opt': queryObj.id})
         MyCuckoo.dialog('公告信息', url);
       },
       //修改
       modify: function(obj) {
-        var data = obj.data;
-        var url = MyCuckoo.resolve('afficheMgrForm.html?action={action}&opt={opt}&id={id}',
+        let data = obj.data;
+        let url = MyCuckoo.resolve('afficheMgrForm.html?action={action}&opt={opt}&id={id}',
             {'action': obj.event, 'opt': queryObj.id, 'id': data.afficheId})
 
         MyCuckoo.dialog('公告信息', url);
       },
       //查看
       view: function(obj) {
-        var data = obj.data;
-        var url = MyCuckoo.resolve('afficheMgrForm.html?action={action}&opt={opt}&id={id}',
+        let data = obj.data;
+        let url = MyCuckoo.resolve('afficheMgrForm.html?action={action}&opt={opt}&id={id}',
             {'action': obj.event, 'opt': queryObj.id, 'id': data.afficheId})
         MyCuckoo.sideDialog('公告信息', url);
       },
       //删除
       delete: function(obj) {
-        var data = obj.data;
-        var that = this;
+        let data = obj.data;
+        let that = this;
         MyCuckoo.confirm({msg : '您确认删除此记录吗.', ok : function() {
           $.request(operatorMap[obj.event], {id: data.afficheId}).then(json => {
             MyCuckoo.msg({ msg: json.msg });
@@ -244,15 +189,8 @@
         }});
       },
       more: function (obj) {
-        var that = this;
-        var btns = [];
-        var i = 0;
-        layui.each(operator, function(index, item) {
-          if ((item.group & 4) != 4 || i++ == 0) {
-            return;
-          }
-          btns.push(item);
-        });
+        let that = this;
+        let btns = MyCuckoo.getActions(operator, 'more');
         dropdown.render({
           elem: obj.elem, // 触发事件的 DOM 对象
           show: true, // 外部事件触发即显示
@@ -262,7 +200,7 @@
           },
           click: function(menudata) {
             obj.event = menudata.code;
-            that['execute'](obj);
+            that.on(obj);
           }
         });
       }

@@ -4,7 +4,7 @@
   <meta http-equiv="Content-Type" content="text/html; charset=utf-8" />
   <title>分配角色</title>
   <link type="image/x-icon" href="../../static/images/favicon.ico" rel="shortcut icon" />
-  <link type="text/css" href="../../static/layui/2.9.13/css/layui.css" rel="stylesheet" />
+  <link type="text/css" href="../../static/layui/2.11.4/css/layui.css" rel="stylesheet" />
   <link type="text/css" href="../../static/css/mycuckoo.css" rel="stylesheet" />
 
   <!-- 标签风格 -->
@@ -39,30 +39,12 @@
   </form>
 </div>
 </body>
-<script type="text/javascript" src="../../static/layui/2.9.13/layui.js" charset="UTF-8"></script>
+<script type="text/javascript" src="../../static/layui/2.11.4/layui.js" charset="UTF-8"></script>
 <script type="text/javascript" src="../../static/mycuckoo.js" charset="UTF-8"></script>
 <script type="text/javascript" src="../../static/mycuckoo.api.js" charset="UTF-8"></script>
-<script type="text/html" id="ID_operator">
-  <div class="layui-btn-container" style="margin-bottom: 6px; text-align: center;">
-    {{# if((d.group & 8) === 8) { }}
-    <a href="javascript: " class="layui-btn layui-btn-sm" data-event="{{= d.code }}" lay-submit>
-      <i class="layui-icon layui-icon-ok"></i>{{= d.name }}
-    </a>
-    {{# } }}
-    <a href="javascript:" class="layui-btn layui-btn-sm" data-event="close">
-      <i class="layui-icon layui-icon-close"></i>关闭
-    </a>
-  </div>
-</script>
 <script type="text/javascript">
-  layui.config({
-    base: '../../static/extend/',
-    version: '101100'
-  });
-
-  layui.use(['jquery', 'laytpl', 'form'], function() {
-    var $ = layui.jquery,
-      laytpl = layui.laytpl,
+  layui.use(['jquery', 'form'], function() {
+    const $ = layui.jquery,
       form = layui.form,
       queryObj = MyCuckoo.getQueryObject(location.search),
       operator = MyCuckoo.getOperation(queryObj.opt),
@@ -70,11 +52,9 @@
       action = operatorMap[queryObj.action],
       $form = $('form[name=editForm]');
 
-    var FormMgr = function () {
+    const FormMgr = function () {
       //渲染操作按钮
-      laytpl(ID_operator.innerHTML).render(action || {}, function(html) {
-        $form.find('.toolbar').html(html);
-      });
+      $form.find('.toolbar').html(MyCuckoo.getActions(action || {}, 'form'));
 
       //表单初始赋值
       if (!queryObj.id) {
@@ -84,12 +64,12 @@
         $form.parent().find('legend').text(queryObj.name);
 
         $.request(operatorMap['res:moduleMgr:optSelector'], queryObj).then(function(json) {
-          var data = json.data.source;
-          var assign = json.data.assign || [];
-          var $checkbox = $('<div></div>');
-          for (var i = 0; i < data.length; i++) {
-            var item = data[i];
-            var checked = (assign.indexOf(parseInt(item.id)) >= 0) ? 'checked' : '';
+          let data = json.data.source;
+          let assign = json.data.assign || [];
+          let $checkbox = $('<div></div>');
+          for (let i = 0; i < data.length; i++) {
+            let item = data[i];
+            let checked = (assign.indexOf(parseInt(item.id)) >= 0) ? 'checked' : '';
             $checkbox.append('' +
                 '<input type="checkbox" name="optIds[' + i + ']" lay-skin="none" value="' + item.id + '" ' + checked + '>' +
                 '<div lay-checkbox class="lay-skin-tag layui-badge">' + item.text + '</div>' +
@@ -102,16 +82,16 @@
       }
 
       //操作按钮触发事件
-      var formMgr = this;
+      const that = this;
       $form.find('a.layui-btn:not([lay-submit])').on('click', function() {
-        var event = $(this).data('event');
-        formMgr['execute']({event: event, elem: this});
+        let event = $(this).data('event');
+        that.on({event: event, elem: this});
       });
 
       //监听提交
       form.on('submit', function(data) {
-        var event = $(this).data('event');
-        formMgr['execute']({event: event, data: $.extend({}, data.field, queryObj)});
+        let event = $(this).data('event');
+        that.on({event: event, data: $.extend({}, data.field, queryObj)});
 
         return false;
       });
@@ -119,17 +99,17 @@
 
     FormMgr.prototype = {
       constructor: FormMgr,
-      execute: function(obj) {
-        var arr = obj.event.split(':');
-        var event = arr[arr.length - 1];
+      on: function(obj) {
+        let arr = obj.event.split(':');
+        let event = arr[arr.length - 1];
 
         this[event] && this[event](obj);
       },
       //保存模块操作
       assignOpt(obj) {
-        var data = obj.data;
-        var optIds = []
-        for (var p in data) {
+        let data = obj.data;
+        let optIds = []
+        for (let p in data) {
           if (p.indexOf('optIds') == 0) {
             optIds.push(data[p]);
           }
@@ -153,7 +133,7 @@
       },
       //关闭当前iframe页
       close: function() {
-        var index = parent.layer.getFrameIndex(window.name);
+        let index = parent.layer.getFrameIndex(window.name);
         parent.layer.close(index);
       }
       //end
