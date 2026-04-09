@@ -2,6 +2,23 @@
   layui.use(['jquery'], function () {
     const $ = layui.jquery;
     const host = 'http://localhost:8080';
+    const apiOrigin = new URL(host, global.location.href).origin;
+
+    const getResponseMsg = function(xhr, fallback) {
+      if (xhr && xhr.responseJSON && typeof xhr.responseJSON.msg !== 'undefined') {
+        return xhr.responseJSON.msg;
+      }
+
+      return fallback || '请求失败，请稍后重试';
+    }
+
+    const isAllowedApiUrl = function(url) {
+      try {
+        return new URL(url, global.location.href).origin === apiOrigin;
+      } catch (e) {
+        return false;
+      }
+    }
 
     $.ajaxSetup({
       type: 'POST',
@@ -13,21 +30,21 @@
           layer.closeAll();
           layer.open({
             title: '未登录',
-            content: xhr.responseJSON.msg,
+            content: getResponseMsg(xhr, '登录状态已失效'),
             end: function () {
               top.parent.location.href = parent.location.protocol + '/login.html';
             },
           });
         },
         403: function(xhr) {
-          layer.open({title: '警告', content: xhr.responseJSON.msg});
+          layer.open({title: '警告', content: getResponseMsg(xhr, '无权限执行当前操作')});
         },
         500: function(xhr) {
-          layer.open({title: '错误', content: xhr.responseJSON.msg});
+          layer.open({title: '错误', content: getResponseMsg(xhr, '服务异常，请稍后重试')});
         }
       },
-      beforeSend: function(xhr) {
-        if (MyCuckoo.getSession('token')) {
+      beforeSend: function(xhr, settings) {
+        if (MyCuckoo.getSession('token') && settings && settings.url && isAllowedApiUrl(settings.url)) {
           xhr.setRequestHeader('Authorization', 'Bearer ' + MyCuckoo.getSession('token'));
         }
       },
@@ -39,12 +56,13 @@
     const placeholder = /\{(\w+)\}/;
     const resolvePlaceholder = function(uri, uriVariables) {
       let path = uri;
-      for (let variable in uriVariables) {
+      const variables = uriVariables || {};
+      Object.keys(variables).forEach(function(variable) {
         let witch = typeof variable;
         if ('string' == witch || 'number' == witch) {
-          path = path.replace('{' + variable + '}', uriVariables[variable]);
+          path = path.replace('{' + variable + '}', encodeURIComponent(String(variables[variable])));
         }
-      }
+      });
 
       return path;
     }
