@@ -85,10 +85,10 @@
 <script type="text/javascript" src="static/layui/2.13.5/layui.js" charset="UTF-8"></script>
 <script type="text/javascript" src="static/bpmn/18.0.0/bpmn-modeler.development.js" charset="UTF-8"></script>
 <script type="text/javascript" src="static/bpmn/modeler-plugins.js" charset="UTF-8"></script>
-<script type="text/javascript">
-  layui.config({
-    base: 'static/extend/',
-    version: '101100'
+  <script type="text/javascript">
+    layui.config({
+      base: 'static/extend/',
+      version: '101100'
   });
 
   layui.use(['jquery'], function() {
@@ -109,7 +109,9 @@
     $('.layui-btn-container').find('a.layui-btn:not([lay-submit])').on('click', function() {
       var event = $(this).data('event');
       if (event === 'create') {
-        modeler.createDiagram();
+        $.get('./modeler-default.bpmn', function (xml) {
+          openDiagram(xml)
+        }, 'text');
       } else if (event === 'view') {
         $.get('./modeler-demo.bpmn', function (xml) {
           openDiagram(xml)
