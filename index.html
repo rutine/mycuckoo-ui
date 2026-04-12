@@ -119,8 +119,8 @@
         });
 
         $('img#filePicker').siblings('span').text(menuMgr.user.userName);
-        if(menuMgr.user.userPhotoUrl) {
-          $('img#filePicker').attr('src', menuMgr.user.userPhotoUrl)
+        if(menuMgr.user.photoUrl) {
+          $('img#filePicker').attr('src', menuMgr.user.photoUrl)
         }
 
         //更换头像
@@ -128,10 +128,10 @@
           elem: '#filePicker',
           url: MyCuckoo.api.fileMgr.url,
           accept: 'images',
-          data: {business: 'photo'},
+          data: {type: 'PHOTO'},
           done: function(res, index, upload) {
             if(res.code == 0) { //上传成功
-              $.put(MyCuckoo.api.userMgr.updatePhoto, {photo: res.data.url}).then(function(json) {
+              $.put(MyCuckoo.api.userMgr.updatePhoto, {fileId: res.data.id}).then(function(json) {
                 $('img#filePicker').attr('src', res.data.url);
                 MyCuckoo.msg({ msg: '成功更换头像' });
               });
@@ -156,7 +156,7 @@
       },
       //查看用户信息
       userInfo: function(el) {
-        MyCuckoo.dialog('用户信息', './view/uum/userMgrForm.html?action=view&id=' + this.user.id, 480, 450);
+        MyCuckoo.dialog('用户信息', './view/uum/userMgrForm.html?action=res:userMgr:view&opt=34&id=' + this.user.id, 480, 450);
       },
       //注销登录
       logout: function(el) {

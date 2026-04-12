@@ -87,7 +87,7 @@
       $form = $('form[name=editForm]');
 
     let $fileList = $('#ID_fileList');
-    let accessories = [];
+    let attachments = [];
 
     const FormMgr = function () {
       let that = this;
@@ -105,17 +105,17 @@
         $.request(operatorMap['res:afficheMgr:view'], queryObj).then(function (json) {
           form.val('editForm', json.data);
 
-          json.data.accessories.forEach(function(item, index) {
+          json.data.attachments.forEach(function(item, index) {
             let tr = $([
               '<tr>',
               '<td>',
-              ' <input type="hidden" name="accessoryName" value="' + item.accessoryName + '">',
-              ' <a href="' + MyCuckoo.api.fileMgr.url + '?business=document&filename=' + item.accessoryName + '" target="_blank">',
-              ' <img src="' + that.getThumbnail(item.accessoryName) + '">&nbsp;&nbsp;',
-              ' <span>' + item.accessoryName + '</span>',
+              ' <input type="hidden" name="filename" value="' + item.name + '">',
+              ' <a href="' + MyCuckoo.api.fileMgr.url + '?isOnline=Y&fileId=' + item.id + '" target="_blank">',
+              ' <img src="' + that.getThumbnail(item.name) + '">&nbsp;&nbsp;',
+              ' <span>' + item.name + '</span>',
               ' </a>',
               '</td>',
-              '<td></td>',
+              '<td>' + (item.size / 1014).toFixed(1) + 'kb</td>',
               '<td></td>',
               (action.code === 'res:afficheMgr:view') ? '<td></td>' : '<td><button class="layui-btn layui-btn-xs layui-btn-danger btn-delete">删除</button></td>',
               '</tr>'
@@ -123,7 +123,7 @@
 
             //删除
             tr.find('.btn-delete').on('click', function () {
-              that.deleteAccessory(item.accessoryId);
+              that.deleteAttachment(queryObj.id, item.id);
               tr.remove();
             });
 
@@ -148,7 +148,7 @@
       //监听提交
       form.on('submit', function(data) {
         let event = $(this).data('event');
-        that.on({event: event, data: $.extend({accessories: accessories}, data.field)});
+        that.on({event: event, data: $.extend({attachments: attachments}, data.field)});
 
         return false;
       });
@@ -172,7 +172,7 @@
           accept: 'file',
           multiple: true,
           auto: false,
-          data: {business: 'document'},
+          data: {type: 'AFFICHE'},
           bindAction: '#ID_uploadStart',
           choose: function(obj) {
             let files = this.files = obj.pushFile(); //将每次选择的文件追加到文件队列
@@ -211,7 +211,7 @@
           },
           done: function(res, index, upload) {
             if(res.code == 0) { //上传成功
-              accessories.push({accessoryName: this.files[index].name});
+              attachments.push({ ...res.data });
 
               let tr = $fileList.find('tr#ID_upload_'+ index),
                 tds = tr.children();
@@ -266,8 +266,8 @@
         });
       },
       // 删除附件
-      deleteAccessory: function(accessoryId) {
-        $.request(operatorMap['res:afficheMgr:deleteAccessory'], {filenameOrId: accessoryId}).then(json => {
+      deleteAttachment: function(id, fileId) {
+        $.request(operatorMap['res:afficheMgr:deleteAttachment'], {id: id, title: fileId}).then(json => {
           MyCuckoo.msg({msg: json.msg});
         });
       },

@@ -23,7 +23,7 @@
       <div class="layui-inline">
         <div class="layui-input-block">
           <div class="layui-upload">
-            <input type="hidden" name="photoUrl" />
+            <input type="hidden" name="photoFileId" />
             <div class="layui-upload-list">
               <img id="ID_filePicker" style="max-height: 120px; max-width: 120px;" class="layui-upload-img" src="../../static/images/form/blank_userphoto.gif" title="用户照片" />
             </div>
@@ -159,11 +159,11 @@
         elem: '#ID_filePicker',
         url: MyCuckoo.api.fileMgr.url,
         accept: 'images',
-        data: {business: 'photo'},
+        data: {type: 'PHOTO'},
         done: function(res, index, upload) {
           if(res.code == 0) { //上传成功
             $form.find('img#ID_filePicker').attr('src', res.data.url);
-            $form.find('input[name=photoUrl]').val(res.data.url);
+            $form.find('input[name=photoFileId]').val(res.data.id);
             return;
           }
           this.error(index, upload);

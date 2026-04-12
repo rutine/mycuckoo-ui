@@ -6,6 +6,12 @@
   <link type="image/x-icon" href="../../static/images/favicon.ico" rel="shortcut icon" />
   <link type="text/css" href="../../static/layui/2.13.5/css/layui.css" rel="stylesheet" />
   <link type="text/css" href="../../static/css/mycuckoo.css" rel="stylesheet" />
+  <style>
+    .radio-stack .layui-form-radio {
+      display: block;
+      margin: 6px 0;
+    }
+  </style>
 </head>
 <body>
 <div class="mycuckoo-site-nav">
@@ -49,7 +55,7 @@
             <div class="layui-form-item">
               <label class="layui-form-label">管理员列表</label>
               <div class="layui-input-block">
-                <select name="systemMgr"></select>
+                <select name="adminUsers"></select>
               </div>
             </div>
 
@@ -77,11 +83,11 @@
           <form class="layui-form" lay-filter="editForm">
             <div class="layui-form-item">
               <label class="layui-form-label">日志级别</label>
-              <div class="layui-input-block">
-                <input type="radio" name="loggerLevel" value="1" title="增、删、改">
-                <input type="radio" name="loggerLevel" value="2" title="删、改、其它">
-                <input type="radio" name="loggerLevel" value="3" title="删、其它">
-                <input type="radio" name="loggerLevel" value="0" title="关闭">
+              <div class="layui-input-block radio-stack">
+                <input type="radio" name="logLevel" value="1" title="增、删、改">
+                <input type="radio" name="logLevel" value="2" title="删、改、其它">
+                <input type="radio" name="logLevel" value="3" title="删、其它">
+                <input type="radio" name="logLevel" value="0" title="关闭">
               </div>
             </div>
 
@@ -104,7 +110,7 @@
             <div class="layui-form-item">
               <label class="layui-form-label">保留天数</label>
               <div class="layui-input-block">
-                <select name="logRecordKeepDays">
+                <select name="logRetentionDays">
                   <option value="-1">不设置</option>
                   <option value="3">3天</option>
                   <option value="7">7天</option>
@@ -138,24 +144,50 @@
         <div class="layui-card-body">
           <form class="layui-form" lay-filter="editForm">
             <div class="layui-form-item">
-              <label class="layui-form-label">监控设置</label>
+              <label class="layui-form-label">监控类型</label>
               <div class="layui-input-block">
-                <b>windows tomcat监控,在catalina.bat加入:</b><br>
-                <code>set JAVA_HOME=C:\Program Files\Java\jdk1.6.0_18</code><br>
-                <code>set PATH=%PATH%;%JAVA_HOME%\bin</code><br>
-                <code>set CLASSPATH=%CLASSPATH%;%JAVA_HOME%</code><br>
-                <code>set JAVA_OPTS=%JAVA_OPTS%</code><br>
-                <code>-Dcom.sun.management.jmxremote</code><br>
-                <code>-Dsun.io.useCanonCaches=false</code><br>
-                <code>-Dcom/sun/management/jmxremote/port=9999</code><br>
-                <code>-Dcom/sun/management/jmxremote/ssl=false</code><br>
-                <code>-Dcom/sun/management/jmxremote/authenticate=false</code><br>
-                <code>-Xms512m -Xmx512m -XX:MaxNewSize=256m -XX:MaxPermSize=256m</code>
+                <input type="text" name="defaultJmxServer" class="layui-input" maxlength="20" />
+              </div>
+            </div>
+
+            <div class="layui-form-item">
+              <label class="layui-form-label">JMX地址</label>
+              <div class="layui-input-block">
+                <input type="text" name="tomcatJmxUrl" class="layui-input" maxlength="200" />
+              </div>
+            </div>
+
+            <div class="layui-form-item">
+              <label class="layui-form-label">对象名称</label>
+              <div class="layui-input-block">
+                <input type="text" name="tomcatMbeanName" class="layui-input" maxlength="200" />
+              </div>
+            </div>
+
+            <div class="layui-form-item">
+              <label class="layui-form-label">监控说明</label>
+              <div class="layui-input-block">
+                <div class="layui-font-12">
+                  <b>windows tomcat监控(Java 8+), 在catalina.bat加入:</b><br>
+                  <code>set JAVA_HOME=你的JDK目录</code><br>
+                  <code>set PATH=%PATH%;%JAVA_HOME%\bin</code><br>
+                  <code>set JAVA_OPTS=%JAVA_OPTS% -Dcom.sun.management.jmxremote</code><br>
+                  <code>set JAVA_OPTS=%JAVA_OPTS% -Dcom.sun.management.jmxremote.port=9999</code><br>
+                  <code>set JAVA_OPTS=%JAVA_OPTS% -Dcom.sun.management.jmxremote.rmi.port=9999</code><br>
+                  <code>set JAVA_OPTS=%JAVA_OPTS% -Djava.rmi.server.hostname=127.0.0.1</code><br>
+                  <code>set JAVA_OPTS=%JAVA_OPTS% -Dcom.sun.management.jmxremote.ssl=false</code><br>
+                  <code>set JAVA_OPTS=%JAVA_OPTS% -Dcom.sun.management.jmxremote.authenticate=false</code><br>
+                  <code>set JAVA_OPTS=%JAVA_OPTS% -Xms512m -Xmx512m -XX:MetaspaceSize=128m -XX:MaxMetaspaceSize=256m</code><br>
+                  <span>生产环境建议开启认证与SSL, 不建议直接暴露未鉴权JMX端口。</span>
+                </div>
               </div>
             </div>
 
             <div class="layui-form-item">
               <div class="layui-input-block">
+                <a href="javascript:" class="layui-btn layui-btn-sm" data-event="modify" lay-submit="submit">设置
+                  <i class="layui-icon glyphicon-hdd"></i>
+                </a>
                 <a href="javascript:" class="layui-btn layui-btn-sm" data-event="startJConsole" lay-submit="submit">启动
                   <i class="layui-icon glyphicon-hdd"></i>
                 </a>
@@ -172,10 +204,10 @@
           <form class="layui-form" lay-filter="editForm">
             <div class="layui-form-item">
               <label class="layui-form-label">行权限级别</label>
-              <div class="layui-input-block">
-                <input type="radio" name="rowPrivilegeLevel" value="org" title="机构">
-                <input type="radio" name="rowPrivilegeLevel" value="rol" title="角色">
-                <input type="radio" name="rowPrivilegeLevel" value="usr" title="用户">
+              <div class="layui-input-block radio-stack">
+                <input type="radio" name="defaultRowPrivilegeLevel" value="org" title="机构">
+                <input type="radio" name="defaultRowPrivilegeLevel" value="rol" title="角色">
+                <input type="radio" name="defaultRowPrivilegeLevel" value="usr" title="用户">
               </div>
             </div>
 
@@ -228,14 +260,14 @@
         $.request(action).then(json => {
           form.val('editForm', json.data);
 
-          let $select = $main.find('select[name=systemMgr]');
+          let $select = $main.find('select[name=adminUsers]');
           $select.empty();
 
-          for (let i = 0; i < json.data.systemMgr.length; i++) {
-            let item = json.data.systemMgr[i];
+          for (let i = 0; i < json.data.adminUsers.length; i++) {
+            let item = json.data.adminUsers[i];
             $select.append('<option value="' + item + '">' + item + '</option>');
           }
-          form.render('select');
+          form.render();
         });
       },
 
