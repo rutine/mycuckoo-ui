@@ -1,0 +1,72 @@
+{
+  "name": "TaskExt",
+  "prefix": "taskExt",
+  "uri": "http://mycuckoo.com",
+  "xml": {
+    "tagAlias": "lowerCase"
+  },
+  "associations": [],
+  "types": [
+    {
+      "name": "Parameters",
+      "superClass": [ "Element" ],
+      "properties": [
+        {
+          "name": "values",
+          "isMany": true,
+          "type": "Parameter"
+        }
+      ]
+    },
+    {
+      "name": "Parameter",
+      "properties": [
+        {
+          "name": "name",
+          "isAttr": true,
+          "type": "String"
+        },
+        {
+          "name": "value",
+          "isAttr": true,
+          "type": "String"
+        },
+        {
+          "name": "extensions",
+          "type": "Extensions"
+        }
+      ]
+    },
+    {
+      "name": "Extensions",
+      "superClass": [ "Element" ],
+      "properties": [
+        {
+          "name": "extensions",
+          "isMany": true,
+          "type": "Extension"
+        }
+      ]
+    },
+    {
+      "name": "Extension",
+      "properties": [
+        {
+          "name": "key",
+          "isAttr": true,
+          "type": "String"
+        }
+      ]
+    },
+    {
+      "name": "userTask",
+      "properties": [
+        {
+          "name": "assignee",
+          "isAttr": true,
+          "type": "String"
+        }
+      ]
+    }
+  ]
+}

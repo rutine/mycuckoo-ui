@@ -1,0 +1,46 @@
+{
+  "name": "mycuckoo-ui",
+  "version": "4.2.0",
+  "description": "",
+  "main": "lib/index.js",
+  "files": [
+    "dist",
+    "lib"
+  ],
+  "scripts": {
+    "build": "rollup -c",
+    "check:flowable": "node scripts/check-flowable-bpmn.js modeler-demo.bpmn",
+    "view:safe": "node scripts/view-file-safe.js"
+  },
+  "engines": {
+    "node": "*"
+  },
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/rutine/mycuckoo-ui"
+  },
+  "keywords": [
+    "mycuckoo"
+  ],
+  "devDependencies": {
+    "@babel/core": "^7.26.0",
+    "@babel/preset-env": "^7.26.0",
+    "@rollup/plugin-commonjs": "^28.0.0",
+    "@rollup/plugin-json": "^6.1.0",
+    "@rollup/plugin-node-resolve": "^15.2.3",
+    "@rollup/plugin-replace": "^6.0.0",
+    "@rollup/plugin-terser": "^0.4.4",
+    "cross-env": "^7.0.3",
+    "rollup": "^4.28.1"
+  },
+  "dependencies": {
+    "@bpmn-io/properties-panel": "^3.25.1",
+    "bpmn-js": "^18.1.1",
+    "bpmn-js-properties-panel": "^5.28.0",
+    "diagram-js": "^15.2.3",
+    "htm": "^3.1.1",
+    "inherits-browser": "^0.1.0",
+    "ids": "^1.0.0",
+    "min-dash": "^4.1.1"
+  }
+}

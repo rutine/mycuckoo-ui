@@ -1,0 +1,209 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<definitions xmlns="http://www.omg.org/spec/BPMN/20100524/MODEL"
+             xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+             xmlns:xsd="http://www.w3.org/2001/XMLSchema"
+             xmlns:flowable="http://flowable.org/bpmn"
+             xmlns:bpmndi="http://www.omg.org/spec/BPMN/20100524/DI"
+             xmlns:omgdc="http://www.omg.org/spec/DD/20100524/DC"
+             xmlns:omgdi="http://www.omg.org/spec/DD/20100524/DI"
+             typeLanguage="http://www.w3.org/2001/XMLSchema" expressionLanguage="http://www.w3.org/1999/XPath" targetNamespace="http://www.flowable.org/test">
+  <process id="test1001" name="测试审批" isExecutable="true">
+    <startEvent id="start"></startEvent>
+    <endEvent id="end"></endEvent>
+    <userTask id="resubmit" name="重新申请" flowable:assignee="${initiator}" flowable:formKey="/home">
+      <extensionElements>
+        <flowable:taskListener event="assignment" expression="${auditFlowService.beforeTask(execution)}"></flowable:taskListener>
+      </extensionElements>
+    </userTask>
+    <exclusiveGateway id="shortOutGateway_0" name="第1级审批人判断"></exclusiveGateway>
+    <userTask id="task_0" name="第1级审批(串行会签)" flowable:assignee="${assignee}">
+      <extensionElements>
+        <flowable:taskListener event="assignment" expression="${auditFlowService.beforeTask(execution)}"></flowable:taskListener>
+        <flowable:taskListener event="all" expression="${auditFlowService.on('test', task)}"></flowable:taskListener>
+      </extensionElements>
+      <multiInstanceLoopCharacteristics isSequential="true" flowable:collection="assigneeList_0" flowable:elementVariable="assignee">
+        <completionCondition>${auditFlowService.hasComplete(execution)}</completionCondition>
+      </multiInstanceLoopCharacteristics>
+    </userTask>
+    <sequenceFlow id="shortOutGateway_0_to_task_0" name="存在审批人" sourceRef="shortOutGateway_0" targetRef="task_0">
+      <conditionExpression xsi:type="tFormalExpression"><![CDATA[${assigneeList_0 != null && assigneeList_0.size() > 0}]]></conditionExpression>
+    </sequenceFlow>
+    <exclusiveGateway id="auditGateway_0" name="第1级审批结果判断"></exclusiveGateway>
+    <sequenceFlow id="task_0_to_auditGateway_0" name="提交审批结果" sourceRef="task_0" targetRef="auditGateway_0"></sequenceFlow>
+    <sequenceFlow id="auditGateway_0_to_resubmit" name="驳回重提" sourceRef="auditGateway_0" targetRef="resubmit">
+      <conditionExpression xsi:type="tFormalExpression"><![CDATA[${!auditFlowService.hasPass(execution)}]]></conditionExpression>
+    </sequenceFlow>
+    <exclusiveGateway id="shortOutGateway_1" name="第2级审批人判断"></exclusiveGateway>
+    <userTask id="task_1" name="第2级审批(串行会签)" flowable:assignee="${assignee}">
+      <extensionElements>
+        <flowable:taskListener event="assignment" expression="${auditFlowService.beforeTask(execution)}"></flowable:taskListener>
+        <flowable:taskListener event="all" expression="${auditFlowService.on('test', task)}"></flowable:taskListener>
+      </extensionElements>
+      <multiInstanceLoopCharacteristics isSequential="true" flowable:collection="assigneeList_1" flowable:elementVariable="assignee">
+        <completionCondition>${auditFlowService.hasComplete(execution)}</completionCondition>
+      </multiInstanceLoopCharacteristics>
+    </userTask>
+    <sequenceFlow id="shortOutGateway_1_to_task_1" name="存在审批人" sourceRef="shortOutGateway_1" targetRef="task_1">
+      <conditionExpression xsi:type="tFormalExpression"><![CDATA[${assigneeList_1 != null && assigneeList_1.size() > 0}]]></conditionExpression>
+    </sequenceFlow>
+    <exclusiveGateway id="auditGateway_1" name="第2级审批结果判断"></exclusiveGateway>
+    <sequenceFlow id="task_1_to_auditGateway_1" name="提交审批结果" sourceRef="task_1" targetRef="auditGateway_1"></sequenceFlow>
+    <sequenceFlow id="auditGateway_1_to_resubmit" name="驳回重提" sourceRef="auditGateway_1" targetRef="resubmit">
+      <conditionExpression xsi:type="tFormalExpression"><![CDATA[${!auditFlowService.hasPass(execution)}]]></conditionExpression>
+    </sequenceFlow>
+    <exclusiveGateway id="shortOutGateway_2" name="第3级审批人判断"></exclusiveGateway>
+    <userTask id="task_2" name="第3级审批(串行会签)" flowable:assignee="${assignee}">
+      <extensionElements>
+        <flowable:taskListener event="assignment" expression="${auditFlowService.beforeTask(execution)}"></flowable:taskListener>
+        <flowable:taskListener event="all" expression="${auditFlowService.on('test', task)}"></flowable:taskListener>
+      </extensionElements>
+      <multiInstanceLoopCharacteristics isSequential="true" flowable:collection="assigneeList_2" flowable:elementVariable="assignee">
+        <completionCondition>${auditFlowService.hasComplete(execution)}</completionCondition>
+      </multiInstanceLoopCharacteristics>
+    </userTask>
+    <sequenceFlow id="shortOutGateway_2_to_task_2" name="存在审批人" sourceRef="shortOutGateway_2" targetRef="task_2">
+      <conditionExpression xsi:type="tFormalExpression"><![CDATA[${assigneeList_2 != null && assigneeList_2.size() > 0}]]></conditionExpression>
+    </sequenceFlow>
+    <exclusiveGateway id="auditGateway_2" name="第3级审批结果判断"></exclusiveGateway>
+    <sequenceFlow id="task_2_to_auditGateway_2" name="提交审批结果" sourceRef="task_2" targetRef="auditGateway_2"></sequenceFlow>
+    <sequenceFlow id="auditGateway_2_to_resubmit" name="驳回重提" sourceRef="auditGateway_2" targetRef="resubmit">
+      <conditionExpression xsi:type="tFormalExpression"><![CDATA[${!auditFlowService.hasPass(execution)}]]></conditionExpression>
+    </sequenceFlow>
+    <sequenceFlow id="shortOutGateway_2_to_end" name="无人审批直接结束" sourceRef="shortOutGateway_2" targetRef="end">
+      <conditionExpression xsi:type="tFormalExpression"><![CDATA[${assigneeList_2 == null || assigneeList_2.size() == 0}]]></conditionExpression>
+    </sequenceFlow>
+    <sequenceFlow id="auditGateway_2_to_end" name="审批通过结束" sourceRef="auditGateway_2" targetRef="end">
+      <conditionExpression xsi:type="tFormalExpression"><![CDATA[${auditFlowService.hasPass(execution)}]]></conditionExpression>
+    </sequenceFlow>
+    <sequenceFlow id="shortOutGateway_1_to_shortOutGateway_2" name="无人审批跳过" sourceRef="shortOutGateway_1" targetRef="shortOutGateway_2">
+      <conditionExpression xsi:type="tFormalExpression"><![CDATA[${assigneeList_1 == null || assigneeList_1.size() == 0}]]></conditionExpression>
+    </sequenceFlow>
+    <sequenceFlow id="auditGateway_1_to_shortOutGateway_2" name="审批通过进入下一阶段" sourceRef="auditGateway_1" targetRef="shortOutGateway_2">
+      <conditionExpression xsi:type="tFormalExpression"><![CDATA[${auditFlowService.hasPass(execution)}]]></conditionExpression>
+    </sequenceFlow>
+    <sequenceFlow id="shortOutGateway_0_to_shortOutGateway_1" name="无人审批跳过" sourceRef="shortOutGateway_0" targetRef="shortOutGateway_1">
+      <conditionExpression xsi:type="tFormalExpression"><![CDATA[${assigneeList_0 == null || assigneeList_0.size() == 0}]]></conditionExpression>
+    </sequenceFlow>
+    <sequenceFlow id="auditGateway_0_to_shortOutGateway_1" name="审批通过进入下一阶段" sourceRef="auditGateway_0" targetRef="shortOutGateway_1">
+      <conditionExpression xsi:type="tFormalExpression"><![CDATA[${auditFlowService.hasPass(execution)}]]></conditionExpression>
+    </sequenceFlow>
+    <sequenceFlow id="start_to_shortOutGateway_0" name="进入审批" sourceRef="start" targetRef="shortOutGateway_0"></sequenceFlow>
+    <sequenceFlow id="resubmit_to_shortOutGateway_0" name="重新提交" sourceRef="resubmit" targetRef="shortOutGateway_0"></sequenceFlow>
+  </process>
+  <bpmndi:BPMNDiagram id="BPMNDiagram_test1001">
+    <bpmndi:BPMNPlane bpmnElement="test1001" id="BPMNPlane_test1001">
+      <bpmndi:BPMNShape bpmnElement="start" id="BPMNShape_start">
+        <omgdc:Bounds height="30.0" width="30.0" x="60.0" y="120.0"></omgdc:Bounds>
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape bpmnElement="resubmit" id="BPMNShape_resubmit">
+        <omgdc:Bounds height="120.0" width="80.0" x="180.0" y="220.0"></omgdc:Bounds>
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape bpmnElement="shortOutGateway_0" id="BPMNShape_shortOutGateway_0">
+        <omgdc:Bounds height="40.0" width="40.0" x="180.0" y="110.0"></omgdc:Bounds>
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape bpmnElement="task_0" id="BPMNShape_task_0">
+        <omgdc:Bounds height="120.0" width="80.0" x="270.0" y="90.0"></omgdc:Bounds>
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape bpmnElement="auditGateway_0" id="BPMNShape_auditGateway_0">
+        <omgdc:Bounds height="40.0" width="40.0" x="450.0" y="110.0"></omgdc:Bounds>
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape bpmnElement="shortOutGateway_1" id="BPMNShape_shortOutGateway_1">
+        <omgdc:Bounds height="40.0" width="40.0" x="540.0" y="110.0"></omgdc:Bounds>
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape bpmnElement="task_1" id="BPMNShape_task_1">
+        <omgdc:Bounds height="120.0" width="80.0" x="630.0" y="90.0"></omgdc:Bounds>
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape bpmnElement="auditGateway_1" id="BPMNShape_auditGateway_1">
+        <omgdc:Bounds height="40.0" width="40.0" x="810.0" y="110.0"></omgdc:Bounds>
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape bpmnElement="shortOutGateway_2" id="BPMNShape_shortOutGateway_2">
+        <omgdc:Bounds height="40.0" width="40.0" x="900.0" y="110.0"></omgdc:Bounds>
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape bpmnElement="task_2" id="BPMNShape_task_2">
+        <omgdc:Bounds height="120.0" width="80.0" x="990.0" y="90.0"></omgdc:Bounds>
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape bpmnElement="auditGateway_2" id="BPMNShape_auditGateway_2">
+        <omgdc:Bounds height="40.0" width="40.0" x="1170.0" y="110.0"></omgdc:Bounds>
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape bpmnElement="end" id="BPMNShape_end">
+        <omgdc:Bounds height="30.0" width="30.0" x="1350.0" y="115.0"></omgdc:Bounds>
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNEdge bpmnElement="shortOutGateway_0_to_task_0" id="BPMNEdge_shortOutGateway_0_to_task_0">
+        <omgdi:waypoint x="220.0" y="130.0"></omgdi:waypoint>
+        <omgdi:waypoint x="270.0" y="130.0"></omgdi:waypoint>
+      </bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge bpmnElement="task_0_to_auditGateway_0" id="BPMNEdge_task_0_to_auditGateway_0">
+        <omgdi:waypoint x="390.0" y="130.0"></omgdi:waypoint>
+        <omgdi:waypoint x="450.0" y="130.0"></omgdi:waypoint>
+      </bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge bpmnElement="shortOutGateway_1_to_task_1" id="BPMNEdge_shortOutGateway_1_to_task_1">
+        <omgdi:waypoint x="580.0" y="130.0"></omgdi:waypoint>
+        <omgdi:waypoint x="630.0" y="130.0"></omgdi:waypoint>
+      </bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge bpmnElement="task_1_to_auditGateway_1" id="BPMNEdge_task_1_to_auditGateway_1">
+        <omgdi:waypoint x="750.0" y="130.0"></omgdi:waypoint>
+        <omgdi:waypoint x="810.0" y="130.0"></omgdi:waypoint>
+      </bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge bpmnElement="shortOutGateway_2_to_task_2" id="BPMNEdge_shortOutGateway_2_to_task_2">
+        <omgdi:waypoint x="940.0" y="130.0"></omgdi:waypoint>
+        <omgdi:waypoint x="990.0" y="130.0"></omgdi:waypoint>
+      </bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge bpmnElement="task_2_to_auditGateway_2" id="BPMNEdge_task_2_to_auditGateway_2">
+        <omgdi:waypoint x="1110.0" y="130.0"></omgdi:waypoint>
+        <omgdi:waypoint x="1170.0" y="130.0"></omgdi:waypoint>
+      </bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge bpmnElement="start_to_shortOutGateway_0" id="BPMNEdge_start_to_shortOutGateway_0">
+        <omgdi:waypoint x="90.0" y="135.0"></omgdi:waypoint>
+        <omgdi:waypoint x="180.0" y="130.0"></omgdi:waypoint>
+      </bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge bpmnElement="resubmit_to_shortOutGateway_0" id="BPMNEdge_resubmit_to_shortOutGateway_0">
+        <omgdi:waypoint x="300.0" y="260.0"></omgdi:waypoint>
+        <omgdi:waypoint x="140.0" y="260.0"></omgdi:waypoint>
+        <omgdi:waypoint x="140.0" y="180.0"></omgdi:waypoint>
+        <omgdi:waypoint x="180.0" y="130.0"></omgdi:waypoint>
+      </bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge bpmnElement="shortOutGateway_0_to_shortOutGateway_1" id="BPMNEdge_shortOutGateway_0_to_shortOutGateway_1">
+        <omgdi:waypoint x="200.0" y="110.0"></omgdi:waypoint>
+        <omgdi:waypoint x="560.0" y="110.0"></omgdi:waypoint>
+      </bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge bpmnElement="auditGateway_0_to_shortOutGateway_1" id="BPMNEdge_auditGateway_0_to_shortOutGateway_1">
+        <omgdi:waypoint x="470.0" y="110.0"></omgdi:waypoint>
+        <omgdi:waypoint x="560.0" y="110.0"></omgdi:waypoint>
+      </bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge bpmnElement="auditGateway_0_to_resubmit" id="BPMNEdge_auditGateway_0_to_resubmit">
+        <omgdi:waypoint x="470.0" y="150.0"></omgdi:waypoint>
+        <omgdi:waypoint x="470.0" y="330.0"></omgdi:waypoint>
+        <omgdi:waypoint x="240.0" y="330.0"></omgdi:waypoint>
+        <omgdi:waypoint x="240.0" y="300.0"></omgdi:waypoint>
+      </bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge bpmnElement="shortOutGateway_1_to_shortOutGateway_2" id="BPMNEdge_shortOutGateway_1_to_shortOutGateway_2">
+        <omgdi:waypoint x="560.0" y="110.0"></omgdi:waypoint>
+        <omgdi:waypoint x="920.0" y="110.0"></omgdi:waypoint>
+      </bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge bpmnElement="auditGateway_1_to_shortOutGateway_2" id="BPMNEdge_auditGateway_1_to_shortOutGateway_2">
+        <omgdi:waypoint x="830.0" y="110.0"></omgdi:waypoint>
+        <omgdi:waypoint x="920.0" y="110.0"></omgdi:waypoint>
+      </bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge bpmnElement="auditGateway_1_to_resubmit" id="BPMNEdge_auditGateway_1_to_resubmit">
+        <omgdi:waypoint x="830.0" y="150.0"></omgdi:waypoint>
+        <omgdi:waypoint x="830.0" y="330.0"></omgdi:waypoint>
+        <omgdi:waypoint x="240.0" y="330.0"></omgdi:waypoint>
+        <omgdi:waypoint x="240.0" y="300.0"></omgdi:waypoint>
+      </bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge bpmnElement="shortOutGateway_2_to_end" id="BPMNEdge_shortOutGateway_2_to_end">
+        <omgdi:waypoint x="920.0" y="110.0"></omgdi:waypoint>
+        <omgdi:waypoint x="1350.0" y="130.0"></omgdi:waypoint>
+      </bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge bpmnElement="auditGateway_2_to_end" id="BPMNEdge_auditGateway_2_to_end">
+        <omgdi:waypoint x="1190.0" y="130.0"></omgdi:waypoint>
+        <omgdi:waypoint x="1350.0" y="130.0"></omgdi:waypoint>
+      </bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge bpmnElement="auditGateway_2_to_resubmit" id="BPMNEdge_auditGateway_2_to_resubmit">
+        <omgdi:waypoint x="1190.0" y="150.0"></omgdi:waypoint>
+        <omgdi:waypoint x="1190.0" y="330.0"></omgdi:waypoint>
+        <omgdi:waypoint x="240.0" y="330.0"></omgdi:waypoint>
+        <omgdi:waypoint x="240.0" y="300.0"></omgdi:waypoint>
+      </bpmndi:BPMNEdge>
+    </bpmndi:BPMNPlane>
+  </bpmndi:BPMNDiagram>
+</definitions>

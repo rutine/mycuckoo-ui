@@ -1,0 +1,22 @@
+{
+  "name": "SequenceFlowExt",
+  "prefix": "sequenceFlowExt",
+  "uri": "http://mycuckoo.com",
+  "xml": {
+    "tagAlias": "lowerCase"
+  },
+  "associations": [],
+  "types": [
+    {
+      "name": "BewitchedTask",
+      "extends": [ "bpmn:SequenceFlow" ],
+      "properties": [
+        {
+          "name": "expression",
+          "isAttr": true,
+          "type": "String"
+        }
+      ]
+    }
+  ]
+}

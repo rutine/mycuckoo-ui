@@ -1,0 +1,204 @@
+<!DOCTYPE html>
+<html>
+<head>
+  <meta http-equiv="Content-Type" content="text/html; charset=UTF-8">
+  <meta name="renderer" content="webkit|ie-comp|ie-stand">
+  <meta http-equiv="X-UA-Compatible" content="IE=edge,chrome=1">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, minimum-scale=1.0, maximum-scale=1.0, user-scalable=0">
+  <meta http-equiv="Cache-Control" content="no-siteapp" />
+  <title>工作流</title>
+
+  <link type="image/x-icon" href="static/images/favicon.ico" rel="shortcut icon">
+  <link type="text/css" href="static/layui/2.13.5/css/layui.css" rel="stylesheet" />
+
+  <link rel="stylesheet" href="static/bpmn/18.0.0/css/diagram-js.css" />
+  <link rel="stylesheet" href="static/bpmn/18.0.0/css/bpmn-js.css" />
+  <link rel="stylesheet" href="static/bpmn/18.0.0/css/bpmn.css" />
+  <link rel="stylesheet" href="static/bpmn/18.0.0/css/properties-panel.css" />
+ <!-- <link rel="stylesheet" href="https://unpkg.com/bpmn-js@18.0.0/dist/assets/bpmn-font/css/bpmn.css" />-->
+
+  <style type="text/css">
+    html, body, .mycuckoo-main {
+      height: 100%;
+      margin: 0;
+    }
+
+    .mycuckoo-main {
+      overflow: hidden;
+    }
+
+    .mycuckoo-main > .layui-row:last-child {
+      height: calc(100% - 38px);
+    }
+
+    .modeler-pane,
+    #ID_modeler_right {
+      height: 100%;
+    }
+
+    /* app.css */
+    .bpmn-icon-task.red {
+      color: #cc0000 !important;
+    }
+
+    /* app.css */
+    .icon-custom { /* 定义一个公共的类名 */
+      border-radius: 50%;
+      background-size: 65%;
+      background-repeat: no-repeat;
+      background-position: center;
+    }
+
+    .icon-custom.cuckoo-task { /* 加上背景图 */
+      background-image: url('https://hexo-blog-1256114407.cos.ap-shenzhen-fsi.myqcloud.com/rules.png');
+    }
+  </style>
+</head>
+<body>
+<div class="mycuckoo-main">
+  <div class="layui-row">
+    <div class="layui-col-lg9">
+      <div class="layui-btn-container">
+        <a href="javascript: " class="layui-btn layui-btn-xs layui-bg-gray" data-event="create">
+          <i class="layui-icon layui-icon-addition"></i> 新建设计
+        </a>
+        <a href="javascript: " class="layui-btn layui-btn-xs layui-bg-gray" data-event="view">
+          <i class="layui-icon layui-icon-addition"></i> 预览 Demo
+        </a>
+        <a href="javascript: " class="layui-btn layui-btn-xs layui-bg-gray layui-hide" data-event="diagram">
+          <i class="layui-icon layui-icon-file"></i> 下载 BPMN
+        </a>
+        <a href="javascript: " class="layui-btn layui-btn-xs layui-bg-gray layui-hide" data-event="svg">
+          <i class="layui-icon layui-icon-file-b"></i> 下载 SVG
+        </a>
+      </div>
+    </div>
+    <div class="layui-col-lg3"></div>
+  </div>
+
+  <div class="layui-row">
+    <div id="ID_modeler_pane" class="layui-col-lg9 layui-col-md8 layui-panel modeler-pane"></div>
+    <div id="ID_modeler_right" class="layui-col-lg3 layui-col-md4"></div>
+  </div>
+
+</div>
+<script type="text/javascript" src="static/layui/2.13.5/layui.js" charset="UTF-8"></script>
+<script type="text/javascript" src="static/bpmn/18.0.0/bpmn-modeler.development.js" charset="UTF-8"></script>
+<script type="text/javascript" src="static/bpmn/modeler-plugins.js" charset="UTF-8"></script>
+<script type="text/javascript">
+  layui.config({
+    base: 'static/extend/',
+    version: '101100'
+  });
+
+  layui.use(['jquery'], function() {
+    var $ = layui.jquery;
+    var modeler = new BpmnJS({
+      container: '#ID_modeler_pane',
+      propertiesPanel: {
+        parent: '#ID_modeler_right'
+      },
+      height: '100%',
+      additionalModules: [
+        ...ModelerPlugins.modules
+      ],
+      moddleExtensions: ModelerPlugins.moddles
+    });
+
+    // 操作按钮触发事件
+    $('.layui-btn-container').find('a.layui-btn:not([lay-submit])').on('click', function() {
+      var event = $(this).data('event');
+      if (event === 'create') {
+        modeler.createDiagram();
+      } else if (event === 'view') {
+        $.get('./modeler-demo.bpmn', function (xml) {
+          openDiagram(xml)
+        }, 'text');
+      } else if (event === 'diagram') {
+
+      } else if (event === 'svg') {
+
+      }
+    });
+
+    async function openDiagram(xml) {
+      try {
+        await modeler.importXML(xml);
+
+        // access modeler components
+        var canvas = modeler.get('canvas');
+        var overlays = modeler.get('overlays');
+
+        // zoom to fit full viewport
+        // canvas.zoom('fit-viewport');
+
+        // // attach an overlay to a node
+        // overlays.add('SCAN_OK', 'note', {
+        //   position: {
+        //     bottom: 0,
+        //     right: 0
+        //   },
+        //   html: '<div class="diagram-note">Mixed up the labels?</div>'
+        // });
+
+        // // add marker
+        // canvas.addMarker('SCAN_OK', 'needs-discussion');
+      } catch (err) {
+        console.error(err);
+      }
+    }
+
+    function setEncoded(link, name, data, type) {
+      if (data) {
+        var encodedData = encodeURIComponent(data);
+        link.removeClass('layui-hide').attr({ 'href': 'data:' + type + ';charset=UTF-8,' + encodedData, 'download': name });
+      } else {
+        console.log(link);
+        link.addClass('layui-hide');
+      }
+    }
+
+    var exportFiles = debounce(async function() {
+      let $svg = $('.layui-btn-container a[data-event="svg"]');
+      let $diagram = $('.layui-btn-container a[data-event="diagram"]');
+      try {
+        const { svg } = await modeler.saveSVG();
+        setEncoded($svg, 'diagram.svg', svg, 'image/svg+xml');
+      } catch (err) {
+        console.error('Error happened saving SVG: ', err);
+        setEncoded($svg, 'diagram.svg', null, 'image/svg+xml');
+      }
+
+      try {
+        const { xml } = await modeler.saveXML({ format: true });
+        // 保留 CDATA 结构
+        let xml2 = xml.replace(/<!\[CDATA\[(.*?)\]\]>/gs, (match, p1) => {
+          return `<![CDATA[${p1.replace(/]]>/g, ']]]]><![CDATA[>')}]]>`;
+        });
+
+        setEncoded($diagram, 'diagram.bpmn', xml2, 'application/bpmn20-xml');
+      } catch (err) {
+        console.error('Error happened saving diagram: ', err);
+        setEncoded($diagram, 'diagram.bpmn', null, 'application/bpmn20-xml');
+      }
+    }, 500);
+
+    modeler.on('commandStack.changed', exportFiles);
+
+    function debounce(fn, timeout) {
+      var timer;
+
+      return function() {
+        if (timer) {
+          clearTimeout(timer);
+        }
+
+        timer = setTimeout(fn, timeout);
+      };
+    }
+
+    // end
+  });
+</script>
+</body>
+</html>
