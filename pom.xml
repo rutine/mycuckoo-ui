@@ -25,6 +25,10 @@
             </resource>
             <resource>
                 <directory>static</directory>
+                <targetPath>META-INF/resources/static</targetPath>
+            </resource>
+            <resource>
+                <directory>static</directory>
                 <targetPath>META-INF/resources/webjars/static</targetPath>
             </resource>
             <resource>
