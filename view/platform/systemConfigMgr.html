@@ -7,6 +7,22 @@
   <link type="text/css" href="../../static/layui/2.13.5/css/layui.css" rel="stylesheet" />
   <link type="text/css" href="../../static/css/mycuckoo.css" rel="stylesheet" />
   <style>
+    html, body {
+      height: 100%;
+      overflow: hidden;
+    }
+
+    body {
+      margin: 0;
+    }
+
+    .mycuckoo-main {
+      height: 100%;
+      box-sizing: border-box;
+      overflow: hidden;
+    }
+  </style>
+  <style>
     .radio-stack .layui-form-radio {
       display: block;
       margin: 6px 0;
@@ -15,11 +31,6 @@
 </head>
 <body>
 <div class="mycuckoo-site-nav">
-  <span class="right">
-    <a class="layui-btn layui-btn-sm" href="javascript:location.replace(location.href);" title="刷新">
-      <i class="layui-icon layui-icon-refresh"></i>
-    </a>
-  </span>
 </div>
 
 <div class="mycuckoo-main" style="overflow: auto">
