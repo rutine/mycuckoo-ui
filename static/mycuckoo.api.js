@@ -23,7 +23,7 @@
     $.ajaxSetup({
       type: 'POST',
       //contentType: 'application/json',
-      dataType: 'json',
+      // dataType: 'json',
       xhrFields: { withCredentials: true },
       statusCode: {
         401: function(xhr) {

@@ -1,7 +1,7 @@
 (function(global) {
   layui.config({
     base: '../../static/extend/',
-    version: '4.1.1'
+    version: '5.0.0'
   });
 
   layui.use(['jquery', 'layer'], function() {

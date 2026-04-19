@@ -1,12 +1,12 @@
 import {assign, every, forEach, isArray} from 'min-dash';
 
-import {is} from 'bpmn/lib/util/ModelUtil';
+import {is} from 'bpmn-js/lib/util/ModelUtil';
 
-import {isEventSubProcess, isExpanded, isHorizontal} from 'bpmn/lib/util/DiUtil';
+import {isEventSubProcess, isExpanded, isHorizontal} from 'bpmn-js/lib/util/DiUtil';
 
-import {isAny} from 'bpmn/lib/features/modeling/util/ModelingUtil';
+import {isAny} from 'bpmn-js/lib/features/modeling/util/ModelingUtil';
 
-import {getChildLanes} from 'bpmn/lib/features/modeling/util/LaneUtil';
+import {getChildLanes} from 'bpmn-js/lib/features/modeling/util/LaneUtil';
 
 import {hasPrimaryModifier} from 'diagram-js/lib/util/Mouse';
 
@@ -419,8 +419,8 @@ ContextPadProvider.prototype.getContextPadEntries = function(element) {
           translate('Append gateway')
         ),
         'append.append-task': appendAction(
-          'bpmn:Task',
-          'bpmn-icon-task',
+          'bpmn:UserTask',
+          'bpmn-icon-user',
           translate('Append task')
         ),
         // 'append.intermediate-event': appendAction(

@@ -14,7 +14,7 @@
   <link rel="stylesheet" href="static/bpmn/18.0.0/css/diagram-js.css" />
   <link rel="stylesheet" href="static/bpmn/18.0.0/css/bpmn-js.css" />
   <link rel="stylesheet" href="static/bpmn/18.0.0/css/bpmn.css" />
-  <link rel="stylesheet" href="static/bpmn/18.0.0/css/properties-panel.css" />
+  <link rel="stylesheet" href="static/css/modeler-layui-panel.css?v=20260418-0830" />
  <!-- <link rel="stylesheet" href="https://unpkg.com/bpmn-js@18.0.0/dist/assets/bpmn-font/css/bpmn.css" />-->
 
   <style type="text/css">
@@ -23,17 +23,37 @@
       margin: 0;
     }
 
-    .mycuckoo-main {
-      overflow: hidden;
-    }
-
     .mycuckoo-main > .layui-row:last-child {
       height: calc(100% - 38px);
     }
 
-    .modeler-pane,
-    #ID_modeler_right {
+    .modeler-workspace {
+      height: calc(100% - 38px);
+    }
+
+    .modeler-toolbar {
+      display: flex;
+      align-items: center;
+      gap: 8px;
+      flex-wrap: wrap;
+      padding: 4px 0;
+    }
+
+    .modeler-toolbar .toolbar-spacer {
+      flex: 1 1 auto;
+    }
+
+    .modeler-toolbar .toolbar-api-input {
+      min-width: 260px;
+      max-width: 460px;
+    }
+
+    .modeler-pane, #ID_modeler_right {
       height: 100%;
+    }
+
+    .modeler-pane {
+      position: relative;
     }
 
     /* app.css */
@@ -58,13 +78,20 @@
 <div class="mycuckoo-main">
   <div class="layui-row">
     <div class="layui-col-lg9">
-      <div class="layui-btn-container">
+      <div class="layui-btn-container modeler-toolbar">
         <a href="javascript: " class="layui-btn layui-btn-xs layui-bg-gray" data-event="create">
           <i class="layui-icon layui-icon-addition"></i> 新建设计
         </a>
         <a href="javascript: " class="layui-btn layui-btn-xs layui-bg-gray" data-event="view">
           <i class="layui-icon layui-icon-addition"></i> 预览 Demo
         </a>
+        <a href="javascript: " class="layui-btn layui-btn-xs layui-bg-cyan layui-hide" data-event="showXml">
+          <i class="layui-icon layui-icon-read"></i> 查看 XML
+        </a>
+        <a href="javascript: " class="layui-btn layui-btn-xs layui-bg-blue" data-event="save">
+          <i class="layui-icon layui-icon-ok"></i> 保存流程
+        </a>
+        <div class="toolbar-spacer"></div>
         <a href="javascript: " class="layui-btn layui-btn-xs layui-bg-gray layui-hide" data-event="diagram">
           <i class="layui-icon layui-icon-file"></i> 下载 BPMN
         </a>
@@ -76,131 +103,432 @@
     <div class="layui-col-lg3"></div>
   </div>
 
-  <div class="layui-row">
-    <div id="ID_modeler_pane" class="layui-col-lg9 layui-col-md8 layui-panel modeler-pane"></div>
-    <div id="ID_modeler_right" class="layui-col-lg3 layui-col-md4"></div>
+  <div id="ID_modeler_edit_row" class="layui-row modeler-workspace">
+    <div id="ID_modeler_editor" class="layui-col-lg9 layui-col-md8 layui-col-sm8 layui-panel modeler-pane"></div>
+    <div id="ID_modeler_right" class="layui-col-lg3 layui-col-md4 layui-col-sm4"></div>
+  </div>
+
+  <div id="ID_modeler_preview_row" class="layui-row layui-hide modeler-workspace">
+    <div id="ID_modeler_viewer" class="layui-col-lg12 modeler-pane"></div>
   </div>
 
 </div>
 <script type="text/javascript" src="static/layui/2.13.5/layui.js" charset="UTF-8"></script>
 <script type="text/javascript" src="static/bpmn/18.0.0/bpmn-modeler.development.js" charset="UTF-8"></script>
-<script type="text/javascript" src="static/bpmn/modeler-plugins.js" charset="UTF-8"></script>
+<script type="text/javascript" src="static/mycuckoo.js" charset="UTF-8"></script>
+<script type="text/javascript" src="static/mycuckoo.api.js" charset="UTF-8"></script>
+<script type="text/javascript" src="static/user-picker.js?v=20260418-0830" charset="UTF-8"></script>
+<script type="text/javascript" src="static/bpmn/modeler-plugins.js?v=20260418-0830" charset="UTF-8"></script>
   <script type="text/javascript">
     layui.config({
       base: 'static/extend/',
       version: '101100'
-  });
-
-  layui.use(['jquery'], function() {
-    var $ = layui.jquery;
-    var modeler = new BpmnJS({
-      container: '#ID_modeler_pane',
-      propertiesPanel: {
-        parent: '#ID_modeler_right'
-      },
-      height: '100%',
-      additionalModules: [
-        ...ModelerPlugins.modules
-      ],
-      moddleExtensions: ModelerPlugins.moddles
     });
 
-    // 操作按钮触发事件
-    $('.layui-btn-container').find('a.layui-btn:not([lay-submit])').on('click', function() {
-      var event = $(this).data('event');
-      if (event === 'create') {
-        $.get('./modeler-default.bpmn', function (xml) {
-          openDiagram(xml)
-        }, 'text');
-      } else if (event === 'view') {
-        $.get('./modeler-demo.bpmn', function (xml) {
-          openDiagram(xml)
-        }, 'text');
-      } else if (event === 'diagram') {
+    layui.use(['jquery'], function() {
+      const $ = layui.jquery,
+        layer = layui.layer,
+        queryObj = MyCuckoo.getQueryObject(location.search),
+        $toolbar = $('.layui-btn-container'),
+        $editRow = $('#ID_modeler_edit_row'),
+        $previewRow = $('#ID_modeler_preview_row');
 
-      } else if (event === 'svg') {
+      const userPicker = window.MyCuckoo && typeof window.MyCuckoo.createUserPicker === 'function'
+        ? window.MyCuckoo.createUserPicker({
+            width: 500,
+            height: 400,
+            layer: layer,
+            url: './view/uum/userPicker.html'
+          })
+        : null;
 
-      }
-    });
+      const ModelerMgr = function() {
+        const that = this;
 
-    async function openDiagram(xml) {
-      try {
-        await modeler.importXML(xml);
+        this.modeler = null;
+        this.currentXml = '';
+        this.isPreviewMode = false;
+        this.exportFiles = this.debounce(function() {
+          that.exportFilesImpl();
+        }, 500);
 
-        // access modeler components
-        var canvas = modeler.get('canvas');
-        var overlays = modeler.get('overlays');
-
-        // zoom to fit full viewport
-        // canvas.zoom('fit-viewport');
-
-        // // attach an overlay to a node
-        // overlays.add('SCAN_OK', 'note', {
-        //   position: {
-        //     bottom: 0,
-        //     right: 0
-        //   },
-        //   html: '<div class="diagram-note">Mixed up the labels?</div>'
-        // });
-
-        // // add marker
-        // canvas.addMarker('SCAN_OK', 'needs-discussion');
-      } catch (err) {
-        console.error(err);
-      }
-    }
-
-    function setEncoded(link, name, data, type) {
-      if (data) {
-        var encodedData = encodeURIComponent(data);
-        link.removeClass('layui-hide').attr({ 'href': 'data:' + type + ';charset=UTF-8,' + encodedData, 'download': name });
-      } else {
-        console.log(link);
-        link.addClass('layui-hide');
-      }
-    }
-
-    var exportFiles = debounce(async function() {
-      let $svg = $('.layui-btn-container a[data-event="svg"]');
-      let $diagram = $('.layui-btn-container a[data-event="diagram"]');
-      try {
-        const { svg } = await modeler.saveSVG();
-        setEncoded($svg, 'diagram.svg', svg, 'image/svg+xml');
-      } catch (err) {
-        console.error('Error happened saving SVG: ', err);
-        setEncoded($svg, 'diagram.svg', null, 'image/svg+xml');
-      }
-
-      try {
-        const { xml } = await modeler.saveXML({ format: true });
-        // 保留 CDATA 结构
-        let xml2 = xml.replace(/<!\[CDATA\[(.*?)\]\]>/gs, (match, p1) => {
-          return `<![CDATA[${p1.replace(/]]>/g, ']]]]><![CDATA[>')}]]>`;
+        $toolbar.find('a.layui-btn:not([lay-submit])').on('click', function() {
+          let event = $(this).data('event');
+          that.on({event: event, elem: this});
         });
 
-        setEncoded($diagram, 'diagram.bpmn', xml2, 'application/bpmn20-xml');
-      } catch (err) {
-        console.error('Error happened saving diagram: ', err);
-        setEncoded($diagram, 'diagram.bpmn', null, 'application/bpmn20-xml');
-      }
-    }, 500);
-
-    modeler.on('commandStack.changed', exportFiles);
-
-    function debounce(fn, timeout) {
-      var timer;
-
-      return function() {
-        if (timer) {
-          clearTimeout(timer);
+        if (queryObj.key) {
+          this.loadDiagram(queryObj.key);
+        } else {
+          this.setPreviewMode(false);
+          this.create();
         }
+      }
 
-        timer = setTimeout(fn, timeout);
-      };
-    }
 
-    // end
-  });
+      ModelerMgr.prototype = {
+        constructor: ModelerMgr,
+        on: function(obj) {
+          let arr = obj.event.split(':');
+          let event = arr[arr.length - 1];
+
+          this[event] && this[event](obj);
+        },
+        createDiagram: function(previewOnly) {
+          if (this.modeler && typeof this.modeler.destroy === 'function') {
+            this.modeler.destroy();
+          }
+
+          if (previewOnly) {
+            this.modeler = new BpmnJS.NavigatedViewer({
+              container: '#ID_modeler_viewer',
+              height: '100%'
+            });
+          } else {
+            this.modeler = new BpmnJS({
+              container: '#ID_modeler_editor',
+              layuiPropertiesPanel: {
+                parent: '#ID_modeler_right',
+                userPicker: userPicker
+              },
+              height: '100%',
+              additionalModules: [
+                ...ModelerPlugins.modules
+              ],
+              moddleExtensions: ModelerPlugins.moddles
+            });
+
+            this.modeler.on('commandStack.changed', this.exportFiles);
+          }
+
+          return this.modeler;
+        },
+        create: async function() {
+          try {
+            let app = this.createDiagram(false);
+            await app.createDiagram();
+            this.currentXml = '';
+            this.setPreviewMode(false);
+            this.toggleXmlButton('');
+          } catch (err) {
+            console.error(err);
+            MyCuckoo.msg({msg: '新建设计失败：' + (err && err.message ? err.message : err), icon: 2, time: 1800});
+          }
+        },
+        view: function() {
+          $.request({url: './modeler-demo.bpmn', method: 'get'}).then(xml => {
+            this.openDiagram(xml, false);
+          });
+        },
+        showXml: function() {
+          if (!this.currentXml) {
+            MyCuckoo.msg({msg: '当前没有可显示的 XML', icon: 2, time: 1800});
+            return;
+          }
+
+          if (!layer) {
+            return;
+          }
+
+          layer.open({
+            type: 1,
+            title: 'XML 预览',
+            area: ['680px', '320px'],
+            maxmin: true,
+            shadeClose: true,
+            content: '<div style="padding: 12px; height: 100%; box-sizing: border-box;">'
+              + '<textarea readonly class="layui-textarea" style="height: 540px; font-family: Consolas, monospace;">'
+              + this.escapeHtml(this.currentXml)
+              + '</textarea></div>'
+          });
+        },
+        save: function() {
+          this.saveDefinition();
+        },
+        diagram: function(obj) {
+          let $link = $(obj.elem);
+          if (this.isPreviewMode) {
+            MyCuckoo.msg({msg: '预览模式下不支持下载 BPMN', icon: 2, time: 1800});
+            return;
+          }
+
+          if (!$link.attr('href')) {
+            this.exportFilesImpl().then(() => {
+              if (this.downloadFile($link)) {
+                return;
+              }
+
+              MyCuckoo.msg({msg: '当前没有可下载的 BPMN 文件', icon: 2, time: 1800});
+            });
+            return;
+          }
+
+          this.downloadFile($link);
+        },
+        svg: function(obj) {
+          let $link = $(obj.elem);
+          if (this.isPreviewMode) {
+            MyCuckoo.msg({msg: '预览模式下不支持下载 SVG', icon: 2, time: 1800});
+            return;
+          }
+
+          if (!$link.attr('href')) {
+            this.exportFilesImpl().then(() => {
+              if (this.downloadFile($link)) {
+                return;
+              }
+
+              MyCuckoo.msg({msg: '当前没有可下载的 SVG 文件', icon: 2, time: 1800});
+            });
+            return;
+          }
+
+          this.downloadFile($link);
+        },
+        openDiagram: async function(xml, previewOnly) {
+          try {
+            let app = this.createDiagram(!!previewOnly);
+            await app.importXML(xml);
+            this.currentXml = xml;
+            this.setPreviewMode(!!previewOnly);
+            this.toggleXmlButton(xml);
+            return true;
+          } catch (err) {
+            console.error(err);
+            MyCuckoo.msg({msg: 'XML 加载失败：' + (err && err.message ? err.message : err), icon: 2, time: 1800});
+            throw err;
+          }
+        },
+        setEncoded: function(link, name, data, type) {
+          if (data) {
+            let encodedData = encodeURIComponent(data);
+            link.removeClass('layui-hide').attr({'href': 'data:' + type + ';charset=UTF-8,' + encodedData, 'download': name});
+          } else {
+            link.addClass('layui-hide');
+          }
+        },
+        downloadFile: function($link) {
+          let href = $link.attr('href');
+          if (!href) {
+            return false;
+          }
+
+          let elem = document.createElement('a');
+          elem.href = href;
+          elem.download = $link.attr('download') || '';
+          document.body.appendChild(elem);
+          elem.click();
+          document.body.removeChild(elem);
+          return true;
+        },
+        exportFilesImpl: async function() {
+          if (!this.modeler || this.isPreviewMode || typeof this.modeler.saveXML !== 'function') {
+            return;
+          }
+
+          let $svg = $toolbar.find('a[data-event="svg"]');
+          let $diagram = $toolbar.find('a[data-event="diagram"]');
+          try {
+            const { svg } = await this.modeler.saveSVG();
+            this.setEncoded($svg, 'diagram.svg', svg, 'image/svg+xml');
+          } catch (err) {
+            console.error('Error happened saving SVG: ', err);
+            this.setEncoded($svg, 'diagram.svg', null, 'image/svg+xml');
+          }
+
+          try {
+            const { xml } = await this.modeler.saveXML({ format: true });
+            this.currentXml = xml;
+            this.toggleXmlButton(xml);
+            let xml2 = xml.replace(/<!\[CDATA\[(.*?)\]\]>/gs, function(match, p1) {
+              return '<![CDATA[' + p1.replace(/]]>/g, ']]]]><![CDATA[>') + ']]>';
+            });
+
+            this.setEncoded($diagram, 'diagram.bpmn', xml2, 'application/bpmn20-xml');
+          } catch (err) {
+            console.error('Error happened saving diagram: ', err);
+            this.setEncoded($diagram, 'diagram.bpmn', null, 'application/bpmn20-xml');
+          }
+        },
+        debounce: function(fn, timeout) {
+          let timer;
+
+          return function() {
+            if (timer) {
+              clearTimeout(timer);
+            }
+
+            timer = setTimeout(fn, timeout);
+          };
+        },
+        toggleXmlButton: function(xml) {
+          $toolbar.find('a[data-event="showXml"]').toggleClass('layui-hide', !xml);
+        },
+        setPreviewMode: function(previewOnly) {
+          let $diagramBtn = $toolbar.find('a[data-event="diagram"]');
+          let $saveBtn = $toolbar.find('a[data-event="save"]');
+          let $svgBtn = $toolbar.find('a[data-event="svg"]');
+          this.isPreviewMode = previewOnly;
+          $editRow.toggleClass('layui-hide', previewOnly);
+          $previewRow.toggleClass('layui-hide', !previewOnly);
+          $toolbar.children().toggleClass('layui-hide', previewOnly);
+          $saveBtn.toggleClass('layui-hide', previewOnly);
+
+          if (previewOnly) {
+            $diagramBtn.addClass('layui-hide').removeAttr('href download');
+            $svgBtn.addClass('layui-hide').removeAttr('href download');
+          } else {
+            if ($diagramBtn.attr('href')) {
+              $diagramBtn.removeClass('layui-hide');
+            }
+            if ($svgBtn.attr('href')) {
+              $svgBtn.removeClass('layui-hide');
+            }
+          }
+        },
+        escapeHtml: function(text) {
+          return String(text || '')
+            .replace(/&/g, '&amp;')
+            .replace(/</g, '&lt;')
+            .replace(/>/g, '&gt;');
+        },
+        getCurrentXml: async function() {
+          if (!this.modeler || this.isPreviewMode || typeof this.modeler.saveXML !== 'function') {
+            throw new Error('当前不是可保存的编辑模式');
+          }
+
+          const { xml } = await this.modeler.saveXML({ format: true });
+          this.currentXml = xml;
+          this.toggleXmlButton(xml);
+          return xml;
+        },
+        getProcessInfoFromXml: function(xml) {
+          try {
+            let parser = new DOMParser();
+            let doc = parser.parseFromString(xml, 'text/xml');
+            let process = doc.getElementsByTagNameNS('*', 'process')[0];
+            if (!process) {
+              return {};
+            }
+
+            return {
+              key: process.getAttribute('id') || '',
+              name: process.getAttribute('name') || ''
+            };
+          } catch (err) {
+            console.warn('解析流程信息失败', err);
+            return {};
+          }
+        },
+        readDefinitionForm: function($container) {
+          return {
+            processDefinitionKey: $.trim($container.find('[name="processDefinitionKey"]').val()),
+            name: $.trim($container.find('[name="name"]').val()),
+            description: $.trim($container.find('[name="description"]').val())
+          };
+        },
+        saveDefinition: async function() {
+          if (this.isPreviewMode) {
+            MyCuckoo.msg({msg: '预览模式下不支持保存', icon: 2, time: 1800});
+            return;
+          }
+
+          try {
+            let that = this;
+            let xml = await this.getCurrentXml();
+            let processInfo = this.getProcessInfoFromXml(xml);
+            let initialData = {
+              processDefinitionKey: queryObj.key || processInfo.key || '',
+              name: queryObj.name || processInfo.name || '',
+              description: queryObj.description || ''
+            };
+
+            layer.open({
+              type: 1,
+              title: '保存流程定义',
+              area: ['560px', '360px'],
+              btn: ['保存', '取消'],
+              shadeClose: true,
+              content: '<div id="ID_modeler_save_form" style="padding: 16px 18px 0;">'
+                + '<div class="layui-form layui-form-pane">'
+                + '<div class="layui-form-item"><label class="layui-form-label">流程 Key</label><div class="layui-input-block"><input type="text" name="processDefinitionKey" autocomplete="off" class="layui-input" placeholder="例如：leaveApply" value="' + that.escapeHtml(initialData.processDefinitionKey) + '"></div></div>'
+                + '<div class="layui-form-item"><label class="layui-form-label">流程名称</label><div class="layui-input-block"><input type="text" name="name" autocomplete="off" class="layui-input" placeholder="请输入流程名称" value="' + that.escapeHtml(initialData.name) + '"></div></div>'
+                + '<div class="layui-form-item layui-form-text"><label class="layui-form-label">流程描述</label><div class="layui-input-block"><textarea name="description" class="layui-textarea" placeholder="可选">' + that.escapeHtml(initialData.description) + '</textarea></div></div>'
+                + '</div>'
+                + '</div>',
+              yes: async function(index) {
+                let formData = that.readDefinitionForm($('#ID_modeler_save_form'));
+                if (!formData.processDefinitionKey) {
+                  MyCuckoo.msg({msg: '请输入流程 Key', icon: 2, time: 1800});
+                  return;
+                }
+                if (!formData.name) {
+                  MyCuckoo.msg({msg: '请输入流程名称', icon: 2, time: 1800});
+                  return;
+                }
+
+                let loadingIndex = layer.load(1, {shade: 0.15});
+                try {
+                  let json = await $.request({
+                    url: 'http://localhost:8082/flow/mgr/definitions',
+                    method: 'post'
+                  }, {
+                    processDefinitionKey: formData.processDefinitionKey,
+                    name: formData.name,
+                    description: formData.description,
+                    xml: xml
+                  });
+                  queryObj.key = formData.processDefinitionKey;
+                  queryObj.name = formData.name;
+                  queryObj.description = formData.description;
+                  layer.close(index);
+                  MyCuckoo.msg({msg: (json && json.msg) || '流程定义保存成功', icon: 1, time: 1800});
+                } catch (err) {
+                  console.error(err);
+                  MyCuckoo.msg({msg: '保存流程定义失败：' + (err && err.message ? err.message : err), icon: 2, time: 2200});
+                } finally {
+                  layer.close(loadingIndex);
+                }
+              }
+            });
+          } catch (err) {
+            console.error(err);
+            MyCuckoo.msg({msg: '保存前导出 XML 失败：' + (err && err.message ? err.message : err), icon: 2, time: 2200});
+          }
+        },
+        loadDiagram: async function(key) {
+          if (!key) {
+            MyCuckoo.msg({msg: '缺少流程定义 key', icon: 2, time: 1800});
+            return;
+          }
+
+          try {
+            MyCuckoo.msg({msg: '正在获取 XML...', icon: 1, time: 1800});
+            const json = await $.request({
+              url: 'http://localhost:8082/flow/mgr/definitions/bpmn-model?processDefinitionKey=' + encodeURIComponent(key),
+              method: 'get'
+            }).then(json => {
+              return json;
+            });
+
+            let xml = json.data;
+            if (!xml || String(xml).indexOf('<') === -1) {
+              throw new Error('接口未返回有效 XML');
+            }
+
+            let previewOnly = String(queryObj.mode || '').toLowerCase() === 'view';
+            await this.openDiagram(xml, previewOnly);
+            MyCuckoo.msg({msg: previewOnly ? '接口 XML 已加载，当前为只读预览模式' : '接口 XML 已加载，当前为可编辑模式', icon: 1, time: 1800});
+          } catch (err) {
+            console.error(err);
+            MyCuckoo.msg({msg: '获取接口 XML 失败：' + (err && err.message ? err.message : err), icon: 2, time: 1800});
+          }
+        }
+      }
+
+      new ModelerMgr();
+      //end
+    });
 </script>
 </body>
 </html>

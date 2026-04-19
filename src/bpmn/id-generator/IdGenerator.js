@@ -1,4 +1,4 @@
-import { getBusinessObject, is } from 'bpmn/lib/util/ModelUtil';
+import { getBusinessObject, is } from 'bpmn-js/lib/util/ModelUtil';
 
 import { getNextIndexedValue, getNumericSuffix, getTaskIndex, hasTaskId } from '../util';
 

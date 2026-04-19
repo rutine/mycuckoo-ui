@@ -1,5 +1,12 @@
 import Ids from 'ids';
-import { getBusinessObject } from 'bpmn/lib/util/ModelUtil';
+
+export function getBusinessObject(element) {
+  if (!element) {
+    return null;
+  }
+
+  return element.businessObject || element;
+}
 
 export function getParametersElement(element, type) {
   const businessObject = getBusinessObject(element);
@@ -21,6 +28,30 @@ export function createElement(elementType, properties, parent, factory) {
   }
 
   return element;
+}
+
+export function readModdleProperty(target, key) {
+  if (!target || !key) {
+    return undefined;
+  }
+
+  if (Object.prototype.hasOwnProperty.call(target, key)) {
+    return target[key];
+  }
+
+  if (typeof target.get === 'function') {
+    return target.get(key);
+  }
+
+  return undefined;
+}
+
+export function readExpressionBody(expression) {
+  if (!expression) {
+    return '';
+  }
+
+  return expression.body || expression.value || '';
 }
 
 export function nextId(prefix) {
@@ -69,6 +100,10 @@ export function hasTaskId(value) {
 
 export function getNextTaskId(elementRegistry) {
   return getNextElementId('task_', elementRegistry);
+}
+
+export function getTaskCollectionName(taskIndex) {
+  return `assigneeList_${taskIndex === null ? 0 : taskIndex}`;
 }
 
 export function getTaskIndexFromElement(element) {

@@ -100,9 +100,9 @@
       },
       cols: [[
         {field: 'text', title: '名称', width: 200},
-        {field: 'code', title: '操作', templet: function(d) { return d.code ? d.code : '' }},
+        {field: 'code', title: '操作', width: 200, templet: function(d) { return d.code ? d.code : '' }},
         {field: 'method', title: '方法', templet: function(d) { return d.method ? d.method : '' }},
-        {field: 'path', title: 'url', width: 200, templet: function(d) { return d.method ? d.path : '' }},
+        {field: 'path', title: 'url', templet: function(d) { return d.method ? d.path : '' }},
         {field: 'order', title: '顺序', templet: function(d) { return d.method ? d.order : '' }},
         {field: 'status', title: '状态', templet: function(d) {
             return d.method ? (d.status == 'enable' ? '启用' : '停用') : ''
