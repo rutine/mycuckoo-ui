@@ -96,19 +96,19 @@
     const $ = layui.jquery,
       form = layui.form,
       queryObj = MyCuckoo.getQueryObject(location.search),
-      operator = MyCuckoo.getOperation(queryObj.opt),
-      operatorMap = MyCuckoo.getDictMap(operator),
-      action = operatorMap[queryObj.action],
+      resources = MyCuckoo.getResource(queryObj.reskey),
+      resourceMap = MyCuckoo.getDictMap(resources),
+      resourceObj = resourceMap[queryObj.action],
       $form = $('form[name=editForm]');
 
     //表单初始赋值
     function initForm() {
       if (queryObj.id) {
-        $.request(operatorMap['res:resourceMgr:view'], queryObj).then(json => {
+        $.request(resourceMap['res:resourceMgr:view'], queryObj).then(json => {
           json.data.moduleId = queryObj.moduleId;
           form.val('editForm', json.data);
 
-          if (action.code === 'res:resourceMgr:view') {
+          if (resourceObj.code === 'res:resourceMgr:view') {
             $form.find('input, select, textarea').attr('disabled', 'disabled')
           }
         });
@@ -121,10 +121,10 @@
       const that = this;
 
       //渲染操作按钮
-      $form.find('.toolbar').html(MyCuckoo.getActions(action || {}, 'form'));
+      $form.find('.toolbar').html(MyCuckoo.getActions(resourceObj || {}, 'form'));
 
       //初始化
-      $.request(operatorMap['res:moduleMgr:optSelector'], {id: queryObj.moduleId}).then(function(json) {
+      $.request(resourceMap['res:moduleMgr:optSelector'], {id: queryObj.moduleId}).then(function(json) {
         let $select = $form.find('select[name=operateId]');
         $select.empty();
         $select.append('<option value="">请选择或搜索</option>');
@@ -161,14 +161,14 @@
         this[event] && this[event](obj);
       },
       add: function(obj) {
-        $.request(action, obj.data).then(json => {
+        $.request(resourceObj, obj.data).then(json => {
           MyCuckoo.msg({msg: json.msg});
 
           this.refresh();
         });
       },
       modify: function(obj) {
-        $.request(action, obj.data).then(json => {
+        $.request(resourceObj, obj.data).then(json => {
           MyCuckoo.msg({msg: json.msg});
 
           this.refresh();

@@ -124,23 +124,23 @@
       tree = layui.dtree,
       upload = layui.upload,
       queryObj = MyCuckoo.getQueryObject(location.search),
-      operator = MyCuckoo.getOperation(queryObj.opt),
-      operatorMap = MyCuckoo.getDictMap(operator),
-      action = operatorMap[queryObj.action],
+      resources = MyCuckoo.getResource(queryObj.reskey),
+      resourceMap = MyCuckoo.getDictMap(resources),
+      resourceObj = resourceMap[queryObj.action],
       $form = $('form[name=editForm]');
 
     const FormMgr = function() {
       const that = this;
 
       //渲染操作按钮
-      $form.find('.toolbar').html(MyCuckoo.getActions(action || {}, 'form'));
+      $form.find('.toolbar').html(MyCuckoo.getActions(resourceObj || {}, 'form'));
 
       //表单初始赋值
-      if (queryObj.id && action) {
-        $.request(operatorMap['res:userMgr:view'], queryObj).then(json => {
+      if (queryObj.id && resourceObj) {
+        $.request(resourceMap['res:userMgr:view'], queryObj).then(json => {
           form.val('editForm', json.data);
 
-          if (action.code === 'res:userMgr:view') {
+          if (resourceObj.code === 'res:userMgr:view') {
             $form.find('input, select, textarea').attr('disabled', 'disabled')
           }
           if(json.data.photoUrl) {
@@ -263,32 +263,32 @@
         });
       },
       selectDept: function(ele) {
-        let action = operatorMap['res:deptMgr:tree'];
+        let action = resourceMap['res:deptMgr:tree'];
         if (!action) {
           MyCuckoo.msg({msg: '无权访问此资源'});
           return;
         }
 
-        this.openTree(MyCuckoo.api.host + action.path, {nodeId: 'deptId', context: 'deptName'});
+        this.openTree(MyCuckoo.api.getUrl(action), {nodeId: 'deptId', context: 'deptName'});
       },
       selectRole: function(ele) {
-        let action = operatorMap['res:deptMgr:tree'];
+        let action = resourceMap['res:deptMgr:tree'];
         if (!action) {
           MyCuckoo.msg({msg: '无权访问此资源'});
           return;
         }
 
-        this.openTree(MyCuckoo.api.host + action.path, {nodeId: 'roleId', context: 'roleName'});
+        this.openTree(MyCuckoo.api.getUrl(action), {nodeId: 'roleId', context: 'roleName'});
       },
       add: function(obj) {
-        $.request(action, obj.data).then(json => {
+        $.request(resourceObj, obj.data).then(json => {
           MyCuckoo.msg({msg: json.msg});
 
           this.refresh();
         });
       },
       modify: function(obj) {
-        $.request(action, obj.data).then(json => {
+        $.request(resourceObj, obj.data).then(json => {
           MyCuckoo.msg({msg: json.msg});
 
           this.refresh();

@@ -156,7 +156,7 @@
       },
       //查看用户信息
       userInfo: function(el) {
-        MyCuckoo.dialog('用户信息', './view/uum/userMgrForm.html?action=res:userMgr:view&opt=34&id=' + this.user.id, 480, 450);
+        MyCuckoo.dialog('用户信息', './view/uum/userMgrForm.html?reskey=34&action=res:userMgr:view&id=' + this.user.id, 480, 450);
       },
       //注销登录
       logout: function(el) {
@@ -233,7 +233,7 @@
             let subItemHtm = '';
             for (let iii = 0; iii < menu.third[second.moduleId].length; iii++) {
               let third = menu.third[second.moduleId][iii];
-              let href = 'view/' + third.belongSys + '/' + third.code + '.html?id=' + third.moduleId;
+              let href = 'view/' + third.belongSys + '/' + third.code + '.html?reskey=' + third.moduleId;
               subItemHtm += laytpl(subItemTpl).render({
                 href: href,
                 iconCls: third.iconCls,

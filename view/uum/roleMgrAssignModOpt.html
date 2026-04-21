@@ -84,8 +84,8 @@
       form = layui.form,
       tree = layui.dtree,
       queryObj = MyCuckoo.getQueryObject(location.search),
-      operator = MyCuckoo.getOperation(queryObj.opt),
-      operatorMap = MyCuckoo.getDictMap(operator),
+      resources = MyCuckoo.getResource(queryObj.reskey),
+      resourceMap = MyCuckoo.getDictMap(resources),
       $main = $('.mycuckoo-main');
 
 
@@ -94,7 +94,7 @@
       //表单初始赋值
       if (queryObj.id) {
         $('fieldset > legend').text('角色名称: ' + queryObj.name);
-        $.request(operatorMap['res:roleMgr:resSelector'], queryObj).then(json => {
+        $.request(resourceMap['res:roleMgr:resSelector'], queryObj).then(json => {
           form.val('roleAssignModOpt', json.data);
           form.val('roleAssignRowPriv', json.data);
 
@@ -152,7 +152,7 @@
 
         let optIds = [];
         selectedNodes.forEach(item => item.isLeaf && optIds.push(item.nodeId));
-        $.request(operatorMap['res:roleMgr:assignRes'], data, optIds).then(json => {
+        $.request(resourceMap['res:roleMgr:assignRes'], data, optIds).then(json => {
           MyCuckoo.msg({msg: json.msg});
 
           this.refresh();
@@ -166,7 +166,7 @@
           return;
         }
 
-        $.request(operatorMap['res:roleMgr:assignRow'], data, rowIds).then(json => {
+        $.request(resourceMap['res:roleMgr:assignRow'], data, rowIds).then(json => {
           MyCuckoo.msg({msg: json.msg});
 
           this.refresh();

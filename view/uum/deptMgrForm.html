@@ -56,9 +56,9 @@
       layer = layui.layer,
       tree = layui.dtree,
       queryObj = MyCuckoo.getQueryObject(location.search),
-      operator = MyCuckoo.getOperation(queryObj.opt),
-      operatorMap = MyCuckoo.getDictMap(operator),
-      action = operatorMap[queryObj.action],
+      resources = MyCuckoo.getResource(queryObj.reskey),
+      resourceMap = MyCuckoo.getDictMap(resources),
+      resourceObj = resourceMap[queryObj.action],
       $form = $('form[name=editForm]');
 
 
@@ -66,15 +66,15 @@
       const that = this;
 
       //渲染操作按钮
-      $form.find('.toolbar').html(MyCuckoo.getActions(action || {}, 'form'));
+      $form.find('.toolbar').html(MyCuckoo.getActions(resourceObj || {}, 'form'));
 
       //初始化
       //表单初始赋值
-      if (queryObj.id && action) {
-        $.request(operatorMap['res:deptMgr:view'], queryObj).then(json => {
+      if (queryObj.id && resourceObj) {
+        $.request(resourceMap['res:deptMgr:view'], queryObj).then(json => {
           form.val('editForm', json.data);
 
-          if (action.code === 'res:deptMgr:view') {
+          if (resourceObj.code === 'res:deptMgr:view') {
             $form.find('input, select, textarea').attr('disabled', 'disabled')
           }
         });
@@ -156,23 +156,23 @@
         });
       },
       selectDept: function(obj) {
-        let action = operatorMap['res:deptMgr:tree'];
+        let action = resourceMap['res:deptMgr:tree'];
         if (!action) {
           MyCuckoo.msg({msg: '无权访问此资源'});
           return;
         }
 
-        this.openTree(MyCuckoo.api.host + action.path, {nodeId: 'parentId', context: 'parentName'});
+        this.openTree(MyCuckoo.api.getUrl(action), {nodeId: 'parentId', context: 'parentName'});
       },
       add: function(obj) {
-        $.request(action, obj.data).then(json => {
+        $.request(resourceObj, obj.data).then(json => {
           MyCuckoo.msg({msg: json.msg});
 
           this.refresh();
         });
       },
       modify: function(obj) {
-        $.request(action, obj.data).then(json => {
+        $.request(resourceObj, obj.data).then(json => {
           MyCuckoo.msg({msg: json.msg});
 
           this.refresh();

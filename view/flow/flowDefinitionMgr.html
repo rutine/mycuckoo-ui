@@ -60,19 +60,19 @@
 
     //本地缓存数据
     const queryObj = MyCuckoo.getQueryObject(location.search);
-    const operator = MyCuckoo.getOperation(queryObj.id);
-    const operatorMap = MyCuckoo.getDictMap(operator);
-    const action = MyCuckoo.getIndexAction(operator);
+    const resources = MyCuckoo.getResource(queryObj.reskey);
+    const resourceMap = MyCuckoo.getDictMap(resources);
+    const resourceObj = MyCuckoo.getMainResource(resources);
 
     table.render({
       id: 'table',
       elem: '#ID_table',
-      url: 'http://localhost:8082/flow/mgr/definitions', //MyCuckoo.api.host + action.path,
-      method: 'get',// action.method,
+      url: MyCuckoo.api.getUrl(resourceObj),
+      method: resourceObj.method,
       cellMinWidth: 100,
       height: MyCuckoo.tableHeight,
-      toolbar: MyCuckoo.getActions(operator, 'table'),
-      // operator: operator,
+      toolbar: MyCuckoo.getActions(resources, 'table'),
+      resources: resources,
       cols: [[
         {type: 'numbers'},
         {type: 'radio'},
@@ -83,7 +83,7 @@
         {field: 'diagramResourceName', title: '图片文件'},
         {field: 'version', title: '版本号'},
         {field: 'hasStartFormKey', title: '是否有表单'},
-        {fixed: "right", title: "操作", align: "center", width: 120, toolbar: MyCuckoo.getActions(operator, 'col'), operator: operator}
+        {fixed: "right", title: "操作", align: "center", width: 120, toolbar: MyCuckoo.getActions(resources, 'col'), resources: resources}
       ]],
       page: true,
       request: {
@@ -164,12 +164,15 @@
       },
       //增加
       add: function(obj) {
-        MyCuckoo.dialog('流程设计', '../../modeler.html');
+        MyCuckoo.dialog('流程设计', '../../modeler.html?reskey={reskey}&action={action}',
+                {...queryObj, 'action': obj.event}
+        );
       },
       //修改
       modify: function(obj) {
         let data = obj.data;
-        let url = MyCuckoo.resolve('../../modeler.html?key={key}&mode=edit&name={name}&description={description}', {
+        let url = MyCuckoo.resolve('../../modeler.html?reskey={reskey}&action={action}&key={key}&mode=edit&name={name}&description={description}', {
+          ...queryObj, 'action': obj.event,
           key: data.key,
           name: data.name || '',
           description: data.description || ''
@@ -179,7 +182,8 @@
       //查看
       view: function(obj) {
         let data = obj.data;
-        let url = MyCuckoo.resolve('../../modeler.html?key={key}&mode=view&name={name}&description={description}', {
+        let url = MyCuckoo.resolve('../../modeler.html?reskey={reskey}&action={action}&key={key}&mode=view&name={name}&description={description}', {
+          ...queryObj, 'action': obj.event,
           key: data.key,
           name: data.name || '',
           description: data.description || ''
@@ -192,7 +196,7 @@
         let that = this;
         MyCuckoo.confirm({title: '警告提示', msg: '您确认删除此记录吗?',
           okBtn: '是', cancelBtn: '否', ok: function() {
-            $.request(operatorMap[obj.event], {id: data.userId}).then(json => {
+            $.request(resourceMap[obj.event], {id: data.userId}).then(json => {
               MyCuckoo.msg({ msg: json.msg });
 
               that.reload();
@@ -201,7 +205,7 @@
       },
       more: function (obj) {
         let that = this;
-        let btns = MyCuckoo.getActions(operator, 'more');
+        let btns = MyCuckoo.getActions(resources, 'more');
         dropdown.render({
           elem: obj.elem,
           show: true,

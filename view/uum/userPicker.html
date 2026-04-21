@@ -41,6 +41,7 @@
   <div class="picker-selected">
     <div>已选用户（<span id="ID_selected_count">0</span>）</div>
     <div id="ID_selected_summary">未选择</div>
+    <div id="ID_selected_cache" class="layui-hide"></>
   </div>
 
   <table id="ID_table" class="layui-hide" lay-filter="table"></table>
@@ -134,8 +135,9 @@
           return user.name || user.id;
         });
 
-      $('#ID_selected_count').attr('users', users.length ? JSON.stringify(users) : '').text(String(users.length));
+      $('#ID_selected_count').text(String(users.length));
       $('#ID_selected_summary').text(names.length ? names.join(', ') : '未选择');
+      $('#ID_selected_cache').attr('json', users.length ? JSON.stringify(users) : '');
     }
 
     function closeDialog() {

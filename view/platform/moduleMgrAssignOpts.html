@@ -47,14 +47,14 @@
     const $ = layui.jquery,
       form = layui.form,
       queryObj = MyCuckoo.getQueryObject(location.search),
-      operator = MyCuckoo.getOperation(queryObj.opt),
-      operatorMap = MyCuckoo.getDictMap(operator),
-      action = operatorMap[queryObj.action],
+      resources = MyCuckoo.getResource(queryObj.reskey),
+      resourceMap = MyCuckoo.getDictMap(resources),
+      resourceObj = resourceMap[queryObj.action],
       $form = $('form[name=editForm]');
 
     const FormMgr = function () {
       //渲染操作按钮
-      $form.find('.toolbar').html(MyCuckoo.getActions(action || {}, 'form'));
+      $form.find('.toolbar').html(MyCuckoo.getActions(resourceObj || {}, 'form'));
 
       //表单初始赋值
       if (!queryObj.id) {
@@ -63,7 +63,7 @@
       } else {
         $form.parent().find('legend').text(queryObj.name);
 
-        $.request(operatorMap['res:moduleMgr:optSelector'], queryObj).then(function(json) {
+        $.request(resourceMap['res:moduleMgr:optSelector'], queryObj).then(function(json) {
           let data = json.data.source;
           let assign = json.data.assign || [];
           let $checkbox = $('<div></div>');
@@ -119,7 +119,7 @@
           return;
         }
 
-        $.request(action, data, optIds).then(json => {
+        $.request(resourceObj, data, optIds).then(json => {
           MyCuckoo.msg({msg: json.msg});
 
           this.close();

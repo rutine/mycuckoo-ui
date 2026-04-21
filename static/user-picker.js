@@ -121,7 +121,7 @@
           title: title,
           content: content,
           beforeEnd: function(layero, index, that) {
-            const data = layer.getChildFrame('#ID_selected_count', index).attr('users');
+            const data = layer.getChildFrame('#ID_selected_cache', index).attr('json');
             data ? resolvePending(requestId, JSON.parse(data)) : rejectPending(requestId);
             return true;
           },

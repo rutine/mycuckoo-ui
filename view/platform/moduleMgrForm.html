@@ -130,19 +130,19 @@
       layer = layui.layer,
       tree = layui.dtree,
       queryObj = MyCuckoo.getQueryObject(location.search),
-      operator = MyCuckoo.getOperation(queryObj.opt),
-      operatorMap = MyCuckoo.getDictMap(operator),
-      action = operatorMap[queryObj.action],
+      resources = MyCuckoo.getResource(queryObj.reskey),
+      resourceMap = MyCuckoo.getDictMap(resources),
+      resourceObj = resourceMap[queryObj.action],
       $form = $('form[name=editForm]');
 
     const FormMgr = function () {
       //渲染操作按钮
       /*
-      laytpl(ID_operator.innerHTML).render(action || {}, function(html) {
+      laytpl(ID_operator.innerHTML).render(resourceObj || {}, function(html) {
         $form.find('.toolbar').html(html);
       });
       */
-      $form.find('.toolbar').html(MyCuckoo.getActions(action || {}, 'form'));
+      $form.find('.toolbar').html(MyCuckoo.getActions(resourceObj || {}, 'form'));
 
       //初始化
       MyCuckoo.api.getDict({typeCodes: 'system_type,mod_page_type'}).then(function(json) {
@@ -161,15 +161,15 @@
         form.render('select');
 
         //表单初始赋值
-        if (queryObj.id && action) {
-          if (action.code !== 'res:moduleMgr:add') {
+        if (queryObj.id && resourceObj) {
+          if (resourceObj.code !== 'res:moduleMgr:add') {
             $form.find('input[name=code]').attr('disabled', 'disabled')
           }
 
-          $.request(operatorMap['res:moduleMgr:view'], queryObj).then(json => {
+          $.request(resourceMap['res:moduleMgr:view'], queryObj).then(json => {
             form.val('editForm', json.data);
 
-            if (action.code === 'res:moduleMgr:view') {
+            if (resourceObj.code === 'res:moduleMgr:view') {
               $form.find('input, select, textarea').attr('disabled', 'disabled')
             }
           });
@@ -260,23 +260,23 @@
         });
       },
       selectModule: function(obj) {
-        let action = operatorMap['res:moduleMgr:tree'];
+        let action = resourceMap['res:moduleMgr:tree'];
         if (!action) {
           MyCuckoo.msg({msg: '无权访问此资源'});
           return;
         }
 
-        this.openTree(MyCuckoo.api.host + action.path, {nodeId: 'parentId', context: 'parentName'});
+        this.openTree(MyCuckoo.api.getUrl(action), {nodeId: 'parentId', context: 'parentName'});
       },
       add(obj) {
-        $.request(action, obj.data).then(json => {
+        $.request(resourceObj, obj.data).then(json => {
           MyCuckoo.msg({msg: json.msg});
 
           this.refresh();
         });
       },
       modify: function(obj) {
-        $.request(action, obj.data).then(json => {
+        $.request(resourceObj, obj.data).then(json => {
           MyCuckoo.msg({msg: json.msg});
 
           this.refresh();

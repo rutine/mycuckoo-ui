@@ -245,9 +245,9 @@
       form = layui.form,
       queryObj = MyCuckoo.getQueryObject(location.search);
 
-    const operator = MyCuckoo.getOperation(queryObj.id);
-    const operatorMap = MyCuckoo.getDictMap(operator);
-    const action = MyCuckoo.getIndexAction(operator);
+    const resources = MyCuckoo.getResource(queryObj.reskey);
+    const resourceMap = MyCuckoo.getDictMap(resources);
+    const resourceObj = MyCuckoo.getMainResource(resources);
 
     $main = $('.mycuckoo-main');
     $main.height($(window).height() - 90);
@@ -268,7 +268,7 @@
     FormMgr.prototype = {
       constructor: FormMgr,
       reload() {
-        $.request(action).then(json => {
+        $.request(resourceObj).then(json => {
           form.val('editForm', json.data);
 
           let $select = $main.find('select[name=adminUsers]');
@@ -284,7 +284,7 @@
 
       //设置
       modify(obj) {
-        $.request(operatorMap['res:systemConfigMgr:modify'], obj.data).then(json => {
+        $.request(resourceMap['res:systemConfigMgr:modify'], obj.data).then(json => {
           MyCuckoo.msg({msg: json.msg});
 
           this.reload();
@@ -298,13 +298,13 @@
       },
       //选择管理员
       selectAdmin(userAddDelFlag) {
-        let url = MyCuckoo.resolve('systemConfigMgrAssignUser.html?action=res:systemConfigMgr:modify&opt={opt}&q[userAddDelFlag]={flag}',
-          {'opt': queryObj.id, 'flag': userAddDelFlag})
+        let url = MyCuckoo.resolve('systemConfigMgrAssignUser.html?reskey={reskey}&action=res:systemConfigMgr:modify&q[userAddDelFlag]={flag}',
+          { ...queryObj, 'flag': userAddDelFlag})
         MyCuckoo.dialog('选择用户', url);
       },
       // 系统监控设置
       startJConsole(obj) {
-        $.request(operatorMap['res:systemConfigMgr:' +  obj.event], {}).then(json => {
+        $.request(resourceMap['res:systemConfigMgr:' +  obj.event], {}).then(json => {
           MyCuckoo.msg({msg: json.msg});
         });
       },

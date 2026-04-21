@@ -42,9 +42,9 @@
       dropdown = layui.dropdown,
       table = layui.table,
       queryObj = MyCuckoo.getQueryObject(location.search),
-      operator = MyCuckoo.getOperation(queryObj.opt),
-      operatorMap = MyCuckoo.getDictMap(operator),
-      action = operatorMap[queryObj.action],
+      resources = MyCuckoo.getResource(queryObj.reskey),
+      resourceMap = MyCuckoo.getDictMap(resources),
+      resourceObj = resourceMap[queryObj.action],
       $form = $('form[name=editForm]');
 
     const types = [
@@ -72,7 +72,7 @@
     const tableInst = table.render({
       id: 'table',
       elem: '#ID_table',
-      url: MyCuckoo.resolve(MyCuckoo.api.host + operatorMap['res:resourceMgr:selector'].path, queryObj),
+      url: MyCuckoo.resolve(MyCuckoo.api.getUrl(resourceMap['res:resourceMgr:selector']), queryObj),
       method: 'get',
       height: MyCuckoo.tableHeight,
       css: [
@@ -201,7 +201,7 @@
       const that = formMgrInst  = this;
 
       //渲染操作按钮
-      $form.find('.toolbar').html(MyCuckoo.getActions(action || {}, 'form'));
+      $form.find('.toolbar').html(MyCuckoo.getActions(resourceObj || {}, 'form'));
 
       //表单初始赋值
       if (queryObj.action) {
@@ -292,7 +292,7 @@
         this[event] && this[event](obj);
       },
       assign: function(obj) {
-        $.request(action, obj.data).then(json => {
+        $.request(resourceObj, obj.data).then(json => {
             MyCuckoo.msg({msg: json.msg});
             this.refresh();
         });

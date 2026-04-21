@@ -141,6 +141,13 @@
     const api = {
       host: host,
 
+      getUrl: function (resourceObj = {}) {
+        if (resourceObj.url) {
+          return resourceObj.url;
+        }
+
+        return (resourceObj.path && resourceObj.path.startsWith('/flow/mgr') ? 'http://localhost:8082' : host) + resourceObj.path
+      },
       postRegister: function(params) {
         return $.postJson(host + '/register', params);
       },

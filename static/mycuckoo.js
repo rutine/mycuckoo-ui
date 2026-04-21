@@ -35,16 +35,16 @@
       /**
        * 获取会话操作按钮
        */
-      getOperation: function(key) {
+      getResource: function(key) {
         let menu = this.getSession('myMenu');
         if (menu && menu.fourth) {
           return menu.fourth[key] || [];
         }
 
-        return null || [];
+        return [];
       },
 
-      getIndexAction: function (operator) {
+      getMainResource: function (operator) {
         return operator.findLast(o => (o['group'] & 1) === 1);
       },
 

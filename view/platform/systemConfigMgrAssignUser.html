@@ -50,14 +50,14 @@
       form = layui.form,
       table = layui.table,
       queryObj = MyCuckoo.getQueryObject(location.search),
-      operator = MyCuckoo.getOperation(queryObj.opt),
-      operatorMap = MyCuckoo.getDictMap(operator),
-      action = operatorMap[queryObj.action];
+      resources = MyCuckoo.getResource(queryObj.reskey),
+      resourceMap = MyCuckoo.getDictMap(resources),
+      resourceObj = resourceMap[queryObj.action];
 
     table.render({
       id: 'table',
       elem: '#ID_table',
-      url: MyCuckoo.api.host + operatorMap['res:systemConfigMgr:selector'].path,
+      url: MyCuckoo.api.getUrl(resourceMap['res:systemConfigMgr:selector']),
       method: 'get',
       cellMinWidth: 100,
       cols: [[
@@ -118,7 +118,7 @@
           codes.push(item.account);
         });
         let params = {'userAddDelFlag': queryObj['q[userAddDelFlag]'], systemMgr : codes};
-        $.request(action, params).then(json => {
+        $.request(resourceObj, params).then(json => {
           MyCuckoo.msg({msg: json.msg});
 
           this.refresh();

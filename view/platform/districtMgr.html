@@ -56,19 +56,19 @@
 
     //本地缓存数据
     const queryObj = MyCuckoo.getQueryObject(location.search);
-    const operator = MyCuckoo.getOperation(queryObj.id);
-    const operatorMap = MyCuckoo.getDictMap(operator);
-    const action = MyCuckoo.getIndexAction(operator);
+    const resources = MyCuckoo.getResource(queryObj.reskey);
+    const resourceMap = MyCuckoo.getDictMap(resources);
+    const resourceObj = MyCuckoo.getMainResource(resources);
 
     table.render({
       id: 'table',
       elem: '#ID_table',
-      url: MyCuckoo.api.host + action.path,
-      method: action.method,
+      url: MyCuckoo.api.getUrl(resourceObj),
+      method: resourceObj.method,
       cellMinWidth: 100,
       height: MyCuckoo.tableHeight,
-      toolbar: MyCuckoo.getActions(operator, 'table'),
-      operator: operator,
+      toolbar: MyCuckoo.getActions(resources, 'table'),
+      resources: resources,
       cols: [[
         {type: 'numbers'},
         {type: 'radio'},
@@ -87,7 +87,7 @@
           }
         },
         {field: 'createTime', title: '创建日期', sort: true},
-        {fixed: "right", title: "操作", align: "center", width: 120, toolbar: MyCuckoo.getActions(operator, 'col'), operator: operator}
+        {fixed: "right", title: "操作", align: "center", width: 120, toolbar: MyCuckoo.getActions(resources, 'col'), resources: resources}
       ]],
       page: true,
       request: {
@@ -168,22 +168,22 @@
       },
       //增加
       add: function(obj) {
-        let url = MyCuckoo.resolve('districtMgrForm.html?action={action}&opt={opt}',
-            {'action': obj.event, 'opt': queryObj.id})
+        let url = MyCuckoo.resolve('districtMgrForm.html?reskey={reskey}&action={action}',
+            { ...queryObj, 'action': obj.event})
         MyCuckoo.dialog('地区信息', url);
       },
       //修改
       modify: function(obj) {
         let data = obj.data;
-        let url = MyCuckoo.resolve('districtMgrForm.html?action={action}&opt={opt}&id={id}',
-            {'action': obj.event, 'opt': queryObj.id, 'id': data.districtId})
+        let url = MyCuckoo.resolve('districtMgrForm.html?reskey={reskey}&action={action}&id={id}',
+            { ...queryObj, 'action': obj.event, 'id': data.districtId})
         MyCuckoo.dialog('地区信息', url);
       },
       //查看
       view: function(obj) {
         let data = obj.data;
-        let url = MyCuckoo.resolve('districtMgrForm.html?action={action}&opt={opt}&id={id}',
-            {'action': obj.event, 'opt': queryObj.id, 'id': data.districtId})
+        let url = MyCuckoo.resolve('districtMgrForm.html?reskey={reskey}&action={action}&id={id}',
+            { ...queryObj, 'action': obj.event, 'id': data.districtId})
         MyCuckoo.sideDialog('地区信息', url);
       },
       //启用
@@ -195,7 +195,7 @@
         }
 
         let that = this;
-        $.request(operatorMap[obj.event], {id: data.districtId, disEnableFlag: 'enable'}).then(json => {
+        $.request(resourceMap[obj.event], {id: data.districtId, disEnableFlag: 'enable'}).then(json => {
           MyCuckoo.msg({ msg: '地区启用成功' });
 
           that.reload();
@@ -211,7 +211,7 @@
 
         let that = this;
         MyCuckoo.confirm({msg : '您确认停用此地区?', ok : function() {
-          $.request(operatorMap[obj.event], {id: data.districtId, disEnableFlag: 'disable'}).then(function(json) {
+          $.request(resourceMap[obj.event], {id: data.districtId, disEnableFlag: 'disable'}).then(function(json) {
             MyCuckoo.msg({ msg: '地区停用成功' });
 
             that.reload();
@@ -220,7 +220,7 @@
       },
       more: function (obj) {
         let that = this;
-        let btns = MyCuckoo.getActions(operator, 'more');
+        let btns = MyCuckoo.getActions(resources, 'more');
         dropdown.render({
           elem: obj.elem,
           show: true,

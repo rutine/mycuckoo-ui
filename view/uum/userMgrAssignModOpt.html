@@ -121,8 +121,8 @@
       form = layui.form,
       tree = layui.dtree,
       queryObj = MyCuckoo.getQueryObject(location.search),
-      operator = MyCuckoo.getOperation(queryObj.opt),
-      operatorMap = MyCuckoo.getDictMap(operator),
+      resources = MyCuckoo.getResource(queryObj.reskey),
+      resourceMap = MyCuckoo.getDictMap(resources),
       $tab = $('.layui-tab');
 
 
@@ -133,7 +133,7 @@
       //表单初始赋值
       if (queryObj.id) {
         $('fieldset > legend').text('用户名称:' + queryObj.name);
-        $.request(operatorMap['res:userMgr:resSelector'], queryObj).then(json => {
+        $.request(resourceMap['res:userMgr:resSelector'], queryObj).then(json => {
           form.val('userAssignModOpt', json.data);
           form.val('userAssignRowPriv', json.data);
 
@@ -198,7 +198,7 @@
       },
       selectRowPrivilege: function(privilegeType) {
         let that = this;
-        $.request(operatorMap['res:userMgr:rowSelector'], queryObj).then(json => {
+        $.request(resourceMap['res:userMgr:rowSelector'], queryObj).then(json => {
           let data = json.data;
           let selectedPrivilegeType = data.privilegeScope;
 
@@ -215,16 +215,16 @@
             data.privileges.forEach(item => {
               checkNodes.push(item.id);
             });
-            let action = operatorMap['res:deptMgr:tree'];
-            that.openTree(MyCuckoo.api.host + action.path, {id: id, data: checkNodes});
+            let action = resourceMap['res:deptMgr:tree'];
+            that.openTree(MyCuckoo.api.getUrl(action), {id: id, data: checkNodes});
           }
           else if(privilegeType == 'rol') {
             let checkNodes = [];
             data.privileges.forEach(item => {
               checkNodes.push('id-leaf-' + item.id);
             });
-            let action = operatorMap['res:deptMgr:tree'];
-            that.openTree(MyCuckoo.api.host + action.path, {id: id, data: checkNodes, withRole: true});
+            let action = resourceMap['res:deptMgr:tree'];
+            that.openTree(MyCuckoo.api.getUrl(action), {id: id, data: checkNodes, withRole: true});
           }
           else {
             let nodes = data.privileges;
@@ -250,7 +250,7 @@
       },
       //查询用户
       selectUsers: function(ele) {
-        $.request(operatorMap['res:userMgr:selector'], {userName: $tab.find('input[name=searchUsr]').val()}).then(json => {
+        $.request(resourceMap['res:userMgr:selector'], {userName: $tab.find('input[name=searchUsr]').val()}).then(json => {
           let nodes = [];
           json.data.forEach(item => nodes.push({
             id: item.userId,
@@ -278,7 +278,7 @@
 
         let optIds = [];
         selectedNodes.forEach(item => item.isLeaf && optIds.push(item.nodeId));
-        $.request(operatorMap['res:userMgr:assignRes'], data, optIds).then(json => {
+        $.request(resourceMap['res:userMgr:assignRes'], data, optIds).then(json => {
           MyCuckoo.msg({msg: json.msg});
 
           this.refresh();
@@ -303,7 +303,7 @@
           let index = !isNaN(id) ? -1 : id.indexOf('_');
           rowIds.push(item.isLeaf && index != -1 ? id.substr(index + 1) : id);
         });
-        $.request(operatorMap['res:userMgr:assignRow'], data, rowIds).then(json => {
+        $.request(resourceMap['res:userMgr:assignRow'], data, rowIds).then(json => {
           MyCuckoo.msg({msg: json.msg});
 
           this.refresh();

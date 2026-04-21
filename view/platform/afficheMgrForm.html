@@ -81,9 +81,9 @@
       layDate = layui.laydate,
       upload = layui.upload,
       queryObj = MyCuckoo.getQueryObject(location.search),
-      operator = MyCuckoo.getOperation(queryObj.opt),
-      operatorMap = MyCuckoo.getDictMap(operator),
-      action = operatorMap[queryObj.action],
+      resources = MyCuckoo.getResource(queryObj.reskey),
+      resourceMap = MyCuckoo.getDictMap(resources),
+      resourceObj = resourceMap[queryObj.action],
       $form = $('form[name=editForm]');
 
     let $fileList = $('#ID_fileList');
@@ -92,17 +92,17 @@
     const FormMgr = function () {
       let that = this;
       //渲染操作按钮
-      $form.find('.toolbar').html(MyCuckoo.getActions(action || {}, 'form'));
+      $form.find('.toolbar').html(MyCuckoo.getActions(resourceObj || {}, 'form'));
 
       //表单初始赋值
-      if (queryObj.id && action) {
-        if(action.code === 'res:afficheMgr:view') {
+      if (queryObj.id && resourceObj) {
+        if(resourceObj.code === 'res:afficheMgr:view') {
           $('#ID_filePicker').addClass('layui-hide');
           $('#ID_uploadStart').addClass('layui-hide');
           $form.find('input, select, textarea').attr('disabled', 'disabled')
         }
 
-        $.request(operatorMap['res:afficheMgr:view'], queryObj).then(function (json) {
+        $.request(resourceMap['res:afficheMgr:view'], queryObj).then(function (json) {
           form.val('editForm', json.data);
 
           json.data.attachments.forEach(function(item, index) {
@@ -117,7 +117,7 @@
               '</td>',
               '<td>' + (item.size / 1014).toFixed(1) + 'kb</td>',
               '<td></td>',
-              (action.code === 'res:afficheMgr:view') ? '<td></td>' : '<td><button class="layui-btn layui-btn-xs layui-btn-danger btn-delete">删除</button></td>',
+              (resourceObj.code === 'res:afficheMgr:view') ? '<td></td>' : '<td><button class="layui-btn layui-btn-xs layui-btn-danger btn-delete">删除</button></td>',
               '</tr>'
             ].join(''));
 
@@ -250,7 +250,7 @@
       add: function(obj) {
         let data = obj.data;
         data.publish = (data.publish != 0)
-        $.request(action, obj.data).then(json => {
+        $.request(resourceObj, obj.data).then(json => {
           MyCuckoo.msg({msg: json.msg});
 
           this.refresh();
@@ -259,7 +259,7 @@
       modify: function(obj) {
         let data = obj.data;
         data.publish = (data.publish != 0)
-        $.request(action, obj.data).then(json => {
+        $.request(resourceObj, obj.data).then(json => {
           MyCuckoo.msg({msg: json.msg});
 
           this.refresh();
@@ -267,7 +267,7 @@
       },
       // 删除附件
       deleteAttachment: function(id, fileId) {
-        $.request(operatorMap['res:afficheMgr:deleteAttachment'], {id: id, title: fileId}).then(json => {
+        $.request(resourceMap['res:afficheMgr:deleteAttachment'], {id: id, title: fileId}).then(json => {
           MyCuckoo.msg({msg: json.msg});
         });
       },

@@ -67,23 +67,23 @@
       form = layui.form,
       tree = layui.tree,
       queryObj = MyCuckoo.getQueryObject(location.search),
-      operator = MyCuckoo.getOperation(queryObj.opt),
-      operatorMap = MyCuckoo.getDictMap(operator),
-      action = operatorMap[queryObj.action],
+      resources = MyCuckoo.getResource(queryObj.reskey),
+      resourceMap = MyCuckoo.getDictMap(resources),
+      resourceObj = resourceMap[queryObj.action],
       $form = $('form[name=editForm]');
 
     const FormMgr = function () {
       const that = this;
 
       //渲染操作按钮
-      $form.find('.toolbar').html(MyCuckoo.getActions(action || {}, 'form'));
+      $form.find('.toolbar').html(MyCuckoo.getActions(resourceObj || {}, 'form'));
 
       $form.find('#ID_mycuckoo-tree').height($(window).height());
 
       //表单初始赋值
       if (queryObj.id) {
         $form.parent().find('fieldset > legend').text('模块: ' + queryObj.name);
-        $.request(operatorMap['res:moduleMgr:resSelector'], queryObj).then(function(json) {
+        $.request(resourceMap['res:moduleMgr:resSelector'], queryObj).then(function(json) {
           let source = json.data.source;
           let $elem = $form.find('.layui-col-md9');
           that.rend($elem, source, false, source);
@@ -253,7 +253,7 @@
         }
 
         let that = this;
-        $.request(action, obj.data, resource).then(json => {
+        $.request(resourceObj, obj.data, resource).then(json => {
           MyCuckoo.msg({msg: json.msg});
 
           setTimeout(function() {

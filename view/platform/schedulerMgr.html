@@ -59,19 +59,19 @@
 
     //本地缓存数据
     const queryObj = MyCuckoo.getQueryObject(location.search);
-    const operator = MyCuckoo.getOperation(queryObj.id);
-    const operatorMap = MyCuckoo.getDictMap(operator);
-    const action = MyCuckoo.getIndexAction(operator);
+    const resources = MyCuckoo.getResource(queryObj.reskey);
+    const resourceMap = MyCuckoo.getDictMap(resources);
+    const resourceObj = MyCuckoo.getMainResource(resources);
 
     table.render({
       id: 'table',
       elem: '#ID_table',
-      url: MyCuckoo.api.host + action.path,
-      method: action.method,
+      url: MyCuckoo.api.getUrl(resourceObj),
+      method: resourceObj.method,
       cellMinWidth: 100,
       height: MyCuckoo.tableHeight,
-      toolbar: MyCuckoo.getActions(operator, 'table'),
-      operator: operator,
+      toolbar: MyCuckoo.getActions(resources, 'table'),
+      resources: resources,
       cols: [[
         {type: 'numbers'},
         {type: 'radio'},
@@ -88,7 +88,7 @@
           }
         },
         {field: 'createTime', title: '创建日期', sort: true},
-        {fixed: "right", title: "操作", align: "center", width: 120, toolbar: MyCuckoo.getActions(operator, 'col'), operator: operator}
+        {fixed: "right", title: "操作", align: "center", width: 120, toolbar: MyCuckoo.getActions(resources, 'col'), resources: resources}
       ]],
       page: true,
       request: {
@@ -170,22 +170,22 @@
       },
       //增加
       add: function(obj) {
-        let url = MyCuckoo.resolve('schedulerMgrForm.html?action={action}&opt={opt}',
-            {'action': obj.event, 'opt': queryObj.id})
+        let url = MyCuckoo.resolve('schedulerMgrForm.html?reskey={reskey}&action={action}',
+            { ...queryObj, 'action': obj.event})
         MyCuckoo.dialog('任务调度信息', url);
       },
       //修改
       modify: function(obj) {
         let data = obj.data;
-        let url = MyCuckoo.resolve('schedulerMgrForm.html?action={action}&opt={opt}&id={id}',
-            {'action': obj.event, 'opt': queryObj.id, 'id': data.jobId})
+        let url = MyCuckoo.resolve('schedulerMgrForm.html?reskey={reskey}&action={action}&id={id}',
+            { ...queryObj, 'action': obj.event, 'id': data.jobId})
         MyCuckoo.dialog('任务调度信息', url);
       },
       //查看
       view: function(obj) {
         let data = obj.data;
-        let url = MyCuckoo.resolve('schedulerMgrForm.html?action={action}&opt={opt}&id={id}',
-            {'action': obj.event, 'opt': queryObj.id, 'id': data.jobId})
+        let url = MyCuckoo.resolve('schedulerMgrForm.html?reskey={reskey}&action={action}&id={id}',
+            { ...queryObj, 'action': obj.event, 'id': data.jobId})
         MyCuckoo.sideDialog('任务调度信息', url);
       },
       //删除
@@ -193,7 +193,7 @@
         let data = obj.data;
         let that = this;
         MyCuckoo.confirm({msg : '您确认删除此记录吗?', ok : function() {
-          $.request(operatorMap[obj.event], {id: data.jobId}).then(json => {
+          $.request(resourceMap[obj.event], {id: data.jobId}).then(json => {
             MyCuckoo.msg({ msg: json.msg });
 
             that.reload();
@@ -209,7 +209,7 @@
         }
 
         let that = this;
-        $.request(operatorMap[obj.event], {id: data.jobId}).then(json => {
+        $.request(resourceMap[obj.event], {id: data.jobId}).then(json => {
           MyCuckoo.msg({state: 'success', title: '提示', msg: json.msg});
 
           that.reload();
@@ -224,7 +224,7 @@
         }
 
         let that = this;
-        $.request(operatorMap[obj.event], {id: data.jobId}).then(json => {
+        $.request(resourceMap[obj.event], {id: data.jobId}).then(json => {
           MyCuckoo.msg({state: 'success', title: '提示', msg: json.msg});
 
           that.reload();
@@ -233,7 +233,7 @@
       //启动调度器
       schedulerStart: function(obj) {
         let that = this;
-        $.request(operatorMap[obj.event], {}).then(json => {
+        $.request(resourceMap[obj.event], {}).then(json => {
           MyCuckoo.msg({ msg: json.msg });
 
           that.reload();
@@ -242,7 +242,7 @@
       //停止调度器
       schedulerStop: function(obj) {
         let that = this;
-        $.request(operatorMap[obj.event], {}).then(json => {
+        $.request(resourceMap[obj.event], {}).then(json => {
           MyCuckoo.msg({ msg: json.msg });
 
           that.reload();
@@ -250,7 +250,7 @@
       },
       more: function (obj) {
         let that = this;
-        let btns = MyCuckoo.getActions(operator, 'more');
+        let btns = MyCuckoo.getActions(resources, 'more');
         dropdown.render({
           elem: obj.elem,
           show: true,

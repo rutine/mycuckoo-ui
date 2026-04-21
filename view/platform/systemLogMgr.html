@@ -57,19 +57,19 @@
 
     //本地缓存数据
     const queryObj = MyCuckoo.getQueryObject(location.search);
-    const operator = MyCuckoo.getOperation(queryObj.id);
-    const operatorMap = MyCuckoo.getDictMap(operator);
-    const action = MyCuckoo.getIndexAction(operator);
+    const resources = MyCuckoo.getResource(queryObj.reskey);
+    const resourceMap = MyCuckoo.getDictMap(resources);
+    const resourceObj = MyCuckoo.getMainResource(resources);
 
     table.render({
       id: 'table',
       elem: '#ID_table',
-      url: MyCuckoo.api.host + action.path,
-      method: action.method,
+      url: MyCuckoo.api.getUrl(resourceObj),
+      method: resourceObj.method,
       cellMinWidth: 100,
       height: MyCuckoo.tableHeight,
-      toolbar: MyCuckoo.getActions(operator, 'table'),
-      operator: operator,
+      toolbar: MyCuckoo.getActions(resources, 'table'),
+      resources: resources,
       cols: [[
         {type: 'numbers'},
         {type: 'radio'},
@@ -163,7 +163,7 @@
       //查看
       view(obj) {
         let data = obj.data;
-        $.request(operatorMap[obj.event], {id: data.optId}).then(json => {
+        $.request(resourceMap[obj.event], {id: data.optId}).then(json => {
           MyCuckoo.msg({title : '日志内容查看', msg : json.data });
         });
       },

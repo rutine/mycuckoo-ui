@@ -55,23 +55,23 @@
     const $ = layui.jquery,
       form = layui.form,
       queryObj = MyCuckoo.getQueryObject(location.search),
-      operator = MyCuckoo.getOperation(queryObj.opt),
-      operatorMap = MyCuckoo.getDictMap(operator),
-      action = operatorMap[queryObj.action],
+      resources = MyCuckoo.getResource(queryObj.reskey),
+      resourceMap = MyCuckoo.getDictMap(resources),
+      resourceObj = resourceMap[queryObj.action],
       $form = $('form[name=editForm]');
 
     const FormMgr = function () {
       const that = this;
 
       //渲染操作按钮
-      $form.find('.toolbar').html(MyCuckoo.getActions(action || {}, 'form'));
+      $form.find('.toolbar').html(MyCuckoo.getActions(resourceObj || {}, 'form'));
 
       //表单初始赋值
-      if (queryObj.id && action) {
-        $.request(operatorMap['res:roleMgr:view'], queryObj).then(json => {
+      if (queryObj.id && resourceObj) {
+        $.request(resourceMap['res:roleMgr:view'], queryObj).then(json => {
           form.val('editForm', json.data);
 
-          if (action.code === 'res:roleMgr:view') {
+          if (resourceObj.code === 'res:roleMgr:view') {
             $form.find('input, select, textarea').attr('disabled', 'disabled')
           }
         });
@@ -101,14 +101,14 @@
         this[event] && this[event](obj);
       },
       add: function(obj) {
-        $.request(action, obj.data).then(json => {
+        $.request(resourceObj, obj.data).then(json => {
           MyCuckoo.msg({msg: json.msg});
 
           this.refresh();
         });
       },
       modify: function(obj) {
-        $.request(action, obj.data).then(json => {
+        $.request(resourceObj, obj.data).then(json => {
           MyCuckoo.msg({msg: json.msg});
 
           this.refresh();
