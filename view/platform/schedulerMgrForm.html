@@ -95,8 +95,7 @@
 </div>
 </body>
 <script type="text/javascript" src="../../static/layui/2.13.5/layui.js" charset="UTF-8"></script>
-<script type="text/javascript" src="../../static/mycuckoo.js" charset="UTF-8"></script>
-<script type="text/javascript" src="../../static/mycuckoo.api.js" charset="UTF-8"></script>
+<script type="text/javascript" src="../../static/mycuckoo.bundle.js" charset="UTF-8"></script>
 <script type="text/javascript">
   let $ = null;
   layui.use(['jquery', 'form', 'laydate'], function() {
@@ -117,13 +116,13 @@
 
       //表单初始赋值
       if (queryObj.id && resourceObj) {
-        $.request(resourceMap['res:schedulerMgr:view'], queryObj).then(json => {
+        $.request(resourceMap[MyCuckoo.res.schedulerMgr.view], queryObj).then(json => {
           form.val('editForm', json.data);
 
           let triggerType = json.data.triggerType.toLowerCase();
           $form.find('.scheduler-trigger-type-' + triggerType).removeClass('layui-hide');
 
-          if (resourceObj.code === 'res:schedulerMgr:view') {
+          if (resourceObj.code === MyCuckoo.res.schedulerMgr.view) {
             $form.find('input, select, textarea').attr('disabled', 'disabled')
           }
         });

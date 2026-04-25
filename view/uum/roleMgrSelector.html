@@ -24,8 +24,7 @@
 </div>
 </body>
 <script type="text/javascript" src="../../static/layui/2.13.5/layui.js" charset="UTF-8"></script>
-<script type="text/javascript" src="../../static/mycuckoo.js" charset="UTF-8"></script>
-<script type="text/javascript" src="../../static/mycuckoo.api.js" charset="UTF-8"></script>
+<script type="text/javascript" src="../../static/mycuckoo.bundle.js" charset="UTF-8"></script>
 <script type="text/javascript">
   layui.use(['jquery', 'form', 'table'], function() {
     const $ = layui.jquery,
@@ -40,7 +39,7 @@
     table.render({
       id: 'table',
       elem: '#ID_table',
-      url: MyCuckoo.api.getUrl(resourceMap['res:roleMgr:list']),
+      url: MyCuckoo.api.getUrl(resourceMap[MyCuckoo.res.roleMgr.list]),
       method: 'get',
       cellMinWidth: 100,
       height: MyCuckoo.tableHeight,

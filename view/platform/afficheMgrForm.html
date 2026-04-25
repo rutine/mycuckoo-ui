@@ -72,8 +72,7 @@
 </div>
 </body>
 <script type="text/javascript" src="../../static/layui/2.13.5/layui.js" charset="UTF-8"></script>
-<script type="text/javascript" src="../../static/mycuckoo.js" charset="UTF-8"></script>
-<script type="text/javascript" src="../../static/mycuckoo.api.js" charset="UTF-8"></script>
+<script type="text/javascript" src="../../static/mycuckoo.bundle.js" charset="UTF-8"></script>
 <script type="text/javascript">
   layui.use(['jquery', 'form', 'laydate', 'upload'], function() {
     const $ = layui.jquery,
@@ -96,13 +95,13 @@
 
       //表单初始赋值
       if (queryObj.id && resourceObj) {
-        if(resourceObj.code === 'res:afficheMgr:view') {
+        if(resourceObj.code === MyCuckoo.res.afficheMgr.view) {
           $('#ID_filePicker').addClass('layui-hide');
           $('#ID_uploadStart').addClass('layui-hide');
           $form.find('input, select, textarea').attr('disabled', 'disabled')
         }
 
-        $.request(resourceMap['res:afficheMgr:view'], queryObj).then(function (json) {
+        $.request(resourceMap[MyCuckoo.res.afficheMgr.view], queryObj).then(function (json) {
           form.val('editForm', json.data);
 
           json.data.attachments.forEach(function(item, index) {
@@ -117,7 +116,7 @@
               '</td>',
               '<td>' + (item.size / 1014).toFixed(1) + 'kb</td>',
               '<td></td>',
-              (resourceObj.code === 'res:afficheMgr:view') ? '<td></td>' : '<td><button class="layui-btn layui-btn-xs layui-btn-danger btn-delete">删除</button></td>',
+              (resourceObj.code === MyCuckoo.res.afficheMgr.view) ? '<td></td>' : '<td><button class="layui-btn layui-btn-xs layui-btn-danger btn-delete">删除</button></td>',
               '</tr>'
             ].join(''));
 
@@ -267,7 +266,7 @@
       },
       // 删除附件
       deleteAttachment: function(id, fileId) {
-        $.request(resourceMap['res:afficheMgr:deleteAttachment'], {id: id, title: fileId}).then(json => {
+        $.request(resourceMap[MyCuckoo.res.afficheMgr.deleteAttachment], {id: id, title: fileId}).then(json => {
           MyCuckoo.msg({msg: json.msg});
         });
       },

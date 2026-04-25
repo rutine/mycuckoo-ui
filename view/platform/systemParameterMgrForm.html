@@ -56,8 +56,7 @@
 </div>
 </body>
 <script type="text/javascript" src="../../static/layui/2.13.5/layui.js" charset="UTF-8"></script>
-<script type="text/javascript" src="../../static/mycuckoo.js" charset="UTF-8"></script>
-<script type="text/javascript" src="../../static/mycuckoo.api.js" charset="UTF-8"></script>
+<script type="text/javascript" src="../../static/mycuckoo.bundle.js" charset="UTF-8"></script>
 <script type="text/javascript">
   let $ = null;
   layui.use(['jquery', 'form'], function() {
@@ -88,14 +87,14 @@
 
         //表单初始赋值
         if (queryObj.id && resourceObj) {
-          if (resourceObj.code !== 'res:systemParameterMgr:add') {
+          if (resourceObj.code !== MyCuckoo.res.systemParameterMgr.add) {
             $form.find('input[name=key]').attr('disabled', 'disabled');
           }
 
-          $.request(resourceMap['res:systemParameterMgr:view'], queryObj).then(json => {
+          $.request(resourceMap[MyCuckoo.res.systemParameterMgr.view], queryObj).then(json => {
             form.val('editForm', json.data);
 
-            if (resourceObj.code === 'res:systemParameterMgr:view') {
+            if (resourceObj.code === MyCuckoo.res.systemParameterMgr.view) {
               $form.find('input, select, textarea').attr('disabled', 'disabled')
             }
           });

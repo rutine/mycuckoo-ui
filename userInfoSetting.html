@@ -60,21 +60,21 @@
   </div>
 </body>
 <script type="text/javascript" src="static/layui/2.13.5/layui.js" charset="UTF-8"></script>
-<script type="text/javascript" src="static/mycuckoo.js" charset="UTF-8"></script>
-<script type="text/javascript" src="static/mycuckoo.api.js" charset="UTF-8"></script>
+<script type="text/javascript" src="static/mycuckoo.bundle.js" charset="UTF-8"></script>
 <script type="text/javascript">
   layui.use(['jquery', 'form'], function() {
     var $ = layui.jquery,
       form = layui.form,
-      queryObj = MyCuckoo.getQueryObject(location.search);
+      queryObj = MyCuckoo.getQueryObject(location.search),
+      resourceMap = MyCuckoo.getResourceMap();
 
-    var userInfo =  MyCuckoo.getSession('userInfo');;
+    var userInfo =  MyCuckoo.getSession('userInfo');
     $('#ID_userCode').text(userInfo.userCode);
     $('#ID_userName').text(userInfo.userName);
 
     //监听提交
     form.on('submit', function(data) {
-      $.put(MyCuckoo.api.userMgr.updatePwdUrl, data.field).then(json => {
+      $.request(resourceMap[MyCuckoo.res.userMgr.modifyPassword], data.field).then(json => {
         MyCuckoo.confirm({
           msg: json.msg,
           end: function() {

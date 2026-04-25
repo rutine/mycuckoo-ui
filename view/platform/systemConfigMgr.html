@@ -237,8 +237,7 @@
 </div>
 </body>
 <script type="text/javascript" src="../../static/layui/2.13.5/layui.js" charset="UTF-8"></script>
-<script type="text/javascript" src="../../static/mycuckoo.js" charset="UTF-8"></script>
-<script type="text/javascript" src="../../static/mycuckoo.api.js" charset="UTF-8"></script>
+<script type="text/javascript" src="../../static/mycuckoo.bundle.js" charset="UTF-8"></script>
 <script type="text/javascript">
   layui.use(['jquery', 'form'], function() {
     const $ = layui.jquery,
@@ -284,7 +283,7 @@
 
       //设置
       modify(obj) {
-        $.request(resourceMap['res:systemConfigMgr:modify'], obj.data).then(json => {
+        $.request(resourceMap[MyCuckoo.res.systemConfigMgr.modify], obj.data).then(json => {
           MyCuckoo.msg({msg: json.msg});
 
           this.reload();
@@ -298,13 +297,13 @@
       },
       //选择管理员
       selectAdmin(userAddDelFlag) {
-        let url = MyCuckoo.resolve('systemConfigMgrAssignUser.html?reskey={reskey}&action=res:systemConfigMgr:modify&q[userAddDelFlag]={flag}',
-          { ...queryObj, 'flag': userAddDelFlag})
+        let url = MyCuckoo.resolve('systemConfigMgrAssignUser.html?reskey={reskey}&action={action}&q[userAddDelFlag]={flag}',
+          { ...queryObj, action: MyCuckoo.res.systemConfigMgr.modify, 'flag': userAddDelFlag})
         MyCuckoo.dialog('选择用户', url);
       },
       // 系统监控设置
       startJConsole(obj) {
-        $.request(resourceMap['res:systemConfigMgr:' +  obj.event], {}).then(json => {
+        $.request(resourceMap[MyCuckoo.res.systemConfigMgr.prefix + obj.event], {}).then(json => {
           MyCuckoo.msg({msg: json.msg});
         });
       },

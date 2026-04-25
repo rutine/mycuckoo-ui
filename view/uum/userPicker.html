@@ -59,14 +59,14 @@
 </div>
 </body>
 <script type="text/javascript" src="../../static/layui/2.13.5/layui.js" charset="UTF-8"></script>
-<script type="text/javascript" src="../../static/mycuckoo.js" charset="UTF-8"></script>
-<script type="text/javascript" src="../../static/mycuckoo.api.js" charset="UTF-8"></script>
+<script type="text/javascript" src="../../static/mycuckoo.bundle.js" charset="UTF-8"></script>
 <script type="text/javascript">
   layui.use(['jquery', 'form', 'table'], function() {
     const $ = layui.jquery,
       form = layui.form,
       table = layui.table,
       queryObj = MyCuckoo.getQueryObject(location.search),
+      resourceMap = MyCuckoo.getResourceMap(),
       selectedUsers = Object.create(null),
       $form = $('form[name=pickerForm]');
 
@@ -154,7 +154,7 @@
       table.render({
         id: 'table',
         elem: '#ID_table',
-        url: MyCuckoo.api.userMgr.url,
+        url: MyCuckoo.api.getUrl(resourceMap[MyCuckoo.res.userMgr.list]),
         method: 'get',
         cellMinWidth: 100,
         height: 'full-200',
@@ -188,10 +188,6 @@
             data: pageData
           };
         },
-        // complete: function(xhr, ts) {
-        //   initSelectedUsers(queryObj.ids, queryObj.names);
-        //   updateSelectedSummary();
-        // },
         done: function() {
           updateSelectedSummary();
         }

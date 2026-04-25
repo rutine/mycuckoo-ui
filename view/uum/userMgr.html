@@ -49,8 +49,7 @@
 </div>
 </body>
 <script type="text/javascript" src="../../static/layui/2.13.5/layui.js" charset="UTF-8"></script>
-<script type="text/javascript" src="../../static/mycuckoo.js" charset="UTF-8"></script>
-<script type="text/javascript" src="../../static/mycuckoo.api.js" charset="UTF-8"></script>
+<script type="text/javascript" src="../../static/mycuckoo.bundle.js" charset="UTF-8"></script>
 <script type="text/javascript">
   layui.use(['jquery', 'form', 'dropdown', 'table', 'dtree'], function() {
     const $ = layui.jquery,
@@ -264,7 +263,7 @@
           content: '<ul id="ID_tree" class="dtree" data-id="1"></ul>',
           btn: ['确认选择'],
           success: function(layero, index) {
-            let action = resourceMap['res:deptMgr:tree'];
+            let action = resourceMap[MyCuckoo.res.deptMgr.tree];
             let treeObj = tree.render({
               elem: '#ID_tree',
               method: 'get',

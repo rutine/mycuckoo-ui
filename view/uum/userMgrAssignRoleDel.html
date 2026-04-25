@@ -77,15 +77,17 @@
 </div>
 </body>
 <script type="text/javascript" src="../../static/layui/2.13.5/layui.js" charset="UTF-8"></script>
-<script type="text/javascript" src="../../static/mycuckoo.js" charset="UTF-8"></script>
-<script type="text/javascript" src="../../static/mycuckoo.api.js" charset="UTF-8"></script>
+<script type="text/javascript" src="../../static/mycuckoo.bundle.js" charset="UTF-8"></script>
 <script type="text/javascript">
   layui.use(['jquery', 'form', 'dtree', 'selectM'], function() {
     const $ = layui.jquery,
       form = layui.form,
       tree = layui.dtree,
       select = layui.selectM,
-      queryObj = MyCuckoo.getQueryObject(location.search);
+      queryObj = MyCuckoo.getQueryObject(location.search),
+      resources = MyCuckoo.getResource(queryObj.reskey),
+      resourceMap = MyCuckoo.getDictMap(resources),
+      resourceObj = resourceMap[queryObj.action];
 
     let treeObj;
     let multiSelectObj;
@@ -109,11 +111,15 @@
     const FormMgr = function () {
       //表单初始赋值
       if (queryObj.id) {
-        $.get(MyCuckoo.api.userMgr.url + '/' + queryObj.id).then(function(json) {
+        $.request(resourceMap[MyCuckoo.res.userMgr.view], queryObj).then(json => {
           form.val('editForm', json.data);
+
+          if (!resourceObj || resourceObj.code === MyCuckoo.res.userMgr.view) {
+            $form.find('input, select, textarea').attr('disabled', 'disabled')
+          }
         });
 
-        $.get(MyCuckoo.api.userMgr.rolePrivilegeUrl, queryObj).then(function(json) {
+        $.request(resourceMap[MyCuckoo.res.userMgr.rowSelector], queryObj).then(function(json) {
           //初始化结构树
           treeObj = tree.render({
             elem: '#ID_left_role_tree',
@@ -260,7 +266,7 @@
         } else {
           let roleIds = [];
           selectedData.forEach(item => roleIds.push(item.orgRoleId));
-          $.postJson(MyCuckoo.api.userMgr.saveRolePrivilegeUrl, data, roleIds).then(json => {
+          $.request(null, data, roleIds).then(json => {
             MyCuckoo.msg({msg: json.data});
 
             this.refresh();

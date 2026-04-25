@@ -50,11 +50,10 @@
 </div>
 </body>
 <script type="text/javascript" src="../../static/layui/2.13.5/layui.js" charset="UTF-8"></script>
-<script type="text/javascript" src="../../static/mycuckoo.js" charset="UTF-8"></script>
-<script type="text/javascript" src="../../static/mycuckoo.api.js" charset="UTF-8"></script>
+<script type="text/javascript" src="../../static/mycuckoo.bundle.js" charset="UTF-8"></script>
 <script type="text/html" id="toolbar">
   <div class="layui-btn-group btn-toolbar">
-    {{# layui.each(d.operator, function(index, item){ }}
+    {{# layui.each(d.resources, function(index, item){ }}
     <button class="layui-btn layui-btn-sm" lay-event="{{ item.code }}">
       <i class="layui-icon layui-icon-{{ item.iconCls }}"></i> {{ item.name }}
     </button>
@@ -70,7 +69,8 @@
 
     //本地缓存数据
     const queryObj = MyCuckoo.getQueryObject(location.search);
-    const operator = MyCuckoo.getResource(queryObj.reskey);
+    const resources = MyCuckoo.getResource(queryObj.reskey);
+    const resourceMap = MyCuckoo.getDictMap(resources);
 
     //搜索
     form.on('submit(search)', function(data) {
@@ -84,10 +84,11 @@
 
     //初始化结构树
     let selectNode = null;
+    let uri = MyCuckoo.api.getUrl(resourceMap[MyCuckoo.res.deptMgr.tree]);
     const treeObj = tree.render({
       elem: '#tree',
       method: 'get',
-      url: MyCuckoo.resolvePlaceholder(MyCuckoo.api.deptMgr.childNodesUrl, {id: 0}),
+      url: MyCuckoo.resolvePlaceholder(uri, {id: 0}),
       request: {isCheckbox: 'N'},
       dataStyle: 'layuiStyle',
       response: { statusCode: 0, treeId: 'id', title: 'text', isLast: 'isLeaf', checkArr: 'checkbox'},
@@ -114,7 +115,7 @@
       cellMinWidth: 100,
       height: MyCuckoo.tableHeight,
       toolbar: '#toolbar',
-      operator: operator,
+      resources: resources,
       cols: [[
         {type: 'numbers'},
         {type: 'checkbox'},

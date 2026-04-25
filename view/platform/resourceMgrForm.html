@@ -89,8 +89,7 @@
 </div>
 </body>
 <script type="text/javascript" src="../../static/layui/2.13.5/layui.js" charset="UTF-8"></script>
-<script type="text/javascript" src="../../static/mycuckoo.js" charset="UTF-8"></script>
-<script type="text/javascript" src="../../static/mycuckoo.api.js" charset="UTF-8"></script>
+<script type="text/javascript" src="../../static/mycuckoo.bundle.js" charset="UTF-8"></script>
 <script type="text/javascript">
   layui.use(['jquery', 'form'], function() {
     const $ = layui.jquery,
@@ -104,11 +103,11 @@
     //表单初始赋值
     function initForm() {
       if (queryObj.id) {
-        $.request(resourceMap['res:resourceMgr:view'], queryObj).then(json => {
+        $.request(resourceMap[MyCuckoo.res.resourceMgr.view], queryObj).then(json => {
           json.data.moduleId = queryObj.moduleId;
           form.val('editForm', json.data);
 
-          if (resourceObj.code === 'res:resourceMgr:view') {
+          if (resourceObj.code === MyCuckoo.res.resourceMgr.view) {
             $form.find('input, select, textarea').attr('disabled', 'disabled')
           }
         });
@@ -124,7 +123,7 @@
       $form.find('.toolbar').html(MyCuckoo.getActions(resourceObj || {}, 'form'));
 
       //初始化
-      $.request(resourceMap['res:moduleMgr:optSelector'], {id: queryObj.moduleId}).then(function(json) {
+      $.request(resourceMap[MyCuckoo.res.moduleMgr.optSelector], {id: queryObj.moduleId}).then(function(json) {
         let $select = $form.find('select[name=operateId]');
         $select.empty();
         $select.append('<option value="">请选择或搜索</option>');

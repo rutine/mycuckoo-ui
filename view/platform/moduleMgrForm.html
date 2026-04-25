@@ -107,8 +107,7 @@
   </div>
 </body>
 <script type="text/javascript" src="../../static/layui/2.13.5/layui.js" charset="UTF-8"></script>
-<script type="text/javascript" src="../../static/mycuckoo.js" charset="UTF-8"></script>
-<script type="text/javascript" src="../../static/mycuckoo.api.js" charset="UTF-8"></script>
+<script type="text/javascript" src="../../static/mycuckoo.bundle.js" charset="UTF-8"></script>
 <script type="text/html" id="ID_operator">
   <!-- 弃用 -->
   <div class="layui-btn-container" style="margin-bottom: 6px; text-align: center;">
@@ -162,14 +161,14 @@
 
         //表单初始赋值
         if (queryObj.id && resourceObj) {
-          if (resourceObj.code !== 'res:moduleMgr:add') {
+          if (resourceObj.code !== MyCuckoo.res.moduleMgr.add) {
             $form.find('input[name=code]').attr('disabled', 'disabled')
           }
 
-          $.request(resourceMap['res:moduleMgr:view'], queryObj).then(json => {
+          $.request(resourceMap[MyCuckoo.res.moduleMgr.view], queryObj).then(json => {
             form.val('editForm', json.data);
 
-            if (resourceObj.code === 'res:moduleMgr:view') {
+            if (resourceObj.code === MyCuckoo.res.moduleMgr.view) {
               $form.find('input, select, textarea').attr('disabled', 'disabled')
             }
           });
@@ -260,7 +259,7 @@
         });
       },
       selectModule: function(obj) {
-        let action = resourceMap['res:moduleMgr:tree'];
+        let action = resourceMap[MyCuckoo.res.moduleMgr.tree];
         if (!action) {
           MyCuckoo.msg({msg: '无权访问此资源'});
           return;

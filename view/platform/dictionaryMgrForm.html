@@ -59,8 +59,7 @@
 </div>
 </body>
 <script type="text/javascript" src="../../static/layui/2.13.5/layui.js" charset="UTF-8"></script>
-<script type="text/javascript" src="../../static/mycuckoo.js" charset="UTF-8"></script>
-<script type="text/javascript" src="../../static/mycuckoo.api.js" charset="UTF-8"></script>
+<script type="text/javascript" src="../../static/mycuckoo.bundle.js" charset="UTF-8"></script>
 <script type="text/javascript">
   layui.use(['jquery', 'form'], function() {
     const $ = layui.jquery,
@@ -74,7 +73,7 @@
     const FormMgr = function() {
       const that = this;
 
-      if (resourceObj.code !== 'res:dictionaryMgr:view') {
+      if (resourceObj.code !== MyCuckoo.res.dictionaryMgr.view) {
         $form.find('a[data-event=addRow]').removeClass('layui-hide');
       }
 
@@ -83,12 +82,12 @@
 
       //表单初始赋值
       if (queryObj.id && resourceObj) {
-        $.request(resourceMap['res:dictionaryMgr:view'], queryObj).then(function(json) {
+        $.request(resourceMap[MyCuckoo.res.dictionaryMgr.view], queryObj).then(function(json) {
           form.val('editForm', json.data);
 
           that.smallTypeGrid(json.data.smallTypes);
 
-          if (resourceObj.code === 'res:dictionaryMgr:view') {
+          if (resourceObj.code === MyCuckoo.res.dictionaryMgr.view) {
             $form.find('input, select, textarea').attr('disabled', 'disabled')
           }
         });
@@ -122,7 +121,7 @@
         let that = this;
         let $ele = $form.find('#ID_mycuckoo_dict_small_type_content');
         smallTypes.forEach(function(item, index) {
-          if (resourceObj.code === 'res:dictionaryMgr:view') {
+          if (resourceObj.code === MyCuckoo.res.dictionaryMgr.view) {
             let tr = $([
               '<tr>',
               '<td>' + item.code + '</td>',

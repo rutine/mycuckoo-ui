@@ -76,8 +76,7 @@
 </div>
 </body>
 <script type="text/javascript" src="static/layui/2.13.5/layui.js" charset="UTF-8"></script>
-<script type="text/javascript" src="static/mycuckoo.js" charset="UTF-8"></script>
-<script type="text/javascript" src="static/mycuckoo.api.js" charset="UTF-8"></script>
+<script type="text/javascript" src="static/mycuckoo.bundle.js" charset="UTF-8"></script>
 <script type="text/javascript">
   layui.use(['jquery', 'element', 'admin', 'upload', 'laytpl'], function(){
     const $ = layui.jquery,
@@ -113,6 +112,8 @@
         MyCuckoo.setSession('myMenu', menu);
         MyCuckoo.setSession('userInfo', json.user);
 
+        let resourceMap = MyCuckoo.getResourceMap();
+
         element.on('nav(mycuckoo-nav-right)', function(data) {
           let type = $(this).data('type');
           menuMgr[type] && menuMgr[type](this);
@@ -131,7 +132,7 @@
           data: {type: 'PHOTO'},
           done: function(res, index, upload) {
             if(res.code == 0) { //上传成功
-              $.put(MyCuckoo.api.userMgr.updatePhoto, {fileId: res.data.id}).then(function(json) {
+              $.request(resourceMap[MyCuckoo.res.userMgr.modifyPhoto], {fileId: res.data.id}).then(function(json) {
                 $('img#filePicker').attr('src', res.data.url);
                 MyCuckoo.msg({ msg: '成功更换头像' });
               });
@@ -156,7 +157,7 @@
       },
       //查看用户信息
       userInfo: function(el) {
-        MyCuckoo.dialog('用户信息', './view/uum/userMgrForm.html?reskey=34&action=res:userMgr:view&id=' + this.user.id, 480, 450);
+        MyCuckoo.dialog('用户信息', './view/uum/userMgrForm.html?reskey=34&action=' + MyCuckoo.res.userMgr.view + '&id=' + this.user.id, 480, 450);
       },
       //注销登录
       logout: function(el) {
@@ -228,10 +229,10 @@
         for (let i = 0; i < menu.first.length; i++) {
           let first = menu.first[i];
           let itemHtm = '';
-          for (let ii = 0; ii < menu.second[first.moduleId].length; ii++) {
+          for (let ii = 0; ii < menu.second[first.moduleId]?.length; ii++) {
             let second = menu.second[first.moduleId][ii];
             let subItemHtm = '';
-            for (let iii = 0; iii < menu.third[second.moduleId].length; iii++) {
+            for (let iii = 0; iii < menu.third[second.moduleId]?.length; iii++) {
               let third = menu.third[second.moduleId][iii];
               let href = 'view/' + third.belongSys + '/' + third.code + '.html?reskey=' + third.moduleId;
               subItemHtm += laytpl(subItemTpl).render({

@@ -113,8 +113,7 @@
 </div>
 </body>
 <script type="text/javascript" src="../../static/layui/2.13.5/layui.js" charset="UTF-8"></script>
-<script type="text/javascript" src="../../static/mycuckoo.js" charset="UTF-8"></script>
-<script type="text/javascript" src="../../static/mycuckoo.api.js" charset="UTF-8"></script>
+<script type="text/javascript" src="../../static/mycuckoo.bundle.js" charset="UTF-8"></script>
 <script type="text/javascript">
   layui.use(['jquery', 'form', 'laydate', 'dtree', 'upload'], function() {
     const $ = layui.jquery,
@@ -137,10 +136,10 @@
 
       //表单初始赋值
       if (queryObj.id && resourceObj) {
-        $.request(resourceMap['res:userMgr:view'], queryObj).then(json => {
+        $.request(resourceMap[MyCuckoo.res.userMgr.view], queryObj).then(json => {
           form.val('editForm', json.data);
 
-          if (resourceObj.code === 'res:userMgr:view') {
+          if (resourceObj.code === MyCuckoo.res.userMgr.view) {
             $form.find('input, select, textarea').attr('disabled', 'disabled')
           }
           if(json.data.photoUrl) {
@@ -263,7 +262,7 @@
         });
       },
       selectDept: function(ele) {
-        let action = resourceMap['res:deptMgr:tree'];
+        let action = resourceMap[MyCuckoo.res.deptMgr.tree];
         if (!action) {
           MyCuckoo.msg({msg: '无权访问此资源'});
           return;
@@ -272,7 +271,7 @@
         this.openTree(MyCuckoo.api.getUrl(action), {nodeId: 'deptId', context: 'deptName'});
       },
       selectRole: function(ele) {
-        let action = resourceMap['res:deptMgr:tree'];
+        let action = resourceMap[MyCuckoo.res.deptMgr.tree];
         if (!action) {
           MyCuckoo.msg({msg: '无权访问此资源'});
           return;

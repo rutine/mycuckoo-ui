@@ -77,8 +77,7 @@
 </div>
 </body>
 <script type="text/javascript" src="../../static/layui/2.13.5/layui.js" charset="UTF-8"></script>
-<script type="text/javascript" src="../../static/mycuckoo.js" charset="UTF-8"></script>
-<script type="text/javascript" src="../../static/mycuckoo.api.js" charset="UTF-8"></script>
+<script type="text/javascript" src="../../static/mycuckoo.bundle.js" charset="UTF-8"></script>
 <script type="text/javascript">
   function formatDate(format) {
     if (!format) return '';
@@ -277,10 +276,10 @@
 
         //表单初始赋值
         if (queryObj.id && resourceObj) {
-          $.request(resourceMap['res:districtMgr:view'], queryObj).then(json => {
+          $.request(resourceMap[MyCuckoo.res.districtMgr.view], queryObj).then(json => {
             form.val('editForm', json.data);
 
-            if (resourceObj.code === 'res:districtMgr:view') {
+            if (resourceObj.code === MyCuckoo.res.districtMgr.view) {
               $form.find('input, select, textarea').attr('disabled', 'disabled')
             }
           });
@@ -370,7 +369,7 @@
         });
       },
       selectDistrict: function(obj) {
-        let action = resourceMap['res:districtMgr:tree'];
+        let action = resourceMap[MyCuckoo.res.districtMgr.tree];
         if (!action) {
           MyCuckoo.msg({msg: '无权访问此资源'});
           return;
