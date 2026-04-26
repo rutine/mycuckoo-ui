@@ -132,9 +132,10 @@ function bindLayuiSelect(form, bindings = []) {
 }
 
 export default class LayuiPropertiesPanel {
-  constructor(eventBus, selection, bpmnFactory, commandStack, modeling, moddle, config = {}) {
+  constructor(eventBus, selection, bpmnFactory, commandStack, modeling, moddle, canvas, config = {}) {
     this._eventBus = eventBus;
     this._selection = selection;
+    this._canvas = canvas;
     this._config = config || {};
     this._services = {
       bpmnFactory,
@@ -162,6 +163,30 @@ export default class LayuiPropertiesPanel {
     });
 
     this._render();
+  }
+
+  _getProcessElement() {
+    const rootElement = this._canvas && typeof this._canvas.getRootElement === 'function'
+      ? this._canvas.getRootElement()
+      : null;
+
+    return findFirstElement(rootElement, (element) => {
+      const businessObject = element && element.businessObject ? element.businessObject : null;
+      return element && (
+        element.type === 'bpmn:Process' ||
+        (businessObject && businessObject.$type === 'bpmn:Process')
+      );
+    });
+  }
+
+  _getActiveElement() {
+    const selection = this._selection && this._selection.get ? this._selection.get() : [];
+
+    if (selection && selection.length) {
+      return selection[0];
+    }
+
+    return this._getProcessElement();
   }
 
   _ensureContainer() {
@@ -201,8 +226,7 @@ export default class LayuiPropertiesPanel {
       return;
     }
 
-    const selection = this._selection && this._selection.get ? this._selection.get() : [];
-    const element = selection && selection.length ? selection[0] : null;
+    const element = this._getActiveElement();
 
     if (
       this._uiState.pendingMultiInstanceDraft &&
@@ -239,8 +263,7 @@ export default class LayuiPropertiesPanel {
   _shouldSuppressMultiInstanceRender() {
     const suppressState = this._uiState && this._uiState.suppressMultiInstanceRender;
     const pendingDraft = this._uiState && this._uiState.pendingMultiInstanceDraft;
-    const selection = this._selection && this._selection.get ? this._selection.get() : [];
-    const element = selection && selection.length ? selection[0] : null;
+    const element = this._getActiveElement();
     const elementId = getElementId(element);
     const activeElement = typeof document !== 'undefined' ? document.activeElement : null;
     const activeInsidePanel = !!(
@@ -303,5 +326,6 @@ LayuiPropertiesPanel.$inject = [
   'commandStack',
   'modeling',
   'moddle',
+  'canvas',
   'config.layuiPropertiesPanel'
 ];

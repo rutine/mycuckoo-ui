@@ -170,7 +170,7 @@
       //修改
       modify: function(obj) {
         let data = obj.data;
-        let url = MyCuckoo.resolve('../../modeler.html?reskey={reskey}&action={action}&key={key}&mode=edit&name={name}&description={description}', {
+        let url = MyCuckoo.resolve('../../modeler.html?reskey={reskey}&action={action}&key={key}&name={name}&description={description}', {
           ...queryObj, 'action': obj.event,
           key: data.key,
           name: data.name || '',
@@ -181,7 +181,7 @@
       //查看
       view: function(obj) {
         let data = obj.data;
-        let url = MyCuckoo.resolve('../../modeler.html?reskey={reskey}&action={action}&key={key}&mode=view&name={name}&description={description}', {
+        let url = MyCuckoo.resolve('../../modeler.html?reskey={reskey}&action={action}&key={key}&name={name}&description={description}', {
           ...queryObj, 'action': obj.event,
           key: data.key,
           name: data.name || '',

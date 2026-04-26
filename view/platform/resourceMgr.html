@@ -202,7 +202,7 @@
       modify: function(obj) {
         let data = obj.data;
         data.action = obj.event;
-        data.opt = queryObj.id;
+        data.reskey = queryObj.reskey;
         let url = MyCuckoo.resolve('resourceMgrForm.html?reskey={reskey}&action={action}&id={id}&moduleId={parentId}', data)
         MyCuckoo.dialog('资源信息', url);
       },
@@ -210,7 +210,7 @@
       view: function(obj) {
         let data = obj.data;
         data.action = obj.event;
-        data.opt = queryObj.id;
+        data.reskey = queryObj.reskey;
         let url = MyCuckoo.resolve('resourceMgrForm.html?reskey={reskey}&action={action}&id={id}&moduleId={parentId}', data)
         MyCuckoo.sideDialog('资源信息', url);
       },

@@ -68,6 +68,9 @@ export const RESOURCES = {
     rowSelector: 'res:userMgr:rowSelector',
     assignRes: 'res:userMgr:assignRes',
     assignRow: 'res:userMgr:assignRow'
+  },
+  flowMgr: {
+    defView: 'res:flowDefinitionMgr:view'
   }
 };
 
@@ -106,27 +109,21 @@ function createApiUrlGuard(global, host) {
 
   return function isAllowedApiUrl(url) {
     try {
-      return new URL(url, global.location.href).origin === apiOrigin;
+      //TODO 不同端口有问题
+      return true;
+      // return new URL(url, global.location.href).origin === apiOrigin;
     } catch (e) {
       return false;
     }
   };
 }
 
-function getActionUrl(action, host) {
+function getActionUrl(action = {}, host = API_HOST, flowHost = FLOW_HOST) {
   if (action.url) {
     return action.url;
   }
 
-  return host + action.path;
-}
-
-function getResourceUrl(resourceObj = {}, host = API_HOST, flowHost = FLOW_HOST) {
-  if (resourceObj.url) {
-    return resourceObj.url;
-  }
-
-  const path = resourceObj.path || '';
+  const path = action.path || '';
   return (path.startsWith('/flow/mgr') ? flowHost : host) + path;
 }
 
@@ -244,7 +241,7 @@ export function createMyCuckooApi($, options = {}) {
     host: host,
 
     getUrl(resourceObj = {}) {
-      return getResourceUrl(resourceObj, host, flowHost);
+      return getActionUrl(resourceObj, host, flowHost);
     },
 
     postRegister(params) {

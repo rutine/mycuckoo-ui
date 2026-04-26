@@ -17,6 +17,8 @@ export const EMPTY_PANEL_STATE = {
 export const COMPONENTS = {
   EXPRESSION_EDITOR: 'ExpressionEditor',
   PARAMETER_EDITOR: 'ParameterEditor',
+  SELECT: 'Select',
+  SWITCH: 'Switch',
   TEXT_INPUT: 'TextInput',
   LISTENER_EDITOR: 'ListenerEditor',
   MULTI_INSTANCE_EDITOR: 'MultiInstanceEditor'
@@ -167,6 +169,26 @@ export function createSimpleEntry(key, label, options = {}) {
     component: COMPONENTS.TEXT_INPUT,
     key,
     label,
+    ...options
+  });
+}
+
+export function createSelectEntry(key, label, options = {}) {
+  return createEntry({
+    component: COMPONENTS.SELECT,
+    key,
+    label,
+    options: options.options || [],
+    ...options
+  });
+}
+
+export function createSwitchEntry(key, label, options = {}) {
+  return createEntry({
+    component: COMPONENTS.SWITCH,
+    key,
+    label,
+    layText: options.layText || '是|否',
     ...options
   });
 }

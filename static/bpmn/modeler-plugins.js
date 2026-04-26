@@ -38460,6 +38460,7 @@
   const COMPONENTS = {
     EXPRESSION_EDITOR: 'ExpressionEditor',
     PARAMETER_EDITOR: 'ParameterEditor',
+    SWITCH: 'Switch',
     TEXT_INPUT: 'TextInput',
     LISTENER_EDITOR: 'ListenerEditor',
     MULTI_INSTANCE_EDITOR: 'MultiInstanceEditor'
@@ -38614,6 +38615,16 @@
     });
   }
 
+  function createSwitchEntry(key, label, options = {}) {
+    return createEntry({
+      component: COMPONENTS.SWITCH,
+      key,
+      label,
+      layText: options.layText || '是|否',
+      ...options
+    });
+  }
+
   function createBlockEntry(key, label, component, options = {}) {
     return createEntry({
       component,
@@ -38714,7 +38725,27 @@
     }
   ];
 
+  const PROCESS_GROUPS = [
+    {
+      id: 'base',
+      label: '模型信息',
+      entries: [
+        createSimpleEntry('id', '模型ID'),
+        createSimpleEntry('name', '模型名称'),
+        createSwitchEntry('isExecutable', '是否可执行', {
+          layText: '是|否',
+          getValue: (element) => {
+            const businessObject = element && element.businessObject ? element.businessObject : {};
+            return businessObject.isExecutable !== false;
+          },
+          normalizeValue: (value) => value === true || String(value) === 'true'
+        })
+      ]
+    }
+  ];
+
   const SCHEMA_ROUTES = {
+    'bpmn:Process': (element) => createPanelSchema(element, PROCESS_GROUPS),
     'bpmn:SequenceFlow': resolveSequenceFlowSchema,
     'bpmn:UserTask': resolveUserTaskSchema
   };
@@ -40075,12 +40106,12 @@
       };
     }
 
-    const nextValue = normalizeText(value);
+    const nextValue = typeof value === 'boolean' ? value : normalizeText(value);
 
     return {
       updated: true,
       result: services.modeling.updateProperties(element, {
-        [fieldId]: nextValue || undefined
+        [fieldId]: nextValue === '' ? undefined : nextValue
       })
     };
   }
@@ -40146,16 +40177,23 @@
 
         if (originalSetValue) {
           entry.setValue = (value) => {
-            if (entry.component === 'TextInput' || entry.component === 'ExpressionEditor') {
+            if (
+              entry.component === 'TextInput' ||
+              entry.component === 'ExpressionEditor' ||
+              entry.component === 'Select' ||
+              entry.component === 'Switch'
+            ) {
+              const nextValue = typeof entry.normalizeValue === 'function' ? entry.normalizeValue(value) : value;
+
               if (uiState) {
                 uiState.pendingSimpleEntry = {
                   elementId: getElementId(element),
                   entryKey: entry.key || null,
-                  value: normalizeText(value)
+                  value: normalizeText(nextValue)
                 };
               }
 
-              const result = writeSimpleField(element, services, entry.key, value);
+              const result = writeSimpleField(element, services, entry.key, nextValue);
 
               if (uiState && (!result || !result.updated)) {
                 uiState.pendingSimpleEntry = null;
@@ -40426,7 +40464,9 @@
   function isEditableEntry(entry) {
     return !!(entry && (
       entry.component === 'TextInput' ||
-      entry.component === 'ExpressionEditor'
+      entry.component === 'ExpressionEditor' ||
+      entry.component === 'Select' ||
+      entry.component === 'Switch'
     ));
   }
 
@@ -40471,6 +40511,42 @@
   }
 
   function createEditableControl(documentRef, entry, value) {
+    if (entry && entry.component === 'Switch') {
+      const inputEl = documentRef.createElement('input');
+      inputEl.type = 'checkbox';
+      inputEl.checked = value === true || String(value) === 'true';
+      inputEl.dataset.entryKey = entry && entry.key ? entry.key : '';
+      inputEl.dataset.component = entry && entry.component ? entry.component : '';
+
+      if (typeof inputEl.setAttribute === 'function') {
+        inputEl.setAttribute('lay-skin', 'switch');
+        inputEl.setAttribute('lay-text', entry.layText || '是|否');
+      }
+
+      return inputEl;
+    }
+
+    if (entry && entry.component === 'Select') {
+      const selectEl = documentRef.createElement('select');
+      selectEl.className = 'layui-input';
+      selectEl.dataset.entryKey = entry && entry.key ? entry.key : '';
+      selectEl.dataset.component = entry && entry.component ? entry.component : '';
+
+      (entry.options || []).forEach((option) => {
+        const optionEl = documentRef.createElement('option');
+        optionEl.value = normalizeText(option && option.value);
+        optionEl.textContent = normalizeText(option && option.label) || optionEl.value;
+        selectEl.appendChild(optionEl);
+      });
+
+      selectEl.value = normalizeText(value);
+      if (typeof selectEl.setAttribute === 'function') {
+        selectEl.setAttribute('lay-ignore', '');
+      }
+
+      return selectEl;
+    }
+
     const isExpression = entry && entry.component === 'ExpressionEditor';
     const controlEl = documentRef.createElement(isExpression ? 'textarea' : 'input');
     controlEl.className = isExpression ? 'layui-textarea' : 'layui-input';
@@ -40550,12 +40626,23 @@
   }
 
   function bindEditableEvents(controlEl, errorEl, entry, initialValue) {
-    let lastCommittedValue = normalizeText(initialValue);
+    let lastCommittedValue = entry && entry.component === 'Switch'
+      ? String(initialValue === true || String(initialValue) === 'true')
+      : normalizeText(initialValue);
+
+    function readControlValue() {
+      if (entry && entry.component === 'Switch') {
+        return !!controlEl.checked;
+      }
+
+      return normalizeText(controlEl.value);
+    }
 
     function submitValue() {
-      const nextValue = normalizeText(controlEl.value);
+      const nextValue = readControlValue();
+      const comparableValue = entry && entry.component === 'Switch' ? String(nextValue) : nextValue;
 
-      if (nextValue === lastCommittedValue) {
+      if (comparableValue === lastCommittedValue) {
         return;
       }
 
@@ -40577,11 +40664,12 @@
       setEntryError(controlEl, errorEl, resultMessage);
 
       if (result && result.updated) {
-        lastCommittedValue = nextValue;
+        lastCommittedValue = comparableValue;
       }
     }
 
     controlEl.addEventListener('blur', submitValue);
+    controlEl.addEventListener('change', submitValue);
     controlEl.addEventListener('keydown', (event) => {
       if (controlEl.tagName === 'input' && event && event.key === 'Enter') {
         if (typeof event.preventDefault === 'function') {
@@ -41774,6 +41862,28 @@
     container.appendChild(form);
   }
 
+  function findFirstElement(root, matcher) {
+    if (!root) {
+      return null;
+    }
+
+    if (matcher(root)) {
+      return root;
+    }
+
+    const children = root && root.children ? Array.from(root.children) : [];
+
+    for (let index = 0; index < children.length; index += 1) {
+      const matched = findFirstElement(children[index], matcher);
+
+      if (matched) {
+        return matched;
+      }
+    }
+
+    return null;
+  }
+
   function findLastListenerValueInput(container) {
     let target = null;
 
@@ -41876,9 +41986,10 @@
   }
 
   class LayuiPropertiesPanel {
-    constructor(eventBus, selection, bpmnFactory, commandStack, modeling, moddle, config = {}) {
+    constructor(eventBus, selection, bpmnFactory, commandStack, modeling, moddle, canvas, config = {}) {
       this._eventBus = eventBus;
       this._selection = selection;
+      this._canvas = canvas;
       this._config = config || {};
       this._services = {
         bpmnFactory,
@@ -41906,6 +42017,30 @@
       });
 
       this._render();
+    }
+
+    _getProcessElement() {
+      const rootElement = this._canvas && typeof this._canvas.getRootElement === 'function'
+        ? this._canvas.getRootElement()
+        : null;
+
+      return findFirstElement(rootElement, (element) => {
+        const businessObject = element && element.businessObject ? element.businessObject : null;
+        return element && (
+          element.type === 'bpmn:Process' ||
+          (businessObject && businessObject.$type === 'bpmn:Process')
+        );
+      });
+    }
+
+    _getActiveElement() {
+      const selection = this._selection && this._selection.get ? this._selection.get() : [];
+
+      if (selection && selection.length) {
+        return selection[0];
+      }
+
+      return this._getProcessElement();
     }
 
     _ensureContainer() {
@@ -41945,8 +42080,7 @@
         return;
       }
 
-      const selection = this._selection && this._selection.get ? this._selection.get() : [];
-      const element = selection && selection.length ? selection[0] : null;
+      const element = this._getActiveElement();
 
       if (
         this._uiState.pendingMultiInstanceDraft &&
@@ -41983,8 +42117,7 @@
     _shouldSuppressMultiInstanceRender() {
       const suppressState = this._uiState && this._uiState.suppressMultiInstanceRender;
       const pendingDraft = this._uiState && this._uiState.pendingMultiInstanceDraft;
-      const selection = this._selection && this._selection.get ? this._selection.get() : [];
-      const element = selection && selection.length ? selection[0] : null;
+      const element = this._getActiveElement();
       const elementId = getElementId(element);
       const activeElement = typeof document !== 'undefined' ? document.activeElement : null;
       const activeInsidePanel = !!(
@@ -42047,6 +42180,7 @@
     'commandStack',
     'modeling',
     'moddle',
+    'canvas',
     'config.layuiPropertiesPanel'
   ];
 

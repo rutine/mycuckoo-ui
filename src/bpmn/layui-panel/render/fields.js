@@ -44,7 +44,9 @@ function readEntryValue(entry) {
 function isEditableEntry(entry) {
   return !!(entry && (
     entry.component === 'TextInput' ||
-    entry.component === 'ExpressionEditor'
+    entry.component === 'ExpressionEditor' ||
+    entry.component === 'Select' ||
+    entry.component === 'Switch'
   ));
 }
 
@@ -89,6 +91,42 @@ function getValidationFieldMessage(validation, field) {
 }
 
 function createEditableControl(documentRef, entry, value) {
+  if (entry && entry.component === 'Switch') {
+    const inputEl = documentRef.createElement('input');
+    inputEl.type = 'checkbox';
+    inputEl.checked = value === true || String(value) === 'true';
+    inputEl.dataset.entryKey = entry && entry.key ? entry.key : '';
+    inputEl.dataset.component = entry && entry.component ? entry.component : '';
+
+    if (typeof inputEl.setAttribute === 'function') {
+      inputEl.setAttribute('lay-skin', 'switch');
+      inputEl.setAttribute('lay-text', entry.layText || '是|否');
+    }
+
+    return inputEl;
+  }
+
+  if (entry && entry.component === 'Select') {
+    const selectEl = documentRef.createElement('select');
+    selectEl.className = 'layui-input';
+    selectEl.dataset.entryKey = entry && entry.key ? entry.key : '';
+    selectEl.dataset.component = entry && entry.component ? entry.component : '';
+
+    (entry.options || []).forEach((option) => {
+      const optionEl = documentRef.createElement('option');
+      optionEl.value = normalizeText(option && option.value);
+      optionEl.textContent = normalizeText(option && option.label) || optionEl.value;
+      selectEl.appendChild(optionEl);
+    });
+
+    selectEl.value = normalizeText(value);
+    if (typeof selectEl.setAttribute === 'function') {
+      selectEl.setAttribute('lay-ignore', '');
+    }
+
+    return selectEl;
+  }
+
   const isExpression = entry && entry.component === 'ExpressionEditor';
   const controlEl = documentRef.createElement(isExpression ? 'textarea' : 'input');
   controlEl.className = isExpression ? 'layui-textarea' : 'layui-input';
@@ -168,12 +206,23 @@ function setEntryError(controlEl, errorEl, message) {
 }
 
 function bindEditableEvents(controlEl, errorEl, entry, initialValue) {
-  let lastCommittedValue = normalizeText(initialValue);
+  let lastCommittedValue = entry && entry.component === 'Switch'
+    ? String(initialValue === true || String(initialValue) === 'true')
+    : normalizeText(initialValue);
+
+  function readControlValue() {
+    if (entry && entry.component === 'Switch') {
+      return !!controlEl.checked;
+    }
+
+    return normalizeText(controlEl.value);
+  }
 
   function submitValue() {
-    const nextValue = normalizeText(controlEl.value);
+    const nextValue = readControlValue();
+    const comparableValue = entry && entry.component === 'Switch' ? String(nextValue) : nextValue;
 
-    if (nextValue === lastCommittedValue) {
+    if (comparableValue === lastCommittedValue) {
       return;
     }
 
@@ -195,11 +244,12 @@ function bindEditableEvents(controlEl, errorEl, entry, initialValue) {
     setEntryError(controlEl, errorEl, resultMessage);
 
     if (result && result.updated) {
-      lastCommittedValue = nextValue;
+      lastCommittedValue = comparableValue;
     }
   }
 
   controlEl.addEventListener('blur', submitValue);
+  controlEl.addEventListener('change', submitValue);
   controlEl.addEventListener('keydown', (event) => {
     if (controlEl.tagName === 'input' && event && event.key === 'Enter') {
       if (typeof event.preventDefault === 'function') {

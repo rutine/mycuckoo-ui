@@ -76,12 +76,12 @@ function writeSimpleField(element, services, fieldId, value) {
     };
   }
 
-  const nextValue = normalizeText(value);
+  const nextValue = typeof value === 'boolean' ? value : normalizeText(value);
 
   return {
     updated: true,
     result: services.modeling.updateProperties(element, {
-      [fieldId]: nextValue || undefined
+      [fieldId]: nextValue === '' ? undefined : nextValue
     })
   };
 }
@@ -147,16 +147,23 @@ function bindDefaultEntries(panelState, element, options = {}) {
 
       if (originalSetValue) {
         entry.setValue = (value) => {
-          if (entry.component === 'TextInput' || entry.component === 'ExpressionEditor') {
+          if (
+            entry.component === 'TextInput' ||
+            entry.component === 'ExpressionEditor' ||
+            entry.component === 'Select' ||
+            entry.component === 'Switch'
+          ) {
+            const nextValue = typeof entry.normalizeValue === 'function' ? entry.normalizeValue(value) : value;
+
             if (uiState) {
               uiState.pendingSimpleEntry = {
                 elementId: getElementId(element),
                 entryKey: entry.key || null,
-                value: normalizeText(value)
+                value: normalizeText(nextValue)
               };
             }
 
-            const result = writeSimpleField(element, services, entry.key, value);
+            const result = writeSimpleField(element, services, entry.key, nextValue);
 
             if (uiState && (!result || !result.updated)) {
               uiState.pendingSimpleEntry = null;

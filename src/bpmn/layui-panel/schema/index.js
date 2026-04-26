@@ -2,6 +2,7 @@ import {
   createEmptyPanelSchema,
   createPanelSchema,
   createSimpleEntry,
+  createSwitchEntry,
   getElementType
 } from './common.js';
 import { resolveSequenceFlowSchema } from './sequence-flow.js';
@@ -18,7 +19,27 @@ const FALLBACK_GROUPS = [
   }
 ];
 
+const PROCESS_GROUPS = [
+  {
+    id: 'base',
+    label: '模型信息',
+    entries: [
+      createSimpleEntry('id', '模型ID'),
+      createSimpleEntry('name', '模型名称'),
+      createSwitchEntry('isExecutable', '是否可执行', {
+        layText: '是|否',
+        getValue: (element) => {
+          const businessObject = element && element.businessObject ? element.businessObject : {};
+          return businessObject.isExecutable !== false;
+        },
+        normalizeValue: (value) => value === true || String(value) === 'true'
+      })
+    ]
+  }
+];
+
 const SCHEMA_ROUTES = {
+  'bpmn:Process': (element) => createPanelSchema(element, PROCESS_GROUPS),
   'bpmn:SequenceFlow': resolveSequenceFlowSchema,
   'bpmn:UserTask': resolveUserTaskSchema
 };

@@ -45,7 +45,12 @@ export function resolvePlaceholder(uri, uriVariables = {}) {
 export function fromQueryString(queryString) {
   const search = String(queryString || '').replace(/^\?/, '');
   const params = new URLSearchParams(search);
-  const obj = {};
+  const obj = {
+    action: '',
+    method: '',
+    url: '',
+    path: ''
+  };
 
   params.forEach(function(value, key) {
     obj[key] = value;
@@ -210,7 +215,7 @@ export function createMyCuckoo(global = window) {
 
     getDictMap(dicts) {
       if (!Array.isArray(dicts)) {
-        return dicts;
+        return dicts || {};
       }
 
       return dicts.reduce(function(map, item) {

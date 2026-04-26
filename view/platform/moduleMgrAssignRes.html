@@ -30,10 +30,6 @@
 </head>
 <body>
   <div class="mycuckoo-main">
-    <fieldset class="layui-elem-field layui-field-title" style="margin-top: 0px">
-      <legend>模块名称</legend>
-    </fieldset>
-
     <form class="layui-form layui-form-pane" name="editForm" lay-filter="moduleAssignResource">
       <div class="layui-row">
         <div class="layui-col-md3">
@@ -81,11 +77,9 @@
 
       //表单初始赋值
       if (queryObj.id) {
-        $form.parent().find('fieldset > legend').text('模块: ' + queryObj.name);
         $.request(resourceMap[MyCuckoo.res.moduleMgr.resSelector], queryObj).then(function(json) {
           let source = json.data.source;
           let $elem = $form.find('.layui-col-md9');
-          that.rend($elem, source, false, source);
 
           //初始化结构树
           tree.render({
@@ -106,7 +100,9 @@
             }
           });
 
-          tree.setChecked('ID-mycuckoo-tree', json.data.assign)
+          tree.setChecked('ID-mycuckoo-tree', json.data.assign);
+          that.rend($elem, source, false, source, json.data.assign);
+          form.render('checkbox', 'moduleAssignResource')
         });
       } else {
         MyCuckoo.alert({ title : '提示', msg : '请关闭后选择模块!' });
@@ -136,14 +132,18 @@
 
         this[event] && this[event](obj);
       },
-      rend: function (elem, data, checked, source) {
+      rend: function (elem, data, checked, source, assign) {
         let hideBi = 1 << 9;
-        if (data && data.children && data.children.length > 0) {
+        if (Array.isArray(data)) {
+          for (let p in data) {
+            this.rend(elem, data[p], checked, source, assign);
+          }
+        } else if (data && data.children && data.children.length > 0) {
           for (let p in data.children) {
-            this.rend(elem, data.children[p], checked, source);
+            this.rend(elem, data.children[p], checked, source, assign);
           }
         } else {
-          checked = checked || data.checked;
+          checked = checked || data.checked || (Array.isArray(assign) && assign.includes(data.id));
           delete data.checked;
 
           let $checkbox = elem.find('.mycuckoo-checkbox-set-' + data.id);
