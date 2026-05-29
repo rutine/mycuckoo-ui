@@ -202,6 +202,18 @@
             });
           }});
       },
+      //创建实例
+      createInstance: function(obj) {
+        let data = obj.data;
+        let that = this;
+        MyCuckoo.confirm({msg : '您确认创建流程实例？', ok : function() {
+            $.request(resourceMap[obj.event], {processDefinitionId: data.id, formType: 'common-audit'}).then(function(json) {
+              MyCuckoo.msg({ msg: '创建流程成功' });
+
+              that.reload();
+            });
+          }});
+      },
       more: function (obj) {
         let that = this;
         let btns = MyCuckoo.getActions(resources, 'more');

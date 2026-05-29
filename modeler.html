@@ -69,25 +69,25 @@
 <div class="mycuckoo-main">
   <div class="layui-row">
     <div class="layui-col-lg9">
-      <div class="layui-btn-container modeler-toolbar">
-        <a href="javascript: " class="layui-btn layui-btn-xs layui-bg-gray" data-event="create">
-          <i class="layui-icon layui-icon-addition"></i> 新建设计
+      <div class="layui-btn-group modeler-toolbar">
+        <a href="javascript: " class="layui-btn layui-btn-xs layui-btn-primary layui-border" data-event="create">
+          <i class="layui-icon layui-icon-add-1"></i> 新建设计
         </a>
-        <a href="javascript: " class="layui-btn layui-btn-xs layui-bg-gray" data-event="viewDemo">
-          <i class="layui-icon layui-icon-addition"></i> 预览 Demo
+        <a href="javascript: " class="layui-btn layui-btn-xs layui-btn-primary layui-border" data-event="viewDemo">
+          <i class="layui-icon layui-icon-file"></i> 预览 Demo
         </a>
-        <a href="javascript: " class="layui-btn layui-btn-xs layui-bg-cyan layui-hide" data-event="viewXml">
+        <a href="javascript: " class="layui-btn layui-btn-xs layui-btn-primary layui-border layui-hide" data-event="viewXml">
           <i class="layui-icon layui-icon-read"></i> 查看 XML
         </a>
-        <a href="javascript: " class="layui-btn layui-btn-xs layui-bg-blue layui-hide" data-event="save">
+        <a href="javascript: " class="layui-btn layui-btn-xs layui-btn-primary layui-border layui-hide" data-event="save">
           <i class="layui-icon layui-icon-ok"></i> 保存流程
         </a>
         <div class="layui-layout-right"></div>
-          <a href="javascript: " class="layui-btn layui-btn-xs layui-bg-gray layui-hide" data-event="diagram">
-            <i class="layui-icon layui-icon-file"></i> 下载 BPMN
+          <a href="javascript: " class="layui-btn layui-btn-xs layui-btn-primary layui-border layui-hide" data-event="diagram">
+            <i class="layui-icon layui-icon-export"></i> 下载 BPMN
           </a>
-          <a href="javascript: " class="layui-btn layui-btn-xs layui-bg-gray layui-hide" data-event="svg">
-            <i class="layui-icon layui-icon-file-b"></i> 下载 SVG
+          <a href="javascript: " class="layui-btn layui-btn-xs layui-btn-primary layui-border layui-hide" data-event="svg">
+            <i class="layui-icon layui-icon-download-circle"></i> 下载 SVG
           </a>
       </div>
     </div>
@@ -122,7 +122,7 @@
         resources = MyCuckoo.getResource(queryObj.reskey),
         resourceMap = MyCuckoo.getDictMap(resources),
         resourceObj = resourceMap[queryObj.action],
-        $toolbar = $('.layui-btn-container');
+        $toolbar = $('.layui-btn-group');
 
       const userPicker = MyCuckoo.createUserPicker({
             width: 500,
@@ -204,7 +204,7 @@
           that.on({event: event, elem: this});
         });
 
-        if (queryObj.key) {
+        if (queryObj?.key) {
           this.init(queryObj);
         } else {
           this.create();
@@ -234,7 +234,7 @@
           } else {
             this.modeler = new BpmnJS({
               container: '#ID_modeler_editor',
-              layuiPropertiesPanel: {
+              myPropertiesPanel: {
                 parent: '#ID_modeler_right',
                 userPicker: userPicker
               },

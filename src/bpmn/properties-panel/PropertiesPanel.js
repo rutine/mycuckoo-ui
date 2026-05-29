@@ -131,7 +131,7 @@ function bindLayuiSelect(form, bindings = []) {
   });
 }
 
-export default class LayuiPropertiesPanel {
+export default class PropertiesPanel {
   constructor(eventBus, selection, bpmnFactory, commandStack, modeling, moddle, canvas, config = {}) {
     this._eventBus = eventBus;
     this._selection = selection;
@@ -319,7 +319,7 @@ export default class LayuiPropertiesPanel {
   }
 }
 
-LayuiPropertiesPanel.$inject = [
+PropertiesPanel.$inject = [
   'eventBus',
   'selection',
   'bpmnFactory',
@@ -327,5 +327,5 @@ LayuiPropertiesPanel.$inject = [
   'modeling',
   'moddle',
   'canvas',
-  'config.layuiPropertiesPanel'
+  'config.myPropertiesPanel'
 ];

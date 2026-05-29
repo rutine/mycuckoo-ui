@@ -510,6 +510,9 @@
         403: function(xhr) {
           layer.open({ title: '警告', content: getResponseMsg(xhr, '无权限执行当前操作') });
         },
+        405: function(xhr) {
+          layer.open({ title: '错误', content: getResponseMsg(xhr, '不支持的请求方法') });
+        },
         500: function(xhr) {
           layer.open({ title: '错误', content: getResponseMsg(xhr, '服务异常，请稍后重试') });
         }
@@ -523,6 +526,7 @@
         }
       },
       error: function(xhr) {
+        layer.open({ title: '错误', content: getResponseMsg(xhr, '系统错误') });
         console.log(xhr);
       }
     });

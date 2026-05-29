@@ -38316,6 +38316,168 @@
     idGenerator: [ 'type', IdGenerator ]
   };
 
+  var name$1 = "TaskExt";
+  var prefix$1 = "taskExt";
+  var uri$1 = "http://mycuckoo.com";
+  var xml$1 = {
+  	tagAlias: "lowerCase"
+  };
+  var associations$1 = [
+  ];
+  var types$1 = [
+  	{
+  		name: "Parameters",
+  		superClass: [
+  			"Element"
+  		],
+  		properties: [
+  			{
+  				name: "values",
+  				isMany: true,
+  				type: "Parameter"
+  			}
+  		]
+  	},
+  	{
+  		name: "Parameter",
+  		properties: [
+  			{
+  				name: "name",
+  				isAttr: true,
+  				type: "String"
+  			},
+  			{
+  				name: "value",
+  				isAttr: true,
+  				type: "String"
+  			},
+  			{
+  				name: "extensions",
+  				type: "Extensions"
+  			}
+  		]
+  	},
+  	{
+  		name: "Extensions",
+  		superClass: [
+  			"Element"
+  		],
+  		properties: [
+  			{
+  				name: "extensions",
+  				isMany: true,
+  				type: "Extension"
+  			}
+  		]
+  	},
+  	{
+  		name: "Extension",
+  		properties: [
+  			{
+  				name: "key",
+  				isAttr: true,
+  				type: "String"
+  			}
+  		]
+  	},
+  	{
+  		name: "userTask",
+  		properties: [
+  			{
+  				name: "assignee",
+  				isAttr: true,
+  				type: "String"
+  			}
+  		]
+  	}
+  ];
+  var taskModdleDescriptor = {
+  	name: name$1,
+  	prefix: prefix$1,
+  	uri: uri$1,
+  	xml: xml$1,
+  	associations: associations$1,
+  	types: types$1
+  };
+
+  var name = "Flowable";
+  var prefix = "flowable";
+  var uri = "http://flowable.org/bpmn";
+  var xml = {
+  	tagAlias: "lowerCase"
+  };
+  var associations = [
+  ];
+  var types = [
+  	{
+  		name: "UserTask",
+  		"extends": [
+  			"bpmn:UserTask"
+  		],
+  		properties: [
+  			{
+  				name: "assignee",
+  				isAttr: true,
+  				type: "String"
+  			},
+  			{
+  				name: "formKey",
+  				isAttr: true,
+  				type: "String"
+  			}
+  		]
+  	},
+  	{
+  		name: "FlowableMultiInstanceLoopCharacteristics",
+  		"extends": [
+  			"bpmn:MultiInstanceLoopCharacteristics"
+  		],
+  		properties: [
+  			{
+  				name: "collection",
+  				isAttr: true,
+  				type: "String"
+  			},
+  			{
+  				name: "elementVariable",
+  				isAttr: true,
+  				type: "String"
+  			}
+  		]
+  	},
+  	{
+  		name: "TaskListener",
+  		superClass: [
+  			"Element"
+  		],
+  		meta: {
+  			allowedIn: [
+  				"bpmn:UserTask"
+  			]
+  		},
+  		properties: [
+  			{
+  				name: "event",
+  				isAttr: true,
+  				type: "String"
+  			},
+  			{
+  				name: "expression",
+  				isAttr: true,
+  				type: "String"
+  			}
+  		]
+  	}
+  ];
+  var userTaskModdleDescriptor = {
+  	name: name,
+  	prefix: prefix,
+  	uri: uri,
+  	xml: xml,
+  	associations: associations,
+  	types: types
+  };
+
   const VALIDATOR_KIND = 'panel-validator';
   const VALIDATOR_STATUS = 'not-implemented';
 
@@ -40416,8 +40578,8 @@
     return panelState;
   }
 
-  var layuiPanelApi = {
-    moduleName: 'layuiPropertiesPanel',
+  var myPanelApi = {
+    moduleName: 'myPropertiesPanel',
     resolvePanelState,
     listeners,
     extensions,
@@ -41985,7 +42147,7 @@
     });
   }
 
-  class LayuiPropertiesPanel {
+  class PropertiesPanel {
     constructor(eventBus, selection, bpmnFactory, commandStack, modeling, moddle, canvas, config = {}) {
       this._eventBus = eventBus;
       this._selection = selection;
@@ -42173,7 +42335,7 @@
     }
   }
 
-  LayuiPropertiesPanel.$inject = [
+  PropertiesPanel.$inject = [
     'eventBus',
     'selection',
     'bpmnFactory',
@@ -42181,174 +42343,12 @@
     'modeling',
     'moddle',
     'canvas',
-    'config.layuiPropertiesPanel'
+    'config.myPropertiesPanel'
   ];
 
-  var LayuiPropertiesPanelModule = {
-    __init__: [ 'layuiPropertiesPanel' ],
-    layuiPropertiesPanel: [ 'type', LayuiPropertiesPanel ]
-  };
-
-  var name$1 = "TaskExt";
-  var prefix$1 = "taskExt";
-  var uri$1 = "http://mycuckoo.com";
-  var xml$1 = {
-  	tagAlias: "lowerCase"
-  };
-  var associations$1 = [
-  ];
-  var types$1 = [
-  	{
-  		name: "Parameters",
-  		superClass: [
-  			"Element"
-  		],
-  		properties: [
-  			{
-  				name: "values",
-  				isMany: true,
-  				type: "Parameter"
-  			}
-  		]
-  	},
-  	{
-  		name: "Parameter",
-  		properties: [
-  			{
-  				name: "name",
-  				isAttr: true,
-  				type: "String"
-  			},
-  			{
-  				name: "value",
-  				isAttr: true,
-  				type: "String"
-  			},
-  			{
-  				name: "extensions",
-  				type: "Extensions"
-  			}
-  		]
-  	},
-  	{
-  		name: "Extensions",
-  		superClass: [
-  			"Element"
-  		],
-  		properties: [
-  			{
-  				name: "extensions",
-  				isMany: true,
-  				type: "Extension"
-  			}
-  		]
-  	},
-  	{
-  		name: "Extension",
-  		properties: [
-  			{
-  				name: "key",
-  				isAttr: true,
-  				type: "String"
-  			}
-  		]
-  	},
-  	{
-  		name: "userTask",
-  		properties: [
-  			{
-  				name: "assignee",
-  				isAttr: true,
-  				type: "String"
-  			}
-  		]
-  	}
-  ];
-  var taskModdleDescriptor = {
-  	name: name$1,
-  	prefix: prefix$1,
-  	uri: uri$1,
-  	xml: xml$1,
-  	associations: associations$1,
-  	types: types$1
-  };
-
-  var name = "Flowable";
-  var prefix = "flowable";
-  var uri = "http://flowable.org/bpmn";
-  var xml = {
-  	tagAlias: "lowerCase"
-  };
-  var associations = [
-  ];
-  var types = [
-  	{
-  		name: "UserTask",
-  		"extends": [
-  			"bpmn:UserTask"
-  		],
-  		properties: [
-  			{
-  				name: "assignee",
-  				isAttr: true,
-  				type: "String"
-  			},
-  			{
-  				name: "formKey",
-  				isAttr: true,
-  				type: "String"
-  			}
-  		]
-  	},
-  	{
-  		name: "FlowableMultiInstanceLoopCharacteristics",
-  		"extends": [
-  			"bpmn:MultiInstanceLoopCharacteristics"
-  		],
-  		properties: [
-  			{
-  				name: "collection",
-  				isAttr: true,
-  				type: "String"
-  			},
-  			{
-  				name: "elementVariable",
-  				isAttr: true,
-  				type: "String"
-  			}
-  		]
-  	},
-  	{
-  		name: "TaskListener",
-  		superClass: [
-  			"Element"
-  		],
-  		meta: {
-  			allowedIn: [
-  				"bpmn:UserTask"
-  			]
-  		},
-  		properties: [
-  			{
-  				name: "event",
-  				isAttr: true,
-  				type: "String"
-  			},
-  			{
-  				name: "expression",
-  				isAttr: true,
-  				type: "String"
-  			}
-  		]
-  	}
-  ];
-  var userTaskModdleDescriptor = {
-  	name: name,
-  	prefix: prefix,
-  	uri: uri,
-  	xml: xml,
-  	associations: associations,
-  	types: types
+  var MyPropertiesPanelModule = {
+    __init__: [ 'myPropertiesPanel' ],
+    myPropertiesPanel: [ 'type', PropertiesPanel ]
   };
 
   // import MyModeler from './MyModeler'
@@ -42361,14 +42361,14 @@
       MyPaletteProviderModule,
       MyContextProviderModule,
       IdGeneratorModule,
-      LayuiPropertiesPanelModule
+      MyPropertiesPanelModule
     ],
     moddles: {
       taskExt: taskModdleDescriptor,
       userTask: userTaskModdleDescriptor
     },
-    layuiPropertiesPanel: LayuiPropertiesPanelModule,
-    layuiPanelApi
+    myPropertiesPanel: MyPropertiesPanelModule,
+    myPanelApi
   };
 
   return index;

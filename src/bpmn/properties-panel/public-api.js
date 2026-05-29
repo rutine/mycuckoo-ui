@@ -1,4 +1,4 @@
-import { resolvePanelSchema } from './schema/index.js';
+import { resolvePanelSchema } from './schema';
 import extensions from './editors/extension-editor.js';
 import listeners from './editors/listener-editor.js';
 import multiInstance from './editors/multi-instance-editor.js';
@@ -387,7 +387,7 @@ export function resolvePanelState(element, options = {}) {
 }
 
 export default {
-  moduleName: 'layuiPropertiesPanel',
+  moduleName: 'myPropertiesPanel',
   resolvePanelState,
   listeners,
   extensions,

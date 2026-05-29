@@ -5,10 +5,10 @@ import MyContextProviderModule from './context-pad';
 import IdGeneratorModule from './id-generator';
 import MyTranslate from './translate';
 
-import LayuiPropertiesPanelModule from './layui-panel';
 import taskModdleDescriptor from './properties-panel/descriptors/taskExt.json';
 import userTaskModdleDescriptor from './properties-panel/descriptors/userTask.json';
-import layuiPanelApi from './layui-panel/public-api';
+import MyPropertiesPanelModule from './properties-panel';
+import myPanelApi from './properties-panel/public-api';
 
 export default {
   modules: [
@@ -17,12 +17,12 @@ export default {
     MyPaletteProviderModule,
     MyContextProviderModule,
     IdGeneratorModule,
-    LayuiPropertiesPanelModule
+    MyPropertiesPanelModule
   ],
   moddles: {
     taskExt: taskModdleDescriptor,
     userTask: userTaskModdleDescriptor
   },
-  layuiPropertiesPanel: LayuiPropertiesPanelModule,
-  layuiPanelApi
+  myPropertiesPanel: MyPropertiesPanelModule,
+  myPanelApi
 };
