@@ -37987,16 +37987,27 @@
     return element.businessObject || element;
   }
 
-  function getParametersElement(element, type) {
+  function queryTypedExtensionElements(element, type) {
     const businessObject = getBusinessObject(element);
-
-    if (!businessObject.extensionElements) {
-      return null;
+    if (!businessObject  || !businessObject.extensionElements || !businessObject.extensionElements.values) {
+      return [];
     }
 
-    return businessObject.extensionElements.values.filter(function(e) {
-      return e.$instanceOf(type);
-    })[0];
+    let values = businessObject.extensionElements.values;
+    values = Array.isArray(values) ? values : (!!values ? [values] : []);
+    if (type === 'all') {
+      return values;
+    }
+
+    return values.filter(function(value) {
+      // return value.$type === 'flowable:TaskListener';
+      return value.$instanceOf(type);
+    });
+  }
+
+  function queryTypedExtensionElement(element, type) {
+    const typedElements = queryTypedExtensionElements(element, type);
+    return typedElements.length > 0 ? typedElements[0] : null;
   }
 
   function createElement(elementType, properties, parent, factory) {
@@ -38009,28 +38020,58 @@
     return element;
   }
 
-  function readModdleProperty(target, key) {
-    if (!target || !key) {
+  function getProperty(obj, key) {
+    if (!obj || !key) {
       return undefined;
     }
 
-    if (Object.prototype.hasOwnProperty.call(target, key)) {
-      return target[key];
+    if (Object.prototype.hasOwnProperty.call(obj, key)) {
+      return obj[key];
     }
 
-    if (typeof target.get === 'function') {
-      return target.get(key);
+    if (typeof obj.get === 'function') {
+      return obj.get(key);
     }
 
     return undefined;
   }
 
-  function readExpressionBody(expression) {
+  function getExpressionBody(expression) {
     if (!expression) {
       return '';
     }
 
     return expression.body || expression.value || '';
+  }
+
+  function executeCommands(commandStack, commands = []) {
+    if (!commandStack || !Array.isArray(commands) || !commands.length) {
+      return undefined;
+    }
+
+    if (commands.length === 1) {
+      return commandStack.execute(commands[0].cmd, commands[0].context);
+    }
+
+    try {
+      return commandStack.execute('properties-panel.multi-command-executor', commands);
+    } catch (error) {
+      let lastResult;
+
+      commands.forEach((command) => {
+        lastResult = commandStack.execute(command.cmd, command.context);
+      });
+
+      return lastResult;
+    }
+  }
+
+  function updateModdleProperties(commandStack, element, moddleElement, properties = {}) {
+    return commandStack.execute('element.updateModdleProperties', {
+      element,
+      moddleElement,
+      properties
+    });
   }
 
   function getNumericSuffix(value, prefix) {
@@ -38364,7 +38405,7 @@
   		],
   		properties: [
   			{
-  				name: "extensions",
+  				name: "values",
   				isMany: true,
   				type: "Extension"
   			}
@@ -38477,6 +38518,3169 @@
   	associations: associations,
   	types: types
   };
+
+  function toStr(value) {
+    if (value === undefined || value === null) {
+      return '';
+    }
+
+    return String(value);
+  }
+
+  function getStr(value, defaultValue = '') {
+    return typeof value === 'string' ? value : defaultValue;
+  }
+
+  function getter(obj, key) {
+    if (!obj || !key) {
+      return '';
+    }
+
+    if (Object.prototype.hasOwnProperty.call(obj, key)) {
+      return obj[key];
+    }
+
+    if (typeof obj.get === 'function') {
+      return obj.get(key);
+    }
+
+    return '';
+  }
+
+  function getElementId(element) {
+    if (!element) {
+      return null;
+    }
+
+    return element.id || (element.businessObject && element.businessObject.id) || null;
+  }
+
+  function appendClassName(element, className) {
+    if (!element || !className) {
+      return;
+    }
+
+    const tokens = toStr(element.className)
+      .split(/\s+/)
+      .filter(Boolean);
+
+    if (tokens.indexOf(className) !== -1) {
+      return;
+    }
+
+    tokens.push(className);
+    element.className = tokens.join(' ');
+  }
+
+  function removeClassName(element, className) {
+    if (!element || !className) {
+      return;
+    }
+
+    element.className = toStr(element.className)
+      .split(/\s+/)
+      .filter((token) => token && token !== className)
+      .join(' ');
+  }
+
+  function toggleClassName(element, className, enabled) {
+    if (enabled) {
+      appendClassName(element, className);
+      return;
+    }
+
+    removeClassName(element, className);
+  }
+
+  function escapeHtml(value) {
+    return toStr(value)
+      .replace(/&/g, '&amp;')
+      .replace(/</g, '&lt;')
+      .replace(/>/g, '&gt;');
+  }
+
+  function escapeAttr(value) {
+    return escapeHtml(value)
+      .replace(/"/g, '&quot;')
+      .replace(/'/g, '&#39;');
+  }
+
+  function htmlToElement(documentRef, html) {
+    const templateEl = documentRef.createElement('template');
+    templateEl.innerHTML = toStr(html).trim();
+
+    return templateEl.content.firstElementChild;
+  }
+
+  function renderHtml(mountEl, html) {
+    if (!mountEl) {
+      return;
+    }
+
+    mountEl.innerHTML = toStr(html);
+  }
+
+  function firstErrorValueMessage(errors) {
+    if (!errors || typeof errors !== 'object') {
+      return '';
+    }
+
+    const values = Object.values(errors);
+
+    for (let index = 0; index < values.length; index += 1) {
+      const value = values[index];
+
+      if (typeof value === 'string' && value) {
+        return value;
+      }
+
+      if (value && typeof value.message === 'string' && value.message) {
+        return value.message;
+      }
+    }
+
+    return '';
+  }
+
+  function firstValidationMessage(result) {
+    if (!result) {
+      return '';
+    }
+
+    if (typeof result === 'string') {
+      return result;
+    }
+
+    if (result.valid === false) {
+      if (typeof result.message === 'string' && result.message) {
+        return result.message;
+      }
+
+      const errorMessage = firstErrorValueMessage(result.errors);
+
+      return errorMessage || '输入不合法';
+    }
+
+    return '';
+  }
+
+  function getFieldValidationMessage(validation, field) {
+    if (!validation || typeof validation !== 'object') {
+      return '';
+    }
+
+    const errors = validation.errors;
+
+    if (!errors || typeof errors !== 'object') {
+      return '';
+    }
+
+    const target = errors[field];
+
+    if (typeof target === 'string' && target) {
+      return target;
+    }
+
+    if (target && typeof target.message === 'string' && target.message) {
+      return target.message;
+    }
+
+    return '';
+  }
+
+  function setControlError(controlEl, errorEl, message) {
+    const nextMessage = toStr(message).trim();
+    const hasDangerClass = /\blayui-form-danger\b/.test(controlEl.className);
+
+    errorEl.textContent = nextMessage;
+
+    if (nextMessage && !hasDangerClass) {
+      controlEl.className = `${controlEl.className} layui-form-danger`.trim();
+      return;
+    }
+
+    if (!nextMessage && hasDangerClass) {
+      controlEl.className = controlEl.className.replace(/\s*layui-form-danger\b/g, '').trim();
+    }
+  }
+
+  const DEFAULT_USER_TASK_ASSIGNEE = '${assignee}';
+
+  function writeDefaultProperties(element, context) {
+    if (!element || element.type !== 'bpmn:UserTask' || !context || !context.modeling) {
+      return;
+    }
+
+    const value = toStr(getter(element.businessObject, 'flowable:assignee'));
+    if (!value.trim()) {
+      context.modeling.updateProperties(element, {
+        'flowable:assignee': DEFAULT_USER_TASK_ASSIGNEE
+      });
+    }
+  }
+
+  function writeProperties(element, context, fieldId, value) {
+    if (!element || !context || !context.modeling || !fieldId) {
+      return {
+        updated: false,
+        notApplied: true,
+        reason: 'missing-context'
+      };
+    }
+
+    const nextValue = typeof value === 'boolean' ? value : toStr(value);
+    return {
+      updated: true,
+      result: context.modeling.updateProperties(element, {
+        [fieldId]: nextValue === '' ? undefined : nextValue
+      })
+    };
+  }
+
+  function createEntryAdapter(entry, group, panelState, element, options = {}) {
+    const context = options.context || null;
+    const uiState = options.uiState || null;
+    const getRawValue = typeof entry.getValue === 'function' ? entry.getValue : null;
+    const setRawValue = typeof entry.setValue === 'function' ? entry.setValue : null;
+    const rawValidate = typeof entry.validate === 'function' ? entry.validate : null;
+
+    if (getRawValue) {
+      entry.getValue = () => {
+        const value = getRawValue(element, {
+          element,
+          groupId: group.id || null,
+          entryKey: entry.key || null,
+          writer: panelState.writer,
+          validator: panelState.validator
+        });
+
+        if (entry.key === 'flowable:assignee' && !toStr(value).trim()) {
+          return DEFAULT_USER_TASK_ASSIGNEE;
+        }
+
+        return value;
+      };
+    }
+
+    if (setRawValue) {
+      entry.setValue = (value) => {
+        const nextValue = typeof entry.normalizeValue === 'function' ? entry.normalizeValue(value) : value;
+        if (uiState) {
+          uiState.pendingSimpleEntry = {
+            elementId: getElementId(element),
+            entryKey: entry.key || null,
+            value: toStr(nextValue)
+          };
+        }
+
+        const result = writeProperties(element, context, entry.key, nextValue);
+        if (uiState && (!result || !result.updated)) {
+          uiState.pendingSimpleEntry = null;
+        }
+
+        return result;
+      };
+    }
+
+    if (rawValidate) {
+      entry.validate = (value) => rawValidate(value, {
+        element,
+        groupId: group.id || null,
+        entryKey: entry.key || null,
+        writer: panelState.writer,
+        validator: panelState.validator
+      });
+    }
+
+    return entry;
+  }
+
+  function bindBasicEntries(entry, group, element, options = {}) {
+    writeDefaultProperties(element, options.context);
+
+
+    createEntryAdapter(entry, group, options.panelState, element, options);
+
+    // const groups = panelState && Array.isArray(panelState.groups) ? panelState.groups : [];
+    //
+    // groups.forEach((group) => {
+    //   const entries = group && Array.isArray(group.entries) ? group.entries : [];
+    //   entries.forEach((entry) => {
+    //     if (entry && isBasicEntry(entry)) {
+    //       createEntryAdapter(entry, group, panelState, element, options);
+    //     }
+    //   });
+    // });
+  }
+
+  var writer$4 = {
+    bindBasicEntries
+  };
+
+  function ui$1(entry) {
+    if (entry) {
+      return `<input type="text" class="layui-input" data-basic-control="true" data-entry-key="" data-component="">
+        <div class="layui-bpmn-panel__entry-error"></div>`;
+    }
+
+    const key = escapeAttr(entry.key || '');
+    const component = escapeAttr(entry.component || '');
+    const datasetAttributes = `data-basic-control="true" data-entry-key="${key}" data-component="${component}"`;
+
+    if (entry.component === 'Switch') {
+      return `<input type="checkbox" class="" ${datasetAttributes} lay-skin="switch" lay-text="${escapeAttr(entry.layText || '是|否')}">
+        <div class="layui-bpmn-panel__entry-error"></div>`;
+    }
+    else if (entry.component === 'Select') {
+      return `
+        <select class="layui-input" ${datasetAttributes} lay-ignore>
+        ${(entry.options || []).map((option) => {
+          const value = toStr(option && option.value);
+          const label = toStr(option && option.label) || value;
+          return `<option value="${escapeAttr(value)}">${escapeHtml(label)}</option>`;
+        }).join('')}
+        </select>
+        <div class="layui-bpmn-panel__entry-error"></div>
+    `;
+    }
+    else if (entry.component === 'ExpressionEditor') {
+      return `<textarea class="layui-textarea" ${datasetAttributes}></textarea>
+            <div class="layui-bpmn-panel__entry-error"></div>`;
+    }
+
+    return `<input type="text" class="layui-input" ${datasetAttributes}>
+          <div class="layui-bpmn-panel__entry-error"></div>`;
+  }
+
+  function setControlValue(controlEl, entry, value) {
+    if (!controlEl) {
+      return;
+    }
+
+    if (entry && entry.component === 'Switch') {
+      controlEl.checked = toStr(value) === 'true';
+      return;
+    }
+
+    controlEl.value = toStr(value);
+  }
+
+
+  function isBasicEntry(entry) {
+    return !!(entry && (entry.component === 'TextInput'
+        || entry.component === 'ExpressionEditor'
+        || entry.component === 'Select'
+        || entry.component === 'Switch'
+    ));
+  }
+
+  class BasicComponent {
+    constructor(entry) {
+      this.entry = entry;
+    }
+
+    bindEvents(controlEl, errorEl, initialValue) {
+      const entry = this.entry;
+      let lastValue = entry.component === 'Switch'
+          ? (toStr(initialValue) === 'true' ? 'true' : 'false')
+          : toStr(initialValue);
+
+
+      function submitValue() {
+        const newValue = entry.component === 'Switch' ? !!controlEl.checked : toStr(controlEl.value);
+        const nextValue = entry.component === 'Switch' ? String(newValue) : newValue;
+        if (nextValue === lastValue) {
+          return;
+        }
+
+        const validation = typeof entry.validate === 'function' ? entry.validate(newValue) : null;
+        const validationMessage = firstValidationMessage(validation);
+        if (validationMessage) {
+          setControlError(controlEl, errorEl, validationMessage);
+          return;
+        }
+
+        const result = typeof entry.setValue === 'function' ? entry.setValue(newValue) : { updated: false };
+        const resultMessage = firstValidationMessage(result && result.validation);
+        setControlError(controlEl, errorEl, resultMessage);
+
+        if (result && result.updated) {
+          lastValue = nextValue;
+        }
+      }
+
+      controlEl.addEventListener('blur', submitValue);
+      controlEl.addEventListener('change', submitValue);
+      controlEl.addEventListener('keydown', (event) => {
+        if (String(controlEl.tagName || '').toLowerCase() === 'input' && event && event.key === 'Enter') {
+          if (typeof event.preventDefault === 'function') {
+            event.preventDefault();
+          }
+
+          submitValue();
+        }
+      });
+    }
+
+    mount(mountEl) {
+      let value = typeof this.entry.getValue === 'function' ? this.entry.getValue() : null;
+
+      renderHtml(mountEl, ui$1(this.entry));
+
+      const controlEl = mountEl.querySelector('[data-basic-control="true"]');
+      const errorEl = mountEl.querySelector('.layui-bpmn-panel__entry-error');
+
+      setControlValue(controlEl, this.entry, value);
+      this.bindEvents(controlEl, errorEl, value);
+
+      return {
+        controlEl,
+        errorEl
+      };
+    }
+  }
+
+  function createEntry$5(entry, group, element, options) {
+    writer$4.bindBasicEntries(entry, group, element, options);
+
+    return new BasicComponent(entry);
+  }
+
+  function supportsEntry$4(entry) {
+    return isBasicEntry(entry);
+  }
+
+  const basicComponent = {
+    type: 'basic',
+    label: '基础属性',
+    supportsEntry: supportsEntry$4,
+    createEntry: createEntry$5,
+    BasicComponent
+  };
+
+  function writeDefaultExpression(context, element) {
+    const businessObject = getBusinessObject(element);
+    let conditionExpression = getProperty(businessObject, 'conditionExpression');
+    if (conditionExpression) {
+      return conditionExpression;
+    }
+
+    conditionExpression = context.moddle.create('bpmn:FormalExpression', { body: '' });
+    conditionExpression.$parent = businessObject;
+
+    context.modeling.updateProperties(element, {
+      conditionExpression
+    });
+
+    return conditionExpression;
+  }
+
+  function writeExpression(context, element, body = '') {
+    const conditionExpression = writeDefaultExpression(context, element);
+    if (!conditionExpression) {
+      return {updated: false, notApplied: true, reason: 'missing-condition-expression'};
+    }
+
+    const result = updateModdleProperties(
+        context.commandStack,
+        element,
+        conditionExpression,
+        {
+          body: typeof body === 'string' ? body : ''
+        }
+    );
+
+    return {updated: true, result, conditionExpression};
+  }
+
+
+  function getFlowCondition(element) {
+    const businessObject = getBusinessObject(element);
+    const conditionExpression = getProperty(businessObject, 'conditionExpression');
+    return getExpressionBody(conditionExpression);
+  }
+
+  function setFlowCondition(context, element, value = '') {
+    return writeExpression(context, element, value);
+  }
+
+  function createFlowConditionEntryAdapter(entry, element, options = {}) {
+    const context = options.context || null;
+    if (!entry) {
+      return entry;
+    }
+
+    entry.getValue = () => getFlowCondition(element);
+    entry.setValue = (value = '') => setFlowCondition(context, element, value);
+
+    return entry;
+  }
+
+  function bindFlowConditionEntry(entry, group, element, options = {}) {
+    // const entry = findGroupEntry(panelState, 'flow-condition', 'conditionExpression');
+    if (!!(entry && group && group.id !== 'flow-condition' && entry.key !== 'conditionExpression')) {
+      return;
+    }
+
+    createFlowConditionEntryAdapter(entry, element, options);
+  }
+
+  var writer$3 = {
+    bindFlowConditionEntry,
+    createFlowConditionEntryAdapter
+  };
+
+  function isFlowConditionEntry(entry) {
+    return !!(entry && (entry.key === 'conditionExpression' && entry.component === 'ExpressionEditor'));
+  }
+
+  class FlowConditionComponent {
+    constructor(entry) {
+      this.basicComponent = new BasicComponent(entry);
+    }
+
+    mount(mountEl) {
+      return this.basicComponent.mount(mountEl);
+    }
+  }
+
+  function createEntry$4(entry, group, element, options) {
+    writer$3.bindFlowConditionEntry(entry, group, element, options);
+
+    return new FlowConditionComponent(entry);
+  }
+
+  function supportsEntry$3(entry) {
+    return isFlowConditionEntry(entry);
+  }
+
+  const flowConditionComponent = {
+    type: 'flowCondition',
+    label: '流转条件',
+    supportsEntry: supportsEntry$3,
+    createEntry: createEntry$4,
+    FlowConditionComponent
+  };
+
+  const LAYUI_SELECT_BINDING_PROP$1 = '__layuiSelectBinding';
+  const LAYUI_SELECT_FILTER_PROP = '__layuiSelectFilter';
+
+  function getEntryValue$2(entry) {
+    if (!entry || typeof entry.getValue !== 'function') {
+      return null;
+    }
+
+    return entry.getValue();
+  }
+
+  function createListenerDraft(value = {}) {
+    return {
+      event: toStr(value.event).trim() || 'assignment',
+      type: toStr(value.type).trim() || 'expression',
+      value: toStr(value.value)
+    };
+  }
+
+  function createListenerValue$1(value) {
+    const items = value && Array.isArray(value.items) ? value.items : [];
+
+    return {
+      items: items.map((item) => createListenerDraft(item))
+    };
+  }
+
+  function syncListenerItems(state, value) {
+    const normalizedValue = createListenerValue$1(value);
+
+    state.items = normalizedValue.items;
+
+    return state;
+  }
+
+  function setListenerFieldErrors(fieldBindings, validation) {
+    Object.keys(fieldBindings).forEach((field) => {
+      const binding = fieldBindings[field];
+      const message = getFieldValidationMessage(validation, field);
+      setControlError(binding.controlEl, binding.errorEl, message);
+    });
+  }
+
+  const DEFAULT_LISTENER_EVENT = 'assignment';
+  const DEFAULT_LISTENER_TYPE = 'expression';
+  const DEFAULT_LISTENER_EXPRESSION = '${auditFlowService.beforeTask(execution)}';
+  const SUPPORTED_LISTENER_TYPES = [ 'expression', 'class', 'delegateExpression' ];
+  const SUPPORTED_LISTENER_EVENTS = [ 'assignment', 'create', 'complete', 'delete', 'all' ];
+  const SUPPORTED_LISTENER_ACTIONS = [ 'add', 'remove', 'update' ];
+
+
+
+  function unwrapDraftValue$1(value) {
+    return value && value.draft ? value.draft : value;
+  }
+
+  function createValidationResult$2(errors = {}, payloadKey, payload) {
+    const result = {
+      valid: Object.keys(errors).length === 0,
+      errors,
+      issues: Object.keys(errors).map((field) => ({
+        field,
+        message: errors[field]
+      }))
+    };
+
+    if (payloadKey) {
+      result[payloadKey] = payload;
+    }
+
+    return result;
+  }
+
+  function createDefaultListener() {
+    return {
+      event: DEFAULT_LISTENER_EVENT,
+      type: DEFAULT_LISTENER_TYPE,
+      value: DEFAULT_LISTENER_EXPRESSION
+    };
+  }
+
+  function createListenerProperties(draft) {
+    const properties = {
+      event: draft.event,
+      expression: undefined,
+      class: undefined,
+      delegateExpression: undefined
+    };
+
+    properties[draft.type] = draft.value;
+
+    return properties;
+  }
+
+  function createListenerValue(element) {
+    return {
+      kind: 'listener-editor',
+      items: listListeners(element),
+      draft: createDefaultListener(),
+      createDefaultDraft: createDefaultListener,
+      validateDraft: validateDraft$1
+    };
+  }
+
+  function writeDefaultExtensionElements$2(context, element) {
+    const businessObject = getBusinessObject(element);
+    const extensionElements = getProperty(businessObject, 'extensionElements');
+    if (extensionElements) {
+      return {extensionElements, commands: []};
+    }
+
+    const nextExtensionElements = createElement(
+        'bpmn:ExtensionElements',
+        { values: [] },
+        businessObject,
+        context.bpmnFactory
+    );
+
+    return {
+      extensionElements: nextExtensionElements,
+      commands: [{
+        cmd: 'element.updateModdleProperties',
+        context: {
+          element,
+          moddleElement: businessObject,
+          properties: {
+            extensionElements: nextExtensionElements
+          }
+        }
+      }]
+    };
+  }
+
+  function listListeners(element) {
+    return queryTypedExtensionElements(element, 'flowable:TaskListener').map((listener) => {
+      let binding = {type: DEFAULT_LISTENER_TYPE, value: ''};
+      for (const type of SUPPORTED_LISTENER_TYPES) {
+        const value = getStr(getProperty(listener, type));
+        if (value.trim()) {
+          binding = { type, value };
+          break;
+        }
+      }
+
+      return {
+        event: getStr(getProperty(listener, 'event')),
+        type: binding.type,
+        value: binding.value
+      };
+    });
+  }
+
+  function getListenerElement(element, index) {
+    const listeners = queryTypedExtensionElements(element, 'flowable:TaskListener');
+    if (!Number.isInteger(index) || index < 0 || index >= listeners.length) {
+      return null;
+    }
+
+    return listeners[index];
+  }
+
+  function addListener(context, element) {
+    const ensured = writeDefaultExtensionElements$2(context, element);
+    const nextListener = createElement('flowable:TaskListener',
+        createListenerProperties(createDefaultListener()),
+        ensured.extensionElements,
+        context.bpmnFactory
+    );
+
+    let values = getProperty(ensured.extensionElements, 'values');
+    values = Array.isArray(values) ? values : [];
+
+    executeCommands(context.commandStack, [
+      ...ensured.commands,
+      {
+        cmd: 'element.updateModdleProperties',
+        context: {
+          element,
+          moddleElement: ensured.extensionElements,
+          properties: {
+            values: [ ...values, nextListener ]
+          }
+        }
+      }
+    ]);
+
+    return {
+      updated: true,
+      value: createListenerValue(element)
+    };
+  }
+
+  function updateListener(context, element, index, draft) {
+    const listener = getListenerElement(element, index);
+    if (!listener) {
+      return { updated: false, reason: 'listener-not-found' };
+    }
+
+    const validation = validateDraft$1(draft);
+    if (!validation.valid) {
+      return { updated: false, validation };
+    }
+
+    context.commandStack.execute('element.updateModdleProperties', {
+      element,
+      moddleElement: listener,
+      properties: createListenerProperties(validation.draft)
+    });
+
+    return { updated: true, validation, value: createListenerValue(element) };
+  }
+
+  function removeListener(context, element, index) {
+    const ensured = writeDefaultExtensionElements$2(context, element);
+    const listener = getListenerElement(element, index);
+    if (!listener) {
+      return { updated: false, reason: 'listener-not-found' };
+    }
+
+    const values = queryTypedExtensionElements(element, 'all').filter((value) => value !== listener);
+    context.commandStack.execute('element.updateModdleProperties', {
+      element,
+      moddleElement: ensured.extensionElements,
+      properties: {
+        values
+      }
+    });
+
+    return { updated: true, value: createListenerValue(element) };
+  }
+
+  function validateDraft$1(draft = {}) {
+    const normalizedDraft = {
+      event: getStr(draft.event, DEFAULT_LISTENER_EVENT),
+      type: getStr(draft.type, DEFAULT_LISTENER_TYPE),
+      value: getStr(draft.value)
+    };
+    const errors = {};
+
+    if (!normalizedDraft.event.trim()) {
+      errors.event = 'event is required';
+    }
+
+    if (!SUPPORTED_LISTENER_EVENTS.includes(normalizedDraft.event)) {
+      errors.event = 'listener event is not supported';
+    }
+
+    if (!SUPPORTED_LISTENER_TYPES.includes(normalizedDraft.type)) {
+      errors.type = 'listener type is not supported';
+    }
+
+    if (!normalizedDraft.value.trim()) {
+      errors.value = 'value is required';
+    }
+
+    return createValidationResult$2(errors, 'draft', normalizedDraft);
+  }
+
+  function validateAction(value = {}) {
+    const action = getStr(value.action);
+    const errors = {};
+
+    if (!SUPPORTED_LISTENER_ACTIONS.includes(action)) {
+      errors.action = 'listener action is not supported';
+    }
+
+    if ((action === 'remove' || action === 'update') && !Number.isInteger(value.index)) {
+      errors.index = 'listener index is required';
+    }
+
+    return createValidationResult$2(errors, 'action', action);
+  }
+
+  function applyChange$1(context, element, value = {}) {
+    if (!context || !context.commandStack || !context.bpmnFactory) {
+      return {
+        updated: false,
+        notApplied: true,
+        reason: 'missing-context'
+      };
+    }
+
+    const actionValidation = validateAction(value);
+    if (!actionValidation.valid) {
+      if (actionValidation.errors && actionValidation.errors.action) {
+        return {
+          updated: false,
+          reason: 'unsupported-action'
+        };
+      }
+
+      return {
+        updated: false,
+        reason: 'listener-not-found'
+      };
+    }
+
+    switch (value.action) {
+    case 'add':
+      return addListener(context, element);
+    case 'remove':
+      return removeListener(context, element, value.index);
+    case 'update':
+      return updateListener(context, element, value.index, value.draft);
+    default:
+      return {
+        updated: false,
+        reason: 'unsupported-action'
+      };
+    }
+  }
+
+  function createListenerEntryAdapter(entry, element, options = {}) {
+    const context = options.context || null;
+    const uiState = options.uiState || null;
+    const listenerSelectMode = options.listenerSelectMode === 'layui' ? 'layui' : 'native';
+
+    if (!entry) {
+      return entry;
+    }
+
+    entry.getValue = () => createListenerValue(element);
+    entry.validate = (value = {}) => validateDraft$1(unwrapDraftValue$1(value));
+    entry.ui = {
+      ...(entry.ui || {}),
+      selectMode: listenerSelectMode
+    };
+    entry.setValue = (value = {}) => {
+      const shouldRestoreFocus = value && value.action === 'add' && uiState;
+
+      if (shouldRestoreFocus) {
+        uiState.pendingFocus = {
+          kind: 'listener-value-last',
+          elementId: getElementId(element)
+        };
+      }
+
+      const result = applyChange$1(context, element, value);
+
+      if (shouldRestoreFocus && (!result || !result.updated)) {
+        uiState.pendingFocus = null;
+      }
+
+      return result;
+    };
+
+    return entry;
+  }
+
+  function bindListenerEntry(entry, group, element, options) {
+    // const entry = findGroupEntry(panelState, 'listeners', 'listenerEditor');
+
+    if (!!(entry && group && !group && group.id !== 'listeners' && entry.key !== 'listenerEditor')) {
+      return;
+    }
+
+    createListenerEntryAdapter(entry, element, options);
+  }
+
+  var writer$2 = {
+    bindListenerEntry,
+    createListenerEntryAdapter,
+    createDefaultListener,
+    validateDraft: validateDraft$1
+  };
+
+  function editorUI$1() {
+    return `
+    <div class="layui-bpmn-panel__listener-editor" data-editor-kind="listener-editor">
+    <div class="layui-bpmn-panel__listener-items"></div>
+    <div class="layui-bpmn-panel__listener-actions">
+    <button type="button" class="layui-btn layui-btn-sm" data-action="add-listener">新增监听器</button>
+    </div>
+    </div>
+  `;
+  }
+
+  function itemsUI(items, selectMode) {
+    if (!items.length) {
+      return '<div class="layui-bpmn-panel__entry-preview layui-bpmn-panel__entry-preview--empty">-</div>';
+    }
+
+    return items.map((item, index) => {
+      const indexText = String(index);
+      const selectMode1 = (selectMode) === 'layui' ? `lay-filter="listener-event-${index}` : 'lay-ignore';
+      const selectMode2 = (selectMode) === 'layui' ? `lay-filter="listener-type-${index}` : 'lay-ignore';
+
+      return `
+      <div class="layui-bpmn-panel__listener-item" data-listener-index="${escapeAttr(indexText)}">
+        <div class="layui-bpmn-panel__listener-item-body">
+        
+        <div class="layui-form-item layui-bpmn-panel__listener-field" data-field="event">
+          <label class="layui-form-label layui-bpmn-panel__entry-label">事件</label>
+          <div class="layui-input-block layui-bpmn-panel__listener-field-mount">
+            <select class="layui-input layui-bpmn-panel__listener-select" data-field="event" ${selectMode1}>
+              <option value="assignment">任务分派事件</option>
+              <option value="create">创建事件</option>
+              <option value="complete">完成事件</option>
+              <option value="delete">删除事件</option>
+              <option value="all">所有事件</option>
+            </select>
+            <div class="layui-bpmn-panel__entry-error"></div>
+          </div>
+        </div>
+
+        <div class="layui-form-item layui-bpmn-panel__listener-field" data-field="type">
+          <label class="layui-form-label layui-bpmn-panel__entry-label">监听器类型</label>
+          <div class="layui-input-block layui-bpmn-panel__listener-field-mount">
+            <select class="layui-input layui-bpmn-panel__listener-select" data-field="type" ${selectMode2}>
+              <option value="expression">表达式</option>
+              <option value="class">类</option>
+              <option value="delegateExpression">代理表达式</option>
+            </select>
+            <div class="layui-bpmn-panel__entry-error"></div>
+          </div>
+        </div>
+
+        <div class="layui-form-item layui-bpmn-panel__listener-field" data-field="value">
+          <label class="layui-form-label layui-bpmn-panel__entry-label">值</label>
+          <div class="layui-input-block layui-bpmn-panel__listener-field-mount">
+            <input type="text" class="layui-input" data-field="value">
+            <div class="layui-bpmn-panel__entry-error"></div>
+          </div>
+        </div>
+        
+        <button type="button" class="layui-btn layui-btn-sm layui-btn-primary" data-action="remove-listener">删除监听器</button>
+        </div>
+      </div>
+    `
+    });
+  }
+
+  function setSelectMode(selectEl, options = {}) {
+    const selectMode = options.selectMode || 'native';
+    if (selectMode === 'layui') {
+      selectEl[LAYUI_SELECT_FILTER_PROP] = options.layFilter || '';
+    }
+
+    if (typeof selectEl.setAttribute !== 'function') {
+      return;
+    }
+
+    if (selectMode === 'layui' && options.layFilter) {
+      selectEl.setAttribute('lay-filter', options.layFilter);
+    } else {
+      selectEl.setAttribute('lay-ignore', '');
+    }
+  }
+
+  function focusControl(controlEl) {
+    if (!controlEl) {
+      return;
+    }
+
+    if (typeof controlEl.focus === 'function') {
+      controlEl.focus();
+    }
+    if (toStr(controlEl.value) && typeof controlEl.select === 'function') {
+      controlEl.select();
+    }
+  }
+
+  function createState$1(entry) {
+    return createListenerValue$1(getEntryValue$2(entry));
+  }
+
+  function getBindingFieldEls$1(itemEl, field) {
+    const fieldEl = itemEl.querySelector(`.layui-bpmn-panel__listener-field[data-field="${field}"]`);
+    const controlEl = fieldEl.querySelector(`[data-field="${field}"]`);
+    const errorEl = fieldEl.querySelector('.layui-bpmn-panel__entry-error');
+
+    return {
+      fieldEl,
+      controlEl,
+      errorEl
+    };
+  }
+
+  function setLayuiSelectBinding(selectEl, onChange) {
+    if (!selectEl || typeof onChange !== 'function') {
+      return;
+    }
+
+    const layFilter = typeof selectEl.getAttribute === 'function'
+        ? toStr(selectEl.getAttribute('lay-filter')).trim()
+        : toStr(selectEl[LAYUI_SELECT_FILTER_PROP]).trim();
+
+    if (!layFilter) {
+      return;
+    }
+
+    selectEl[LAYUI_SELECT_BINDING_PROP$1] = {
+      element: selectEl,
+      filter: layFilter,
+      onChange
+    };
+  }
+
+  class ListenersComponent {
+    constructor(entry) {
+      this.entry = entry;
+      this.state = createState$1(entry);
+    }
+
+    mount(mountEl) {
+      const entry = this.entry;
+      const state = this.state;
+
+      renderHtml(mountEl, editorUI$1());
+
+      const editorEl = mountEl.querySelector('[data-editor-kind="listener-editor"]');
+      const itemsEl = editorEl.querySelector('.layui-bpmn-panel__listener-items');
+      const actionsEl = editorEl.querySelector('.layui-bpmn-panel__listener-actions');
+
+      function renderItems(options = {}) {
+        const focusIndex = Number.isInteger(options.focusIndex) ? options.focusIndex : -1;
+        const selectMode = entry.ui && entry.ui.selectMode === 'native' ? 'native' : 'layui';
+
+        renderHtml(itemsEl, itemsUI(state.items, selectMode));
+
+        if (!state.items.length) {
+          return;
+        }
+
+        itemsEl.querySelectorAll('.layui-bpmn-panel__listener-item').forEach((itemEl) => {
+          const index = Number(itemEl.getAttribute('data-listener-index'));
+          const item = state.items[index];
+          const draft = createListenerDraft(item);
+          let lastDraft = JSON.stringify(draft);
+
+          const eventField = getBindingFieldEls$1(itemEl, 'event');
+          const typeField = getBindingFieldEls$1(itemEl, 'type');
+          const valueField = getBindingFieldEls$1(itemEl, 'value');
+          const deleteButtonEl = itemEl.querySelector('[data-action="remove-listener"]');
+          const fieldBindings = {
+            event: eventField,
+            type: typeField,
+            value: valueField
+          };
+
+          setSelectMode(eventField.controlEl, {selectMode: selectMode, layFilter: `listener-event-${index}`});
+          setSelectMode(typeField.controlEl, {selectMode: selectMode, layFilter: `listener-type-${index}`});
+
+          eventField.controlEl.value = draft.event;
+          typeField.controlEl.value = draft.type;
+          valueField.controlEl.value = draft.value;
+
+          function submitDraft() {
+            const newDraft = createListenerDraft({
+              event: eventField.controlEl.value,
+              type: typeField.controlEl.value,
+              value: valueField.controlEl.value
+            });
+            const nextDraft = JSON.stringify(newDraft);
+            if (nextDraft === lastDraft) {
+              return;
+            }
+
+            const validation = typeof entry.validate === 'function' ? entry.validate(newDraft) : null;
+            setListenerFieldErrors(fieldBindings, validation);
+            if (validation && validation.valid === false) {
+              return;
+            }
+
+            const result = typeof entry.setValue === 'function'
+              ? entry.setValue({action: 'update', index, draft: newDraft})
+              : { updated: false };
+            const resultValidation = result && result.validation ? result.validation : null;
+            setListenerFieldErrors(fieldBindings, resultValidation);
+            if (!result || !result.updated) {
+              return;
+            }
+
+            lastDraft = nextDraft;
+            state.items[index] = newDraft;
+
+            if (result.value) {
+              syncListenerItems(state, result.value);
+              renderItems();
+            }
+          }
+
+          setLayuiSelectBinding(eventField.controlEl, (nextValue) => {
+            eventField.controlEl.value = toStr(nextValue);
+            submitDraft();
+          });
+          setLayuiSelectBinding(typeField.controlEl, (nextValue) => {
+            typeField.controlEl.value = toStr(nextValue);
+            submitDraft();
+          });
+          eventField.controlEl.addEventListener('change', submitDraft);
+          typeField.controlEl.addEventListener('change', submitDraft);
+          valueField.controlEl.addEventListener('blur', submitDraft);
+          valueField.controlEl.addEventListener('keydown', (event) => {
+            if (event && event.key === 'Enter') {
+              if (typeof event.preventDefault === 'function') {
+                event.preventDefault();
+              }
+
+              submitDraft();
+            }
+          });
+
+          deleteButtonEl.addEventListener('click', () => {
+            const result = typeof entry.setValue === 'function' ? entry.setValue({action: 'remove', index}) : { updated: false };
+            if (!result || !result.updated) {
+              return;
+            }
+
+            if (result.value) {
+              syncListenerItems(state, result.value);
+            } else {
+              state.items.splice(index, 1);
+            }
+
+            renderItems();
+          });
+
+          if (index === focusIndex) {
+            focusControl(valueField.controlEl);
+          }
+        });
+      }
+
+      const addButtonEl = actionsEl.querySelector('[data-action="add-listener"]');
+      addButtonEl.addEventListener('click', () => {
+        const result = typeof entry.setValue === 'function' ? entry.setValue({ action: 'add' }) : { updated: false };
+        if (!result || !result.updated) {
+          return;
+        }
+
+        if (result.value) {
+          syncListenerItems(state, result.value);
+        } else {
+          state.items.push(createListenerDraft());
+        }
+
+        renderItems({focusIndex: state.items.length - 1});
+      });
+
+      renderItems();
+
+      return {editorEl, itemsEl, actionsEl};
+    }
+  }
+
+  function createEntry$3(entry, group, element, options) {
+    writer$2.bindListenerEntry(entry, group, element, options);
+
+    return new ListenersComponent(entry);
+  }
+
+  function supportsEntry$2(entry) {
+    return !!(entry && entry.component === 'ListenerEditor');
+  }
+
+  const listenersComponent = {
+    type: 'listeners',
+    label: '监听器',
+    entryLayout: 'embedded',
+    supportsEntry: supportsEntry$2,
+    createEntry: createEntry$3,
+    ListenersComponent
+  };
+
+  function getEntryValue$1(entry) {
+    if (!entry || typeof entry.getValue !== 'function') {
+      return null;
+    }
+
+    try {
+      return entry.getValue();
+    } catch (error) {
+      return null;
+    }
+  }
+
+  function createMultiInstanceProperties(value) {
+    const draft = value && typeof value === 'object' ? value : {};
+
+    return {
+      enabled: !!draft.enabled,
+      isSequential: !!draft.isSequential,
+      collection: toStr(draft.collection).trim(),
+      elementVariable: toStr(draft.elementVariable).trim(),
+      loopCardinality: toStr(draft.loopCardinality).trim(),
+      completionCondition: toStr(draft.completionCondition).trim(),
+      assigneeMode: toStr(draft.assigneeMode).trim(),
+      ids: toStr(draft.ids).trim(),
+      names: toStr(draft.names).trim()
+    };
+  }
+
+  function getMultiInstanceSelectedNames(value) {
+    const text = toStr(value).trim();
+
+    return text
+      ? text.split(/[,\uff0c]/).map((item) => toStr(item).trim()).filter(Boolean)
+      : [];
+  }
+
+  function createState(entry) {
+    return createMultiInstanceProperties(getEntryValue$1(entry));
+  }
+
+  function applyPickedUsersToDraft(draft, pickedUsers) {
+    return createMultiInstanceProperties({
+      ...draft,
+      assigneeMode: 'user',
+      ids: Array.isArray(pickedUsers)
+        ? pickedUsers
+          .map((user) => user && user.id)
+          .filter((value) => value !== undefined && value !== null && String(value).trim() !== '')
+          .map((value) => String(value).trim())
+          .join(',')
+        : '',
+      names: Array.isArray(pickedUsers)
+        ? pickedUsers
+          .map((user) => user && user.name)
+          .filter((value) => value !== undefined && value !== null && String(value).trim() !== '')
+          .map((value) => String(value).trim())
+          .join(',')
+        : ''
+    });
+  }
+
+  function setMultiInstanceFieldErrors(fieldBindings, validation) {
+    Object.keys(fieldBindings).forEach((field) => {
+      const binding = fieldBindings[field];
+      const message = getFieldValidationMessage(validation, field);
+      setControlError(binding.controlEl, binding.errorEl, message);
+    });
+  }
+
+  function clearMultiInstanceFieldErrors(fieldBindings) {
+    setMultiInstanceFieldErrors(fieldBindings, null);
+  }
+
+  const DEFAULT_ELEMENT_VARIABLE = 'assignee';
+  const DEFAULT_COMPLETION_CONDITION = '${auditFlowService.hasComplete(execution)}';
+  const ASSIGNEE_MODE_USER = 'user';
+
+
+  function createValidationResult$1(errors = {}, payloadKey, payload) {
+    const result = {
+      valid: Object.keys(errors).length === 0,
+      errors,
+      issues: Object.keys(errors).map((field) => ({
+        field,
+        message: errors[field]
+      }))
+    };
+
+    {
+      result[payloadKey] = payload;
+    }
+
+    return result;
+  }
+
+  function isTruthy(value) {
+    return value === true || value === 'true';
+  }
+
+  function getDefaultCollectionValue(element) {
+    return getTaskCollectionName(getTaskIndexFromElement(element));
+  }
+
+  function getLoopCharacteristics(element) {
+    return getProperty(getBusinessObject(element), 'loopCharacteristics');
+  }
+
+  function getTaskParameter(element, name) {
+    const parametersElement = queryTypedExtensionElement(element, 'taskExt:Parameters');
+    let values = getProperty(parametersElement, 'values');
+    values = Array.isArray(values) ? values : [];
+    const index = values.findIndex((parameter) => getStr(getProperty(parameter, 'name')).trim() === name);
+
+    return index >= 0 ? values[index] : null;
+  }
+
+  function getTaskParameterValue(element, name, fallback = '') {
+    const parameter = getTaskParameter(element, name);
+    const value = getProperty(parameter, 'value');
+
+    return typeof value === 'string' ? value : fallback;
+  }
+
+  function isSameMultiInstanceState(left, right) {
+    const nextLeft = createMultiInstanceProperties(left);
+    const nextRight = createMultiInstanceProperties(right);
+
+    return JSON.stringify(nextLeft) === JSON.stringify(nextRight);
+  }
+
+  function copyMultiInstance(element) {
+    const defaults = createDefaultMultiInstance(element);
+    const loopCharacteristics = getLoopCharacteristics(element);
+    const taskParameters = {
+      assigneeMode: toStr(getTaskParameterValue(element, 'assigneeMode')),
+      ids: toStr(getTaskParameterValue(element, 'ids')),
+      names: toStr(getTaskParameterValue(element, 'names'))
+    };
+
+    if (!loopCharacteristics) {
+      return {
+        ...defaults,
+        ...taskParameters
+      };
+    }
+
+    return {
+      ...defaults,
+      ...taskParameters,
+      enabled: true,
+      isSequential: isTruthy(loopCharacteristics.isSequential),
+      collection: getStr(getProperty(loopCharacteristics, 'flowable:collection'), defaults.collection),
+      elementVariable: getStr(getProperty(loopCharacteristics, 'flowable:elementVariable'), defaults.elementVariable),
+      loopCardinality: getExpressionBody(getProperty(loopCharacteristics, 'loopCardinality')),
+      completionCondition: getExpressionBody(getProperty(loopCharacteristics, 'completionCondition'))
+    };
+  }
+
+  function createDefaultMultiInstance(element) {
+    return {
+      enabled: false,
+      isSequential: false,
+      collection: getDefaultCollectionValue(element),
+      elementVariable: DEFAULT_ELEMENT_VARIABLE,
+      loopCardinality: '',
+      completionCondition: DEFAULT_COMPLETION_CONDITION,
+      assigneeMode: '',
+      ids: '',
+      names: ''
+    };
+  }
+
+  function validateDraft(draft = {}) {
+    const normalizedDraft = {
+      enabled: !!draft.enabled,
+      isSequential: !!draft.isSequential,
+      collection: toStr(draft.collection),
+      elementVariable: toStr(draft.elementVariable),
+      loopCardinality: toStr(draft.loopCardinality),
+      completionCondition: toStr(draft.completionCondition),
+      assigneeMode: toStr(draft.assigneeMode),
+      ids: toStr(draft.ids),
+      names: toStr(draft.names)
+    };
+    const errors = {};
+
+    if (normalizedDraft.enabled && !getStr(normalizedDraft.collection).trim()) {
+      errors.collection = 'collection is required when multi-instance is enabled';
+    }
+
+    if (normalizedDraft.enabled && !getStr(normalizedDraft.elementVariable).trim()) {
+      errors.elementVariable = 'elementVariable is required when multi-instance is enabled';
+    }
+
+    if (normalizedDraft.enabled && normalizedDraft.assigneeMode === ASSIGNEE_MODE_USER && !getStr(normalizedDraft.ids).trim()) {
+      errors.ids = 'ids is required when assigneeMode is user';
+    }
+
+    return createValidationResult$1(errors, 'draft', normalizedDraft);
+  }
+
+  function createFormalExpression(moddle, parent, body) {
+    const nextBody = getStr(body).trim();
+    if (!nextBody) {
+      return undefined;
+    }
+
+    const expression = moddle.create('bpmn:FormalExpression', { body });
+
+    return expression;
+  }
+
+  function createLoopCharacteristics(context, element, draft) {
+    const businessObject = getBusinessObject(element);
+    const loopCharacteristics = createElement('bpmn:MultiInstanceLoopCharacteristics', {
+      isSequential: draft.isSequential,
+      'flowable:collection': getStr(draft.collection).trim(),
+      'flowable:elementVariable': getStr(draft.elementVariable).trim(),
+      loopCardinality: createFormalExpression(context.moddle, null, draft.loopCardinality),
+      completionCondition: createFormalExpression(context.moddle, null, draft.completionCondition)
+    }, businessObject, context.bpmnFactory);
+
+    if (loopCharacteristics.loopCardinality) {
+      loopCharacteristics.loopCardinality.$parent = loopCharacteristics;
+    }
+
+    if (loopCharacteristics.completionCondition) {
+      loopCharacteristics.completionCondition.$parent = loopCharacteristics;
+    }
+
+    return loopCharacteristics;
+  }
+
+  function writeDefaultExtensionElements$1(context, element) {
+    const businessObject = getBusinessObject(element);
+    const extensionElements = getProperty(businessObject, 'extensionElements');
+    if (extensionElements) {
+      return {extensionElements, commands: []};
+    }
+
+    const nextExtensionElements = createElement(
+        'bpmn:ExtensionElements',
+        { values: [] },
+        businessObject,
+        context.bpmnFactory
+    );
+
+    return {
+      extensionElements: nextExtensionElements,
+      commands: [{
+        cmd: 'element.updateModdleProperties',
+        context: {
+          element,
+          moddleElement: businessObject,
+          properties: {
+            extensionElements: nextExtensionElements
+          }
+        }
+      }]
+    };
+  }
+
+  function syncAssigneeParameters(context, element, draft) {
+    const ensured = writeDefaultExtensionElements$1(context, element);
+    const oldExtensionValues = queryTypedExtensionElements(element, 'all');
+    const oldParametersElement = queryTypedExtensionElement(element, 'taskExt:Parameters');
+    const oldParameterValues = getProperty(oldParametersElement, 'values');
+    const preservedParameterValues = (Array.isArray(oldParameterValues) ? oldParameterValues : []).filter((parameter) => {
+      const name = toStr(getProperty(parameter, 'name')).trim();
+      return name !== 'assigneeMode' && name !== 'ids' && name !== 'names';
+    });
+    const isUserMode = draft.assigneeMode === ASSIGNEE_MODE_USER;
+    const newParameterValues = isUserMode
+      ? [
+        ...preservedParameterValues,
+        createElement('taskExt:Parameter', {
+          name: 'assigneeMode',
+          value: ASSIGNEE_MODE_USER
+        }, null, context.bpmnFactory),
+        createElement('taskExt:Parameter', {
+          name: 'ids',
+          value: getStr(draft.ids).trim()
+        }, null, context.bpmnFactory),
+        createElement('taskExt:Parameter', {
+          name: 'names',
+          value: toStr(draft.names)
+        }, null, context.bpmnFactory)
+      ]
+      : preservedParameterValues;
+    const preservedExtensionValues = oldExtensionValues.filter((value) => value !== oldParametersElement);
+    const hasExtensionElements = !ensured.commands.length;
+
+    if (!hasExtensionElements && !newParameterValues.length) {
+      return {updated: false};
+    }
+
+    if (!hasExtensionElements) {
+      const extensionElements = ensured.extensionElements;
+      const parametersElement = createElement(
+          'taskExt:Parameters',
+          { values: newParameterValues },
+          extensionElements,
+          context.bpmnFactory
+      );
+      newParameterValues.forEach((parameter) => {
+        parameter.$parent = parametersElement;
+      });
+      extensionElements.values = [ parametersElement ];
+
+      return {
+        updated: true,
+        result: context.modeling.updateProperties(element, { extensionElements })
+      };
+    }
+
+    let newExtensionValues = preservedExtensionValues;
+    if (newParameterValues.length) {
+      const parametersElement = createElement(
+          'taskExt:Parameters',
+          { values: newParameterValues },
+          ensured.extensionElements,
+          context.bpmnFactory
+      );
+      newParameterValues.forEach((parameter) => {
+        parameter.$parent = parametersElement;
+      });
+
+      newExtensionValues = [...newExtensionValues, parametersElement];
+    }
+    if (!newExtensionValues.length) {
+      return {
+        updated: true,
+        result: context.modeling.updateProperties(element, { extensionElements: undefined })
+      };
+    }
+
+    return {
+      updated: true,
+      result: executeCommands(context.commandStack, [
+          ...ensured.commands,
+        {
+          cmd: 'element.updateModdleProperties',
+          context: {
+            element,
+            moddleElement: ensured.extensionElements,
+            properties: {
+              values: [ ...newExtensionValues ]
+            }
+          }
+        }]
+      )
+    };
+  }
+
+  function buildAssigneeParameterCommands(context, element, draft) {
+    const ensured = writeDefaultExtensionElements$1(context, element);
+    const oldExtensionElements = ensured.extensionElements;
+    const oldExtensionValues = getProperty(oldExtensionElements, 'values');
+    const isUserMode = draft.assigneeMode === ASSIGNEE_MODE_USER;
+
+    const commands = [];
+    let parametersElement = queryTypedExtensionElement(element, 'taskExt:Parameters');
+    if (!parametersElement && isUserMode) {
+      parametersElement = createElement(
+          'taskExt:Parameters',
+          { values: [] },
+          oldExtensionElements,
+          context.bpmnFactory
+      );
+      commands.push({
+        cmd: 'element.updateModdleProperties',
+        context: {
+          element,
+          moddleElement: oldExtensionElements,
+          properties: {
+            values: [ ...oldExtensionValues, parametersElement ]
+          }
+        }
+      });
+    }
+
+    if (!parametersElement) {
+      return commands;
+    }
+
+    const parameterValues = Array.isArray(getProperty(parametersElement, 'values'))
+      ? getProperty(parametersElement, 'values')
+      : [];
+    const preservedParameterValues = parameterValues.filter((parameter) => {
+      const name = getStr(getProperty(parameter, 'name'), '').trim();
+      return name !== 'assigneeMode' && name !== 'ids' && name !== 'names';
+    });
+
+    const newParameterValues = isUserMode
+      ? [
+        ...preservedParameterValues,
+        createElement('taskExt:Parameter', {
+          name: 'assigneeMode',
+          value: ASSIGNEE_MODE_USER
+        }, parametersElement, context.bpmnFactory),
+        createElement('taskExt:Parameter', {
+          name: 'ids',
+          value: getStr(draft.ids).trim()
+        }, parametersElement, context.bpmnFactory),
+        createElement('taskExt:Parameter', {
+          name: 'names',
+          value: toStr(draft.names)
+        }, parametersElement, context.bpmnFactory)
+      ]
+      : preservedParameterValues;
+
+    commands.push({
+      cmd: 'element.updateModdleProperties',
+      context: {
+        element,
+        moddleElement: parametersElement,
+        properties: {
+          values: newParameterValues
+        }
+      }
+    });
+
+    return [...ensured.commands, ...commands];
+  }
+
+  function applyChange(context, element, draft = {}) {
+    const validation = validateDraft(draft);
+    const loopCharacteristics = getLoopCharacteristics(element);
+
+    if (!validation.valid) {
+      return { updated: false, validation };
+    }
+
+    if (!validation.draft.enabled) {
+      syncAssigneeParameters(context, element, validation.draft);
+
+      if (!loopCharacteristics) {
+        return { updated: false, validation };
+      }
+
+      const result = context.modeling.updateProperties(element, {
+        loopCharacteristics: undefined
+      });
+
+      return { updated: true, validation, result };
+    }
+
+    if (!loopCharacteristics) {
+      const businessObject = getBusinessObject(element);
+      const nextLoopCharacteristics = createLoopCharacteristics(context, element, validation.draft);
+      const commands = [
+        ...buildAssigneeParameterCommands(context, element, validation.draft),
+        {
+          cmd: 'element.updateModdleProperties',
+          context: {
+            element,
+            moddleElement: businessObject,
+            properties: {
+              loopCharacteristics: nextLoopCharacteristics
+            }
+          }
+        }
+      ];
+      const result = executeCommands(context.commandStack, commands);
+
+      return { updated: true, validation, result };
+    }
+
+    const nextDraft = validation.draft;
+    const nextLoopCharacteristics = createLoopCharacteristics(context, element, nextDraft);
+    const result = context.modeling.updateProperties(element, {
+      loopCharacteristics: nextLoopCharacteristics
+    });
+    syncAssigneeParameters(context, element, validation.draft);
+
+    return { updated: true, validation, result };
+  }
+
+  function createMultiInstanceEntryAdapter(entry, element, options = {}) {
+    const context = options.context || null;
+    const userPicker = typeof options.userPicker === 'function' ? options.userPicker : null;
+    const uiState = options.uiState || null;
+
+    if (!entry) {
+      return entry;
+    }
+
+    entry.getValue = () => {
+      const derivedDraft = copyMultiInstance(element);
+      const pendingDraft = uiState && uiState.pendingMultiInstanceDraft;
+
+      if (!pendingDraft || pendingDraft.elementId !== getElementId(element)) {
+        return derivedDraft;
+      }
+
+      if (isSameMultiInstanceState(derivedDraft, pendingDraft.draft)) {
+        uiState.pendingMultiInstanceDraft = null;
+        return derivedDraft;
+      }
+
+      return pendingDraft.draft;
+    };
+    entry.validate = (draft) => validateDraft(draft);
+    entry.pickUsers = (draft = {}) => {
+      if (!userPicker) {
+        return null;
+      }
+
+      return userPicker({
+        element,
+        draft,
+        groupId: 'multi-instance',
+        entryKey: entry.key || null
+      });
+    };
+    entry.setValue = (draft) => {
+      if (uiState) {
+        uiState.pendingMultiInstanceDraft = {
+          elementId: getElementId(element),
+          draft: createMultiInstanceProperties(draft)
+        };
+        uiState.suppressMultiInstanceRender = {
+          elementId: getElementId(element),
+          remaining: 6
+        };
+      }
+
+      if (!context) {
+        return {
+          updated: false,
+          notApplied: true,
+          reason: 'missing-context',
+          validation: validateDraft(draft)
+        };
+      }
+
+      const result = applyChange(context, element, draft);
+
+      if (uiState && (!result || !result.updated)) {
+        uiState.pendingMultiInstanceDraft = null;
+      }
+
+      return result;
+    };
+
+    return entry;
+  }
+
+  function bindMultiInstanceEntry(entry, group, element, options) {
+    // const entry = findGroupEntry(panelState, 'multi-instance', 'multiInstanceEditor');
+
+    if (!!(entry && group && group.id === 'multi-instance' && entry.key === 'multiInstanceEditor')) {
+      return;
+    }
+
+    createMultiInstanceEntryAdapter(entry, element, options);
+  }
+
+  var writer$1 = {
+    bindMultiInstanceEntry,
+    createMultiInstanceEntryAdapter,
+    createDefaultMultiInstance,
+    validateDraft
+  };
+
+  function applySelectMode(selectEl, options = {}) {
+    const selectMode = options.selectMode || 'native';
+    if (typeof selectEl.setAttribute !== 'function') {
+      return;
+    }
+
+    if (selectMode === 'layui' && options.layFilter) {
+      selectEl.setAttribute('lay-filter', options.layFilter);
+    } else {
+      selectEl.setAttribute('lay-ignore', '');
+    }
+  }
+
+  function previewUI(value) {
+    const names = getMultiInstanceSelectedNames(value);
+
+    if (!names.length) {
+      return '暂未选择用户';
+    }
+
+    return names.map((name) =>
+        `<span class="layui-bpmn-panel__multi-instance-tag layui-badge-rim">${escapeHtml(name)}</span>`
+    ).join('');
+  }
+
+  function editorUI(draft) {
+    return `
+    <div class="layui-bpmn-panel__multi-instance-editor" data-editor-kind="multi-instance">
+    <div class="layui-bpmn-panel__multi-instance-fields">
+
+    <div class="layui-form-item layui-bpmn-panel__multi-instance-field layui-bpmn-panel__multi-instance-field--switch" data-field="enabled">
+      <label class="layui-form-label layui-bpmn-panel__entry-label"><span>开启多实例</span></label>
+      <div class="layui-input-block layui-bpmn-panel__multi-instance-field-mount">
+        <input type="checkbox" class="layui-bpmn-panel__multi-instance-switch" data-field="enabled" lay-skin="switch" lay-text="开启|关闭">
+        <div class="layui-bpmn-panel__entry-error"></div>
+      </div>
+    </div>
+
+    <div class="layui-form-item layui-bpmn-panel__multi-instance-field layui-bpmn-panel__multi-instance-field--switch" data-field="isSequential">
+      <label class="layui-form-label layui-bpmn-panel__entry-label"><span>串行执行</span></label>
+      <div class="layui-input-block layui-bpmn-panel__multi-instance-field-mount">
+        <input type="checkbox" class="layui-bpmn-panel__multi-instance-switch" data-field="isSequential" lay-skin="switch" lay-text="串行|并行">
+        <div class="layui-bpmn-panel__entry-error"></div>
+      </div>
+    </div>
+
+    <div class="layui-form-item layui-bpmn-panel__multi-instance-field" data-field="assigneeMode">
+      <label class="layui-form-label layui-bpmn-panel__entry-label"><span>人员模式</span></label>
+      <div class="layui-input-block layui-bpmn-panel__multi-instance-field-mount">
+        <select class="layui-input" data-field="assigneeMode" lay-ignore>
+        <option value="">动态变量</option>
+        <option value="user">固定用户</option>
+        </select>
+        <div class="layui-bpmn-panel__entry-error"></div>
+      </div>
+    </div>
+
+    <div class="layui-form-item layui-bpmn-panel__multi-instance-field layui-bpmn-panel__multi-instance-field--picker layui-bpmn-panel__multi-instance-field--no-label" data-field="ids">
+      <label class="layui-form-label layui-bpmn-panel__entry-label"><span>选择用户</span></label>
+      <div class="layui-input-block layui-bpmn-panel__multi-instance-field-mount">
+        <div class="layui-bpmn-panel__multi-instance-button-row" data-field="ids">
+          <button type="button" class="layui-btn layui-btn-sm layui-bpmn-panel__multi-instance-picker-btn" data-action="pick-users">选择固定用户</button>
+          <button type="button" class="layui-btn layui-btn-sm layui-bpmn-panel__multi-instance-picker-btn layui-btn-primary layui-bpmn-panel__multi-instance-clear-btn" data-action="clear-users">清空</button>
+        </div>
+        <div class="layui-bpmn-panel__entry-error"></div>
+      </div>
+    </div>
+
+    <div class="layui-form-item layui-bpmn-panel__multi-instance-field layui-bpmn-panel__multi-instance-field--no-label" data-field="names">
+      <label class="layui-form-label layui-bpmn-panel__entry-label"><span>已选用户</span></label>
+      <div class="layui-input-block layui-bpmn-panel__multi-instance-field-mount">
+        <div class="layui-bpmn-panel__entry-preview layui-bpmn-panel__multi-instance-preview layui-bpmn-panel__multi-instance-preview--readonly" data-field="names">
+          ${previewUI(draft.names)}
+        </div>
+        <div class="layui-bpmn-panel__entry-error"></div>
+      </div>
+    </div>
+
+    <div class="layui-form-item layui-bpmn-panel__multi-instance-field" data-field="collection">
+      <label class="layui-form-label layui-bpmn-panel__entry-label"><span>集合变量</span></label>
+      <div class="layui-input-block layui-bpmn-panel__multi-instance-field-mount">
+        <input type="text" class="layui-input" data-field="collection">
+        <div class="layui-bpmn-panel__entry-error"></div>
+      </div>
+    </div>
+
+    <div class="layui-form-item layui-bpmn-panel__multi-instance-field" data-field="elementVariable">
+      <label class="layui-form-label layui-bpmn-panel__entry-label"><span>元素变量</span></label>
+      <div class="layui-input-block layui-bpmn-panel__multi-instance-field-mount">
+        <input type="text" class="layui-input" data-field="elementVariable">
+        <div class="layui-bpmn-panel__entry-error"></div>
+      </div>
+    </div>
+
+    <div class="layui-form-item layui-bpmn-panel__multi-instance-field" data-field="loopCardinality">
+      <label class="layui-form-label layui-bpmn-panel__entry-label"><span>循环次数</span></label>
+      <div class="layui-input-block layui-bpmn-panel__multi-instance-field-mount">
+        <input type="text" class="layui-input" data-field="loopCardinality">
+        <div class="layui-bpmn-panel__entry-error"></div>
+      </div>
+    </div>
+
+    <div class="layui-form-item layui-bpmn-panel__multi-instance-field" data-field="completionCondition">
+      <label class="layui-form-label layui-bpmn-panel__entry-label"><span>完成条件</span></label>
+      <div class="layui-input-block layui-bpmn-panel__multi-instance-field-mount">
+        <textarea class="layui-textarea" data-field="completionCondition"></textarea>
+        <div class="layui-bpmn-panel__entry-error"></div>
+      </div>
+    </div>
+
+    </div>
+    </div>`;
+  }
+
+  function renderPreviewValue(previewEl, value) {
+    renderHtml(previewEl, previewUI(value));
+  }
+
+  function getBindingFieldEls(editorEl, field) {
+    const fieldEl = editorEl.querySelector(`.layui-bpmn-panel__multi-instance-field[data-field="${field}"]`);
+    const controlEl = fieldEl.querySelector(`[data-field="${field}"]`);
+    const errorEl = fieldEl.querySelector('.layui-bpmn-panel__entry-error');
+
+    return {fieldEl, controlEl, errorEl};
+  }
+
+  function setControlDisabled(binding, disabled) {
+    if (!binding) {
+      return;
+    }
+    if (binding.controlEl) {
+      binding.controlEl.disabled = !!disabled;
+    }
+
+    toggleClassName(binding.fieldEl, 'layui-bpmn-panel__multi-instance-field--disabled', !!disabled);
+  }
+
+  class MultiInstanceComponent {
+    constructor(entry) {
+      this.entry = entry;
+      this.draft = createState(entry);
+    }
+
+    mount(mountEl) {
+      const entry = this.entry;
+      let draft = this.draft;
+
+      renderHtml(mountEl, editorUI(draft));
+
+      const editorEl = mountEl.querySelector('[data-editor-kind="multi-instance"]');
+      const fieldsEl = editorEl.querySelector('.layui-bpmn-panel__multi-instance-fields');
+      const enabledField = getBindingFieldEls(editorEl, 'enabled');
+      const isSequentialField = getBindingFieldEls(editorEl, 'isSequential');
+      const assigneeModeField = getBindingFieldEls(editorEl, 'assigneeMode');
+      const collectionField = getBindingFieldEls(editorEl, 'collection');
+      const elementVariableField = getBindingFieldEls(editorEl, 'elementVariable');
+      const idsField = getBindingFieldEls(editorEl, 'ids');
+      const namesField = getBindingFieldEls(editorEl, 'names');
+      const loopCardinalityField = getBindingFieldEls(editorEl, 'loopCardinality');
+      const completionConditionField = getBindingFieldEls(editorEl, 'completionCondition');
+
+      const enabledInputEl = enabledField.controlEl;
+      const isSequentialInputEl = isSequentialField.controlEl;
+      const assigneeModeSelectEl = assigneeModeField.controlEl;
+      const pickUsersButtonEl = idsField.fieldEl.querySelector('[data-action="pick-users"]');
+      const clearUsersButtonEl = idsField.fieldEl.querySelector('[data-action="clear-users"]');
+      const collectionInputEl = collectionField.controlEl;
+      const elementVariableInputEl = elementVariableField.controlEl;
+      const loopCardinalityInputEl = loopCardinalityField.controlEl;
+      const completionConditionEl = completionConditionField.controlEl;
+      const namesPreviewEl = namesField.controlEl;
+
+      enabledInputEl.checked = !!draft.enabled;
+      isSequentialInputEl.checked = !!draft.isSequential;
+      assigneeModeSelectEl.value = draft.assigneeMode;
+      applySelectMode(assigneeModeSelectEl, { selectMode: 'native' });
+      collectionInputEl.value = draft.collection;
+      elementVariableInputEl.value = draft.elementVariable;
+      loopCardinalityInputEl.value = draft.loopCardinality;
+      completionConditionEl.value = draft.completionCondition;
+
+      const fieldBindings = {
+        enabled: enabledField,
+        isSequential: isSequentialField,
+        assigneeMode: assigneeModeField,
+        collection: collectionField,
+        elementVariable: elementVariableField,
+        ids: idsField,
+        loopCardinality: loopCardinalityField,
+        completionCondition: completionConditionField
+      };
+
+      const syncComponentDraft = () => {
+        this.draft = draft;
+      };
+
+      function syncNamesPreview() {
+        renderPreviewValue(namesPreviewEl, draft.names);
+      }
+
+      function syncUserButtonsState() {
+        const count = getMultiInstanceSelectedNames(draft.names).length;
+        const isUserMode = draft.assigneeMode === 'user';
+        const disabled = !draft.enabled;
+
+        pickUsersButtonEl.disabled = disabled;
+        clearUsersButtonEl.disabled = disabled || !isUserMode || count === 0;
+        clearUsersButtonEl.hidden = !isUserMode;
+      }
+
+      function syncAssigneeModeFields() {
+        const isUserMode = draft.assigneeMode === 'user';
+
+        idsField.fieldEl.hidden = !isUserMode;
+        namesField.fieldEl.hidden = !isUserMode;
+      }
+
+      function syncFieldAvailability() {
+        const disabled = !draft.enabled;
+
+        setControlDisabled(isSequentialField, disabled);
+        setControlDisabled(assigneeModeField, disabled);
+        setControlDisabled(idsField, disabled || draft.assigneeMode !== 'user');
+        setControlDisabled(namesField, disabled || draft.assigneeMode !== 'user');
+        setControlDisabled(collectionField, disabled);
+        setControlDisabled(elementVariableField, disabled);
+        setControlDisabled(loopCardinalityField, disabled);
+        setControlDisabled(completionConditionField, disabled);
+        syncUserButtonsState();
+      }
+
+      function submitDraft(nextDraft, options = {}) {
+        const validation = options.skipValidation
+          ? { valid: true }
+          : (typeof entry.validate === 'function' ? entry.validate(nextDraft) : { valid: true });
+
+        if (!options.skipValidation) {
+          setMultiInstanceFieldErrors(fieldBindings, validation);
+        }
+
+        if (validation && validation.valid === false) {
+          return {updated: false, validation};
+        }
+
+        const result = typeof entry.setValue === 'function' ? entry.setValue(nextDraft) : { updated: false };
+        setMultiInstanceFieldErrors(fieldBindings, result && result.validation);
+
+        if (result && result.updated === true) {
+          draft = createMultiInstanceProperties(nextDraft);
+          syncComponentDraft();
+        }
+
+        return result;
+      }
+
+      function bindCommitOnBlur(controlEl, onReadValue) {
+        function commitValue() {
+          if (!draft.enabled) {
+            return;
+          }
+
+          const nextDraft = {
+            ...draft,
+            ...onReadValue()
+          };
+
+          const result = submitDraft(nextDraft);
+          if (result && result.updated === true) {
+            syncFieldAvailability();
+          }
+        }
+
+        controlEl.addEventListener('blur', commitValue);
+        controlEl.addEventListener('change', commitValue);
+        controlEl.addEventListener('keydown', (event) => {
+          if (String(controlEl.tagName || '').toLowerCase() === 'input' && event && event.key === 'Enter') {
+            if (typeof event.preventDefault === 'function') {
+              event.preventDefault();
+            }
+
+            commitValue();
+          }
+        });
+      }
+
+      syncNamesPreview();
+      syncUserButtonsState();
+      syncAssigneeModeFields();
+      syncFieldAvailability();
+
+      enabledInputEl.addEventListener('change', () => {
+        if (!!enabledInputEl.checked === !!draft.enabled) {
+          syncFieldAvailability();
+          return;
+        }
+
+        const lastDraft = { ...draft };
+        const nextDraft = {...draft, enabled: !!enabledInputEl.checked};
+
+        draft = createMultiInstanceProperties(nextDraft);
+        syncComponentDraft();
+        syncFieldAvailability();
+
+        const result = nextDraft.enabled ? submitDraft(nextDraft) : submitDraft(nextDraft, { skipValidation: true });
+        if (result && result.updated === true) {
+          clearMultiInstanceFieldErrors(fieldBindings);
+          syncFieldAvailability();
+          return;
+        }
+
+        if (!nextDraft.enabled) {
+          draft = createMultiInstanceProperties(lastDraft);
+          enabledInputEl.checked = !!draft.enabled;
+          syncComponentDraft();
+          syncFieldAvailability();
+        }
+      });
+
+      isSequentialInputEl.addEventListener('change', () => {
+        draft.isSequential = !!isSequentialInputEl.checked;
+        syncComponentDraft();
+
+        if (draft.enabled) {
+          submitDraft({...draft});
+        }
+      });
+
+      assigneeModeSelectEl.addEventListener('change', () => {
+        let nextValue = assigneeModeSelectEl.value;
+
+        draft.assigneeMode = toStr(nextValue).trim();
+        assigneeModeSelectEl.value = draft.assigneeMode;
+
+        if (draft.assigneeMode !== 'user') {
+          draft.ids = '';
+          draft.names = '';
+        }
+
+        syncComponentDraft();
+        syncNamesPreview();
+        syncUserButtonsState();
+        syncAssigneeModeFields();
+        syncFieldAvailability();
+
+        if (!draft.enabled) {
+          return;
+        }
+
+        if (draft.assigneeMode === 'user' && !toStr(draft.ids).trim()) {
+          clearMultiInstanceFieldErrors(fieldBindings);
+          return;
+        }
+
+        submitDraft({...draft});
+      });
+
+      clearUsersButtonEl.addEventListener('click', () => {
+        if (!draft.enabled || draft.assigneeMode !== 'user') {
+          return;
+        }
+
+        draft.ids = '';
+        draft.names = '';
+        syncComponentDraft();
+
+        syncNamesPreview();
+        syncUserButtonsState();
+
+        submitDraft({...draft});
+      });
+
+      pickUsersButtonEl.addEventListener('click', async () => {
+        if (!draft.enabled || typeof entry.pickUsers !== 'function') {
+          return;
+        }
+
+        let pickedUsers = null;
+        try {
+          pickedUsers = await entry.pickUsers({ ...draft });
+        } catch (error) {
+          return;
+        }
+
+        if (!Array.isArray(pickedUsers)) {
+          return;
+        }
+
+        draft = applyPickedUsersToDraft(draft, pickedUsers);
+        syncComponentDraft();
+
+        assigneeModeSelectEl.value = draft.assigneeMode;
+        syncNamesPreview();
+        syncUserButtonsState();
+        syncAssigneeModeFields();
+        syncFieldAvailability();
+
+        submitDraft({...draft});
+      });
+
+      collectionInputEl.addEventListener('input', () => {
+        draft.collection = toStr(collectionInputEl.value);
+        syncComponentDraft();
+
+        if (draft.enabled) {
+          submitDraft({...draft});
+        }
+      });
+
+      elementVariableInputEl.addEventListener('input', () => {
+        draft.elementVariable = toStr(elementVariableInputEl.value);
+        syncComponentDraft();
+
+        if (draft.enabled) {
+          submitDraft({...draft});
+        }
+      });
+
+      loopCardinalityInputEl.addEventListener('input', () => {
+        draft.loopCardinality = toStr(loopCardinalityInputEl.value);
+        syncComponentDraft();
+
+        if (draft.enabled) {
+          submitDraft({...draft});
+        }
+      });
+
+      completionConditionEl.addEventListener('input', () => {
+        draft.completionCondition = toStr(completionConditionEl.value);
+        syncComponentDraft();
+
+        if (draft.enabled) {
+          submitDraft({...draft});
+        }
+      });
+
+      bindCommitOnBlur(collectionInputEl, () => ({
+        collection: toStr(collectionInputEl.value)
+      }));
+      bindCommitOnBlur(elementVariableInputEl, () => ({
+        elementVariable: toStr(elementVariableInputEl.value)
+      }));
+      bindCommitOnBlur(loopCardinalityInputEl, () => ({
+        loopCardinality: toStr(loopCardinalityInputEl.value)
+      }));
+      completionConditionEl.addEventListener('blur', () => {
+        if (!draft.enabled) {
+          return;
+        }
+
+        submitDraft({...draft, completionCondition: toStr(completionConditionEl.value)});
+      });
+
+      return {
+        editorEl,
+        fieldsEl
+      };
+    }
+  }
+
+  function createEntry$2(entry, group, element, options) {
+    writer$1.bindMultiInstanceEntry(entry, group, element, options);
+
+    return new MultiInstanceComponent(entry);
+  }
+
+  function supportsEntry$1(entry) {
+    return !!(entry && entry.component === 'MultiInstanceEditor');
+  }
+
+  const multiInstanceComponent = {
+    type: 'multiInstance',
+    label: '多实例',
+    entryLayout: 'embedded',
+    supportsEntry: supportsEntry$1,
+    createEntry: createEntry$2,
+    MultiInstanceComponent
+  };
+
+  function createValidationResult(errors = {}, payloadKey, payload) {
+    const result = {
+      valid: Object.keys(errors).length === 0,
+      errors,
+      issues: Object.keys(errors).map((field) => ({
+        field,
+        message: errors[field]
+      }))
+    };
+
+    {
+      result[payloadKey] = payload;
+    }
+
+    return result;
+  }
+
+  function writeDefaultExtensionElements(context, element) {
+    const businessObject = getBusinessObject$1(element);
+    const extensionElements = getProperty(businessObject, 'extensionElements');
+    if (extensionElements) {
+      return {extensionElements, commands: []};
+    }
+
+    const nextExtensionElements = createElement(
+        'bpmn:ExtensionElements',
+        { values: [] },
+        businessObject,
+        context.bpmnFactory
+    );
+
+    return {
+      extensionElements: nextExtensionElements,
+      commands: [{
+        cmd: 'element.updateModdleProperties',
+        context: {
+          element,
+          moddleElement: businessObject,
+          properties: {
+            extensionElements: nextExtensionElements
+          }
+        }
+      }]
+    };
+  }
+
+  function unwrapDraftValue(value) {
+    return value && value.draft ? value.draft : value;
+  }
+
+  function unwrapItemsValue(value) {
+    return Array.isArray(value) ? value : value && value.items;
+  }
+
+  function createDefaultExtension() {
+    return {
+      key: ''
+    };
+  }
+
+  function createExtensionProperties(extension = {}) {
+    return {
+      key: getStr(extension.key)
+    };
+  }
+
+  function resolveExtensionProperties(value = {}) {
+    return createExtensionProperties(value.extension || value.draft || value);
+  }
+
+  function createExtensionValue(element) {
+    return {
+      kind: 'extension-editor',
+      scope: 'parameter',
+      items: listExtensions(element),
+      draft: createDefaultExtension(),
+      createDefaultExtension,
+      validators
+    };
+
+  }
+
+  function getExtensionValues(parameter) {
+    const extensionsElement = getProperty(parameter, 'extensions');
+    const values = getProperty(extensionsElement, 'values');
+
+    return {
+      extensionsElement,
+      values: Array.isArray(values) ? values : []
+    };
+  }
+
+  function getParametersValues(element) {
+    const parametersElement = queryTypedExtensionElement(element, 'taskExt:Parameters');
+    const values = getProperty(parametersElement, 'values');
+
+    return {
+      parametersElement,
+      values: Array.isArray(values) ? values : []
+    };
+  }
+
+  function getParameterAtIndex(element, index) {
+    const { parametersElement, values } = getParametersValues(element);
+    const parameter = Number.isInteger(index) && index >= 0 && index < values.length
+      ? values[index]
+      : null;
+
+    return {
+      parametersElement,
+      values,
+      parameter
+    };
+  }
+
+  function getParameterIndex(value = {}) {
+    if (Number.isInteger(value.parameterIndex)) {
+      return value.parameterIndex;
+    }
+
+    const draft = unwrapDraftValue(value);
+
+    return Number.isInteger(draft && draft.parameterIndex) ? draft.parameterIndex : null;
+  }
+
+  function getExtensionIndex(value = {}) {
+    if (Number.isInteger(value.extensionIndex)) {
+      return value.extensionIndex;
+    }
+
+    if (Number.isInteger(value.index)) {
+      return value.index;
+    }
+
+    const draft = unwrapDraftValue(value);
+
+    return Number.isInteger(draft && draft.extensionIndex) ? draft.extensionIndex : null;
+  }
+
+  function createExtensionValidationForItems(items = []) {
+    return {
+      ...uniqueKeys(items),
+      extensions: Array.isArray(items) ? items.map((item) => createExtensionProperties(item)) : []
+    };
+  }
+
+  function createDefaultParameterExtensionsElement(context, element, parameter) {
+    const oldElement = getProperty(parameter, 'extensions');
+    if (oldElement) {
+      return { extensionsElement: oldElement, commands: [] };
+    }
+
+    const extensionsElement = createElement('taskExt:Extensions', { values: [] }, parameter, context.bpmnFactory);
+
+    return {
+      extensionsElement,
+      commands: [{
+        cmd: 'element.updateModdleProperties',
+        context: {
+          element,
+          moddleElement: parameter,
+          properties: {
+            extensions: extensionsElement
+          }
+        }
+      }]
+    };
+  }
+
+  function getNextExtensionItemsForAction(element, value = {}) {
+    const action = getStr(value.action);
+    const items = listExtensions(element);
+    const parameterIndex = getParameterIndex(value);
+    const extensionIndex = getExtensionIndex(value);
+    const draft = resolveExtensionProperties(value);
+
+    if (action === 'add') {
+      return [
+        ...items,
+        {
+          parameterIndex,
+          extensionIndex: null,
+          ...draft
+        }
+      ];
+    }
+
+    if (action === 'update') {
+      return items.map((item) => (item.parameterIndex === parameterIndex && item.extensionIndex === extensionIndex
+              ? { ...item, ...draft } : item
+      ));
+    }
+
+    if (action === 'remove') {
+      return items.filter((item) => !(item.parameterIndex === parameterIndex && item.extensionIndex === extensionIndex));
+    }
+
+    return items;
+  }
+
+  function applyExtensionAdd(context, element, value = {}, validation) {
+    const parameterIndex = getParameterIndex(value);
+    const { parameter } = getParameterAtIndex(element, parameterIndex);
+
+    if (!parameter) {
+      return { updated: false, reason: 'parameter-not-found', validation };
+    }
+
+    const ensured = createDefaultParameterExtensionsElement(context, element, parameter);
+    const { values } = getExtensionValues(parameter);
+    const newExtension = createElement('taskExt:Extension',
+        resolveExtensionProperties(value),
+        ensured.extensionsElement, context.bpmnFactory);
+
+    const result = executeCommands(context.commandStack, [
+      ...ensured.commands,
+      {
+        cmd: 'element.updateModdleProperties',
+        context: {
+          element,
+          moddleElement: ensured.extensionsElement,
+          properties: {
+            values: [ ...values, newExtension ]
+          }
+        }
+      }
+    ]);
+
+    return {
+      updated: true,
+      result,
+      validation,
+      extension: newExtension,
+      value: createExtensionValue(element)
+    };
+  }
+
+  function applyExtensionUpdate(context, element, value = {}, validation) {
+    const parameterIndex = getParameterIndex(value);
+    const extensionIndex = getExtensionIndex(value);
+    const { parameter } = getParameterAtIndex(element, parameterIndex);
+    const { values } = getExtensionValues(parameter);
+    const extension = Number.isInteger(extensionIndex) ? values[extensionIndex] : null;
+
+    if (!extension) {
+      return {
+        updated: false,
+        reason: 'extension-not-found',
+        validation
+      };
+    }
+
+    const result = executeCommands(context.commandStack, [{
+        cmd: 'element.updateModdleProperties',
+        context: {
+          element,
+          moddleElement: extension,
+          properties: resolveExtensionProperties(value)
+        }
+      }]
+    );
+
+    return {
+      updated: true,
+      result,
+      validation,
+      extension,
+      value: createExtensionValue(element)
+    };
+  }
+
+  function applyExtensionRemove(context, element, value = {}, validation) {
+    const parameterIndex = getParameterIndex(value);
+    const extensionIndex = getExtensionIndex(value);
+    const { parameter } = getParameterAtIndex(element, parameterIndex);
+    const { extensionsElement, values } = getExtensionValues(parameter);
+    const extension = Number.isInteger(extensionIndex) ? values[extensionIndex] : null;
+
+    if (!extensionsElement || !extension) {
+      return {
+        updated: false,
+        reason: 'extension-not-found',
+        validation
+      };
+    }
+
+    const result = executeCommands(context.commandStack, [{
+          cmd: 'element.updateModdleProperties',
+          context: {
+            element,
+            moddleElement: extensionsElement,
+            properties: {
+              values: values.filter((item, index) => index !== extensionIndex)
+            }
+          }
+        }]
+    );
+
+    return {
+      updated: true,
+      result,
+      validation,
+      value: createExtensionValue(element)
+    };
+  }
+
+  function groupExtensionItemsByParameter(items = []) {
+    const groupedItems = new Map();
+    items.forEach((item) => {
+      const parameterIndex = Number.isInteger(item && item.parameterIndex) ? item.parameterIndex : null;
+      if (parameterIndex === null) {
+        return;
+      }
+
+      if (!groupedItems.has(parameterIndex)) {
+        groupedItems.set(parameterIndex, []);
+      }
+
+      groupedItems.get(parameterIndex).push(createExtensionProperties(item));
+    });
+
+    return groupedItems;
+  }
+
+  function applyExtensionListReplacement(context, element, value = {}, validation) {
+    const nextItems = unwrapItemsValue(value);
+    const groupedItems = groupExtensionItemsByParameter(nextItems);
+    const { values: parameters } = getParametersValues(element);
+    const commands = [];
+
+    parameters.forEach((parameter, parameterIndex) => {
+      const nextExtensions = groupedItems.get(parameterIndex) || [];
+      const current = getExtensionValues(parameter);
+
+      if (!nextExtensions.length && !current.extensionsElement) {
+        return;
+      }
+
+      const ensured = nextExtensions.length
+        ? createDefaultParameterExtensionsElement(context, element, parameter)
+        : {
+          extensionsElement: current.extensionsElement,
+          commands: []
+        };
+
+      if (!ensured.extensionsElement) {
+        return;
+      }
+
+      const extensionElements = nextExtensions
+          .map((extension) => createElement('taskExt:Extension', extension,
+              ensured.extensionsElement, context.bpmnFactory))
+          .filter(Boolean);
+
+      commands.push(...ensured.commands, {
+        cmd: 'element.updateModdleProperties',
+        context: {
+          element,
+          moddleElement: ensured.extensionsElement,
+          properties: {
+            values: extensionElements
+          }
+        }
+      });
+    });
+
+    if (!commands.length) {
+      return {
+        updated: false,
+        validation,
+        value: createExtensionValue(element)
+      };
+    }
+
+    const result = executeCommands(context.commandStack, commands);
+
+    return {
+      updated: true,
+      result,
+      validation,
+      value: createExtensionValue(element)
+    };
+  }
+
+  function validateParameter(parameter = {}) {
+    const normalizedParameter = createParameterProperties(parameter);
+    const errors = {};
+
+    if (!getStr(normalizedParameter.name).trim()) {
+      errors.name = 'name is required';
+    }
+
+    return createValidationResult(errors, 'parameter', normalizedParameter);
+  }
+
+  function addParameter(context, element, parameter = {}) {
+    const ensured = writeDefaultExtensionElements(context, element);
+    const extensionElements = ensured.extensionElements;
+    const oldExtensionValues = queryTypedExtensionElements(element, 'all');
+    let parametersElement = queryTypedExtensionElement(element, 'taskExt:Parameters');
+    const commands = [ ...ensured.commands ];
+
+    if (!parametersElement) {
+      const newExtensionValues = Array.isArray(oldExtensionValues) ? oldExtensionValues : [];
+      parametersElement = createElement('taskExt:Parameters', {
+        values: []
+      }, extensionElements, context.bpmnFactory);
+
+      commands.push({
+        cmd: 'element.updateModdleProperties',
+        context: {
+          element,
+          moddleElement: extensionElements,
+          properties: {
+            values: [ ...newExtensionValues, parametersElement ]
+          }
+        }
+      });
+    }
+
+    const oldParameterValues = getProperty(parametersElement, 'values');
+    const newParameterValues = Array.isArray(oldParameterValues) ? oldParameterValues : [];
+    const parameterElement = createElement('taskExt:Parameter', {
+      name: toStr(parameter.name),
+      value: toStr(parameter.value)
+    }, parametersElement, context.bpmnFactory);
+
+    commands.push({
+      cmd: 'element.updateModdleProperties',
+      context: {
+        element,
+        moddleElement: parametersElement,
+        properties: {
+          values: [ ...newParameterValues, parameterElement ]
+        }
+      }
+    });
+
+    const result = executeCommands(context.commandStack, commands);
+
+    return {
+      updated: true,
+      result,
+      parameter: parameterElement,
+      parametersElement
+    };
+  }
+
+  function updateParameter(context, element, index, parameter = {}) {
+    const parametersElement = queryTypedExtensionElement(element, 'taskExt:Parameters');
+    const oldParameterValues = getProperty(parametersElement, 'values');
+    const parameterElement = Array.isArray(oldParameterValues) ? oldParameterValues[index] : null;
+
+    if (!parameterElement) {
+      return {
+        updated: false,
+        notApplied: true,
+        reason: 'missing-parameter'
+      };
+    }
+
+    const result = updateModdleProperties(context.commandStack, element, parameterElement, {
+      name: toStr(parameter.name),
+      value: toStr(parameter.value)
+    });
+
+    return {
+      updated: true,
+      result,
+      parameter: parameterElement,
+      parametersElement
+    };
+  }
+
+  function createDefaultParameter(name = 'Parameter_0') {
+    return {
+      name: getStr(name, 'Parameter_0') || 'Parameter_0',
+      value: ''
+    };
+  }
+
+  function createParameterProperties(parameter = {}) {
+    return {
+      name: getStr(parameter.name),
+      value: getStr(parameter.value)
+    };
+  }
+
+  function createParameterValue(element) {
+    return {
+      kind: 'parameter-editor',
+      items: listParameters(element),
+      draft: createDefaultParameter(),
+      createDefaultParameter: createDefaultParameter,
+      validateParameter
+    };
+  }
+
+  function listParameters(element) {
+    const { values } = getParametersValues(element);
+
+    return values.map((parameter, index) => ({
+      index,
+      ...createParameterProperties({
+        name: getProperty(parameter, 'name'),
+        value: getProperty(parameter, 'value')
+      })
+    }));
+  }
+
+  function listExtensions(element) {
+    const { values } = getParametersValues(element);
+
+    return values.flatMap((parameter, parameterIndex) => {
+      const { values: extensions } = getExtensionValues(parameter);
+
+      return extensions.map((extension, extensionIndex) => ({
+        parameterIndex,
+        parameterName: getStr(getProperty(parameter, 'name')),
+        extensionIndex,
+        ...createExtensionProperties({
+          key: getProperty(extension, 'key')
+        })
+      }));
+    });
+  }
+
+  function uniqueKeys(extensions = []) {
+    const normalizedExtensions = Array.isArray(extensions)
+      ? extensions.map((extension) => createExtensionProperties(extension))
+      : [];
+    const keyIndexes = new Map();
+
+    normalizedExtensions.forEach((extension, index) => {
+      const key = getStr(extension.key).trim();
+
+      if (!key) {
+        return;
+      }
+
+      if (!keyIndexes.has(key)) {
+        keyIndexes.set(key, []);
+      }
+
+      keyIndexes.get(key).push(index);
+    });
+
+    const issues = [];
+
+    keyIndexes.forEach((indexes, key) => {
+      if (indexes.length < 2) {
+        return;
+      }
+
+      issues.push({
+        code: 'duplicate-key',
+        indexes,
+        key,
+        message: 'extension key must be unique'
+      });
+    });
+
+    return {
+      valid: issues.length === 0,
+      duplicateKeys: issues.map((issue) => issue.key),
+      issues,
+      extensions: normalizedExtensions
+    };
+  }
+
+  function applyParameterChange(context, element, value = {}) {
+    const nextValue = unwrapDraftValue(value);
+    const validation = validateParameter(nextValue);
+    const nextIndex = Number.isInteger(value && value.index)
+      ? value.index
+      : (Number.isInteger(nextValue && nextValue.index) ? nextValue.index : null);
+
+    if (!validation.valid) {
+      return { updated: false, validation };
+    }
+
+    const result = nextIndex === null
+      ? addParameter(context, element, validation.parameter)
+      : updateParameter(context, element, nextIndex, validation.parameter);
+
+    return {
+      ...result,
+      validation
+    };
+  }
+
+  function applyExtensionChange(context, element, value = {}) {
+    const action = getStr(value.action);
+    const nextItems = action ? getNextExtensionItemsForAction(element, value) : unwrapItemsValue(value);
+    const validation = createExtensionValidationForItems(nextItems);
+
+    if (!validation.valid) {
+      return { updated: false, validation };
+    }
+
+    if (action === 'add') {
+      return applyExtensionAdd(context, element, value, validation);
+    }
+
+    if (action === 'update') {
+      return applyExtensionUpdate(context, element, value, validation);
+    }
+
+    if (action === 'remove') {
+      return applyExtensionRemove(context, element, value, validation);
+    }
+
+    if (Array.isArray(nextItems)) {
+      return applyExtensionListReplacement(context, element, value, validation);
+    }
+
+    return {
+      updated: false,
+      reason: 'unsupported-action',
+      validation
+    };
+  }
+
+  function createParameterEntryAdapter(entry, element, options = {}) {
+    const context = options.context || null;
+
+    if (!entry) {
+      return entry;
+    }
+
+    entry.getValue = () => createParameterValue(element);
+    entry.validate = (value = {}) => validateParameter(unwrapDraftValue(value));
+    entry.setValue = (value = {}) => applyParameterChange(context, element, value);
+
+    return entry;
+  }
+
+  function createExtensionEntryAdapter(entry, element, options = {}) {
+    const context = options.context || null;
+
+    if (!entry) {
+      return entry;
+    }
+
+    entry.getValue = () => createExtensionValue(element);
+    entry.validate = (value = {}) => uniqueKeys(unwrapItemsValue(value));
+    entry.setValue = (value = {}) => applyExtensionChange(context, element, value);
+
+    return entry;
+  }
+
+  function bindParameterEntry(entry, group, element, options = {}) {
+    // const entry = findGroupEntry(panelState, 'parameters', 'parameterEditor');
+
+    if (!!(entry && group && group.id === 'parameters' && entry.key === 'parameterEditor')) {
+      return;
+    }
+
+    createParameterEntryAdapter(entry, element, options);
+  }
+
+  function bindExtensionEntry(entry, group, element, options = {}) {
+    // const entry = findGroupEntry(panelState, 'parameters', 'extensionEditor');
+
+    if (!!(entry && group && group.id === 'parameters' && entry.key === 'extensionEditor')) {
+      return;
+    }
+
+    createExtensionEntryAdapter(entry, element, options);
+  }
+
+  const validators = {
+    uniqueKeys
+  };
+
+  const parameters = {
+    bindParameterEntry,
+    createDefaultParameter,
+    createEntryAdapter: createParameterEntryAdapter,
+    createValue: createParameterValue,
+    validateParameter
+  };
+
+  const extensions = {
+    bindExtensionEntry,
+    createDefaultExtension,
+    createEntryAdapter: createExtensionEntryAdapter,
+    createValue: createExtensionValue,
+    validators
+  };
+
+  var writer = {
+    bindExtensionEntry,
+    bindParameterEntry,
+    createExtensionEntryAdapter,
+    createParameterEntryAdapter,
+    createDefaultExtension,
+    createDefaultParameter,
+    extensions,
+    parameters,
+    validateParameter,
+    validators
+  };
+
+  function getEntryValue(entry) {
+    if (!entry || typeof entry.getValue !== 'function') {
+      return null;
+    }
+
+    try {
+      return entry.getValue();
+    } catch (error) {
+      return null;
+    }
+  }
+
+  function getItems(value) {
+    return value && Array.isArray(value.items) ? value.items : [];
+  }
+
+  function linePreviewUI(text, modifierClass = '') {
+    const className = `layui-bpmn-panel__entry-preview${modifierClass ? ` ${modifierClass}` : ''}`;
+
+    return `<div class="${className}">${escapeHtml(text)}</div>`;
+  }
+
+  function emptyPreviewUI() {
+    return linePreviewUI('-', 'layui-bpmn-panel__entry-preview--empty');
+  }
+
+  function parameterPreviewUI(value) {
+    const items = getItems(value);
+    if (!items.length) {
+      return emptyPreviewUI();
+    }
+
+    return items.map((item) => {
+      const name = toStr(item && item.name).trim() || '(unnamed)';
+      const parameterValue = toStr(item && item.value);
+
+      return linePreviewUI(`${name} = ${parameterValue}`);
+    }).join('');
+  }
+
+  function extensionPreviewUI(value) {
+    const items = getItems(value);
+
+    if (!items.length) {
+      return emptyPreviewUI();
+    }
+
+    return items.map((item) => {
+      const parameterName = toStr(item && item.parameterName).trim() || '(parameter)';
+      const key = toStr(item && item.key).trim() || '(key)';
+
+      return linePreviewUI(`${parameterName}.${key}`);
+    }).join('');
+  }
+
+  function isParametersEntry(entry) {
+    return !!(entry && (
+      entry.component === 'ParameterEditor' ||
+      entry.component === 'ExtensionEditor'
+    ));
+  }
+
+  class ParametersComponent {
+    constructor(entry) {
+      this.entry = entry;
+    }
+
+    mount(mountEl) {
+      const value = getEntryValue(this.entry);
+
+      if (this.entry && this.entry.component === 'ExtensionEditor') {
+        renderHtml(mountEl, extensionPreviewUI(value));
+        return {
+          previewKind: 'extension'
+        };
+      }
+
+      renderHtml(mountEl, parameterPreviewUI(value));
+
+      return {
+        previewKind: 'parameter'
+      };
+    }
+  }
+
+  function createEntry$1(entry, group, element, options) {
+    writer.bindParameterEntry(entry, group, element, options);
+    writer.bindExtensionEntry(entry, group, element, options);
+
+    return new ParametersComponent(entry);
+  }
+
+  function supportsEntry(entry) {
+    return isParametersEntry(entry);
+  }
+
+  const parametersComponent = {
+    type: 'parameters',
+    label: '参数',
+    supportsEntry,
+    createEntry: createEntry$1,
+    ParametersComponent
+  };
+
+  const LAYUI_SELECT_BINDING_PROP = '__layuiSelectBinding';
+
+  const entryComponents = [
+    basicComponent,
+    flowConditionComponent,
+    listenersComponent,
+    multiInstanceComponent,
+    parametersComponent
+  ];
+
+  function readEntryValue(entry) {
+    if (!entry || typeof entry.getValue !== 'function') {
+      return null;
+    }
+
+    try {
+      return entry.getValue();
+    } catch (error) {
+      return null;
+    }
+  }
+
+  function isEmbeddedEntryComponent(component) {
+    return !!(component && component.entryLayout === 'embedded');
+  }
+
+  function renderEntryPreviewHtml(entry) {
+    const text = toStr(readEntryValue(entry)).trim();
+    const modifierClass = text ? '' : ' layui-bpmn-panel__entry-preview--empty';
+
+    return `<div class="layui-bpmn-panel__entry-preview${modifierClass}">${escapeHtml(text || '-')}</div>`;
+  }
+
+  function renderEntryHtml(group, entry, index) {
+    const componentDefinition = resolveEntryComponent(entry);
+    const embedded = isEmbeddedEntryComponent(componentDefinition);
+    const entryClassName = `layui-form-item layui-bpmn-panel__entry${embedded ? ' layui-bpmn-panel__entry--embedded' : ''}`;
+    const mountClassName = `layui-input-block layui-bpmn-panel__entry-mount${embedded ? ' layui-bpmn-panel__entry-mount--embedded' : ''}`;
+    const entryKey = entry && entry.key ? entry.key : '';
+    const component = entry && entry.component ? entry.component : '';
+    const groupId = group && group.id ? group.id : '';
+    const label = entry && (entry.label || entry.key) ? (entry.label || entry.key) : '';
+    const previewHtml = componentDefinition ? '' : renderEntryPreviewHtml(entry);
+
+    return `
+    <div class="${escapeAttr(entryClassName)}" data-entry-index="${index}" 
+        data-entry-key="${escapeAttr(entryKey)}" data-component="${escapeAttr(component)}" data-group-id="${escapeAttr(groupId)}">
+      ${embedded ? '' : `<label class="layui-form-label layui-bpmn-panel__entry-label">${escapeHtml(label)}</label>`}
+      <div class="${escapeAttr(mountClassName)}" data-entry-index="${index}" 
+        data-entry-key="${escapeAttr(entryKey)}" data-component="${escapeAttr(component)}">${previewHtml}</div>
+    </div>
+  `;
+  }
+
+  function resolveEntryComponent(entry) {
+    return entryComponents.find((component) => (component
+        && typeof component.supportsEntry === 'function'
+        && component.supportsEntry(entry))) || null;
+  }
+
+  function renderGroup(group, element, options = {}) {
+    const documentRef = document;
+    const entries = group && Array.isArray(group.entries) ? group.entries : [];
+    const groupId = group && group.id ? group.id : '';
+    const groupContent = htmlToElement(documentRef,
+        `<div class="layui-colla-content layui-show layui-bpmn-panel__group-content" data-group-id="${escapeAttr(groupId)}">
+                <div class="layui-bpmn-panel__group-fields" data-group-id="${escapeAttr(groupId)}">
+                ${entries.map((entry, index) => renderEntryHtml(group, entry, index)).join('')}
+                </div>
+            </div>`
+    );
+
+    entries.forEach((entry, index) => {
+      const mountEl = groupContent.querySelector(`[data-entry-index="${index}"].layui-bpmn-panel__entry-mount`);
+      const component = resolveEntryComponent(entry);
+
+      if (component) {
+        component.createEntry(entry, group, element, options).mount(mountEl);
+      }
+    });
+
+    return groupContent;
+  }
+
+  function collectLayuiSelectBindings(root) {
+    const bindings = [];
+
+    (function walk(node) {
+      if (!node) {
+        return;
+      }
+
+      const binding = node[LAYUI_SELECT_BINDING_PROP];
+      if (binding && binding.filter && typeof binding.onChange === 'function') {
+        bindings.push(binding);
+      }
+
+      const children = node && node.children ? Array.from(node.children) : [];
+      children.forEach((child) => walk(child));
+    })(root);
+
+    return bindings;
+  }
 
   const VALIDATOR_KIND = 'panel-validator';
   const VALIDATOR_STATUS = 'not-implemented';
@@ -38632,19 +41836,13 @@
     return element && element.businessObject ? element.businessObject : {};
   }
 
-  function getElementType(element) {
-    const businessObject = getElementBusinessObject(element);
-
-    return (element && element.type) || businessObject.$type || '';
-  }
-
   function getElementTitle(element) {
     const businessObject = getElementBusinessObject(element);
 
     return businessObject.name || (element && element.id) || businessObject.id || '';
   }
 
-  function readElementValue(element, key) {
+  function getElementValue(element, key) {
     const businessObject = getElementBusinessObject(element);
 
     if (!key) {
@@ -38676,12 +41874,10 @@
     return '';
   }
 
-  function createGroup(id, label, entries = []) {
-    return {
-      id,
-      label,
-      entries: createEntries(entries)
-    };
+  function getElementType(element) {
+    const businessObject = getElementBusinessObject(element);
+
+    return (element && element.type) || businessObject.$type || '';
   }
 
   function createDefaultVisibility() {
@@ -38689,7 +41885,7 @@
   }
 
   function createDefaultGetter(key) {
-    return (element) => readElementValue(element, key);
+    return (element) => getElementValue(element, key);
   }
 
   function createDefaultSetter(key) {
@@ -38714,7 +41910,7 @@
     };
   }
 
-  function createDefaultEntryShape(definition = {}) {
+  function createDefaultEntry(definition = {}) {
     const key = definition.key || '';
     const component = definition.component || COMPONENTS.TEXT_INPUT;
 
@@ -38731,7 +41927,7 @@
 
   function createEntry(definition = {}) {
     return {
-      ...createDefaultEntryShape(definition),
+      ...createDefaultEntry(definition),
       ...definition
     };
   }
@@ -38742,30 +41938,38 @@
       : [];
   }
 
+  function createGroup(id, label, entries = []) {
+    return {
+      id,
+      label,
+      entries: createEntries(entries)
+    };
+  }
+
   function createGroups(definitions = []) {
     return definitions.map((definition) => createGroup(definition.id, definition.label, definition.entries));
   }
 
-  function createPanelSchema(element, groupDefinitions = []) {
-    const schema = {
+  function createPanelSetting(element, groupDefinitions = []) {
+    const setting = {
       title: getElementTitle(element),
       elementType: getElementType(element),
       groups: createGroups(groupDefinitions)
     };
 
-    schema.writer = createWriter(schema, element);
-    schema.validator = createValidator(schema, element);
+    setting.writer = createWriter(setting, element);
+    setting.validator = createValidator(setting, element);
 
-    return schema;
+    return setting;
   }
 
-  function createEmptyPanelSchema() {
-    const schema = createPanelSchema(null, EMPTY_PANEL_STATE.groups);
+  function createEmptyPanelSetting() {
+    const setting = createPanelSetting(null, EMPTY_PANEL_STATE.groups);
 
-    schema.title = EMPTY_PANEL_STATE.title;
-    schema.elementType = EMPTY_PANEL_STATE.elementType;
+    setting.title = EMPTY_PANEL_STATE.title;
+    setting.elementType = EMPTY_PANEL_STATE.elementType;
 
-    return schema;
+    return setting;
   }
 
   function createSimpleEntry(key, label, options = {}) {
@@ -38827,8 +42031,8 @@
     }
   ];
 
-  function resolveSequenceFlowSchema(element) {
-    return createPanelSchema(element, SEQUENCE_FLOW_GROUPS);
+  function createSequenceFlowSetting(element) {
+    return createPanelSetting(element, SEQUENCE_FLOW_GROUPS);
   }
 
   const USER_TASK_GROUPS = [
@@ -38872,8 +42076,8 @@
     }
   ];
 
-  function resolveUserTaskSchema(element) {
-    return createPanelSchema(element, USER_TASK_GROUPS);
+  function createUserTaskSetting(element) {
+    return createPanelSetting(element, USER_TASK_GROUPS);
   }
 
   const FALLBACK_GROUPS = [
@@ -38907,14 +42111,14 @@
   ];
 
   const SCHEMA_ROUTES = {
-    'bpmn:Process': (element) => createPanelSchema(element, PROCESS_GROUPS),
-    'bpmn:SequenceFlow': resolveSequenceFlowSchema,
-    'bpmn:UserTask': resolveUserTaskSchema
+    'bpmn:Process': (element) => createPanelSetting(element, PROCESS_GROUPS),
+    'bpmn:SequenceFlow': createSequenceFlowSetting,
+    'bpmn:UserTask': createUserTaskSetting
   };
 
-  function resolvePanelSchema(element) {
+  function resolvePanelSetting(element) {
     if (!element) {
-      return createEmptyPanelSchema();
+      return createEmptyPanelSetting();
     }
 
     const elementType = getElementType(element);
@@ -38924,3120 +42128,88 @@
       return resolver(element);
     }
 
-    return createPanelSchema(element, FALLBACK_GROUPS);
+    return createPanelSetting(element, FALLBACK_GROUPS);
   }
 
-  function normalizeString(value, fallback = '') {
-    return typeof value === 'string' ? value : fallback;
+  function groupUI(groups = []) {
+    return `<div class="layui-collapse layui-bpmn-panel__groups">
+    ${groups.map((group, index) => {
+        const label = group.label || group.id || '';
+        const className = group.error ? 'layui-colla-title layui-bpmn-panel__group-title--error' : 'layui-colla-title';
+        const errorHtml = !group.error ? ''
+            : `<span class="layui-bpmn-panel__group-error">${escapeHtml(group.error || '')}</span>`;
+
+        return `<div class="layui-colla-item" data-group-index="${index}" data-group-id="${escapeAttr(group.id || '')}">
+                <h2 class="${escapeAttr(className)}">${escapeHtml(label)}${errorHtml}</h2>
+                <div class="layui-bpmn-panel__group-mount"></div>
+                </div>`
+      }).join('')}
+    </div>`;
   }
 
-  function trimValue(value) {
-    return normalizeString(value).trim();
+  function ui(panelState) {
+    const title = panelState && panelState.title ? panelState.title : '';
+    const elementType = panelState && panelState.elementType ? panelState.elementType : '';
+    const bodyHtml = !!elementType ? groupUI(panelState.groups || [])
+        : `<div class="layui-bpmn-panel__empty layui-text">${escapeHtml(title || '未选择节点')}</div>`;
+
+    return `
+    <form class="layui-form layui-form-pane layui-bpmn-panel">
+        <fieldset class="layui-elem-field layui-field-title layui-bpmn-panel__header">
+        <legend class="layui-bpmn-panel__title">${escapeHtml(title)}</legend>
+        <div class="layui-bpmn-panel__type">${escapeHtml(elementType)}</div>
+        </fieldset>
+        <div class="layui-bpmn-panel__body">${bodyHtml}</div>
+    </form>
+  `;
   }
 
-  function createValidationResult(errors = {}, payloadKey, payload) {
-    const result = {
-      valid: Object.keys(errors).length === 0,
-      errors,
-      issues: Object.keys(errors).map((field) => ({
-        field,
-        message: errors[field]
-      }))
-    };
 
-    if (payloadKey) {
-      result[payloadKey] = payload;
+  class PropertiesProvider {
+    constructor(container) {
+      this._container = container || null;
     }
 
-    return result;
-  }
-
-  function executeCommands$1(commandStack, commands = []) {
-    if (!commandStack || !Array.isArray(commands) || !commands.length) {
-      return undefined;
-    }
-
-    if (commands.length === 1) {
-      return commandStack.execute(commands[0].cmd, commands[0].context);
-    }
-
-    try {
-      return commandStack.execute('properties-panel.multi-command-executor', commands);
-    } catch (error) {
-      let lastResult;
-
-      commands.forEach((command) => {
-        lastResult = commandStack.execute(command.cmd, command.context);
-      });
-
-      return lastResult;
-    }
-  }
-
-  function normalizeExtension(extension = {}) {
-    return {
-      key: normalizeString(extension.key)
-    };
-  }
-
-  function getExtensionsElement(parameter) {
-    return readModdleProperty(parameter, 'extensions');
-  }
-
-  function listExtensions(element) {
-    const parametersElement = getParametersElement(element, 'taskExt:Parameters');
-    const parameters = readModdleProperty(parametersElement, 'values');
-
-    if (!Array.isArray(parameters)) {
-      return [];
-    }
-
-    return parameters.flatMap((parameter, parameterIndex) => {
-      const extensionsElement = getExtensionsElement(parameter);
-      const extensions = readModdleProperty(extensionsElement, 'extensions');
-
-      if (!Array.isArray(extensions)) {
-        return [];
+    render(element, options = {}) {
+      if (!this._container) {
+        return null;
       }
 
-      return extensions.map((extension, extensionIndex) => ({
-        parameterIndex,
-        parameterName: normalizeString(readModdleProperty(parameter, 'name')),
-        extensionIndex,
-        ...normalizeExtension({
-          key: readModdleProperty(extension, 'key')
-        })
-      }));
-    });
-  }
+      const panelState = resolvePanelSetting(element);
 
-  function createDefaultExtension() {
-    return {
-      key: ''
-    };
-  }
-
-  function uniqueKeys(extensions = []) {
-    const normalizedExtensions = Array.isArray(extensions)
-      ? extensions.map((extension) => normalizeExtension(extension))
-      : [];
-    const keyIndexes = new Map();
-
-    normalizedExtensions.forEach((extension, index) => {
-      const key = trimValue(extension.key);
-
-      if (!key) {
-        return;
-      }
-
-      if (!keyIndexes.has(key)) {
-        keyIndexes.set(key, []);
-      }
-
-      keyIndexes.get(key).push(index);
-    });
-
-    const issues = [];
-
-    keyIndexes.forEach((indexes, key) => {
-      if (indexes.length < 2) {
-        return;
-      }
-
-      issues.push({
-        code: 'duplicate-key',
-        indexes,
-        key,
-        message: 'extension key must be unique'
-      });
-    });
-
-    return {
-      valid: issues.length === 0,
-      duplicateKeys: issues.map((issue) => issue.key),
-      issues,
-      extensions: normalizedExtensions
-    };
-  }
-
-  const validators = {
-    uniqueKeys
-  };
-
-  function createValue$2(element) {
-    const normalizedItems = listExtensions(element);
-
-    return {
-      kind: 'extension-editor',
-      scope: 'parameter',
-      items: normalizedItems,
-      draft: createDefaultExtension(),
-      createDefaultExtension,
-      validators
-    };
-  }
-
-  var extensions = {
-    createDefaultExtension,
-    createValue: createValue$2,
-    listExtensions,
-    validators
-  };
-
-  const DEFAULT_LISTENER_EVENT = 'assignment';
-  const DEFAULT_LISTENER_TYPE = 'expression';
-  const DEFAULT_LISTENER_EXPRESSION = '${auditFlowService.beforeTask(execution)}';
-  const SUPPORTED_LISTENER_TYPES = [ 'expression', 'class', 'delegateExpression' ];
-  const SUPPORTED_LISTENER_EVENTS = [ 'assignment', 'create', 'complete', 'delete', 'all' ];
-
-  function getExtensionElements(element) {
-    const businessObject = getBusinessObject(element);
-
-    return readModdleProperty(businessObject, 'extensionElements');
-  }
-
-  function getExtensionValues(element) {
-    const extensionElements = getExtensionElements(element);
-    const values = readModdleProperty(extensionElements, 'values');
-
-    return Array.isArray(values) ? values : [];
-  }
-
-  function listListenerElements(element) {
-    return getExtensionValues(element).filter((value) => value && value.$type === 'flowable:TaskListener');
-  }
-
-  function readListenerValue(listener) {
-    for (const type of SUPPORTED_LISTENER_TYPES) {
-      const value = normalizeString(readModdleProperty(listener, type));
-
-      if (trimValue(value)) {
-        return {
-          type,
-          value
-        };
-      }
-    }
-
-    return {
-      type: DEFAULT_LISTENER_TYPE,
-      value: ''
-    };
-  }
-
-  function normalizeDraft(draft = {}) {
-    return {
-      event: normalizeString(draft.event, DEFAULT_LISTENER_EVENT),
-      type: normalizeString(draft.type, DEFAULT_LISTENER_TYPE),
-      value: normalizeString(draft.value)
-    };
-  }
-
-  function createListenerProperties(draft) {
-    const properties = {
-      event: draft.event,
-      expression: undefined,
-      class: undefined,
-      delegateExpression: undefined
-    };
-
-    properties[draft.type] = draft.value;
-
-    return properties;
-  }
-
-  function ensureExtensionElements(services, element) {
-    const businessObject = getBusinessObject(element);
-    const extensionElements = getExtensionElements(element);
-
-    if (extensionElements) {
-      return {
-        extensionElements,
-        commands: []
+      const _options = {
+        context: options.context || null,
+        uiState: options.uiState || null,
+        panelState: panelState || null,
+        userPicker: options.userPicker,
+        listenerSelectMode: options.listenerSelectMode
       };
-    }
 
-    const nextExtensionElements = createElement(
-      'bpmn:ExtensionElements',
-      { values: [] },
-      businessObject,
-      services.bpmnFactory
-    );
+      renderHtml(this._container, ui(panelState));
 
-    return {
-      extensionElements: nextExtensionElements,
-      commands: [
-        {
-          cmd: 'element.updateModdleProperties',
-          context: {
-            element,
-            moddleElement: businessObject,
-            properties: {
-              extensionElements: nextExtensionElements
-            }
-          }
-        }
-      ]
-    };
-  }
-
-  function getListenerAtIndex(element, index) {
-    const listeners = listListenerElements(element);
-
-    if (!Number.isInteger(index) || index < 0 || index >= listeners.length) {
-      return null;
-    }
-
-    return listeners[index];
-  }
-
-  function addListener(services, element) {
-    const ensured = ensureExtensionElements(services, element);
-    const nextListener = createElement(
-      'flowable:TaskListener',
-      createListenerProperties(createDefaultDraft$1()),
-      ensured.extensionElements,
-      services.bpmnFactory
-    );
-    const values = readModdleProperty(ensured.extensionElements, 'values');
-
-    executeCommands$1(services.commandStack, [
-      ...ensured.commands,
-      {
-        cmd: 'element.updateModdleProperties',
-        context: {
-          element,
-          moddleElement: ensured.extensionElements,
-          properties: {
-            values: [ ...(Array.isArray(values) ? values : []), nextListener ]
-          }
-        }
-      }
-    ]);
-
-    return {
-      updated: true,
-      value: createValue$1(element)
-    };
-  }
-
-  function updateListener(services, element, index, draft) {
-    const listener = getListenerAtIndex(element, index);
-
-    if (!listener) {
-      return {
-        updated: false,
-        reason: 'listener-not-found'
-      };
-    }
-
-    const validation = validateDraft$1(draft);
-
-    if (!validation.valid) {
-      return {
-        updated: false,
-        validation
-      };
-    }
-
-    services.commandStack.execute('element.updateModdleProperties', {
-      element,
-      moddleElement: listener,
-      properties: createListenerProperties(validation.draft)
-    });
-
-    return {
-      updated: true,
-      validation,
-      value: createValue$1(element)
-    };
-  }
-
-  function removeListener(services, element, index) {
-    const extensionElements = getExtensionElements(element);
-    const listener = getListenerAtIndex(element, index);
-
-    if (!extensionElements || !listener) {
-      return {
-        updated: false,
-        reason: 'listener-not-found'
-      };
-    }
-
-    const values = getExtensionValues(element).filter((value) => value !== listener);
-
-    services.commandStack.execute('element.updateModdleProperties', {
-      element,
-      moddleElement: extensionElements,
-      properties: {
-        values
-      }
-    });
-
-    return {
-      updated: true,
-      value: createValue$1(element)
-    };
-  }
-
-  function createDefaultDraft$1() {
-    return {
-      event: DEFAULT_LISTENER_EVENT,
-      type: DEFAULT_LISTENER_TYPE,
-      value: DEFAULT_LISTENER_EXPRESSION
-    };
-  }
-
-  function listListeners(element) {
-    return listListenerElements(element).map((listener) => {
-      const binding = readListenerValue(listener);
-
-      return {
-        event: normalizeString(readModdleProperty(listener, 'event')),
-        type: binding.type,
-        value: binding.value
-      };
-    });
-  }
-
-  function validateDraft$1(draft = {}) {
-    const normalizedDraft = normalizeDraft(draft);
-    const errors = {};
-
-    if (!trimValue(normalizedDraft.event)) {
-      errors.event = 'event is required';
-    }
-
-    if (!SUPPORTED_LISTENER_EVENTS.includes(normalizedDraft.event)) {
-      errors.event = 'listener event is not supported';
-    }
-
-    if (!SUPPORTED_LISTENER_TYPES.includes(normalizedDraft.type)) {
-      errors.type = 'listener type is not supported';
-    }
-
-    if (!trimValue(normalizedDraft.value)) {
-      errors.value = 'value is required';
-    }
-
-    return createValidationResult(errors, 'draft', normalizedDraft);
-  }
-
-  function createValue$1(element) {
-    return {
-      kind: 'listener-editor',
-      items: listListeners(element),
-      draft: createDefaultDraft$1(),
-      createDefaultDraft: createDefaultDraft$1,
-      validateDraft: validateDraft$1
-    };
-  }
-
-  function applyChange(services, element, value = {}) {
-    if (!services || !services.commandStack || !services.bpmnFactory) {
-      return {
-        updated: false,
-        notApplied: true,
-        reason: 'missing-services'
-      };
-    }
-
-    switch (value.action) {
-    case 'add':
-      return addListener(services, element);
-    case 'remove':
-      return removeListener(services, element, value.index);
-    case 'update':
-      return updateListener(services, element, value.index, value.draft);
-    default:
-      return {
-        updated: false,
-        reason: 'unsupported-action'
-      };
-    }
-  }
-
-  var listeners = {
-    applyChange,
-    createDefaultDraft: createDefaultDraft$1,
-    createValue: createValue$1,
-    listListeners,
-    validateDraft: validateDraft$1
-  };
-
-  function updateModdleProperties(commandStack, element, moddleElement, properties = {}) {
-    return commandStack.execute('element.updateModdleProperties', {
-      element,
-      moddleElement,
-      properties
-    });
-  }
-
-  function executeCommands(commandStack, commands = []) {
-    if (!commandStack || !Array.isArray(commands) || !commands.length) {
-      return undefined;
-    }
-
-    if (commands.length === 1) {
-      return commandStack.execute(commands[0].cmd, commands[0].context);
-    }
-
-    try {
-      return commandStack.execute('properties-panel.multi-command-executor', commands);
-    } catch (error) {
-      let lastResult;
-
-      commands.forEach((command) => {
-        lastResult = commandStack.execute(command.cmd, command.context);
-      });
-
-      return lastResult;
-    }
-  }
-
-  function resolveFactory(services = {}) {
-    return services.bpmnFactory || services.moddle || null;
-  }
-
-  function createModdleElement(services, type, properties = {}, parent = null) {
-    const factory = resolveFactory(services);
-
-    if (!factory || typeof factory.create !== 'function') {
-      return null;
-    }
-
-    return createElement(type, properties, parent, factory);
-  }
-
-  function normalizeParameterName(name) {
-    return typeof name === 'string' ? name.trim() : '';
-  }
-
-  function listTaskParameters(element) {
-    const parametersElement = getParametersElement(element, 'taskExt:Parameters');
-    const values = readModdleProperty(parametersElement, 'values');
-
-    return {
-      parametersElement,
-      values: Array.isArray(values) ? values : []
-    };
-  }
-
-  function findTaskParameter(element, name) {
-    const normalizedName = normalizeParameterName(name);
-    const { parametersElement, values } = listTaskParameters(element);
-    const index = values.findIndex((parameter) => normalizeParameterName(readModdleProperty(parameter, 'name')) === normalizedName);
-
-    return {
-      parametersElement,
-      values,
-      index,
-      parameter: index >= 0 ? values[index] : null
-    };
-  }
-
-  function getTaskParameterValue(element, name, fallback = '') {
-    const { parameter } = findTaskParameter(element, name);
-    const value = parameter ? readModdleProperty(parameter, 'value') : fallback;
-
-    return typeof value === 'string' ? value : fallback;
-  }
-
-  function appendTaskParameter(services, element, parameter = {}) {
-    if (!services || !services.commandStack) {
-      return {
-        updated: false,
-        notApplied: true,
-        reason: 'missing-services'
-      };
-    }
-
-    const businessObject = element && element.businessObject ? element.businessObject : null;
-    let extensionElements = businessObject && (
-      businessObject.extensionElements || (
-        typeof businessObject.get === 'function' ? businessObject.get('extensionElements') : null
-      )
-    );
-    let parametersElement = getParametersElement(element, 'taskExt:Parameters');
-    const commands = [];
-
-    if (!businessObject) {
-      return {
-        updated: false,
-        notApplied: true,
-        reason: 'missing-business-object'
-      };
-    }
-
-    if (!extensionElements) {
-      extensionElements = createModdleElement(services, 'bpmn:ExtensionElements', { values: [] }, businessObject);
-
-      if (!extensionElements) {
-        return {
-          updated: false,
-          notApplied: true,
-          reason: 'missing-extension-factory'
-        };
-      }
-
-      commands.push({
-        cmd: 'element.updateModdleProperties',
-        context: {
-          element,
-          moddleElement: businessObject,
-          properties: {
-            extensionElements
-          }
+      (panelState.groups || []).forEach((group, index) => {
+        const groupEl = this._container.querySelector(`[data-group-index="${index}"]`);
+        const groupMountEl = groupEl && groupEl.querySelector('.layui-bpmn-panel__group-mount');
+        if (groupMountEl) {
+          groupMountEl.replaceWith(renderGroup(group, element, _options));
         }
       });
-    }
 
-    if (!parametersElement) {
-      const values = readModdleProperty(extensionElements, 'values');
-      const nextValues = Array.isArray(values) ? values : [];
-
-      parametersElement = createModdleElement(services, 'taskExt:Parameters', { values: [] }, extensionElements);
-
-      if (!parametersElement) {
-        return {
-          updated: false,
-          notApplied: true,
-          reason: 'missing-task-parameters'
-        };
-      }
-
-      commands.push({
-        cmd: 'element.updateModdleProperties',
-        context: {
-          element,
-          moddleElement: extensionElements,
-          properties: {
-            values: [ ...nextValues, parametersElement ]
-          }
-        }
-      });
-    }
-
-    const values = readModdleProperty(parametersElement, 'values');
-    const nextValues = Array.isArray(values) ? values : [];
-    const parameterElement = createModdleElement(services, 'taskExt:Parameter', {
-      name: typeof parameter.name === 'string' ? parameter.name : '',
-      value: typeof parameter.value === 'string' ? parameter.value : ''
-    }, parametersElement);
-
-    if (!parameterElement) {
-      return {
-        updated: false,
-        notApplied: true,
-        reason: 'missing-parameter-factory'
-      };
-    }
-
-    commands.push({
-      cmd: 'element.updateModdleProperties',
-      context: {
-        element,
-        moddleElement: parametersElement,
-        properties: {
-          values: [ ...nextValues, parameterElement ]
-        }
-      }
-    });
-
-    const result = commands.length === 1
-      ? updateModdleProperties(
-        services.commandStack,
-        element,
-        parametersElement,
-        {
-          values: [ ...nextValues, parameterElement ]
-        }
-      )
-      : executeCommands(services.commandStack, commands);
-
-    return {
-      updated: true,
-      result,
-      parameter: parameterElement,
-      parametersElement
-    };
-  }
-
-  function updateTaskParameter(services, element, index, parameter = {}) {
-    if (!services || !services.commandStack) {
-      return {
-        updated: false,
-        notApplied: true,
-        reason: 'missing-services'
-      };
-    }
-
-    const parametersElement = getParametersElement(element, 'taskExt:Parameters');
-    const values = readModdleProperty(parametersElement, 'values');
-    const parameterElement = Array.isArray(values) ? values[index] : null;
-
-    if (!parameterElement) {
-      return {
-        updated: false,
-        notApplied: true,
-        reason: 'missing-parameter'
-      };
-    }
-
-    const result = updateModdleProperties(services.commandStack, element, parameterElement, {
-      name: typeof parameter.name === 'string' ? parameter.name : '',
-      value: typeof parameter.value === 'string' ? parameter.value : ''
-    });
-
-    return {
-      updated: true,
-      result,
-      parameter: parameterElement,
-      parametersElement
-    };
-  }
-
-  function createFormalExpression(moddle, parent, body) {
-    if (!body) {
-      return undefined;
-    }
-
-    const expression = moddle.create('bpmn:FormalExpression', {
-      body
-    });
-
-    if (parent) {
-      expression.$parent = parent;
-    }
-
-    return expression;
-  }
-
-  function ensureSequenceFlowConditionExpression(services, element) {
-    const businessObject = element && element.businessObject ? element.businessObject : null;
-    let conditionExpression = businessObject && (
-      businessObject.conditionExpression || (
-        typeof businessObject.get === 'function' ? businessObject.get('conditionExpression') : null
-      )
-    );
-
-    if (conditionExpression || !services || !services.moddle || !services.modeling || !businessObject) {
-      return conditionExpression;
-    }
-
-    conditionExpression = createFormalExpression(services.moddle, businessObject, '');
-
-    if (!conditionExpression) {
-      conditionExpression = services.moddle.create('bpmn:FormalExpression', { body: '' });
-      conditionExpression.$parent = businessObject;
-    }
-
-    services.modeling.updateProperties(element, {
-      conditionExpression
-    });
-
-    return conditionExpression;
-  }
-
-  function updateSequenceFlowConditionExpression(services, element, body = '') {
-    if (!services || !services.commandStack) {
-      return {
-        updated: false,
-        notApplied: true,
-        reason: 'missing-services'
-      };
-    }
-
-    const conditionExpression = ensureSequenceFlowConditionExpression(services, element);
-
-    if (!conditionExpression) {
-      return {
-        updated: false,
-        notApplied: true,
-        reason: 'missing-condition-expression'
-      };
-    }
-
-    const result = updateModdleProperties(
-      services.commandStack,
-      element,
-      conditionExpression,
-      {
-        body: typeof body === 'string' ? body : ''
-      }
-    );
-
-    return {
-      updated: true,
-      result,
-      conditionExpression
-    };
-  }
-
-  const DEFAULT_ELEMENT_VARIABLE = 'assignee';
-  const DEFAULT_COMPLETION_CONDITION = '${auditFlowService.hasComplete(execution)}';
-  const ASSIGNEE_MODE_USER = 'user';
-
-  function isTruthy(value) {
-    return value === true || value === 'true';
-  }
-
-  function getDefaultCollectionValue(element) {
-    return getTaskCollectionName(getTaskIndexFromElement(element));
-  }
-
-  function getLoopCharacteristics(element) {
-    const businessObject = getBusinessObject(element);
-
-    return readModdleProperty(businessObject, 'loopCharacteristics');
-  }
-
-  function createDefaultDraft(element) {
-    return {
-      enabled: false,
-      isSequential: false,
-      collection: getDefaultCollectionValue(element),
-      elementVariable: DEFAULT_ELEMENT_VARIABLE,
-      loopCardinality: '',
-      completionCondition: DEFAULT_COMPLETION_CONDITION,
-      assigneeMode: '',
-      ids: '',
-      names: ''
-    };
-  }
-
-  function deriveDraft(element) {
-    const defaults = createDefaultDraft(element);
-    const loopCharacteristics = getLoopCharacteristics(element);
-    const taskParameters = {
-      assigneeMode: normalizeString(getTaskParameterValue(element, 'assigneeMode')),
-      ids: normalizeString(getTaskParameterValue(element, 'ids')),
-      names: normalizeString(getTaskParameterValue(element, 'names'))
-    };
-
-    if (!loopCharacteristics) {
-      return {
-        ...defaults,
-        ...taskParameters
-      };
-    }
-
-    return {
-      ...defaults,
-      ...taskParameters,
-      enabled: true,
-      isSequential: isTruthy(loopCharacteristics.isSequential),
-      collection: normalizeString(
-        readModdleProperty(loopCharacteristics, 'flowable:collection'),
-        defaults.collection
-      ) || defaults.collection,
-      elementVariable: normalizeString(
-        readModdleProperty(loopCharacteristics, 'flowable:elementVariable'),
-        defaults.elementVariable
-      ) || defaults.elementVariable,
-      loopCardinality: readExpressionBody(readModdleProperty(loopCharacteristics, 'loopCardinality')),
-      completionCondition: readExpressionBody(readModdleProperty(loopCharacteristics, 'completionCondition'))
-    };
-  }
-
-  function validateDraft(draft = {}) {
-    const normalizedDraft = {
-      enabled: !!draft.enabled,
-      isSequential: !!draft.isSequential,
-      collection: normalizeString(draft.collection),
-      elementVariable: normalizeString(draft.elementVariable),
-      loopCardinality: normalizeString(draft.loopCardinality),
-      completionCondition: normalizeString(draft.completionCondition),
-      assigneeMode: normalizeString(draft.assigneeMode),
-      ids: normalizeString(draft.ids),
-      names: normalizeString(draft.names)
-    };
-    const errors = {};
-
-    if (normalizedDraft.enabled && !trimValue(normalizedDraft.collection)) {
-      errors.collection = 'collection is required when multi-instance is enabled';
-    }
-
-    if (normalizedDraft.enabled && !trimValue(normalizedDraft.elementVariable)) {
-      errors.elementVariable = 'elementVariable is required when multi-instance is enabled';
-    }
-
-    if (normalizedDraft.enabled && normalizedDraft.assigneeMode === ASSIGNEE_MODE_USER && !trimValue(normalizedDraft.ids)) {
-      errors.ids = 'ids is required when assigneeMode is user';
-    }
-
-    return createValidationResult(errors, 'draft', normalizedDraft);
-  }
-
-  function ensureServices(services = {}) {
-    const requiredKeys = [ 'bpmnFactory', 'commandStack', 'modeling', 'moddle' ];
-
-    requiredKeys.forEach((key) => {
-      if (!services[key]) {
-        throw new Error(`multi-instance applyDraft requires services.${key}`);
-      }
-    });
-
-    return services;
-  }
-
-  function toExpression(moddle, parent, body) {
-    const nextBody = trimValue(body);
-
-    return nextBody ? createFormalExpression(moddle, parent, nextBody) : undefined;
-  }
-
-  function createLoopCharacteristics(services, element, draft) {
-    const businessObject = getBusinessObject(element);
-    const loopCharacteristics = createElement('bpmn:MultiInstanceLoopCharacteristics', {
-      isSequential: draft.isSequential,
-      'flowable:collection': trimValue(draft.collection),
-      'flowable:elementVariable': trimValue(draft.elementVariable),
-      loopCardinality: toExpression(services.moddle, null, draft.loopCardinality),
-      completionCondition: toExpression(services.moddle, null, draft.completionCondition)
-    }, businessObject, services.bpmnFactory);
-
-    if (loopCharacteristics.loopCardinality) {
-      loopCharacteristics.loopCardinality.$parent = loopCharacteristics;
-    }
-
-    if (loopCharacteristics.completionCondition) {
-      loopCharacteristics.completionCondition.$parent = loopCharacteristics;
-    }
-
-    return loopCharacteristics;
-  }
-
-  function syncAssigneeParameters(services, element, draft) {
-    const businessObject = getBusinessObject(element);
-    const oldExtensionElements = businessObject && readModdleProperty(businessObject, 'extensionElements');
-    const oldExtensionValues = Array.isArray(readModdleProperty(oldExtensionElements, 'values'))
-      ? readModdleProperty(oldExtensionElements, 'values')
-      : [];
-    const oldParametersElement = getParametersElement(element, 'taskExt:Parameters');
-    const oldParameterValues = Array.isArray(readModdleProperty(oldParametersElement, 'values'))
-      ? readModdleProperty(oldParametersElement, 'values')
-      : [];
-    const preservedParameterValues = oldParameterValues.filter((parameter) => {
-      const name = normalizeString(readModdleProperty(parameter, 'name')).trim();
-
-      return name !== 'assigneeMode' && name !== 'ids' && name !== 'names';
-    });
-    const isUserMode = draft.assigneeMode === ASSIGNEE_MODE_USER;
-    const newParameterValues = isUserMode
-      ? [
-        ...preservedParameterValues,
-        createElement('taskExt:Parameter', {
-          name: 'assigneeMode',
-          value: ASSIGNEE_MODE_USER
-        }, null, services.bpmnFactory),
-        createElement('taskExt:Parameter', {
-          name: 'ids',
-          value: trimValue(draft.ids)
-        }, null, services.bpmnFactory),
-        createElement('taskExt:Parameter', {
-          name: 'names',
-          value: normalizeString(draft.names)
-        }, null, services.bpmnFactory)
-      ]
-      : preservedParameterValues;
-    const preservedExtensionValues = oldExtensionValues.filter((value) => value !== oldParametersElement);
-
-    if (!oldExtensionElements && !newParameterValues.length) {
-      return {
-        updated: false
-      };
-    }
-
-    if (!oldExtensionElements) {
-      const extensionElements = createElement('bpmn:ExtensionElements', { values: [] }, businessObject, services.bpmnFactory);
-      const parametersElement = createElement('taskExt:Parameters', { values: newParameterValues }, extensionElements, services.bpmnFactory);
-
-      newParameterValues.forEach((parameter) => {
-        parameter.$parent = parametersElement;
-      });
-
-      extensionElements.values = [ parametersElement ];
-
-      return {
-        updated: true,
-        result: services.modeling.updateProperties(element, {
-          extensionElements
-        })
-      };
-    }
-
-    if (!newParameterValues.length) {
-      const newExtensionValues = preservedExtensionValues;
-
-      if (!newExtensionValues.length) {
-        return {
-          updated: true,
-          result: services.modeling.updateProperties(element, {
-            extensionElements: undefined
-          })
-        };
-      }
-
-      return {
-        updated: true,
-        result: updateModdleProperties(services.commandStack, element, oldExtensionElements, {
-          values: newExtensionValues
-        })
-      };
-    }
-
-    const parametersElement = createElement('taskExt:Parameters', { values: newParameterValues }, oldExtensionElements, services.bpmnFactory);
-
-    newParameterValues.forEach((parameter) => {
-      parameter.$parent = parametersElement;
-    });
-
-    return {
-      updated: true,
-      result: updateModdleProperties(services.commandStack, element, oldExtensionElements, {
-        values: [ ...preservedExtensionValues, parametersElement ]
-      })
-    };
-  }
-
-  function buildAssigneeParameterCommands(services, element, draft) {
-    const businessObject = getBusinessObject(element);
-    const extensionElements = businessObject && readModdleProperty(businessObject, 'extensionElements');
-    const isUserMode = draft.assigneeMode === ASSIGNEE_MODE_USER;
-    const commands = [];
-
-    if (!businessObject) {
-      return commands;
-    }
-
-    let newExtensionElements = extensionElements;
-
-    if (!newExtensionElements && isUserMode) {
-      newExtensionElements = createElement('bpmn:ExtensionElements', { values: [] }, businessObject, services.bpmnFactory);
-      commands.push({
-        cmd: 'element.updateModdleProperties',
-        context: {
-          element,
-          moddleElement: businessObject,
-          properties: {
-            extensionElements: newExtensionElements
-          }
-        }
-      });
-    }
-
-    const extensionValues = Array.isArray(readModdleProperty(newExtensionElements, 'values'))
-      ? readModdleProperty(newExtensionElements, 'values')
-      : [];
-    let parametersElement = getParametersElement(element, 'taskExt:Parameters');
-
-    if (!parametersElement && newExtensionElements) {
-      parametersElement = extensionValues.find((value) => value && typeof value.$instanceOf === 'function' && value.$instanceOf('taskExt:Parameters')) || null;
-    }
-
-    if (!parametersElement && isUserMode && newExtensionElements) {
-      parametersElement = createElement('taskExt:Parameters', { values: [] }, newExtensionElements, services.bpmnFactory);
-      commands.push({
-        cmd: 'element.updateModdleProperties',
-        context: {
-          element,
-          moddleElement: newExtensionElements,
-          properties: {
-            values: [ ...extensionValues, parametersElement ]
-          }
-        }
-      });
-    }
-
-    if (!parametersElement) {
-      return commands;
-    }
-
-    const parameterValues = Array.isArray(readModdleProperty(parametersElement, 'values'))
-      ? readModdleProperty(parametersElement, 'values')
-      : [];
-    const preservedValues = parameterValues.filter((parameter) => {
-      const name = typeof readModdleProperty(parameter, 'name') === 'string'
-        ? readModdleProperty(parameter, 'name').trim()
-        : '';
-
-      return name !== 'assigneeMode' && name !== 'ids' && name !== 'names';
-    });
-
-    const newParameterValues = isUserMode
-      ? [
-        ...preservedValues,
-        createElement('taskExt:Parameter', {
-          name: 'assigneeMode',
-          value: ASSIGNEE_MODE_USER
-        }, parametersElement, services.bpmnFactory),
-        createElement('taskExt:Parameter', {
-          name: 'ids',
-          value: trimValue(draft.ids)
-        }, parametersElement, services.bpmnFactory),
-        createElement('taskExt:Parameter', {
-          name: 'names',
-          value: normalizeString(draft.names)
-        }, parametersElement, services.bpmnFactory)
-      ]
-      : preservedValues;
-
-    commands.push({
-      cmd: 'element.updateModdleProperties',
-      context: {
-        element,
-        moddleElement: parametersElement,
-        properties: {
-          values: newParameterValues
-        }
-      }
-    });
-
-    return commands;
-  }
-
-  function applyDraft(services, element, draft = {}) {
-    const resolvedServices = ensureServices(services);
-    const validation = validateDraft(draft);
-    const loopCharacteristics = getLoopCharacteristics(element);
-
-    if (!validation.valid) {
-      return {
-        updated: false,
-        validation
-      };
-    }
-
-    if (!validation.draft.enabled) {
-      syncAssigneeParameters(resolvedServices, element, validation.draft);
-
-      if (!loopCharacteristics) {
-        return {
-          updated: false,
-          validation
-        };
-      }
-
-      const result = resolvedServices.modeling.updateProperties(element, {
-        loopCharacteristics: undefined
-      });
-
-      return {
-        updated: true,
-        validation,
-        result
-      };
-    }
-
-    if (!loopCharacteristics) {
-      const businessObject = getBusinessObject(element);
-      const nextLoopCharacteristics = createLoopCharacteristics(resolvedServices, element, validation.draft);
-      const commands = [
-        ...buildAssigneeParameterCommands(resolvedServices, element, validation.draft),
-        {
-          cmd: 'element.updateModdleProperties',
-          context: {
-            element,
-            moddleElement: businessObject,
-            properties: {
-              loopCharacteristics: nextLoopCharacteristics
-            }
-          }
-        }
-      ];
-      const result = executeCommands$1(resolvedServices.commandStack, commands);
-
-      return {
-        updated: true,
-        validation,
-        result
-      };
-    }
-
-    const nextDraft = validation.draft;
-    const nextLoopCharacteristics = createLoopCharacteristics(resolvedServices, element, nextDraft);
-    const result = resolvedServices.modeling.updateProperties(element, {
-      loopCharacteristics: nextLoopCharacteristics
-    });
-    syncAssigneeParameters(resolvedServices, element, validation.draft);
-
-    return {
-      updated: true,
-      validation,
-      result
-    };
-  }
-
-  var multiInstance = {
-    deriveDraft,
-    validateDraft,
-    applyDraft
-  };
-
-  function normalizeParameter(parameter = {}) {
-    return {
-      name: normalizeString(parameter.name),
-      value: normalizeString(parameter.value)
-    };
-  }
-
-  function createDefaultParameter(name = 'Parameter_0') {
-    return {
-      name: normalizeString(name, 'Parameter_0') || 'Parameter_0',
-      value: ''
-    };
-  }
-
-  function listParameters(element) {
-    const parametersElement = getParametersElement(element, 'taskExt:Parameters');
-    const parameters = readModdleProperty(parametersElement, 'values');
-
-    if (!Array.isArray(parameters)) {
-      return [];
-    }
-
-    return parameters.map((parameter, index) => ({
-      index,
-      ...normalizeParameter({
-        name: readModdleProperty(parameter, 'name'),
-        value: readModdleProperty(parameter, 'value')
-      })
-    }));
-  }
-
-  function validateParameter(parameter = {}) {
-    const normalizedParameter = normalizeParameter(parameter);
-    const errors = {};
-
-    if (!trimValue(normalizedParameter.name)) {
-      errors.name = 'name is required';
-    }
-
-    return createValidationResult(errors, 'parameter', normalizedParameter);
-  }
-
-  function createValue(element) {
-    return {
-      kind: 'parameter-editor',
-      items: listParameters(element),
-      draft: createDefaultParameter(),
-      createDefaultParameter,
-      validateParameter
-    };
-  }
-
-  var parameters = {
-    createDefaultParameter,
-    createValue,
-    listParameters,
-    validateParameter
-  };
-
-  function normalizeText(value) {
-    if (value === undefined || value === null) {
-      return '';
-    }
-
-    return String(value);
-  }
-
-  function getElementId(element) {
-    if (!element) {
-      return null;
-    }
-
-    return element.id || (element.businessObject && element.businessObject.id) || null;
-  }
-
-  function getGroupEntries(panelState, groupId) {
-    const groups = panelState && Array.isArray(panelState.groups) ? panelState.groups : [];
-    const group = groups.find((candidate) => candidate && candidate.id === groupId);
-
-    return group && Array.isArray(group.entries)
-      ? group.entries
-      : null;
-  }
-
-  function findGroupEntry(panelState, groupId, entryKey) {
-    const entries = getGroupEntries(panelState, groupId);
-
-    if (!entries) {
-      return null;
-    }
-
-    return entries.find((candidate) => candidate && candidate.key === entryKey) || null;
-  }
-
-  function appendClassName(element, className) {
-    if (!element || !className) {
-      return;
-    }
-
-    const tokens = normalizeText(element.className)
-      .split(/\s+/)
-      .filter(Boolean);
-
-    if (tokens.indexOf(className) !== -1) {
-      return;
-    }
-
-    tokens.push(className);
-    element.className = tokens.join(' ');
-  }
-
-  function removeClassName(element, className) {
-    if (!element || !className) {
-      return;
-    }
-
-    element.className = normalizeText(element.className)
-      .split(/\s+/)
-      .filter((token) => token && token !== className)
-      .join(' ');
-  }
-
-  function toggleClassName(element, className, enabled) {
-    if (enabled) {
-      appendClassName(element, className);
-      return;
-    }
-
-    removeClassName(element, className);
-  }
-
-  const DEFAULT_USER_TASK_ASSIGNEE = '${assignee}';
-
-  function normalizeMultiInstanceState(draft = {}) {
-    return {
-      enabled: !!draft.enabled,
-      isSequential: !!draft.isSequential,
-      collection: normalizeText(draft.collection).trim(),
-      elementVariable: normalizeText(draft.elementVariable).trim(),
-      loopCardinality: normalizeText(draft.loopCardinality).trim(),
-      completionCondition: normalizeText(draft.completionCondition).trim(),
-      assigneeMode: normalizeText(draft.assigneeMode).trim(),
-      ids: normalizeText(draft.ids).trim(),
-      names: normalizeText(draft.names).trim()
-    };
-  }
-
-  function isSameMultiInstanceState(left, right) {
-    const nextLeft = normalizeMultiInstanceState(left);
-    const nextRight = normalizeMultiInstanceState(right);
-
-    return JSON.stringify(nextLeft) === JSON.stringify(nextRight);
-  }
-
-  function readBusinessObjectValue(element, key) {
-    const businessObject = element && element.businessObject ? element.businessObject : null;
-
-    if (!businessObject || !key) {
-      return '';
-    }
-
-    if (Object.prototype.hasOwnProperty.call(businessObject, key)) {
-      return normalizeText(businessObject[key]);
-    }
-
-    if (typeof businessObject.get === 'function') {
-      return normalizeText(businessObject.get(key));
-    }
-
-    return '';
-  }
-
-  function ensureDefaultUserTaskProperties(element, services) {
-    if (!element || element.type !== 'bpmn:UserTask' || !services || !services.modeling) {
-      return;
-    }
-
-    if (!readBusinessObjectValue(element, 'flowable:assignee').trim()) {
-      services.modeling.updateProperties(element, {
-        'flowable:assignee': DEFAULT_USER_TASK_ASSIGNEE
-      });
-    }
-  }
-
-  function writeSimpleField(element, services, fieldId, value) {
-    if (!element || !services || !services.modeling || !fieldId) {
-      return {
-        updated: false,
-        notApplied: true,
-        reason: 'missing-services'
-      };
-    }
-
-    const nextValue = typeof value === 'boolean' ? value : normalizeText(value);
-
-    return {
-      updated: true,
-      result: services.modeling.updateProperties(element, {
-        [fieldId]: nextValue === '' ? undefined : nextValue
-      })
-    };
-  }
-
-  function getPanelEntry(panelState, groupId, entryKey) {
-    return findGroupEntry(panelState, groupId, entryKey);
-  }
-
-  function bindPanelEntry(panelState, groupId, entryKey, binder) {
-    const entry = getPanelEntry(panelState, groupId, entryKey);
-
-    if (!entry || typeof binder !== 'function') {
       return panelState;
     }
-
-    binder(entry);
-
-    return panelState;
-  }
-
-  function unwrapDraftValue(value) {
-    return value && value.draft ? value.draft : value;
-  }
-
-  function unwrapItemsValue(value) {
-    return Array.isArray(value) ? value : value && value.items;
-  }
-
-  function bindDefaultEntries(panelState, element, options = {}) {
-    const groups = panelState && Array.isArray(panelState.groups) ? panelState.groups : [];
-    const services = options.services || null;
-    const uiState = options.uiState || null;
-
-    groups.forEach((group) => {
-      const entries = group && Array.isArray(group.entries) ? group.entries : [];
-
-      entries.forEach((entry) => {
-        if (!entry) {
-          return;
-        }
-
-        const originalGetValue = typeof entry.getValue === 'function' ? entry.getValue : null;
-        const originalSetValue = typeof entry.setValue === 'function' ? entry.setValue : null;
-        const originalValidate = typeof entry.validate === 'function' ? entry.validate : null;
-
-        if (originalGetValue) {
-          entry.getValue = () => {
-            const value = originalGetValue(element, {
-              element,
-              groupId: group.id || null,
-              entryKey: entry.key || null,
-              writer: panelState.writer,
-              validator: panelState.validator
-            });
-
-            if (entry.key === 'flowable:assignee' && !normalizeText(value).trim()) {
-              return DEFAULT_USER_TASK_ASSIGNEE;
-            }
-
-            return value;
-          };
-        }
-
-        if (originalSetValue) {
-          entry.setValue = (value) => {
-            if (
-              entry.component === 'TextInput' ||
-              entry.component === 'ExpressionEditor' ||
-              entry.component === 'Select' ||
-              entry.component === 'Switch'
-            ) {
-              const nextValue = typeof entry.normalizeValue === 'function' ? entry.normalizeValue(value) : value;
-
-              if (uiState) {
-                uiState.pendingSimpleEntry = {
-                  elementId: getElementId(element),
-                  entryKey: entry.key || null,
-                  value: normalizeText(nextValue)
-                };
-              }
-
-              const result = writeSimpleField(element, services, entry.key, nextValue);
-
-              if (uiState && (!result || !result.updated)) {
-                uiState.pendingSimpleEntry = null;
-              }
-
-              return result;
-            }
-
-            return originalSetValue(value, {
-              element,
-              groupId: group.id || null,
-              entryKey: entry.key || null,
-              writer: panelState.writer,
-              validator: panelState.validator
-            });
-          };
-        }
-
-        if (originalValidate) {
-          entry.validate = (value) => originalValidate(value, {
-            element,
-            groupId: group.id || null,
-            entryKey: entry.key || null,
-            writer: panelState.writer,
-            validator: panelState.validator
-          });
-        }
-      });
-    });
-
-    return panelState;
-  }
-
-  function bindMultiInstanceEntry(panelState, element, options = {}) {
-    const services = options.services || null;
-    const userPicker = typeof options.userPicker === 'function' ? options.userPicker : null;
-    const uiState = options.uiState || null;
-
-    return bindPanelEntry(panelState, 'multi-instance', 'multiInstanceEditor', (entry) => {
-      entry.getValue = () => {
-        const derivedDraft = multiInstance.deriveDraft(element);
-        const pendingDraft = uiState && uiState.pendingMultiInstanceDraft;
-
-        if (!pendingDraft || pendingDraft.elementId !== getElementId(element)) {
-          return derivedDraft;
-        }
-
-        if (isSameMultiInstanceState(derivedDraft, pendingDraft.draft)) {
-          uiState.pendingMultiInstanceDraft = null;
-          return derivedDraft;
-        }
-
-        return pendingDraft.draft;
-      };
-      entry.validate = (draft) => multiInstance.validateDraft(draft);
-      entry.pickUsers = (draft = {}) => {
-        if (!userPicker) {
-          return null;
-        }
-
-        return userPicker({
-          element,
-          draft,
-          groupId: 'multi-instance',
-          entryKey: entry.key || null
-        });
-      };
-      entry.setValue = (draft) => {
-        if (uiState) {
-          uiState.pendingMultiInstanceDraft = {
-            elementId: getElementId(element),
-            draft: normalizeMultiInstanceState(draft)
-          };
-          uiState.suppressMultiInstanceRender = {
-            elementId: getElementId(element),
-            remaining: 6
-          };
-        }
-
-        if (!services) {
-          return {
-            updated: false,
-            notApplied: true,
-            reason: 'missing-services',
-            validation: multiInstance.validateDraft(draft)
-          };
-        }
-
-        const result = multiInstance.applyDraft(services, element, draft);
-
-        if (uiState && (!result || !result.updated)) {
-          uiState.pendingMultiInstanceDraft = null;
-        }
-
-        return result;
-      };
-    });
-  }
-
-  function bindListenerEntry(panelState, element, options = {}) {
-    const services = options.services || null;
-    const uiState = options.uiState || null;
-    const listenerSelectMode = options.listenerSelectMode === 'layui' ? 'layui' : 'native';
-
-    return bindPanelEntry(panelState, 'listeners', 'listenerEditor', (entry) => {
-      entry.getValue = () => listeners.createValue(element);
-      entry.validate = (value = {}) => listeners.validateDraft(unwrapDraftValue(value));
-      entry.ui = {
-        ...(entry.ui || {}),
-        selectMode: listenerSelectMode
-      };
-      entry.setValue = (value = {}) => {
-        const shouldRestoreFocus = value && value.action === 'add' && uiState;
-
-        if (shouldRestoreFocus) {
-          uiState.pendingFocus = {
-            kind: 'listener-value-last',
-            elementId: getElementId(element)
-          };
-        }
-
-        const result = listeners.applyChange(services, element, value);
-
-        if (shouldRestoreFocus && (!result || !result.updated)) {
-          uiState.pendingFocus = null;
-        }
-
-        return result;
-      };
-    });
-  }
-
-  function bindExtensionEntry(panelState, element) {
-    return bindPanelEntry(panelState, 'parameters', 'extensionEditor', (entry) => {
-      entry.getValue = () => extensions.createValue(element);
-      entry.validate = (value = {}) => extensions.validators.uniqueKeys(unwrapItemsValue(value));
-      entry.setValue = (value = {}) => ({
-        updated: false,
-        notApplied: true,
-        reason: 'extension-editor-write-not-implemented',
-        validation: extensions.validators.uniqueKeys(unwrapItemsValue(value))
-      });
-    });
-  }
-
-  function bindParameterEntry(panelState, element, options = {}) {
-    const services = options.services || null;
-
-    return bindPanelEntry(panelState, 'parameters', 'parameterEditor', (entry) => {
-      entry.getValue = () => parameters.createValue(element);
-      entry.validate = (value = {}) => parameters.validateParameter(unwrapDraftValue(value));
-      entry.setValue = (value = {}) => {
-        const nextValue = unwrapDraftValue(value);
-        const validation = parameters.validateParameter(nextValue);
-        const nextIndex = Number.isInteger(value && value.index)
-          ? value.index
-          : (Number.isInteger(nextValue && nextValue.index) ? nextValue.index : null);
-
-        if (!validation.valid) {
-          return {
-            updated: false,
-            validation
-          };
-        }
-
-        if (!services) {
-          return {
-            updated: false,
-            notApplied: true,
-            reason: 'missing-services',
-            validation
-          };
-        }
-
-        const result = nextIndex === null
-          ? appendTaskParameter(services, element, validation.parameter)
-          : updateTaskParameter(services, element, nextIndex, validation.parameter);
-
-        return {
-          ...result,
-          validation
-        };
-      };
-    });
-  }
-
-  function bindSequenceFlowConditionEntry(panelState, element, options = {}) {
-    const services = options.services || null;
-
-    return bindPanelEntry(panelState, 'flow-condition', 'conditionExpression', (entry) => {
-      entry.getValue = () => {
-        const businessObject = element && element.businessObject ? element.businessObject : null;
-        const conditionExpression = businessObject && (
-          businessObject.conditionExpression || (
-            typeof businessObject.get === 'function' ? businessObject.get('conditionExpression') : null
-          )
-        );
-
-        if (!conditionExpression) {
-          return '';
-        }
-
-        return conditionExpression.body || conditionExpression.value || '';
-      };
-      entry.setValue = (value = '') => updateSequenceFlowConditionExpression(services, element, value);
-    });
-  }
-
-  function resolvePanelState(element, options = {}) {
-    ensureDefaultUserTaskProperties(element, options.services || null);
-    const panelState = resolvePanelSchema(element);
-
-    bindDefaultEntries(panelState, element, options);
-    bindMultiInstanceEntry(panelState, element, options);
-    bindListenerEntry(panelState, element, options);
-    bindExtensionEntry(panelState, element);
-    bindParameterEntry(panelState, element, options);
-    bindSequenceFlowConditionEntry(panelState, element, options);
-
-    return panelState;
-  }
-
-  var myPanelApi = {
-    moduleName: 'myPropertiesPanel',
-    resolvePanelState,
-    listeners,
-    extensions,
-    multiInstance,
-    parameters
-  };
-
-  const LISTENER_EVENT_OPTIONS = [
-    { value: 'assignment', label: '任务分派事件' },
-    { value: 'create', label: '创建事件' },
-    { value: 'complete', label: '完成事件' },
-    { value: 'delete', label: '删除事件' },
-    { value: 'all', label: '所有事件' }
-  ];
-
-  const LISTENER_TYPE_OPTIONS = [
-    { value: 'expression', label: '表达式' },
-    { value: 'class', label: '类' },
-    { value: 'delegateExpression', label: '代理表达式' }
-  ];
-
-  const LAYUI_SELECT_BINDING_PROP = '__layuiSelectBinding';
-  const LAYUI_SELECT_FILTER_PROP = '__layuiSelectFilter';
-
-  function appendPreviewLine(documentRef, mountEl, text, modifierClass = '') {
-    const lineEl = documentRef.createElement('div');
-    lineEl.className = `layui-bpmn-panel__entry-preview${modifierClass ? ` ${modifierClass}` : ''}`;
-    lineEl.textContent = text;
-    mountEl.appendChild(lineEl);
-  }
-
-  function readEntryValue(entry) {
-    if (!entry || typeof entry.getValue !== 'function') {
-      return null;
-    }
-
-    try {
-      return entry.getValue();
-    } catch (error) {
-      return null;
-    }
-  }
-
-  function isEditableEntry(entry) {
-    return !!(entry && (
-      entry.component === 'TextInput' ||
-      entry.component === 'ExpressionEditor' ||
-      entry.component === 'Select' ||
-      entry.component === 'Switch'
-    ));
-  }
-
-  function normalizeMultiInstanceDraft(value) {
-    const draft = value && typeof value === 'object' ? value : {};
-
-    return {
-      enabled: draft.enabled === true,
-      isSequential: draft.isSequential === true,
-      collection: normalizeText(draft.collection),
-      elementVariable: normalizeText(draft.elementVariable),
-      loopCardinality: normalizeText(draft.loopCardinality),
-      completionCondition: normalizeText(draft.completionCondition),
-      assigneeMode: normalizeText(draft.assigneeMode),
-      ids: normalizeText(draft.ids),
-      names: normalizeText(draft.names)
-    };
-  }
-
-  function getValidationFieldMessage(validation, field) {
-    if (!validation || typeof validation !== 'object') {
-      return '';
-    }
-
-    const errors = validation.errors;
-
-    if (!errors || typeof errors !== 'object') {
-      return '';
-    }
-
-    const target = errors[field];
-
-    if (typeof target === 'string' && target) {
-      return target;
-    }
-
-    if (target && typeof target.message === 'string' && target.message) {
-      return target.message;
-    }
-
-    return '';
-  }
-
-  function createEditableControl(documentRef, entry, value) {
-    if (entry && entry.component === 'Switch') {
-      const inputEl = documentRef.createElement('input');
-      inputEl.type = 'checkbox';
-      inputEl.checked = value === true || String(value) === 'true';
-      inputEl.dataset.entryKey = entry && entry.key ? entry.key : '';
-      inputEl.dataset.component = entry && entry.component ? entry.component : '';
-
-      if (typeof inputEl.setAttribute === 'function') {
-        inputEl.setAttribute('lay-skin', 'switch');
-        inputEl.setAttribute('lay-text', entry.layText || '是|否');
-      }
-
-      return inputEl;
-    }
-
-    if (entry && entry.component === 'Select') {
-      const selectEl = documentRef.createElement('select');
-      selectEl.className = 'layui-input';
-      selectEl.dataset.entryKey = entry && entry.key ? entry.key : '';
-      selectEl.dataset.component = entry && entry.component ? entry.component : '';
-
-      (entry.options || []).forEach((option) => {
-        const optionEl = documentRef.createElement('option');
-        optionEl.value = normalizeText(option && option.value);
-        optionEl.textContent = normalizeText(option && option.label) || optionEl.value;
-        selectEl.appendChild(optionEl);
-      });
-
-      selectEl.value = normalizeText(value);
-      if (typeof selectEl.setAttribute === 'function') {
-        selectEl.setAttribute('lay-ignore', '');
-      }
-
-      return selectEl;
-    }
-
-    const isExpression = entry && entry.component === 'ExpressionEditor';
-    const controlEl = documentRef.createElement(isExpression ? 'textarea' : 'input');
-    controlEl.className = isExpression ? 'layui-textarea' : 'layui-input';
-    controlEl.value = normalizeText(value);
-    controlEl.dataset.entryKey = entry && entry.key ? entry.key : '';
-    controlEl.dataset.component = entry && entry.component ? entry.component : '';
-
-    return controlEl;
-  }
-
-  function createErrorElement(documentRef) {
-    const errorEl = documentRef.createElement('div');
-    errorEl.className = 'layui-bpmn-panel__entry-error';
-    errorEl.textContent = '';
-
-    return errorEl;
-  }
-
-  function getFirstErrorMessage(errors) {
-    if (!errors || typeof errors !== 'object') {
-      return '';
-    }
-
-    const values = Object.values(errors);
-
-    for (let index = 0; index < values.length; index += 1) {
-      const value = values[index];
-
-      if (typeof value === 'string' && value) {
-        return value;
-      }
-
-      if (value && typeof value.message === 'string' && value.message) {
-        return value.message;
-      }
-    }
-
-    return '';
-  }
-
-  function toValidationMessage(result) {
-    if (!result) {
-      return '';
-    }
-
-    if (typeof result === 'string') {
-      return result;
-    }
-
-    if (result.valid === false) {
-      if (typeof result.message === 'string' && result.message) {
-        return result.message;
-      }
-
-      const errorMessage = getFirstErrorMessage(result.errors);
-
-      return errorMessage || '输入不合法';
-    }
-
-    return '';
-  }
-
-  function setEntryError(controlEl, errorEl, message) {
-    const nextMessage = normalizeText(message).trim();
-    const hasDangerClass = /\blayui-form-danger\b/.test(controlEl.className);
-
-    errorEl.textContent = nextMessage;
-
-    if (nextMessage && !hasDangerClass) {
-      controlEl.className = `${controlEl.className} layui-form-danger`.trim();
-      return;
-    }
-
-    if (!nextMessage && hasDangerClass) {
-      controlEl.className = controlEl.className.replace(/\s*layui-form-danger\b/g, '').trim();
-    }
-  }
-
-  function bindEditableEvents(controlEl, errorEl, entry, initialValue) {
-    let lastCommittedValue = entry && entry.component === 'Switch'
-      ? String(initialValue === true || String(initialValue) === 'true')
-      : normalizeText(initialValue);
-
-    function readControlValue() {
-      if (entry && entry.component === 'Switch') {
-        return !!controlEl.checked;
-      }
-
-      return normalizeText(controlEl.value);
-    }
-
-    function submitValue() {
-      const nextValue = readControlValue();
-      const comparableValue = entry && entry.component === 'Switch' ? String(nextValue) : nextValue;
-
-      if (comparableValue === lastCommittedValue) {
-        return;
-      }
-
-      const validation = typeof entry.validate === 'function'
-        ? entry.validate(nextValue)
-        : null;
-      const validationMessage = toValidationMessage(validation);
-
-      if (validationMessage) {
-        setEntryError(controlEl, errorEl, validationMessage);
-        return;
-      }
-
-      const result = typeof entry.setValue === 'function'
-        ? entry.setValue(nextValue)
-        : { updated: false };
-      const resultMessage = toValidationMessage(result && result.validation);
-
-      setEntryError(controlEl, errorEl, resultMessage);
-
-      if (result && result.updated) {
-        lastCommittedValue = comparableValue;
-      }
-    }
-
-    controlEl.addEventListener('blur', submitValue);
-    controlEl.addEventListener('change', submitValue);
-    controlEl.addEventListener('keydown', (event) => {
-      if (controlEl.tagName === 'input' && event && event.key === 'Enter') {
-        if (typeof event.preventDefault === 'function') {
-          event.preventDefault();
-        }
-
-        submitValue();
-      }
-    });
-  }
-
-  function renderEditableEntry(documentRef, mountEl, entry) {
-    const value = readEntryValue(entry);
-    const controlEl = createEditableControl(documentRef, entry, value);
-    const errorEl = createErrorElement(documentRef);
-
-    bindEditableEvents(controlEl, errorEl, entry, value);
-
-    mountEl.appendChild(controlEl);
-    mountEl.appendChild(errorEl);
-  }
-
-  function createMultiInstanceFieldContainer(documentRef, field) {
-    const containerEl = documentRef.createElement('div');
-    containerEl.className = 'layui-bpmn-panel__multi-instance-field';
-    containerEl.dataset.field = field;
-
-    return containerEl;
-  }
-
-  function createLabeledControl(documentRef, field, labelText, controlEl, options = {}) {
-    const fieldEl = createMultiInstanceFieldContainer(documentRef, field);
-    const labelEl = documentRef.createElement('label');
-    const labelTextEl = documentRef.createElement('span');
-    const mountEl = documentRef.createElement('div');
-    const errorEl = createErrorElement(documentRef);
-
-    if (options.kind === 'switch') {
-      appendClassName(fieldEl, 'layui-bpmn-panel__multi-instance-field--switch');
-    }
-
-    appendClassName(fieldEl, 'layui-form-item');
-    labelEl.className = 'layui-form-label layui-bpmn-panel__entry-label';
-    labelTextEl.textContent = labelText;
-    labelEl.appendChild(labelTextEl);
-
-    let labelMetaEl = null;
-
-    if (options.metaText !== undefined) {
-      labelMetaEl = documentRef.createElement('span');
-      labelMetaEl.className = 'layui-badge layui-badge-rim layui-bpmn-panel__entry-label-meta';
-      labelMetaEl.textContent = normalizeText(options.metaText);
-      labelEl.appendChild(labelMetaEl);
-    }
-
-    let labelActionEl = null;
-
-    if (options.actionText !== undefined) {
-      labelActionEl = documentRef.createElement('button');
-      labelActionEl.type = 'button';
-      labelActionEl.className = 'layui-btn layui-btn-xs layui-btn-primary layui-bpmn-panel__entry-label-action';
-      labelActionEl.textContent = normalizeText(options.actionText);
-
-      if (options.actionName) {
-        labelActionEl.dataset.action = options.actionName;
-      }
-
-      labelEl.appendChild(labelActionEl);
-    }
-
-    mountEl.className = 'layui-input-block layui-bpmn-panel__multi-instance-field-mount';
-
-    fieldEl.appendChild(labelEl);
-    mountEl.appendChild(controlEl);
-    mountEl.appendChild(errorEl);
-    fieldEl.appendChild(mountEl);
-
-    return {
-      fieldEl,
-      labelEl,
-      labelTextEl,
-      labelMetaEl,
-      labelActionEl,
-      mountEl,
-      controlEl,
-      errorEl
-    };
-  }
-
-  function setMultiInstanceFieldErrors(fieldBindings, validation) {
-    Object.keys(fieldBindings).forEach((field) => {
-      const binding = fieldBindings[field];
-      const message = getValidationFieldMessage(validation, field);
-      setEntryError(binding.controlEl, binding.errorEl, message);
-    });
-  }
-
-  function clearMultiInstanceFieldErrors(fieldBindings) {
-    setMultiInstanceFieldErrors(fieldBindings, null);
-  }
-
-  function normalizeListenerDraft(value = {}) {
-    return {
-      event: normalizeText(value.event).trim() || 'assignment',
-      type: normalizeText(value.type).trim() || 'expression',
-      value: normalizeText(value.value)
-    };
-  }
-
-  function normalizeListenerEditorValue(value) {
-    const items = value && Array.isArray(value.items) ? value.items : [];
-
-    return {
-      items: items.map((item) => normalizeListenerDraft(item))
-    };
-  }
-
-  function createListenerButton(documentRef, action, text, modifierClass = '') {
-    const buttonEl = documentRef.createElement('button');
-    buttonEl.type = 'button';
-    buttonEl.className = `layui-btn layui-btn-sm${modifierClass ? ` ${modifierClass}` : ''}`;
-    buttonEl.dataset.action = action;
-    buttonEl.textContent = text;
-
-    return buttonEl;
-  }
-
-  function applySelectMode(selectEl, options = {}) {
-    const selectMode = options.selectMode || 'native';
-
-    if (selectMode === 'layui') {
-      selectEl[LAYUI_SELECT_FILTER_PROP] = options.layFilter || '';
-
-      if (typeof selectEl.setAttribute === 'function' && options.layFilter) {
-        selectEl.setAttribute('lay-filter', options.layFilter);
-      }
-
-      return;
-    }
-
-    if (typeof selectEl.setAttribute === 'function') {
-      selectEl.setAttribute('lay-ignore', '');
-    }
-  }
-
-  function setLayuiSelectBinding(selectEl, onChange) {
-    if (!selectEl || typeof onChange !== 'function') {
-      return;
-    }
-
-    const layFilter = typeof selectEl.getAttribute === 'function'
-      ? normalizeText(selectEl.getAttribute('lay-filter')).trim()
-      : normalizeText(selectEl[LAYUI_SELECT_FILTER_PROP]).trim();
-
-    if (!layFilter) {
-      return;
-    }
-
-    selectEl[LAYUI_SELECT_BINDING_PROP] = {
-      element: selectEl,
-      filter: layFilter,
-      onChange
-    };
-  }
-
-  function createListenerSelect(documentRef, field, options, value, selectOptions = {}) {
-    const selectEl = documentRef.createElement('select');
-    selectEl.className = 'layui-input layui-bpmn-panel__listener-select';
-    selectEl.dataset.field = field;
-
-    (options || []).forEach((option) => {
-      const optionEl = documentRef.createElement('option');
-      optionEl.value = option.value;
-      optionEl.textContent = option.label;
-
-      selectEl.appendChild(optionEl);
-    });
-
-    selectEl.value = normalizeText(value);
-    applySelectMode(selectEl, selectOptions);
-
-    return selectEl;
-  }
-
-  function createMultiInstanceSelect(documentRef, field, options, value, selectOptions = {}) {
-    const selectEl = documentRef.createElement('select');
-    selectEl.className = 'layui-input';
-    selectEl.dataset.field = field;
-
-    (options || []).forEach((option) => {
-      const optionEl = documentRef.createElement('option');
-      optionEl.value = option.value;
-      optionEl.textContent = option.label;
-      selectEl.appendChild(optionEl);
-    });
-
-    selectEl.value = normalizeText(value);
-    applySelectMode(selectEl, selectOptions);
-
-    return selectEl;
-  }
-
-  function createMultiInstanceButton(documentRef, action, text) {
-    const buttonEl = documentRef.createElement('button');
-    buttonEl.type = 'button';
-    buttonEl.className = 'layui-btn layui-btn-sm layui-bpmn-panel__multi-instance-picker-btn';
-    buttonEl.dataset.action = action;
-    buttonEl.textContent = text;
-
-    return buttonEl;
-  }
-
-  function createMultiInstanceButtonRow(documentRef, ...buttons) {
-    const rowEl = documentRef.createElement('div');
-    rowEl.className = 'layui-bpmn-panel__multi-instance-button-row';
-
-    buttons.filter(Boolean).forEach((buttonEl) => {
-      rowEl.appendChild(buttonEl);
-    });
-
-    return rowEl;
-  }
-
-  function renderMultiInstancePreviewValue(previewEl, value) {
-    const names = getMultiInstanceSelectedNames(value);
-
-    previewEl.innerHTML = '';
-
-    if (!names.length) {
-      previewEl.textContent = '暂未选择用户';
-      return;
-    }
-
-    names.forEach((name) => {
-      const tagEl = previewEl.ownerDocument.createElement('span');
-      tagEl.className = 'layui-bpmn-panel__multi-instance-tag layui-badge-rim';
-      tagEl.textContent = name;
-      previewEl.appendChild(tagEl);
-    });
-  }
-
-  function getMultiInstanceSelectedNames(value) {
-    const text = normalizeText(value).trim();
-
-    return text
-      ? text.split(/[,\uff0c]/).map((item) => normalizeText(item).trim()).filter(Boolean)
-      : [];
-  }
-
-  function createMultiInstancePreview(documentRef, value) {
-    const previewEl = documentRef.createElement('div');
-    previewEl.className = 'layui-bpmn-panel__entry-preview layui-bpmn-panel__multi-instance-preview layui-bpmn-panel__multi-instance-preview--readonly';
-    renderMultiInstancePreviewValue(previewEl, value);
-
-    return previewEl;
-  }
-
-  function createListenerInput(documentRef, field, value) {
-    const inputEl = documentRef.createElement('input');
-    inputEl.className = 'layui-input';
-    inputEl.dataset.field = field;
-    inputEl.value = normalizeText(value);
-
-    return inputEl;
-  }
-
-  function createListenerField(documentRef, field, labelText, controlEl) {
-    const fieldEl = documentRef.createElement('div');
-    const labelEl = documentRef.createElement('label');
-    const mountEl = documentRef.createElement('div');
-    const errorEl = createErrorElement(documentRef);
-
-    fieldEl.className = 'layui-form-item layui-bpmn-panel__listener-field';
-    fieldEl.dataset.field = field;
-    labelEl.className = 'layui-form-label layui-bpmn-panel__entry-label';
-    labelEl.textContent = labelText;
-    mountEl.className = 'layui-input-block layui-bpmn-panel__listener-field-mount';
-
-    mountEl.appendChild(controlEl);
-    mountEl.appendChild(errorEl);
-    fieldEl.appendChild(labelEl);
-    fieldEl.appendChild(mountEl);
-
-    return {
-      fieldEl,
-      controlEl,
-      errorEl
-    };
-  }
-
-  function setListenerFieldErrors(fieldBindings, validation) {
-    Object.keys(fieldBindings).forEach((field) => {
-      const binding = fieldBindings[field];
-      const message = getValidationFieldMessage(validation, field);
-      setEntryError(binding.controlEl, binding.errorEl, message);
-    });
-  }
-
-  function syncListenerItems(state, value) {
-    const normalizedValue = normalizeListenerEditorValue(value);
-    state.items = normalizedValue.items;
-  }
-
-  function focusListenerValueInput(controlEl) {
-    if (!controlEl || typeof controlEl.focus !== 'function') {
-      return;
-    }
-
-    controlEl.focus();
-
-    if (normalizeText(controlEl.value) && typeof controlEl.select === 'function') {
-      controlEl.select();
-    }
-  }
-
-  function renderListenerEditor(documentRef, mountEl, entry) {
-    const editorEl = documentRef.createElement('div');
-    const itemsEl = documentRef.createElement('div');
-    const actionsEl = documentRef.createElement('div');
-    const state = normalizeListenerEditorValue(readEntryValue(entry));
-
-    editorEl.className = 'layui-bpmn-panel__listener-editor';
-    editorEl.dataset.editorKind = 'listener-editor';
-    itemsEl.className = 'layui-bpmn-panel__listener-items';
-    actionsEl.className = 'layui-bpmn-panel__listener-actions';
-
-    function renderItems(options = {}) {
-      const focusIndex = Number.isInteger(options.focusIndex) ? options.focusIndex : -1;
-      const listenerSelectMode = entry && entry.ui && entry.ui.selectMode === 'native'
-        ? 'native'
-        : 'layui';
-
-      itemsEl.innerHTML = '';
-
-      if (!state.items.length) {
-        renderTextPreview(documentRef, itemsEl, '');
-        return;
-      }
-
-      state.items.forEach((item, index) => {
-        const itemEl = documentRef.createElement('div');
-        const bodyEl = documentRef.createElement('div');
-        const footerEl = documentRef.createElement('div');
-        const draft = normalizeListenerDraft(item);
-        let lastCommittedDraft = JSON.stringify(draft);
-
-        itemEl.className = 'layui-bpmn-panel__listener-item';
-        itemEl.dataset.listenerIndex = String(index);
-        bodyEl.className = 'layui-bpmn-panel__listener-item-body';
-        footerEl.className = 'layui-bpmn-panel__listener-item-footer';
-
-        const eventField = createListenerField(
-          documentRef,
-          'event',
-          '事件',
-          createListenerSelect(documentRef, 'event', LISTENER_EVENT_OPTIONS, draft.event, {
-            selectMode: listenerSelectMode,
-            layFilter: `listener-event-${index}`
-          })
-        );
-        const typeField = createListenerField(
-          documentRef,
-          'type',
-          '监听器类型',
-          createListenerSelect(documentRef, 'type', LISTENER_TYPE_OPTIONS, draft.type, {
-            selectMode: listenerSelectMode,
-            layFilter: `listener-type-${index}`
-          })
-        );
-        const valueField = createListenerField(
-          documentRef,
-          'value',
-          '值',
-          createListenerInput(documentRef, 'value', draft.value)
-        );
-        const deleteButtonEl = createListenerButton(documentRef, 'remove-listener', '删除监听器', 'layui-btn-primary');
-        const fieldBindings = {
-          event: eventField,
-          type: typeField,
-          value: valueField
-        };
-
-        function submitDraft() {
-          const nextDraft = normalizeListenerDraft({
-            event: eventField.controlEl.value,
-            type: typeField.controlEl.value,
-            value: valueField.controlEl.value
-          });
-          const nextKey = JSON.stringify(nextDraft);
-
-          if (nextKey === lastCommittedDraft) {
-            return;
-          }
-
-          const validation = typeof entry.validate === 'function'
-            ? entry.validate(nextDraft)
-            : null;
-
-          setListenerFieldErrors(fieldBindings, validation);
-
-          if (validation && validation.valid === false) {
-            return;
-          }
-
-          const result = typeof entry.setValue === 'function'
-            ? entry.setValue({
-              action: 'update',
-              index,
-              draft: nextDraft
-            })
-            : { updated: false };
-          const resultValidation = result && result.validation ? result.validation : null;
-
-          setListenerFieldErrors(fieldBindings, resultValidation);
-
-          if (!result || !result.updated) {
-            return;
-          }
-
-          lastCommittedDraft = nextKey;
-          state.items[index] = nextDraft;
-
-          if (result.value) {
-            syncListenerItems(state, result.value);
-            renderItems();
-          }
-        }
-
-        setLayuiSelectBinding(eventField.controlEl, (nextValue) => {
-          eventField.controlEl.value = normalizeText(nextValue);
-          submitDraft();
-        });
-        setLayuiSelectBinding(typeField.controlEl, (nextValue) => {
-          typeField.controlEl.value = normalizeText(nextValue);
-          submitDraft();
-        });
-        eventField.controlEl.addEventListener('change', submitDraft);
-        typeField.controlEl.addEventListener('change', submitDraft);
-        valueField.controlEl.addEventListener('blur', submitDraft);
-        valueField.controlEl.addEventListener('keydown', (event) => {
-          if (event && event.key === 'Enter') {
-            if (typeof event.preventDefault === 'function') {
-              event.preventDefault();
-            }
-
-            submitDraft();
-          }
-        });
-
-        deleteButtonEl.addEventListener('click', () => {
-          const result = typeof entry.setValue === 'function'
-            ? entry.setValue({
-              action: 'remove',
-              index
-            })
-            : { updated: false };
-
-          if (!result || !result.updated) {
-            return;
-          }
-
-          if (result.value) {
-            syncListenerItems(state, result.value);
-          } else {
-            state.items.splice(index, 1);
-          }
-
-          renderItems();
-        });
-
-        bodyEl.appendChild(eventField.fieldEl);
-        bodyEl.appendChild(typeField.fieldEl);
-        bodyEl.appendChild(valueField.fieldEl);
-        footerEl.appendChild(deleteButtonEl);
-        itemEl.appendChild(bodyEl);
-        itemEl.appendChild(footerEl);
-        itemsEl.appendChild(itemEl);
-
-        if (index === focusIndex) {
-          focusListenerValueInput(valueField.controlEl);
-        }
-      });
-    }
-
-    const addButtonEl = createListenerButton(documentRef, 'add-listener', '新增监听器');
-
-    addButtonEl.addEventListener('click', () => {
-      const result = typeof entry.setValue === 'function'
-        ? entry.setValue({ action: 'add' })
-        : { updated: false };
-
-      if (!result || !result.updated) {
-        return;
-      }
-
-      if (result.value) {
-        syncListenerItems(state, result.value);
-      } else {
-        state.items.push(normalizeListenerDraft());
-      }
-
-      renderItems({
-        focusIndex: state.items.length - 1
-      });
-    });
-
-    renderItems();
-    actionsEl.appendChild(addButtonEl);
-    editorEl.appendChild(itemsEl);
-    editorEl.appendChild(actionsEl);
-    mountEl.appendChild(editorEl);
-  }
-
-  function createMultiInstanceSwitch(documentRef, checked, options = {}) {
-    const inputEl = documentRef.createElement('input');
-
-    inputEl.type = 'checkbox';
-    inputEl.className = 'layui-bpmn-panel__multi-instance-switch';
-    inputEl.checked = !!checked;
-    inputEl.dataset.field = options.field || '';
-
-    if (typeof inputEl.setAttribute === 'function') {
-      inputEl.setAttribute('lay-skin', 'switch');
-      inputEl.setAttribute('lay-text', options.layText || '串行|并行');
-    }
-
-    return inputEl;
-  }
-
-  function setControlDisabled(controlEl, disabled) {
-    if (!controlEl) {
-      return;
-    }
-
-    controlEl.disabled = !!disabled;
-  }
-
-  function setMultiInstanceFieldDisabled(binding, disabled) {
-    if (!binding) {
-      return;
-    }
-
-    setControlDisabled(binding.controlEl, disabled);
-    toggleClassName(binding.fieldEl, 'layui-bpmn-panel__multi-instance-field--disabled', !!disabled);
-  }
-
-  function renderMultiInstanceEditor(documentRef, mountEl, entry) {
-    const editorEl = documentRef.createElement('div');
-    const fieldsEl = documentRef.createElement('div');
-    let draft = normalizeMultiInstanceDraft(readEntryValue(entry));
-
-    editorEl.className = 'layui-bpmn-panel__multi-instance-editor';
-    editorEl.dataset.editorKind = 'multi-instance';
-    fieldsEl.className = 'layui-bpmn-panel__multi-instance-fields';
-
-    const enabledInputEl = createMultiInstanceSwitch(documentRef, draft.enabled, {
-      field: 'enabled',
-      layText: '开启|关闭'
-    });
-    const isSequentialInputEl = createMultiInstanceSwitch(documentRef, draft.isSequential, {
-      field: 'isSequential',
-      layText: '串行|并行'
-    });
-    const assigneeModeSelectEl = createMultiInstanceSelect(documentRef, 'assigneeMode', [
-      { value: '', label: '动态变量' },
-      { value: 'user', label: '固定用户' }
-    ], draft.assigneeMode, {
-      selectMode: 'native'
-    });
-    const pickUsersButtonEl = createMultiInstanceButton(documentRef, 'pick-users', '选择固定用户');
-    const clearUsersButtonEl = createMultiInstanceButton(documentRef, 'clear-users', '清空');
-    appendClassName(clearUsersButtonEl, 'layui-btn-primary');
-    appendClassName(clearUsersButtonEl, 'layui-bpmn-panel__multi-instance-clear-btn');
-    const pickUsersControlsEl = createMultiInstanceButtonRow(documentRef, pickUsersButtonEl, clearUsersButtonEl);
-
-    const collectionInputEl = documentRef.createElement('input');
-    collectionInputEl.className = 'layui-input';
-    collectionInputEl.value = draft.collection;
-
-    const elementVariableInputEl = documentRef.createElement('input');
-    elementVariableInputEl.className = 'layui-input';
-    elementVariableInputEl.value = draft.elementVariable;
-
-    const loopCardinalityInputEl = documentRef.createElement('input');
-    loopCardinalityInputEl.className = 'layui-input';
-    loopCardinalityInputEl.value = draft.loopCardinality;
-
-    const completionConditionEl = documentRef.createElement('textarea');
-    completionConditionEl.className = 'layui-textarea';
-    completionConditionEl.value = draft.completionCondition;
-    const namesPreviewEl = createMultiInstancePreview(documentRef, draft.names);
-
-    const enabledField = createLabeledControl(documentRef, 'enabled', '开启多实例', enabledInputEl, {
-      kind: 'switch'
-    });
-    const isSequentialField = createLabeledControl(documentRef, 'isSequential', '串行执行', isSequentialInputEl, {
-      kind: 'switch'
-    });
-    const assigneeModeField = createLabeledControl(documentRef, 'assigneeMode', '人员模式', assigneeModeSelectEl);
-    const collectionField = createLabeledControl(documentRef, 'collection', '集合变量', collectionInputEl);
-    const elementVariableField = createLabeledControl(documentRef, 'elementVariable', '元素变量', elementVariableInputEl);
-    const idsField = createLabeledControl(documentRef, 'ids', '选择用户', pickUsersControlsEl);
-    const namesField = createLabeledControl(documentRef, 'names', '已选用户', namesPreviewEl);
-    const loopCardinalityField = createLabeledControl(documentRef, 'loopCardinality', '循环次数', loopCardinalityInputEl);
-    const completionConditionField = createLabeledControl(
-      documentRef,
-      'completionCondition',
-      '完成条件',
-      completionConditionEl
-    );
-
-    const fieldBindings = {
-      enabled: enabledField,
-      isSequential: isSequentialField,
-      assigneeMode: assigneeModeField,
-      collection: collectionField,
-      elementVariable: elementVariableField,
-      ids: idsField,
-      loopCardinality: loopCardinalityField,
-      completionCondition: completionConditionField
-    };
-
-    appendClassName(idsField.fieldEl, 'layui-bpmn-panel__multi-instance-field--picker');
-    appendClassName(idsField.fieldEl, 'layui-bpmn-panel__multi-instance-field--no-label');
-    appendClassName(namesField.fieldEl, 'layui-bpmn-panel__multi-instance-field--no-label');
-
-    function syncNamesPreview() {
-      renderMultiInstancePreviewValue(namesPreviewEl, draft.names);
-    }
-
-    function syncUserButtonsState() {
-      const count = getMultiInstanceSelectedNames(draft.names).length;
-      const isUserMode = draft.assigneeMode === 'user';
-      const disabled = !draft.enabled;
-
-      pickUsersButtonEl.disabled = disabled;
-      clearUsersButtonEl.disabled = disabled || !isUserMode || count === 0;
-      clearUsersButtonEl.hidden = !isUserMode;
-    }
-
-    function syncAssigneeModeFields() {
-      const isUserMode = draft.assigneeMode === 'user';
-
-      idsField.fieldEl.hidden = !isUserMode;
-      namesField.fieldEl.hidden = !isUserMode;
-    }
-
-    function syncFieldAvailability() {
-      const disabled = !draft.enabled;
-
-      setMultiInstanceFieldDisabled(isSequentialField, disabled);
-      setMultiInstanceFieldDisabled(assigneeModeField, disabled);
-      setMultiInstanceFieldDisabled(idsField, disabled || draft.assigneeMode !== 'user');
-      setMultiInstanceFieldDisabled(namesField, disabled || draft.assigneeMode !== 'user');
-      setMultiInstanceFieldDisabled(collectionField, disabled);
-      setMultiInstanceFieldDisabled(elementVariableField, disabled);
-      setMultiInstanceFieldDisabled(loopCardinalityField, disabled);
-      setMultiInstanceFieldDisabled(completionConditionField, disabled);
-      syncUserButtonsState();
-    }
-
-    function applyDraftChange(nextDraft, options = {}) {
-      const validation = options.skipValidation
-        ? { valid: true }
-        : (typeof entry.validate === 'function' ? entry.validate(nextDraft) : { valid: true });
-
-      if (!options.skipValidation) {
-        setMultiInstanceFieldErrors(fieldBindings, validation);
-      }
-
-      if (validation && validation.valid === false) {
-        return {
-          updated: false,
-          validation
-        };
-      }
-
-      const result = typeof entry.setValue === 'function'
-        ? entry.setValue(nextDraft)
-        : { updated: false };
-
-      setMultiInstanceFieldErrors(fieldBindings, result && result.validation);
-
-      if (result && result.updated === true) {
-        draft = normalizeMultiInstanceDraft(nextDraft);
-      }
-
-      return result;
-    }
-
-    function bindCommitOnBlur(controlEl, onReadValue) {
-      function commitValue() {
-        if (!draft.enabled) {
-          return;
-        }
-
-        const nextDraft = {
-          ...draft,
-          ...onReadValue()
-        };
-
-        const result = applyDraftChange(nextDraft);
-
-        if (result && result.updated === true) {
-          syncFieldAvailability();
-        }
-      }
-
-      controlEl.addEventListener('blur', commitValue);
-      controlEl.addEventListener('change', commitValue);
-      controlEl.addEventListener('keydown', (event) => {
-        if (String(controlEl.tagName || '').toLowerCase() === 'input' && event && event.key === 'Enter') {
-          if (typeof event.preventDefault === 'function') {
-            event.preventDefault();
-          }
-
-          commitValue();
-        }
-      });
-    }
-
-    fieldsEl.appendChild(enabledField.fieldEl);
-    fieldsEl.appendChild(isSequentialField.fieldEl);
-    fieldsEl.appendChild(assigneeModeField.fieldEl);
-    fieldsEl.appendChild(idsField.fieldEl);
-    fieldsEl.appendChild(namesField.fieldEl);
-    fieldsEl.appendChild(collectionField.fieldEl);
-    fieldsEl.appendChild(elementVariableField.fieldEl);
-    fieldsEl.appendChild(loopCardinalityField.fieldEl);
-    fieldsEl.appendChild(completionConditionField.fieldEl);
-
-    editorEl.appendChild(fieldsEl);
-    mountEl.appendChild(editorEl);
-
-    syncNamesPreview();
-    syncUserButtonsState();
-    syncAssigneeModeFields();
-    syncFieldAvailability();
-
-    enabledInputEl.addEventListener('change', () => {
-      if (!!enabledInputEl.checked === !!draft.enabled) {
-        syncFieldAvailability();
-        return;
-      }
-
-      const previousDraft = { ...draft };
-      const nextDraft = {
-        ...draft,
-        enabled: !!enabledInputEl.checked
-      };
-
-      draft = normalizeMultiInstanceDraft(nextDraft);
-      syncFieldAvailability();
-
-      const result = nextDraft.enabled
-        ? applyDraftChange(nextDraft)
-        : applyDraftChange(nextDraft, { skipValidation: true });
-
-      if (result && result.updated === true) {
-        clearMultiInstanceFieldErrors(fieldBindings);
-        syncFieldAvailability();
-        return;
-      }
-
-      if (!nextDraft.enabled) {
-        draft = normalizeMultiInstanceDraft(previousDraft);
-        enabledInputEl.checked = !!draft.enabled;
-        syncFieldAvailability();
-      }
-    });
-
-    isSequentialInputEl.addEventListener('change', () => {
-      draft.isSequential = !!isSequentialInputEl.checked;
-
-      if (!draft.enabled) {
-        return;
-      }
-
-      applyDraftChange({
-        ...draft
-      });
-    });
-
-    function handleAssigneeModeChange(nextValue) {
-      draft.assigneeMode = normalizeText(nextValue).trim();
-      assigneeModeSelectEl.value = draft.assigneeMode;
-
-      if (draft.assigneeMode !== 'user') {
-        draft.ids = '';
-        draft.names = '';
-      }
-
-      syncNamesPreview();
-      syncUserButtonsState();
-      syncAssigneeModeFields();
-      syncFieldAvailability();
-
-      if (!draft.enabled) {
-        return;
-      }
-
-      if (draft.assigneeMode === 'user' && !normalizeText(draft.ids).trim()) {
-        clearMultiInstanceFieldErrors(fieldBindings);
-        return;
-      }
-
-      applyDraftChange({
-        ...draft
-      });
-    }
-
-    assigneeModeSelectEl.addEventListener('change', () => {
-      handleAssigneeModeChange(assigneeModeSelectEl.value);
-    });
-
-    collectionInputEl.addEventListener('input', () => {
-      draft.collection = normalizeText(collectionInputEl.value);
-
-      if (draft.enabled) {
-        applyDraftChange({
-          ...draft
-        });
-      }
-    });
-    elementVariableInputEl.addEventListener('input', () => {
-      draft.elementVariable = normalizeText(elementVariableInputEl.value);
-
-      if (draft.enabled) {
-        applyDraftChange({
-          ...draft
-        });
-      }
-    });
-
-    loopCardinalityInputEl.addEventListener('input', () => {
-      draft.loopCardinality = normalizeText(loopCardinalityInputEl.value);
-
-      if (draft.enabled) {
-        applyDraftChange({
-          ...draft
-        });
-      }
-    });
-
-    completionConditionEl.addEventListener('input', () => {
-      draft.completionCondition = normalizeText(completionConditionEl.value);
-
-      if (draft.enabled) {
-        applyDraftChange({
-          ...draft
-        });
-      }
-    });
-
-    clearUsersButtonEl.addEventListener('click', () => {
-      if (!draft.enabled || draft.assigneeMode !== 'user') {
-        return;
-      }
-
-      draft.ids = '';
-      draft.names = '';
-
-      syncNamesPreview();
-      syncUserButtonsState();
-
-      applyDraftChange({
-        ...draft
-      });
-    });
-
-    pickUsersButtonEl.addEventListener('click', async () => {
-      if (!draft.enabled || typeof entry.pickUsers !== 'function') {
-        return;
-      }
-
-      let pickedUsers = null;
-
-      try {
-        pickedUsers = await entry.pickUsers({ ...draft });
-      } catch (error) {
-        return;
-      }
-
-      if (!Array.isArray(pickedUsers)) {
-        return;
-      }
-
-      draft.assigneeMode = 'user';
-      draft.ids = pickedUsers
-        .map((user) => user && user.id)
-        .filter((value) => value !== undefined && value !== null && String(value).trim() !== '')
-        .map((value) => String(value).trim())
-        .join(',');
-      draft.names = pickedUsers
-        .map((user) => user && user.name)
-        .filter((value) => value !== undefined && value !== null && String(value).trim() !== '')
-        .map((value) => String(value).trim())
-        .join(',');
-
-      assigneeModeSelectEl.value = draft.assigneeMode;
-      syncNamesPreview();
-      syncUserButtonsState();
-      syncAssigneeModeFields();
-      syncFieldAvailability();
-
-      applyDraftChange({
-        ...draft
-      });
-    });
-
-    bindCommitOnBlur(collectionInputEl, () => ({
-      collection: normalizeText(collectionInputEl.value)
-    }));
-    bindCommitOnBlur(elementVariableInputEl, () => ({
-      elementVariable: normalizeText(elementVariableInputEl.value)
-    }));
-    bindCommitOnBlur(loopCardinalityInputEl, () => ({
-      loopCardinality: normalizeText(loopCardinalityInputEl.value)
-    }));
-    completionConditionEl.addEventListener('blur', () => {
-      if (!draft.enabled) {
-        return;
-      }
-
-      applyDraftChange({
-        ...draft,
-        completionCondition: normalizeText(completionConditionEl.value)
-      });
-    });
-  }
-
-  function renderTextPreview(documentRef, mountEl, value) {
-    const text = normalizeText(value).trim();
-
-    appendPreviewLine(documentRef, mountEl, text || '-', text ? '' : 'layui-bpmn-panel__entry-preview--empty');
-  }
-
-  function renderParameterPreview(documentRef, mountEl, value) {
-    const items = value && Array.isArray(value.items) ? value.items : [];
-
-    if (!items.length) {
-      renderTextPreview(documentRef, mountEl, '');
-      return;
-    }
-
-    items.forEach((item) => {
-      const name = normalizeText(item && item.name).trim() || '(unnamed)';
-      const parameterValue = normalizeText(item && item.value);
-      appendPreviewLine(documentRef, mountEl, `${name} = ${parameterValue}`);
-    });
-  }
-
-  function renderListenerPreview(documentRef, mountEl, value) {
-    const items = value && Array.isArray(value.items) ? value.items : [];
-
-    if (!items.length) {
-      renderTextPreview(documentRef, mountEl, '');
-      return;
-    }
-
-    items.forEach((item) => {
-      const event = normalizeText(item && item.event).trim() || '(event)';
-      const type = normalizeText(item && item.type).trim() || '(type)';
-      const listenerValue = normalizeText(item && item.value);
-      appendPreviewLine(documentRef, mountEl, `${event} / ${type}: ${listenerValue}`);
-    });
-  }
-
-  function renderExtensionPreview(documentRef, mountEl, value) {
-    const items = value && Array.isArray(value.items) ? value.items : [];
-
-    if (!items.length) {
-      renderTextPreview(documentRef, mountEl, '');
-      return;
-    }
-
-    items.forEach((item) => {
-      const parameterName = normalizeText(item && item.parameterName).trim() || '(parameter)';
-      const key = normalizeText(item && item.key).trim() || '(key)';
-      appendPreviewLine(documentRef, mountEl, `${parameterName}.${key}`);
-    });
-  }
-
-  function renderMultiInstancePreview(documentRef, mountEl, value) {
-    if (!value || typeof value !== 'object' || !value.enabled) {
-      renderTextPreview(documentRef, mountEl, '');
-      return;
-    }
-
-    if (normalizeText(value.assigneeMode).trim() === 'user') {
-      appendPreviewLine(documentRef, mountEl, `users: ${normalizeText(value.names)}`);
-      return;
-    }
-
-    appendPreviewLine(documentRef, mountEl, `collection: ${normalizeText(value.collection)}`);
-    appendPreviewLine(documentRef, mountEl, `elementVariable: ${normalizeText(value.elementVariable)}`);
-  }
-
-  function renderEntryPreview(documentRef, mountEl, entry) {
-    const value = readEntryValue(entry);
-
-    switch (entry && entry.component) {
-    case 'ParameterEditor':
-      renderParameterPreview(documentRef, mountEl, value);
-      break;
-    case 'ListenerEditor':
-      renderListenerPreview(documentRef, mountEl, value);
-      break;
-    case 'ExtensionEditor':
-      renderExtensionPreview(documentRef, mountEl, value);
-      break;
-    case 'MultiInstanceEditor':
-      renderMultiInstancePreview(documentRef, mountEl, value);
-      break;
-    case 'ExpressionEditor':
-    case 'TextInput':
-    default:
-      renderTextPreview(documentRef, mountEl, value);
-      break;
-    }
-  }
-
-  function renderEntryContent(documentRef, mountEl, entry) {
-    if (entry && entry.component === 'MultiInstanceEditor') {
-      renderMultiInstanceEditor(documentRef, mountEl, entry);
-      return;
-    }
-
-    if (entry && entry.component === 'ListenerEditor') {
-      renderListenerEditor(documentRef, mountEl, entry);
-      return;
-    }
-
-    if (isEditableEntry(entry)) {
-      renderEditableEntry(documentRef, mountEl, entry);
-      return;
-    }
-
-    renderEntryPreview(documentRef, mountEl, entry);
-  }
-
-  function isEmbeddedEntry(entry) {
-    return !!(entry && (
-      entry.component === 'MultiInstanceEditor' ||
-      entry.component === 'ListenerEditor'
-    ));
-  }
-
-  function renderFieldGroup(group) {
-    const documentRef = document;
-    const groupContent = document.createElement('div');
-    groupContent.className = 'layui-colla-content layui-show layui-bpmn-panel__group-content';
-    groupContent.dataset.groupId = group && group.id ? group.id : '';
-
-    const groupFields = document.createElement('div');
-    groupFields.className = 'layui-bpmn-panel__group-fields';
-    groupFields.dataset.groupId = group && group.id ? group.id : '';
-
-    const entries = group && Array.isArray(group.entries) ? group.entries : [];
-
-    entries.forEach((entry) => {
-      const entryEl = document.createElement('div');
-      entryEl.className = 'layui-form-item layui-bpmn-panel__entry';
-      entryEl.dataset.entryKey = entry.key || '';
-      entryEl.dataset.component = entry.component || '';
-      entryEl.dataset.groupId = group && group.id ? group.id : '';
-
-      const labelEl = document.createElement('label');
-      labelEl.className = 'layui-form-label layui-bpmn-panel__entry-label';
-      labelEl.textContent = entry.label || entry.key || '';
-
-      const mountEl = document.createElement('div');
-      mountEl.className = 'layui-input-block layui-bpmn-panel__entry-mount';
-      mountEl.dataset.entryKey = entry.key || '';
-      mountEl.dataset.component = entry.component || '';
-      renderEntryContent(documentRef, mountEl, entry);
-
-      if (isEmbeddedEntry(entry)) {
-        appendClassName(entryEl, 'layui-bpmn-panel__entry--embedded');
-        appendClassName(mountEl, 'layui-bpmn-panel__entry-mount--embedded');
-      } else {
-        entryEl.appendChild(labelEl);
-      }
-
-      entryEl.appendChild(mountEl);
-      groupFields.appendChild(entryEl);
-    });
-
-    groupContent.appendChild(groupFields);
-
-    return groupContent;
-  }
-
-  function collectLayuiSelectBindings(root) {
-    const bindings = [];
-
-    (function walk(node) {
-      if (!node) {
-        return;
-      }
-
-      const binding = node[LAYUI_SELECT_BINDING_PROP];
-
-      if (binding && binding.filter && typeof binding.onChange === 'function') {
-        bindings.push(binding);
-      }
-
-      const children = node && node.children ? Array.from(node.children) : [];
-      children.forEach((child) => walk(child));
-    })(root);
-
-    return bindings;
-  }
-
-  function getGroupErrorText(group) {
-    if (!group || !group.error) {
-      return '';
-    }
-
-    return typeof group.error === 'string' ? group.error : '存在校验错误';
-  }
-
-  function renderPanel(container, panelState) {
-    if (!container) {
-      return;
-    }
-
-    container.innerHTML = '';
-
-    const form = document.createElement('form');
-    form.className = 'layui-form layui-form-pane layui-bpmn-panel';
-
-    const header = document.createElement('fieldset');
-    header.className = 'layui-elem-field layui-field-title layui-bpmn-panel__header';
-
-    const titleEl = document.createElement('legend');
-    titleEl.className = 'layui-bpmn-panel__title';
-    titleEl.textContent = panelState.title || '';
-    header.appendChild(titleEl);
-
-    const typeEl = document.createElement('div');
-    typeEl.className = 'layui-bpmn-panel__type';
-    typeEl.textContent = panelState.elementType || '';
-    header.appendChild(typeEl);
-
-    form.appendChild(header);
-
-    const body = document.createElement('div');
-    body.className = 'layui-bpmn-panel__body';
-
-    if (!panelState.elementType) {
-      const emptyEl = document.createElement('div');
-      emptyEl.className = 'layui-bpmn-panel__empty layui-text';
-      emptyEl.textContent = panelState.title || '未选择节点';
-
-      body.appendChild(emptyEl);
-    } else {
-      const groupsEl = document.createElement('div');
-      groupsEl.className = 'layui-collapse layui-bpmn-panel__groups';
-
-      (panelState.groups || []).forEach((group) => {
-        const groupEl = document.createElement('div');
-        groupEl.className = 'layui-colla-item';
-        groupEl.dataset.groupId = group.id || '';
-
-        const groupTitleEl = document.createElement('h2');
-        groupTitleEl.className = 'layui-colla-title';
-        groupTitleEl.textContent = group.label || group.id || '';
-
-        const groupErrorText = getGroupErrorText(group);
-
-        if (groupErrorText) {
-          groupTitleEl.className += ' layui-bpmn-panel__group-title--error';
-
-          const groupErrorEl = document.createElement('span');
-          groupErrorEl.className = 'layui-bpmn-panel__group-error';
-          groupErrorEl.textContent = groupErrorText;
-          groupTitleEl.appendChild(groupErrorEl);
-        }
-
-        groupEl.appendChild(groupTitleEl);
-        groupEl.appendChild(renderFieldGroup(group));
-        groupsEl.appendChild(groupEl);
-      });
-
-      body.appendChild(groupsEl);
-    }
-
-    form.appendChild(body);
-    container.appendChild(form);
   }
 
   function findFirstElement(root, matcher) {
     if (!root) {
       return null;
     }
-
     if (matcher(root)) {
       return root;
     }
 
-    const children = root && root.children ? Array.from(root.children) : [];
-
+    const children = root.children ? Array.from(root.children) : [];
     for (let index = 0; index < children.length; index += 1) {
       const matched = findFirstElement(children[index], matcher);
-
       if (matched) {
         return matched;
       }
@@ -42048,23 +42220,18 @@
 
   function findLastListenerValueInput(container) {
     let target = null;
-
     (function walk(node) {
       if (!node) {
         return;
       }
 
-      const children = node && node.children ? Array.from(node.children) : [];
-
+      const children = node.children ? Array.from(node.children) : [];
       children.forEach((child) => {
         walk(child);
       });
 
-      if (
-        String(node.tagName || '').toLowerCase() === 'input' &&
-        node.dataset &&
-        node.dataset.field === 'value'
-      ) {
+      if (String(node.tagName || '').toLowerCase() === 'input'
+          && node.dataset && node.dataset.field === 'value') {
         target = node;
       }
     })(container);
@@ -42073,17 +42240,15 @@
   }
 
   function getLayuiForm() {
-    const layuiRef =
-      (typeof window !== 'undefined' && window && window.layui) ||
-      (typeof layui !== 'undefined' && layui) ||
-      null;
+    const layuiRef = (typeof window !== 'undefined' && window && window.layui)
+        || (typeof layui !== 'undefined' && layui)
+        || null;
 
     return layuiRef && layuiRef.form;
   }
 
   function rerenderLayuiForm() {
     const form = getLayuiForm();
-
     if (!form || typeof form.render !== 'function') {
       return null;
     }
@@ -42109,7 +42274,6 @@
 
       nextFilters.add(binding.filter);
       registry.set(binding.filter, binding);
-
       if (registry.get(`${binding.filter}:bound`)) {
         return;
       }
@@ -42117,13 +42281,12 @@
       registry.set(`${binding.filter}:bound`, true);
       form.on(`select(${binding.filter})`, (data) => {
         const activeBinding = registry.get(binding.filter);
-
         if (!activeBinding) {
           return;
         }
 
         if (activeBinding.element) {
-          activeBinding.element.value = normalizeText(data && data.value);
+          activeBinding.element.value = toStr(data && data.value);
         }
 
         activeBinding.onChange(data && data.value, data);
@@ -42133,7 +42296,6 @@
     Array.from(registry.keys()).forEach((key) => {
       if (/:bound$/.test(key)) {
         const filter = key.replace(/:bound$/, '');
-
         if (!nextFilters.has(filter)) {
           registry.delete(key);
         }
@@ -42153,7 +42315,7 @@
       this._selection = selection;
       this._canvas = canvas;
       this._config = config || {};
-      this._services = {
+      this._context = {
         bpmnFactory,
         commandStack,
         modeling,
@@ -42167,6 +42329,7 @@
       this._layuiSelectBindings = new Map();
 
       this._container = this._ensureContainer();
+      this._panelProvider = new PropertiesProvider(this._container);
 
       this._eventBus.on('import.done', () => this._render());
       this._eventBus.on('selection.changed', () => this._render());
@@ -42187,17 +42350,16 @@
         : null;
 
       return findFirstElement(rootElement, (element) => {
-        const businessObject = element && element.businessObject ? element.businessObject : null;
-        return element && (
-          element.type === 'bpmn:Process' ||
-          (businessObject && businessObject.$type === 'bpmn:Process')
-        );
+        if (!element) {
+          return null;
+        }
+        const businessObject = element.businessObject;
+        return element.type === 'bpmn:Process' || (businessObject && businessObject.$type === 'bpmn:Process');
       });
     }
 
     _getActiveElement() {
       const selection = this._selection && this._selection.get ? this._selection.get() : [];
-
       if (selection && selection.length) {
         return selection[0];
       }
@@ -42207,13 +42369,11 @@
 
     _ensureContainer() {
       const parent = this._resolveParent(this._config);
-
       if (!parent) {
         return null;
       }
 
       let container = parent.querySelector('.layui-bpmn-properties-host');
-
       if (!container) {
         container = document.createElement('div');
         container.className = 'layui-bpmn-properties-host';
@@ -42225,16 +42385,11 @@
 
     _resolveParent(config) {
       const parent = config && config.parent;
-
       if (typeof parent === 'string') {
         return document.querySelector(parent);
       }
 
-      if (parent && parent.nodeType === 1) {
-        return parent;
-      }
-
-      return null;
+      return (parent && parent.nodeType === 1) ? parent : null;
     }
 
     _render() {
@@ -42243,29 +42398,23 @@
       }
 
       const element = this._getActiveElement();
-
-      if (
-        this._uiState.pendingMultiInstanceDraft &&
-        this._uiState.pendingMultiInstanceDraft.elementId !== getElementId(element)
-      ) {
+      if (this._uiState.pendingMultiInstanceDraft
+          && this._uiState.pendingMultiInstanceDraft.elementId !== getElementId(element)) {
         this._uiState.pendingMultiInstanceDraft = null;
       }
 
-      if (
-        this._uiState.suppressMultiInstanceRender &&
-        this._uiState.suppressMultiInstanceRender.elementId !== getElementId(element)
-      ) {
+      if (this._uiState.suppressMultiInstanceRender
+          && this._uiState.suppressMultiInstanceRender.elementId !== getElementId(element)) {
         this._uiState.suppressMultiInstanceRender = null;
       }
 
-      const panelState = resolvePanelState(element, {
-        services: this._services,
+      this._panelProvider.render(element, {
+        context: this._context,
         uiState: this._uiState,
         userPicker: this._config.userPicker,
         listenerSelectMode: this._config.listenerSelectMode
       });
 
-      renderPanel(this._container, panelState);
       const form = rerenderLayuiForm();
       bindLayuiSelect.call(this, form, collectLayuiSelectBindings(this._container));
       if (form) {
@@ -42282,30 +42431,23 @@
       const element = this._getActiveElement();
       const elementId = getElementId(element);
       const activeElement = typeof document !== 'undefined' ? document.activeElement : null;
-      const activeInsidePanel = !!(
-        activeElement &&
-        this._container &&
-        typeof this._container.contains === 'function' &&
-        this._container.contains(activeElement)
-      );
-      const activeInsideMultiInstance = !!(
-        activeInsidePanel &&
-        typeof activeElement.closest === 'function' &&
-        activeElement.closest('.layui-bpmn-panel__multi-instance-editor')
-      );
+      const activeInsidePanel = !!(activeElement
+          && this._container
+          && typeof this._container.contains === 'function'
+          && this._container.contains(activeElement));
+      const activeInsideMultiInstance = !!(activeInsidePanel
+          && typeof activeElement.closest === 'function'
+          && activeElement.closest('.layui-bpmn-panel__multi-instance-editor'));
 
-      if (
-        !suppressState ||
-        !pendingDraft ||
-        suppressState.elementId !== elementId ||
-        pendingDraft.elementId !== elementId ||
-        !activeInsideMultiInstance
-      ) {
+      if (!suppressState
+          || !pendingDraft
+          || suppressState.elementId !== elementId
+          || pendingDraft.elementId !== elementId
+          || !activeInsideMultiInstance) {
         return false;
       }
 
       suppressState.remaining -= 1;
-
       if (suppressState.remaining <= 0) {
         this._uiState.suppressMultiInstanceRender = null;
       }
@@ -42315,13 +42457,11 @@
 
     _restorePendingFocus(element) {
       const pendingFocus = this._uiState && this._uiState.pendingFocus;
-
       if (!pendingFocus || pendingFocus.elementId !== getElementId(element)) {
         return;
       }
 
       let focusTarget = null;
-
       if (pendingFocus.kind === 'listener-value-last') {
         focusTarget = findLastListenerValueInput(this._container);
       }
@@ -42367,8 +42507,7 @@
       taskExt: taskModdleDescriptor,
       userTask: userTaskModdleDescriptor
     },
-    myPropertiesPanel: MyPropertiesPanelModule,
-    myPanelApi
+    myPropertiesPanel: MyPropertiesPanelModule
   };
 
   return index;

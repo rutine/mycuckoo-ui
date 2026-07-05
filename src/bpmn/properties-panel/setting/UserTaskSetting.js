@@ -1,9 +1,9 @@
 import {
   COMPONENTS,
+  createPanelSetting,
   createBlockEntry,
-  createPanelSchema,
   createSimpleEntry
-} from './common.js';
+} from './BasicSetting.js';
 
 const USER_TASK_GROUPS = [
   {
@@ -46,8 +46,8 @@ const USER_TASK_GROUPS = [
   }
 ];
 
-export function resolveUserTaskSchema(element) {
-  return createPanelSchema(element, USER_TASK_GROUPS);
+export function createUserTaskSetting(element) {
+  return createPanelSetting(element, USER_TASK_GROUPS);
 }
 
-export default resolveUserTaskSchema;
+export default createUserTaskSetting;

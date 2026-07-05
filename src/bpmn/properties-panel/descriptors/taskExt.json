@@ -42,7 +42,7 @@
       "superClass": [ "Element" ],
       "properties": [
         {
-          "name": "extensions",
+          "name": "values",
           "isMany": true,
           "type": "Extension"
         }

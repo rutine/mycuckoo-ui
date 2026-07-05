@@ -1,8 +1,8 @@
 import {
   COMPONENTS,
-  createPanelSchema,
+  createPanelSetting,
   createSimpleEntry
-} from './common.js';
+} from './BasicSetting.js';
 
 const SEQUENCE_FLOW_GROUPS = [
   {
@@ -24,8 +24,8 @@ const SEQUENCE_FLOW_GROUPS = [
   }
 ];
 
-export function resolveSequenceFlowSchema(element) {
-  return createPanelSchema(element, SEQUENCE_FLOW_GROUPS);
+export function createSequenceFlowSetting(element) {
+  return createPanelSetting(element, SEQUENCE_FLOW_GROUPS);
 }
 
-export default resolveSequenceFlowSchema;
+export default createSequenceFlowSetting;

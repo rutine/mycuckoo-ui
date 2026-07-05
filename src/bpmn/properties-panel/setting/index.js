@@ -1,12 +1,12 @@
 import {
-  createEmptyPanelSchema,
-  createPanelSchema,
+  createEmptyPanelSetting,
+  createPanelSetting,
   createSimpleEntry,
   createSwitchEntry,
   getElementType
-} from './common.js';
-import { resolveSequenceFlowSchema } from './sequence-flow.js';
-import { resolveUserTaskSchema } from './user-task.js';
+} from './BasicSetting.js';
+import { createSequenceFlowSetting } from './SequenceFlowSetting.js';
+import { createUserTaskSetting } from './UserTaskSetting.js';
 
 const FALLBACK_GROUPS = [
   {
@@ -39,14 +39,14 @@ const PROCESS_GROUPS = [
 ];
 
 const SCHEMA_ROUTES = {
-  'bpmn:Process': (element) => createPanelSchema(element, PROCESS_GROUPS),
-  'bpmn:SequenceFlow': resolveSequenceFlowSchema,
-  'bpmn:UserTask': resolveUserTaskSchema
+  'bpmn:Process': (element) => createPanelSetting(element, PROCESS_GROUPS),
+  'bpmn:SequenceFlow': createSequenceFlowSetting,
+  'bpmn:UserTask': createUserTaskSetting
 };
 
-export function resolvePanelSchema(element) {
+function resolvePanelSetting(element) {
   if (!element) {
-    return createEmptyPanelSchema();
+    return createEmptyPanelSetting();
   }
 
   const elementType = getElementType(element);
@@ -56,7 +56,7 @@ export function resolvePanelSchema(element) {
     return resolver(element);
   }
 
-  return createPanelSchema(element, FALLBACK_GROUPS);
+  return createPanelSetting(element, FALLBACK_GROUPS);
 }
 
-export default resolvePanelSchema;
+export default resolvePanelSetting;

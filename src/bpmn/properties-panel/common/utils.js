@@ -1,9 +1,13 @@
-export function normalizeText(value) {
+export function toStr(value) {
   if (value === undefined || value === null) {
     return '';
   }
 
   return String(value);
+}
+
+export function getStr(value, defaultValue = '') {
+  return typeof value === 'string' ? value : defaultValue;
 }
 
 export function getElementId(element) {
@@ -38,7 +42,7 @@ export function appendClassName(element, className) {
     return;
   }
 
-  const tokens = normalizeText(element.className)
+  const tokens = toStr(element.className)
     .split(/\s+/)
     .filter(Boolean);
 
@@ -55,7 +59,7 @@ export function removeClassName(element, className) {
     return;
   }
 
-  element.className = normalizeText(element.className)
+  element.className = toStr(element.className)
     .split(/\s+/)
     .filter((token) => token && token !== className)
     .join(' ');

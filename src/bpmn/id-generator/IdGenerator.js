@@ -1,6 +1,6 @@
 import { getBusinessObject, is } from 'bpmn-js/lib/util/ModelUtil';
 
-import { getNextIndexedValue, getNumericSuffix, getTaskIndex, hasTaskId } from '../util';
+import { getNextIndexedValue, getNumericSuffix, getTaskIndex, hasTaskId } from '../ModdleUtils';
 
 export default function IdGenerator(eventBus, modeling, elementRegistry) {
   let syncing = false;

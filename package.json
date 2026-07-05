@@ -37,10 +37,11 @@
     "@bpmn-io/properties-panel": "^3.25.1",
     "bpmn-js": "^18.1.1",
     "bpmn-js-properties-panel": "^5.28.0",
+    "build": "^0.1.4",
     "diagram-js": "^15.2.3",
     "htm": "^3.1.1",
-    "inherits-browser": "^0.1.0",
     "ids": "^1.0.0",
+    "inherits-browser": "^0.1.0",
     "min-dash": "^4.1.1"
   }
 }

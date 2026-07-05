@@ -2,13 +2,14 @@ import {
   createAllValidationDescriptor,
   createFieldValidationDescriptor,
   createValidator
-} from '../services/validation.js';
+} from './validation.js';
 import {
   createFieldWriteDescriptor,
   createWriter
-} from '../services/writer.js';
+} from './writer.js';
+import {getProperty} from "../../ModdleUtils";
 
-export const EMPTY_PANEL_STATE = {
+export const EMPTY_SETTING = {
   title: '未选择节点',
   elementType: '',
   groups: []
@@ -24,8 +25,32 @@ export const COMPONENTS = {
   MULTI_INSTANCE_EDITOR: 'MultiInstanceEditor'
 };
 
-export function getElementBusinessObject(element) {
+function getElementBusinessObject(element) {
   return element && element.businessObject ? element.businessObject : {};
+}
+
+function getElementTitle(element) {
+  const businessObject = getElementBusinessObject(element);
+
+  return businessObject.name || (element && element.id) || businessObject.id || '';
+}
+
+function getElementValue(element, key) {
+  if (!key) {
+    return '';
+  }
+
+  const businessObject = getElementBusinessObject(element);
+  const value = getProperty(businessObject, key) !== undefined ? getProperty(businessObject, key) : '';
+  if (key === 'conditionExpression') {
+    if (!value) {
+      return '';
+    }
+
+    return value.body || value.value || '';
+  }
+
+  return value;
 }
 
 export function getElementType(element) {
@@ -34,58 +59,12 @@ export function getElementType(element) {
   return (element && element.type) || businessObject.$type || '';
 }
 
-export function getElementTitle(element) {
-  const businessObject = getElementBusinessObject(element);
-
-  return businessObject.name || (element && element.id) || businessObject.id || '';
-}
-
-export function readElementValue(element, key) {
-  const businessObject = getElementBusinessObject(element);
-
-  if (!key) {
-    return '';
-  }
-
-  if (key === 'conditionExpression') {
-    const conditionExpression = businessObject.conditionExpression || (
-      typeof businessObject.get === 'function' ? businessObject.get('conditionExpression') : null
-    );
-
-    if (!conditionExpression) {
-      return '';
-    }
-
-    return conditionExpression.body || conditionExpression.value || '';
-  }
-
-  if (Object.prototype.hasOwnProperty.call(businessObject, key)) {
-    return businessObject[key] === undefined || businessObject[key] === null ? '' : businessObject[key];
-  }
-
-  if (typeof businessObject.get === 'function') {
-    const value = businessObject.get(key);
-
-    return value === undefined || value === null ? '' : value;
-  }
-
-  return '';
-}
-
-export function createGroup(id, label, entries = []) {
-  return {
-    id,
-    label,
-    entries: createEntries(entries)
-  };
-}
-
 function createDefaultVisibility() {
   return true;
 }
 
 function createDefaultGetter(key) {
-  return (element) => readElementValue(element, key);
+  return (element) => getElementValue(element, key);
 }
 
 function createDefaultSetter(key) {
@@ -110,7 +89,7 @@ function createDefaultValidator(key) {
   };
 }
 
-function createDefaultEntryShape(definition = {}) {
+function createDefaultEntry(definition = {}) {
   const key = definition.key || '';
   const component = definition.component || COMPONENTS.TEXT_INPUT;
 
@@ -127,7 +106,7 @@ function createDefaultEntryShape(definition = {}) {
 
 export function createEntry(definition = {}) {
   return {
-    ...createDefaultEntryShape(definition),
+    ...createDefaultEntry(definition),
     ...definition
   };
 }
@@ -138,30 +117,38 @@ export function createEntries(definitions = []) {
     : [];
 }
 
+export function createGroup(id, label, entries = []) {
+  return {
+    id,
+    label,
+    entries: createEntries(entries)
+  };
+}
+
 export function createGroups(definitions = []) {
   return definitions.map((definition) => createGroup(definition.id, definition.label, definition.entries));
 }
 
-export function createPanelSchema(element, groupDefinitions = []) {
-  const schema = {
+export function createPanelSetting(element, groupDefinitions = []) {
+  const setting = {
     title: getElementTitle(element),
     elementType: getElementType(element),
     groups: createGroups(groupDefinitions)
   };
 
-  schema.writer = createWriter(schema, element);
-  schema.validator = createValidator(schema, element);
+  setting.writer = createWriter(setting, element);
+  setting.validator = createValidator(setting, element);
 
-  return schema;
+  return setting;
 }
 
-export function createEmptyPanelSchema() {
-  const schema = createPanelSchema(null, EMPTY_PANEL_STATE.groups);
+export function createEmptyPanelSetting() {
+  const setting = createPanelSetting(null, EMPTY_SETTING.groups);
 
-  schema.title = EMPTY_PANEL_STATE.title;
-  schema.elementType = EMPTY_PANEL_STATE.elementType;
+  setting.title = EMPTY_SETTING.title;
+  setting.elementType = EMPTY_SETTING.elementType;
 
-  return schema;
+  return setting;
 }
 
 export function createSimpleEntry(key, label, options = {}) {

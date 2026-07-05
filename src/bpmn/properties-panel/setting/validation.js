@@ -1,14 +1,14 @@
 export const VALIDATOR_KIND = 'panel-validator';
 export const VALIDATOR_STATUS = 'not-implemented';
 
-function getGroupIds(schema) {
-  return (schema && Array.isArray(schema.groups) ? schema.groups : []).map((group) => group.id);
+function getGroupIds(setting) {
+  return (setting && Array.isArray(setting.groups) ? setting.groups : []).map((group) => group.id);
 }
 
-function createValidationContext(schema, element) {
+function createValidationContext(setting, element) {
   return {
     elementId: element && element.id ? element.id : '',
-    groupIds: getGroupIds(schema)
+    groupIds: getGroupIds(setting)
   };
 }
 
@@ -23,18 +23,18 @@ function createDescriptor(type, element, payload = {}) {
   };
 }
 
+function createGroupValidationDescriptor(element, groupId, values = {}) {
+  return createDescriptor('panel-validate-group', element, {
+    groupId,
+    values
+  });
+}
+
 export function createFieldValidationDescriptor(element, groupId, fieldId, value) {
   return createDescriptor('panel-validate-field', element, {
     groupId,
     fieldId,
     value
-  });
-}
-
-export function createGroupValidationDescriptor(element, groupId, values = {}) {
-  return createDescriptor('panel-validate-group', element, {
-    groupId,
-    values
   });
 }
 
@@ -44,8 +44,8 @@ export function createAllValidationDescriptor(element, values = {}) {
   });
 }
 
-export function createValidator(schema, element) {
-  const context = createValidationContext(schema, element);
+export function createValidator(setting, element) {
+  const context = createValidationContext(setting, element);
 
   const validator = {
     kind: VALIDATOR_KIND,

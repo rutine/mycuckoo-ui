@@ -1,8 +1,8 @@
 export const WRITER_KIND = 'panel-writer';
 export const WRITER_STATUS = 'not-implemented';
 
-function getGroupIds(schema) {
-  return (schema && Array.isArray(schema.groups) ? schema.groups : []).map((group) => group.id);
+function getGroupIds(setting) {
+  return (setting && Array.isArray(setting.groups) ? setting.groups : []).map((group) => group.id);
 }
 
 function createDescriptor(type, element, payload = {}) {
@@ -15,6 +15,13 @@ function createDescriptor(type, element, payload = {}) {
   };
 }
 
+function createGroupWriteDescriptor(element, groupId, values = {}) {
+  return createDescriptor('panel-write-group', element, {
+    groupId,
+    values
+  });
+}
+
 export function createFieldWriteDescriptor(element, groupId, fieldId, value) {
   return createDescriptor('panel-write-field', element, {
     groupId,
@@ -23,15 +30,8 @@ export function createFieldWriteDescriptor(element, groupId, fieldId, value) {
   });
 }
 
-export function createGroupWriteDescriptor(element, groupId, values = {}) {
-  return createDescriptor('panel-write-group', element, {
-    groupId,
-    values
-  });
-}
-
-export function createWriter(schema, element) {
-  const groupIds = getGroupIds(schema);
+export function createWriter(setting, element) {
+  const groupIds = getGroupIds(setting);
 
   return {
     kind: WRITER_KIND,

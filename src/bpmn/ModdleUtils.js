@@ -8,16 +8,27 @@ export function getBusinessObject(element) {
   return element.businessObject || element;
 }
 
-export function getParametersElement(element, type) {
+export function queryTypedExtensionElements(element, type) {
   const businessObject = getBusinessObject(element);
-
-  if (!businessObject.extensionElements) {
-    return null;
+  if (!businessObject  || !businessObject.extensionElements || !businessObject.extensionElements.values) {
+    return [];
   }
 
-  return businessObject.extensionElements.values.filter(function(e) {
-    return e.$instanceOf(type);
-  })[0];
+  let values = businessObject.extensionElements.values;
+  values = Array.isArray(values) ? values : (!!values ? [values] : []);
+  if (type === 'all') {
+    return values;
+  }
+
+  return values.filter(function(value) {
+    // return value.$type === 'flowable:TaskListener';
+    return value.$instanceOf(type);
+  });
+}
+
+export function queryTypedExtensionElement(element, type) {
+  const typedElements = queryTypedExtensionElements(element, type);
+  return typedElements.length > 0 ? typedElements[0] : null;
 }
 
 export function createElement(elementType, properties, parent, factory) {
@@ -30,29 +41,60 @@ export function createElement(elementType, properties, parent, factory) {
   return element;
 }
 
-export function readModdleProperty(target, key) {
-  if (!target || !key) {
+export function getProperty(obj, key) {
+  if (!obj || !key) {
     return undefined;
   }
 
-  if (Object.prototype.hasOwnProperty.call(target, key)) {
-    return target[key];
+  if (Object.prototype.hasOwnProperty.call(obj, key)) {
+    return obj[key];
   }
 
-  if (typeof target.get === 'function') {
-    return target.get(key);
+  if (typeof obj.get === 'function') {
+    return obj.get(key);
   }
 
   return undefined;
 }
 
-export function readExpressionBody(expression) {
+export function getExpressionBody(expression) {
   if (!expression) {
     return '';
   }
 
   return expression.body || expression.value || '';
 }
+
+export function executeCommands(commandStack, commands = []) {
+  if (!commandStack || !Array.isArray(commands) || !commands.length) {
+    return undefined;
+  }
+
+  if (commands.length === 1) {
+    return commandStack.execute(commands[0].cmd, commands[0].context);
+  }
+
+  try {
+    return commandStack.execute('properties-panel.multi-command-executor', commands);
+  } catch (error) {
+    let lastResult;
+
+    commands.forEach((command) => {
+      lastResult = commandStack.execute(command.cmd, command.context);
+    });
+
+    return lastResult;
+  }
+}
+
+export function updateModdleProperties(commandStack, element, moddleElement, properties = {}) {
+  return commandStack.execute('element.updateModdleProperties', {
+    element,
+    moddleElement,
+    properties
+  });
+}
+
 
 export function nextId(prefix) {
   const ids = new Ids([ 32,32,1 ]);
