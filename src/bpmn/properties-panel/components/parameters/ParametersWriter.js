@@ -6,8 +6,9 @@ import {
   queryTypedExtensionElements,
   updateModdleProperties
 } from '../../../ModdleUtils.js';
-import {findGroupEntry, getStr, toStr} from '../../common/utils.js';
+import {getStr, toStr} from '../../common/utils.js';
 import {getBusinessObject} from "bpmn-js/lib/util/ModelUtil";
+
 
 function createValidationResult(errors = {}, payloadKey, payload) {
   const result = {
@@ -55,10 +56,6 @@ function writeDefaultExtensionElements(context, element) {
   };
 }
 
-function unwrapDraftValue(value) {
-  return value && value.draft ? value.draft : value;
-}
-
 function unwrapItemsValue(value) {
   return Array.isArray(value) ? value : value && value.items;
 }
@@ -75,18 +72,11 @@ function createExtensionProperties(extension = {}) {
   };
 }
 
-function resolveExtensionProperties(value = {}) {
-  return createExtensionProperties(value.extension || value.draft || value);
-}
-
 function createExtensionValue(element) {
   return {
     kind: 'extension-editor',
     scope: 'parameter',
-    items: listExtensions(element),
-    draft: createDefaultExtension(),
-    createDefaultExtension,
-    validators
+    items: listExtensions(element)
   };
 
 }
@@ -111,27 +101,13 @@ function getParametersValues(element) {
   };
 }
 
-function getParameterAtIndex(element, index) {
-  const { parametersElement, values } = getParametersValues(element);
-  const parameter = Number.isInteger(index) && index >= 0 && index < values.length
-    ? values[index]
-    : null;
-
-  return {
-    parametersElement,
-    values,
-    parameter
-  };
-}
-
 function getParameterIndex(value = {}) {
   if (Number.isInteger(value.parameterIndex)) {
     return value.parameterIndex;
   }
 
-  const draft = unwrapDraftValue(value);
-
-  return Number.isInteger(draft && draft.parameterIndex) ? draft.parameterIndex : null;
+  const data = value.value;
+  return Number.isInteger(data && data.parameterIndex) ? data.parameterIndex : -1;
 }
 
 function getExtensionIndex(value = {}) {
@@ -139,20 +115,8 @@ function getExtensionIndex(value = {}) {
     return value.extensionIndex;
   }
 
-  if (Number.isInteger(value.index)) {
-    return value.index;
-  }
-
-  const draft = unwrapDraftValue(value);
-
-  return Number.isInteger(draft && draft.extensionIndex) ? draft.extensionIndex : null;
-}
-
-function createExtensionValidationForItems(items = []) {
-  return {
-    ...uniqueKeys(items),
-    extensions: Array.isArray(items) ? items.map((item) => createExtensionProperties(item)) : []
-  };
+  const data =  value.value;
+  return Number.isInteger(data && data.extensionIndex) ? data.extensionIndex : -1;
 }
 
 function createDefaultParameterExtensionsElement(context, element, parameter) {
@@ -183,26 +147,23 @@ function getNextExtensionItemsForAction(element, value = {}) {
   const items = listExtensions(element);
   const parameterIndex = getParameterIndex(value);
   const extensionIndex = getExtensionIndex(value);
-  const draft = resolveExtensionProperties(value);
+  const nextValue = createExtensionProperties(value.value);
 
   if (action === 'add') {
     return [
       ...items,
       {
-        parameterIndex,
+        parameterIndex: parameterIndex == -1 ? null : parameterIndex,
         extensionIndex: null,
-        ...draft
+        ...nextValue
       }
     ];
-  }
-
-  if (action === 'update') {
-    return items.map((item) => (item.parameterIndex === parameterIndex && item.extensionIndex === extensionIndex
-            ? { ...item, ...draft } : item
+  } else if (action === 'update') {
+    return items.map((item) => (
+        item.parameterIndex === parameterIndex && item.extensionIndex === extensionIndex
+            ? { ...item, ...nextValue } : item
     ));
-  }
-
-  if (action === 'remove') {
+  } else if (action === 'remove') {
     return items.filter((item) => !(item.parameterIndex === parameterIndex && item.extensionIndex === extensionIndex));
   }
 
@@ -211,7 +172,8 @@ function getNextExtensionItemsForAction(element, value = {}) {
 
 function applyExtensionAdd(context, element, value = {}, validation) {
   const parameterIndex = getParameterIndex(value);
-  const { parameter } = getParameterAtIndex(element, parameterIndex);
+  const { values: parameters } = getParametersValues(element);
+  const parameter = -1 < parameterIndex && parameterIndex < parameters.length ? parameters[parameterIndex] : null;
 
   if (!parameter) {
     return { updated: false, reason: 'parameter-not-found', validation };
@@ -219,9 +181,7 @@ function applyExtensionAdd(context, element, value = {}, validation) {
 
   const ensured = createDefaultParameterExtensionsElement(context, element, parameter);
   const { values } = getExtensionValues(parameter);
-  const newExtension = createElement('taskExt:Extension',
-      resolveExtensionProperties(value),
-      ensured.extensionsElement, context.bpmnFactory);
+  const newExtension = createElement('taskExt:Extension', createExtensionProperties(value.value), ensured.extensionsElement, context.bpmnFactory);
 
   const result = executeCommands(context.commandStack, [
     ...ensured.commands,
@@ -241,24 +201,21 @@ function applyExtensionAdd(context, element, value = {}, validation) {
     updated: true,
     result,
     validation,
-    extension: newExtension,
     value: createExtensionValue(element)
   };
 }
 
 function applyExtensionUpdate(context, element, value = {}, validation) {
   const parameterIndex = getParameterIndex(value);
+  const { values: parameters } = getParametersValues(element);
+  const parameter = -1 < parameterIndex && parameterIndex < parameters.length ? parameters[parameterIndex] : null;
   const extensionIndex = getExtensionIndex(value);
-  const { parameter } = getParameterAtIndex(element, parameterIndex);
   const { values } = getExtensionValues(parameter);
-  const extension = Number.isInteger(extensionIndex) ? values[extensionIndex] : null;
+
+  const extension = -1 < extensionIndex && extensionIndex < values.length ? values[extensionIndex] : null;
 
   if (!extension) {
-    return {
-      updated: false,
-      reason: 'extension-not-found',
-      validation
-    };
+    return { updated: false, reason: 'extension-not-found', validation };
   }
 
   const result = executeCommands(context.commandStack, [{
@@ -266,7 +223,7 @@ function applyExtensionUpdate(context, element, value = {}, validation) {
       context: {
         element,
         moddleElement: extension,
-        properties: resolveExtensionProperties(value)
+        properties: createExtensionProperties(value.value)
       }
     }]
   );
@@ -275,17 +232,17 @@ function applyExtensionUpdate(context, element, value = {}, validation) {
     updated: true,
     result,
     validation,
-    extension,
     value: createExtensionValue(element)
   };
 }
 
 function applyExtensionRemove(context, element, value = {}, validation) {
   const parameterIndex = getParameterIndex(value);
+  const { values: parameters } = getParametersValues(element);
+  const parameter = -1 < parameterIndex && parameterIndex < parameters.length ? parameters[parameterIndex] : null;
   const extensionIndex = getExtensionIndex(value);
-  const { parameter } = getParameterAtIndex(element, parameterIndex);
   const { extensionsElement, values } = getExtensionValues(parameter);
-  const extension = Number.isInteger(extensionIndex) ? values[extensionIndex] : null;
+  const extension = -1 < extensionIndex && extensionIndex < values.length ? values[extensionIndex] : null;
 
   if (!extensionsElement || !extension) {
     return {
@@ -359,8 +316,7 @@ function applyExtensionListReplacement(context, element, value = {}, validation)
     }
 
     const extensionElements = nextExtensions
-        .map((extension) => createElement('taskExt:Extension', extension,
-            ensured.extensionsElement, context.bpmnFactory))
+        .map((extension) => createElement('taskExt:Extension', extension, ensured.extensionsElement, context.bpmnFactory))
         .filter(Boolean);
 
     commands.push(...ensured.commands, {
@@ -394,14 +350,14 @@ function applyExtensionListReplacement(context, element, value = {}, validation)
 }
 
 function validateParameter(parameter = {}) {
-  const normalizedParameter = createParameterProperties(parameter);
+  const nextValue = createParameterProperties(parameter);
   const errors = {};
 
-  if (!getStr(normalizedParameter.name).trim()) {
+  if (!getStr(nextValue.name).trim()) {
     errors.name = 'name is required';
   }
 
-  return createValidationResult(errors, 'parameter', normalizedParameter);
+  return createValidationResult(errors, 'value', nextValue);
 }
 
 function addParameter(context, element, parameter = {}) {
@@ -452,8 +408,7 @@ function addParameter(context, element, parameter = {}) {
   return {
     updated: true,
     result,
-    parameter: parameterElement,
-    parametersElement
+    value: parameter
   };
 }
 
@@ -478,8 +433,7 @@ function updateParameter(context, element, index, parameter = {}) {
   return {
     updated: true,
     result,
-    parameter: parameterElement,
-    parametersElement
+    value: parameter
   };
 }
 
@@ -500,10 +454,7 @@ function createParameterProperties(parameter = {}) {
 function createParameterValue(element) {
   return {
     kind: 'parameter-editor',
-    items: listParameters(element),
-    draft: createDefaultParameter(),
-    createDefaultParameter: createDefaultParameter,
-    validateParameter
+    items: listParameters(element)
   };
 }
 
@@ -512,10 +463,7 @@ function listParameters(element) {
 
   return values.map((parameter, index) => ({
     index,
-    ...createParameterProperties({
-      name: getProperty(parameter, 'name'),
-      value: getProperty(parameter, 'value')
-    })
+    ...createParameterProperties({ name: getProperty(parameter, 'name'), value: getProperty(parameter, 'value') })
   }));
 }
 
@@ -529,20 +477,18 @@ function listExtensions(element) {
       parameterIndex,
       parameterName: getStr(getProperty(parameter, 'name')),
       extensionIndex,
-      ...createExtensionProperties({
-        key: getProperty(extension, 'key')
-      })
+      ...createExtensionProperties({ key: getProperty(extension, 'key') })
     }));
   });
 }
 
-function uniqueKeys(extensions = []) {
-  const normalizedExtensions = Array.isArray(extensions)
+function validateExtensions(extensions = []) {
+  const nextData = Array.isArray(extensions)
     ? extensions.map((extension) => createExtensionProperties(extension))
     : [];
   const keyIndexes = new Map();
 
-  normalizedExtensions.forEach((extension, index) => {
+  nextData.forEach((extension, index) => {
     const key = getStr(extension.key).trim();
 
     if (!key) {
@@ -575,12 +521,12 @@ function uniqueKeys(extensions = []) {
     valid: issues.length === 0,
     duplicateKeys: issues.map((issue) => issue.key),
     issues,
-    extensions: normalizedExtensions
+    extensions: nextData
   };
 }
 
 function applyParameterChange(context, element, value = {}) {
-  const nextValue = unwrapDraftValue(value);
+  const nextValue = value.value;
   const validation = validateParameter(nextValue);
   const nextIndex = Number.isInteger(value && value.index)
     ? value.index
@@ -591,8 +537,8 @@ function applyParameterChange(context, element, value = {}) {
   }
 
   const result = nextIndex === null
-    ? addParameter(context, element, validation.parameter)
-    : updateParameter(context, element, nextIndex, validation.parameter);
+    ? addParameter(context, element, validation.value)
+    : updateParameter(context, element, nextIndex, validation.value);
 
   return {
     ...result,
@@ -603,44 +549,36 @@ function applyParameterChange(context, element, value = {}) {
 function applyExtensionChange(context, element, value = {}) {
   const action = getStr(value.action);
   const nextItems = action ? getNextExtensionItemsForAction(element, value) : unwrapItemsValue(value);
-  const validation = createExtensionValidationForItems(nextItems);
+  const validation = validateExtensions(nextItems);
 
   if (!validation.valid) {
     return { updated: false, validation };
   }
 
-  if (action === 'add') {
-    return applyExtensionAdd(context, element, value, validation);
-  }
+  switch (action) {
+    case 'add':
+      return applyExtensionAdd(context, element, value, validation);
+    case 'update':
+      return applyExtensionUpdate(context, element, value, validation);
+    case 'remove':
+      return applyExtensionRemove(context, element, value, validation);
+    default:
+      if (Array.isArray(nextItems)) {
+        return applyExtensionListReplacement(context, element, value, validation);
+      }
 
-  if (action === 'update') {
-    return applyExtensionUpdate(context, element, value, validation);
+      return {updated: false, reason: 'unsupported-action', validation};
   }
-
-  if (action === 'remove') {
-    return applyExtensionRemove(context, element, value, validation);
-  }
-
-  if (Array.isArray(nextItems)) {
-    return applyExtensionListReplacement(context, element, value, validation);
-  }
-
-  return {
-    updated: false,
-    reason: 'unsupported-action',
-    validation
-  };
 }
 
 function createParameterEntryAdapter(entry, element, options = {}) {
   const context = options.context || null;
-
   if (!entry) {
     return entry;
   }
 
   entry.getValue = () => createParameterValue(element);
-  entry.validate = (value = {}) => validateParameter(unwrapDraftValue(value));
+  entry.validate = (value = {}) => validateParameter(value.value);
   entry.setValue = (value = {}) => applyParameterChange(context, element, value);
 
   return entry;
@@ -648,21 +586,18 @@ function createParameterEntryAdapter(entry, element, options = {}) {
 
 function createExtensionEntryAdapter(entry, element, options = {}) {
   const context = options.context || null;
-
   if (!entry) {
     return entry;
   }
 
   entry.getValue = () => createExtensionValue(element);
-  entry.validate = (value = {}) => uniqueKeys(unwrapItemsValue(value));
+  entry.validate = (value = {}) => validateExtensions(value.values);
   entry.setValue = (value = {}) => applyExtensionChange(context, element, value);
 
   return entry;
 }
 
 function bindParameterEntry(entry, group, element, options = {}) {
-  // const entry = findGroupEntry(panelState, 'parameters', 'parameterEditor');
-
   if (!!(entry && group && group.id === 'parameters' && entry.key === 'parameterEditor')) {
     return;
   }
@@ -671,38 +606,15 @@ function bindParameterEntry(entry, group, element, options = {}) {
 }
 
 function bindExtensionEntry(entry, group, element, options = {}) {
-  // const entry = findGroupEntry(panelState, 'parameters', 'extensionEditor');
-
-  if (!!(entry && group && group.id === 'parameters' && entry.key === 'extensionEditor')) {
+  if (!(entry && group && group.id === 'parameters' && entry.key === 'extensionEditor')) {
     return;
   }
 
   createExtensionEntryAdapter(entry, element, options);
 }
 
-const validators = {
-  uniqueKeys
-};
-
-const parameters = {
-  bindParameterEntry,
-  createDefaultParameter,
-  createEntryAdapter: createParameterEntryAdapter,
-  createValue: createParameterValue,
-  validateParameter
-};
-
-const extensions = {
-  bindExtensionEntry,
-  createDefaultExtension,
-  createEntryAdapter: createExtensionEntryAdapter,
-  createValue: createExtensionValue,
-  validators
-};
 
 export default {
   bindExtensionEntry,
-  bindParameterEntry,
-  extensions,
-  parameters
+  bindParameterEntry
 };

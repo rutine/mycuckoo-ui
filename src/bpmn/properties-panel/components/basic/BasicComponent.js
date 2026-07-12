@@ -5,7 +5,7 @@ import writer from './BasicWriter.js';
 
 
 function ui(entry) {
-  if (entry) {
+  if (!entry) {
     return `<input type="text" class="layui-input" data-basic-control="true" data-entry-key="" data-component="">
         <div class="layui-bpmn-panel__entry-error"></div>`;
   }

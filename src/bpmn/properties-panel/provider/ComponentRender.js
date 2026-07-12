@@ -7,9 +7,6 @@ import listenersComponent from "../components/listeners";
 import multiInstanceComponent from "../components/multiInstance";
 import parametersComponent from "../components/parameters";
 
-
-const LAYUI_SELECT_BINDING_PROP = '__layuiSelectBinding';
-
 const entryComponents = [
   basicComponent,
   flowConditionComponent,
@@ -92,24 +89,4 @@ export function renderGroup(group, element, options = {}) {
   });
 
   return groupContent;
-}
-
-export function collectLayuiSelectBindings(root) {
-  const bindings = [];
-
-  (function walk(node) {
-    if (!node) {
-      return;
-    }
-
-    const binding = node[LAYUI_SELECT_BINDING_PROP];
-    if (binding && binding.filter && typeof binding.onChange === 'function') {
-      bindings.push(binding);
-    }
-
-    const children = node && node.children ? Array.from(node.children) : [];
-    children.forEach((child) => walk(child));
-  })(root);
-
-  return bindings;
 }

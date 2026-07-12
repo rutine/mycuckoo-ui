@@ -1,11 +1,5 @@
-import { collectLayuiSelectBindings } from './provider/ComponentRender.js';
 import PropertiesProvider from './provider/PropertiesProvider.js';
-import {
-  appendClassName,
-  getElementId,
-  toStr,
-  removeClassName
-} from './common/utils.js';
+import {appendClassName, getElementId, removeClassName} from './common/utils.js';
 
 function findFirstElement(root, matcher) {
   if (!root) {
@@ -63,58 +57,6 @@ function rerenderLayuiForm() {
 
   form.render();
   return form;
-}
-
-function bindLayuiSelect(form, bindings = []) {
-  if (!form || typeof form.on !== 'function') {
-    return;
-  }
-
-  const registry = this && this._layuiSelectBindings instanceof Map
-    ? this._layuiSelectBindings
-    : new Map();
-  const nextFilters = new Set();
-
-  bindings.forEach((binding) => {
-    if (!binding || !binding.filter || typeof binding.onChange !== 'function') {
-      return;
-    }
-
-    nextFilters.add(binding.filter);
-    registry.set(binding.filter, binding);
-    if (registry.get(`${binding.filter}:bound`)) {
-      return;
-    }
-
-    registry.set(`${binding.filter}:bound`, true);
-    form.on(`select(${binding.filter})`, (data) => {
-      const activeBinding = registry.get(binding.filter);
-      if (!activeBinding) {
-        return;
-      }
-
-      if (activeBinding.element) {
-        activeBinding.element.value = toStr(data && data.value);
-      }
-
-      activeBinding.onChange(data && data.value, data);
-    });
-  });
-
-  Array.from(registry.keys()).forEach((key) => {
-    if (/:bound$/.test(key)) {
-      const filter = key.replace(/:bound$/, '');
-      if (!nextFilters.has(filter)) {
-        registry.delete(key);
-      }
-
-      return;
-    }
-
-    if (!nextFilters.has(key)) {
-      registry.delete(key);
-    }
-  });
 }
 
 export default class PropertiesPanel {
@@ -224,7 +166,6 @@ export default class PropertiesPanel {
     });
 
     const form = rerenderLayuiForm();
-    bindLayuiSelect.call(this, form, collectLayuiSelectBindings(this._container));
     if (form) {
       appendClassName(this._container, 'layui-bpmn-properties-host--layui-rendered');
     } else {

@@ -1,30 +1,19 @@
 import { toStr } from '../../common/utils.js';
 
-export function getEntryValue(entry) {
-  if (!entry || typeof entry.getValue !== 'function') {
-    return null;
-  }
-
-  try {
-    return entry.getValue();
-  } catch (error) {
-    return null;
-  }
-}
 
 export function createMultiInstanceProperties(value) {
-  const draft = value && typeof value === 'object' ? value : {};
+  const data = value && typeof value === 'object' ? value : {};
 
   return {
-    enabled: !!draft.enabled,
-    isSequential: !!draft.isSequential,
-    collection: toStr(draft.collection).trim(),
-    elementVariable: toStr(draft.elementVariable).trim(),
-    loopCardinality: toStr(draft.loopCardinality).trim(),
-    completionCondition: toStr(draft.completionCondition).trim(),
-    assigneeMode: toStr(draft.assigneeMode).trim(),
-    ids: toStr(draft.ids).trim(),
-    names: toStr(draft.names).trim()
+    enabled: !!data.enabled,
+    isSequential: !!data.isSequential,
+    collection: toStr(data.collection).trim(),
+    elementVariable: toStr(data.elementVariable).trim(),
+    loopCardinality: toStr(data.loopCardinality).trim(),
+    completionCondition: toStr(data.completionCondition).trim(),
+    assigneeMode: toStr(data.assigneeMode).trim(),
+    ids: toStr(data.ids).trim(),
+    names: toStr(data.names).trim()
   };
 }
 
@@ -37,12 +26,12 @@ export function getMultiInstanceSelectedNames(value) {
 }
 
 export function createState(entry) {
-  return createMultiInstanceProperties(getEntryValue(entry));
+  return createMultiInstanceProperties(entry.getValue());
 }
 
-export function applyPickedUsersToDraft(draft, pickedUsers) {
+export function applyPickedUsersToValue(value, pickedUsers) {
   return createMultiInstanceProperties({
-    ...draft,
+    ...value,
     assigneeMode: 'user',
     ids: Array.isArray(pickedUsers)
       ? pickedUsers

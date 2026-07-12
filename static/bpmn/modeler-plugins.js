@@ -38531,22 +38531,6 @@
     return typeof value === 'string' ? value : defaultValue;
   }
 
-  function getter(obj, key) {
-    if (!obj || !key) {
-      return '';
-    }
-
-    if (Object.prototype.hasOwnProperty.call(obj, key)) {
-      return obj[key];
-    }
-
-    if (typeof obj.get === 'function') {
-      return obj.get(key);
-    }
-
-    return '';
-  }
-
   function getElementId(element) {
     if (!element) {
       return null;
@@ -38707,11 +38691,11 @@
   const DEFAULT_USER_TASK_ASSIGNEE = '${assignee}';
 
   function writeDefaultProperties(element, context) {
-    if (!element || element.type !== 'bpmn:UserTask' || !context || !context.modeling) {
+    if (!element || element.type !== 'bpmn:UserTask') {
       return;
     }
 
-    const value = toStr(getter(element.businessObject, 'flowable:assignee'));
+    const value = toStr(getProperty(element.businessObject, 'flowable:assignee'));
     if (!value.trim()) {
       context.modeling.updateProperties(element, {
         'flowable:assignee': DEFAULT_USER_TASK_ASSIGNEE
@@ -38720,7 +38704,7 @@
   }
 
   function writeProperties(element, context, fieldId, value) {
-    if (!element || !context || !context.modeling || !fieldId) {
+    if (!element || !fieldId) {
       return {
         updated: false,
         notApplied: true,
@@ -38731,7 +38715,7 @@
     const nextValue = typeof value === 'boolean' ? value : toStr(value);
     return {
       updated: true,
-      result: context.modeling.updateProperties(element, {
+      value: context.modeling.updateProperties(element, {
         [fieldId]: nextValue === '' ? undefined : nextValue
       })
     };
@@ -38746,14 +38730,7 @@
 
     if (getRawValue) {
       entry.getValue = () => {
-        const value = getRawValue(element, {
-          element,
-          groupId: group.id || null,
-          entryKey: entry.key || null,
-          writer: panelState.writer,
-          validator: panelState.validator
-        });
-
+        const value = getRawValue(element);
         if (entry.key === 'flowable:assignee' && !toStr(value).trim()) {
           return DEFAULT_USER_TASK_ASSIGNEE;
         }
@@ -38764,6 +38741,14 @@
 
     if (setRawValue) {
       entry.setValue = (value) => {
+        // const rs = setRawValue(value, {
+        //   element,
+        //   groupId: group.id || null,
+        //   entryKey: entry.key || null,
+        //   writer: panelState.writer,
+        //   validator: panelState.validator
+        // });
+
         const nextValue = typeof entry.normalizeValue === 'function' ? entry.normalizeValue(value) : value;
         if (uiState) {
           uiState.pendingSimpleEntry = {
@@ -38798,19 +38783,7 @@
   function bindBasicEntries(entry, group, element, options = {}) {
     writeDefaultProperties(element, options.context);
 
-
     createEntryAdapter(entry, group, options.panelState, element, options);
-
-    // const groups = panelState && Array.isArray(panelState.groups) ? panelState.groups : [];
-    //
-    // groups.forEach((group) => {
-    //   const entries = group && Array.isArray(group.entries) ? group.entries : [];
-    //   entries.forEach((entry) => {
-    //     if (entry && isBasicEntry(entry)) {
-    //       createEntryAdapter(entry, group, panelState, element, options);
-    //     }
-    //   });
-    // });
   }
 
   var writer$4 = {
@@ -38818,7 +38791,7 @@
   };
 
   function ui$1(entry) {
-    if (entry) {
+    if (!entry) {
       return `<input type="text" class="layui-input" data-basic-control="true" data-entry-key="" data-component="">
         <div class="layui-bpmn-panel__entry-error"></div>`;
     }
@@ -38968,9 +38941,7 @@
     conditionExpression = context.moddle.create('bpmn:FormalExpression', { body: '' });
     conditionExpression.$parent = businessObject;
 
-    context.modeling.updateProperties(element, {
-      conditionExpression
-    });
+    context.modeling.updateProperties(element, { conditionExpression });
 
     return conditionExpression;
   }
@@ -39017,8 +38988,7 @@
   }
 
   function bindFlowConditionEntry(entry, group, element, options = {}) {
-    // const entry = findGroupEntry(panelState, 'flow-condition', 'conditionExpression');
-    if (!!(entry && group && group.id !== 'flow-condition' && entry.key !== 'conditionExpression')) {
+    if (!(entry && group && group.id === 'flow-condition' && entry.key === 'conditionExpression')) {
       return;
     }
 
@@ -39026,8 +38996,7 @@
   }
 
   var writer$3 = {
-    bindFlowConditionEntry,
-    createFlowConditionEntryAdapter
+    bindFlowConditionEntry
   };
 
   function isFlowConditionEntry(entry) {
@@ -39062,49 +39031,6 @@
     FlowConditionComponent
   };
 
-  const LAYUI_SELECT_BINDING_PROP$1 = '__layuiSelectBinding';
-  const LAYUI_SELECT_FILTER_PROP = '__layuiSelectFilter';
-
-  function getEntryValue$2(entry) {
-    if (!entry || typeof entry.getValue !== 'function') {
-      return null;
-    }
-
-    return entry.getValue();
-  }
-
-  function createListenerDraft(value = {}) {
-    return {
-      event: toStr(value.event).trim() || 'assignment',
-      type: toStr(value.type).trim() || 'expression',
-      value: toStr(value.value)
-    };
-  }
-
-  function createListenerValue$1(value) {
-    const items = value && Array.isArray(value.items) ? value.items : [];
-
-    return {
-      items: items.map((item) => createListenerDraft(item))
-    };
-  }
-
-  function syncListenerItems(state, value) {
-    const normalizedValue = createListenerValue$1(value);
-
-    state.items = normalizedValue.items;
-
-    return state;
-  }
-
-  function setListenerFieldErrors(fieldBindings, validation) {
-    Object.keys(fieldBindings).forEach((field) => {
-      const binding = fieldBindings[field];
-      const message = getFieldValidationMessage(validation, field);
-      setControlError(binding.controlEl, binding.errorEl, message);
-    });
-  }
-
   const DEFAULT_LISTENER_EVENT = 'assignment';
   const DEFAULT_LISTENER_TYPE = 'expression';
   const DEFAULT_LISTENER_EXPRESSION = '${auditFlowService.beforeTask(execution)}';
@@ -39113,9 +39039,32 @@
   const SUPPORTED_LISTENER_ACTIONS = [ 'add', 'remove', 'update' ];
 
 
+  function listListeners(element) {
+    return queryTypedExtensionElements(element, 'flowable:TaskListener').map((listener) => {
+      let binding = {type: DEFAULT_LISTENER_TYPE, value: ''};
+      for (const type of SUPPORTED_LISTENER_TYPES) {
+        const value = getStr(getProperty(listener, type));
+        if (value.trim()) {
+          binding = { type, value };
+          break;
+        }
+      }
 
-  function unwrapDraftValue$1(value) {
-    return value && value.draft ? value.draft : value;
+      return {
+        event: getStr(getProperty(listener, 'event')),
+        type: binding.type,
+        value: binding.value
+      };
+    });
+  }
+
+  function getListenerElement(element, index) {
+    const listeners = queryTypedExtensionElements(element, 'flowable:TaskListener');
+    if (!Number.isInteger(index) || index < 0 || index >= listeners.length) {
+      return null;
+    }
+
+    return listeners[index];
   }
 
   function createValidationResult$2(errors = {}, payloadKey, payload) {
@@ -39143,26 +39092,23 @@
     };
   }
 
-  function createListenerProperties(draft) {
+  function createListenerProperties$1(value) {
     const properties = {
-      event: draft.event,
+      event: value.event,
       expression: undefined,
       class: undefined,
       delegateExpression: undefined
     };
 
-    properties[draft.type] = draft.value;
+    properties[value.type] = value.value;
 
     return properties;
   }
 
-  function createListenerValue(element) {
+  function createListenerValue$1(element) {
     return {
       kind: 'listener-editor',
-      items: listListeners(element),
-      draft: createDefaultListener(),
-      createDefaultDraft: createDefaultListener,
-      validateDraft: validateDraft$1
+      items: listListeners(element)
     };
   }
 
@@ -39195,38 +39141,10 @@
     };
   }
 
-  function listListeners(element) {
-    return queryTypedExtensionElements(element, 'flowable:TaskListener').map((listener) => {
-      let binding = {type: DEFAULT_LISTENER_TYPE, value: ''};
-      for (const type of SUPPORTED_LISTENER_TYPES) {
-        const value = getStr(getProperty(listener, type));
-        if (value.trim()) {
-          binding = { type, value };
-          break;
-        }
-      }
-
-      return {
-        event: getStr(getProperty(listener, 'event')),
-        type: binding.type,
-        value: binding.value
-      };
-    });
-  }
-
-  function getListenerElement(element, index) {
-    const listeners = queryTypedExtensionElements(element, 'flowable:TaskListener');
-    if (!Number.isInteger(index) || index < 0 || index >= listeners.length) {
-      return null;
-    }
-
-    return listeners[index];
-  }
-
   function addListener(context, element) {
     const ensured = writeDefaultExtensionElements$2(context, element);
     const nextListener = createElement('flowable:TaskListener',
-        createListenerProperties(createDefaultListener()),
+        createListenerProperties$1(createDefaultListener()),
         ensured.extensionElements,
         context.bpmnFactory
     );
@@ -39250,28 +39168,23 @@
 
     return {
       updated: true,
-      value: createListenerValue(element)
+      value: createListenerValue$1(element)
     };
   }
 
-  function updateListener(context, element, index, draft) {
+  function updateListener(context, element, index, data) {
     const listener = getListenerElement(element, index);
     if (!listener) {
       return { updated: false, reason: 'listener-not-found' };
     }
 
-    const validation = validateDraft$1(draft);
-    if (!validation.valid) {
-      return { updated: false, validation };
-    }
-
     context.commandStack.execute('element.updateModdleProperties', {
       element,
       moddleElement: listener,
-      properties: createListenerProperties(validation.draft)
+      properties: createListenerProperties$1(data)
     });
 
-    return { updated: true, validation, value: createListenerValue(element) };
+    return { updated: true, value: createListenerValue$1(element) };
   }
 
   function removeListener(context, element, index) {
@@ -39290,34 +39203,34 @@
       }
     });
 
-    return { updated: true, value: createListenerValue(element) };
+    return { updated: true, value: createListenerValue$1(element) };
   }
 
-  function validateDraft$1(draft = {}) {
-    const normalizedDraft = {
-      event: getStr(draft.event, DEFAULT_LISTENER_EVENT),
-      type: getStr(draft.type, DEFAULT_LISTENER_TYPE),
-      value: getStr(draft.value)
+  function validateValue$1(value = {}) {
+    const nextValue = {
+      event: getStr(value.event, DEFAULT_LISTENER_EVENT),
+      type: getStr(value.type, DEFAULT_LISTENER_TYPE),
+      value: getStr(value.value)
     };
     const errors = {};
 
-    if (!normalizedDraft.event.trim()) {
+    if (!nextValue.event.trim()) {
       errors.event = 'event is required';
     }
 
-    if (!SUPPORTED_LISTENER_EVENTS.includes(normalizedDraft.event)) {
+    if (!SUPPORTED_LISTENER_EVENTS.includes(nextValue.event)) {
       errors.event = 'listener event is not supported';
     }
 
-    if (!SUPPORTED_LISTENER_TYPES.includes(normalizedDraft.type)) {
+    if (!SUPPORTED_LISTENER_TYPES.includes(nextValue.type)) {
       errors.type = 'listener type is not supported';
     }
 
-    if (!normalizedDraft.value.trim()) {
+    if (!nextValue.value.trim()) {
       errors.value = 'value is required';
     }
 
-    return createValidationResult$2(errors, 'draft', normalizedDraft);
+    return createValidationResult$2(errors, 'value', nextValue);
   }
 
   function validateAction(value = {}) {
@@ -39337,40 +39250,27 @@
 
   function applyChange$1(context, element, value = {}) {
     if (!context || !context.commandStack || !context.bpmnFactory) {
-      return {
-        updated: false,
-        notApplied: true,
-        reason: 'missing-context'
-      };
+      return {updated: false, notApplied: true, reason: 'missing-context'};
     }
 
     const actionValidation = validateAction(value);
     if (!actionValidation.valid) {
       if (actionValidation.errors && actionValidation.errors.action) {
-        return {
-          updated: false,
-          reason: 'unsupported-action'
-        };
+        return {updated: false, reason: 'unsupported-action'};
       }
 
-      return {
-        updated: false,
-        reason: 'listener-not-found'
-      };
+      return {updated: false, reason: 'listener-not-found'};
     }
 
     switch (value.action) {
-    case 'add':
-      return addListener(context, element);
-    case 'remove':
-      return removeListener(context, element, value.index);
-    case 'update':
-      return updateListener(context, element, value.index, value.draft);
-    default:
-      return {
-        updated: false,
-        reason: 'unsupported-action'
-      };
+      case 'add':
+        return addListener(context, element);
+      case 'update':
+        return updateListener(context, element, value.index, value.value);
+      case 'remove':
+        return removeListener(context, element, value.index);
+      default:
+        return {updated: false, reason: 'unsupported-action'};
     }
   }
 
@@ -39383,12 +39283,7 @@
       return entry;
     }
 
-    entry.getValue = () => createListenerValue(element);
-    entry.validate = (value = {}) => validateDraft$1(unwrapDraftValue$1(value));
-    entry.ui = {
-      ...(entry.ui || {}),
-      selectMode: listenerSelectMode
-    };
+    entry.getValue = () => createListenerValue$1(element);
     entry.setValue = (value = {}) => {
       const shouldRestoreFocus = value && value.action === 'add' && uiState;
 
@@ -39407,14 +39302,17 @@
 
       return result;
     };
+    entry.validate = (value = {}) => validateValue$1(value);
+    entry.ui = {
+      ...(entry.ui || {}),
+      selectMode: listenerSelectMode
+    };
 
     return entry;
   }
 
   function bindListenerEntry(entry, group, element, options) {
-    // const entry = findGroupEntry(panelState, 'listeners', 'listenerEditor');
-
-    if (!!(entry && group && !group && group.id !== 'listeners' && entry.key !== 'listenerEditor')) {
+    if (!(entry && group && group.id === 'listeners' && entry.key === 'listenerEditor')) {
       return;
     }
 
@@ -39422,11 +39320,11 @@
   }
 
   var writer$2 = {
-    bindListenerEntry,
-    createListenerEntryAdapter,
-    createDefaultListener,
-    validateDraft: validateDraft$1
+    bindListenerEntry
   };
+
+  const LAYUI_SELECT_BINDING_PROP$1 = '__layuiSelectBinding';
+  const LAYUI_SELECT_FILTER_PROP = '__layuiSelectFilter';
 
   function editorUI$1() {
     return `
@@ -39524,10 +39422,6 @@
     }
   }
 
-  function createState$1(entry) {
-    return createListenerValue$1(getEntryValue$2(entry));
-  }
-
   function getBindingFieldEls$1(itemEl, field) {
     const fieldEl = itemEl.querySelector(`.layui-bpmn-panel__listener-field[data-field="${field}"]`);
     const controlEl = fieldEl.querySelector(`[data-field="${field}"]`);
@@ -39560,10 +39454,43 @@
     };
   }
 
+  function setListenerFieldErrors(fieldBindings, validation) {
+    Object.keys(fieldBindings).forEach((field) => {
+      const binding = fieldBindings[field];
+      const message = getFieldValidationMessage(validation, field);
+      setControlError(binding.controlEl, binding.errorEl, message);
+    });
+  }
+
+  function createListenerProperties(item = {}) {
+    return {
+      event: toStr(item.event).trim() || 'assignment',
+      type: toStr(item.type).trim() || 'expression',
+      value: toStr(item.value)
+    };
+  }
+
+  function createListenerValue(value) {
+    const items = value && Array.isArray(value.items) ? value.items : [];
+
+    return {
+      items: items.map((item) => createListenerProperties(item))
+    };
+  }
+
+  function syncListenerItems(state, value) {
+    const newState = createListenerValue(value);
+
+    state.items = newState.items;
+
+    return state;
+  }
+
+
   class ListenersComponent {
     constructor(entry) {
       this.entry = entry;
-      this.state = createState$1(entry);
+      this.state = createListenerValue(entry.getValue());
     }
 
     mount(mountEl) {
@@ -39589,8 +39516,8 @@
         itemsEl.querySelectorAll('.layui-bpmn-panel__listener-item').forEach((itemEl) => {
           const index = Number(itemEl.getAttribute('data-listener-index'));
           const item = state.items[index];
-          const draft = createListenerDraft(item);
-          let lastDraft = JSON.stringify(draft);
+          const value = createListenerProperties(item);
+          let lastValue = JSON.stringify(value);
 
           const eventField = getBindingFieldEls$1(itemEl, 'event');
           const typeField = getBindingFieldEls$1(itemEl, 'type');
@@ -39605,38 +39532,34 @@
           setSelectMode(eventField.controlEl, {selectMode: selectMode, layFilter: `listener-event-${index}`});
           setSelectMode(typeField.controlEl, {selectMode: selectMode, layFilter: `listener-type-${index}`});
 
-          eventField.controlEl.value = draft.event;
-          typeField.controlEl.value = draft.type;
-          valueField.controlEl.value = draft.value;
+          eventField.controlEl.value = value.event;
+          typeField.controlEl.value = value.type;
+          valueField.controlEl.value = value.value;
 
-          function submitDraft() {
-            const newDraft = createListenerDraft({
+          function submitData() {
+            const newValue = createListenerProperties({
               event: eventField.controlEl.value,
               type: typeField.controlEl.value,
               value: valueField.controlEl.value
             });
-            const nextDraft = JSON.stringify(newDraft);
-            if (nextDraft === lastDraft) {
+            const nextValue = JSON.stringify(newValue);
+            if (nextValue === lastValue) {
               return;
             }
 
-            const validation = typeof entry.validate === 'function' ? entry.validate(newDraft) : null;
+            const validation = typeof entry.validate === 'function' ? entry.validate(newValue) : null;
             setListenerFieldErrors(fieldBindings, validation);
             if (validation && validation.valid === false) {
               return;
             }
 
-            const result = typeof entry.setValue === 'function'
-              ? entry.setValue({action: 'update', index, draft: newDraft})
-              : { updated: false };
-            const resultValidation = result && result.validation ? result.validation : null;
-            setListenerFieldErrors(fieldBindings, resultValidation);
+            const result = entry.setValue({action: 'update', index, value: newValue});
             if (!result || !result.updated) {
               return;
             }
 
-            lastDraft = nextDraft;
-            state.items[index] = newDraft;
+            lastValue = nextValue;
+            state.items[index] = newValue;
 
             if (result.value) {
               syncListenerItems(state, result.value);
@@ -39646,27 +39569,27 @@
 
           setLayuiSelectBinding(eventField.controlEl, (nextValue) => {
             eventField.controlEl.value = toStr(nextValue);
-            submitDraft();
+            submitData();
           });
           setLayuiSelectBinding(typeField.controlEl, (nextValue) => {
             typeField.controlEl.value = toStr(nextValue);
-            submitDraft();
+            submitData();
           });
-          eventField.controlEl.addEventListener('change', submitDraft);
-          typeField.controlEl.addEventListener('change', submitDraft);
-          valueField.controlEl.addEventListener('blur', submitDraft);
+          eventField.controlEl.addEventListener('change', submitData);
+          typeField.controlEl.addEventListener('change', submitData);
+          valueField.controlEl.addEventListener('blur', submitData);
           valueField.controlEl.addEventListener('keydown', (event) => {
             if (event && event.key === 'Enter') {
               if (typeof event.preventDefault === 'function') {
                 event.preventDefault();
               }
 
-              submitDraft();
+              submitData();
             }
           });
 
           deleteButtonEl.addEventListener('click', () => {
-            const result = typeof entry.setValue === 'function' ? entry.setValue({action: 'remove', index}) : { updated: false };
+            const result = entry.setValue({action: 'remove', index});
             if (!result || !result.updated) {
               return;
             }
@@ -39688,7 +39611,7 @@
 
       const addButtonEl = actionsEl.querySelector('[data-action="add-listener"]');
       addButtonEl.addEventListener('click', () => {
-        const result = typeof entry.setValue === 'function' ? entry.setValue({ action: 'add' }) : { updated: false };
+        const result = entry.setValue({ action: 'add' });
         if (!result || !result.updated) {
           return;
         }
@@ -39696,7 +39619,7 @@
         if (result.value) {
           syncListenerItems(state, result.value);
         } else {
-          state.items.push(createListenerDraft());
+          state.items.push(createListenerProperties());
         }
 
         renderItems({focusIndex: state.items.length - 1});
@@ -39727,31 +39650,19 @@
     ListenersComponent
   };
 
-  function getEntryValue$1(entry) {
-    if (!entry || typeof entry.getValue !== 'function') {
-      return null;
-    }
-
-    try {
-      return entry.getValue();
-    } catch (error) {
-      return null;
-    }
-  }
-
   function createMultiInstanceProperties(value) {
-    const draft = value && typeof value === 'object' ? value : {};
+    const data = value && typeof value === 'object' ? value : {};
 
     return {
-      enabled: !!draft.enabled,
-      isSequential: !!draft.isSequential,
-      collection: toStr(draft.collection).trim(),
-      elementVariable: toStr(draft.elementVariable).trim(),
-      loopCardinality: toStr(draft.loopCardinality).trim(),
-      completionCondition: toStr(draft.completionCondition).trim(),
-      assigneeMode: toStr(draft.assigneeMode).trim(),
-      ids: toStr(draft.ids).trim(),
-      names: toStr(draft.names).trim()
+      enabled: !!data.enabled,
+      isSequential: !!data.isSequential,
+      collection: toStr(data.collection).trim(),
+      elementVariable: toStr(data.elementVariable).trim(),
+      loopCardinality: toStr(data.loopCardinality).trim(),
+      completionCondition: toStr(data.completionCondition).trim(),
+      assigneeMode: toStr(data.assigneeMode).trim(),
+      ids: toStr(data.ids).trim(),
+      names: toStr(data.names).trim()
     };
   }
 
@@ -39764,12 +39675,12 @@
   }
 
   function createState(entry) {
-    return createMultiInstanceProperties(getEntryValue$1(entry));
+    return createMultiInstanceProperties(entry.getValue());
   }
 
-  function applyPickedUsersToDraft(draft, pickedUsers) {
+  function applyPickedUsersToValue(value, pickedUsers) {
     return createMultiInstanceProperties({
-      ...draft,
+      ...value,
       assigneeMode: 'user',
       ids: Array.isArray(pickedUsers)
         ? pickedUsers
@@ -39788,39 +39699,10 @@
     });
   }
 
-  function setMultiInstanceFieldErrors(fieldBindings, validation) {
-    Object.keys(fieldBindings).forEach((field) => {
-      const binding = fieldBindings[field];
-      const message = getFieldValidationMessage(validation, field);
-      setControlError(binding.controlEl, binding.errorEl, message);
-    });
-  }
-
-  function clearMultiInstanceFieldErrors(fieldBindings) {
-    setMultiInstanceFieldErrors(fieldBindings, null);
-  }
-
   const DEFAULT_ELEMENT_VARIABLE = 'assignee';
   const DEFAULT_COMPLETION_CONDITION = '${auditFlowService.hasComplete(execution)}';
   const ASSIGNEE_MODE_USER = 'user';
 
-
-  function createValidationResult$1(errors = {}, payloadKey, payload) {
-    const result = {
-      valid: Object.keys(errors).length === 0,
-      errors,
-      issues: Object.keys(errors).map((field) => ({
-        field,
-        message: errors[field]
-      }))
-    };
-
-    {
-      result[payloadKey] = payload;
-    }
-
-    return result;
-  }
 
   function isTruthy(value) {
     return value === true || value === 'true';
@@ -39857,8 +39739,25 @@
     return JSON.stringify(nextLeft) === JSON.stringify(nextRight);
   }
 
+  function createValidationResult$1(errors = {}, payloadKey, payload) {
+    const result = {
+      valid: Object.keys(errors).length === 0,
+      errors,
+      issues: Object.keys(errors).map((field) => ({
+        field,
+        message: errors[field]
+      }))
+    };
+
+    {
+      result[payloadKey] = payload;
+    }
+
+    return result;
+  }
+
   function copyMultiInstance(element) {
-    const defaults = createDefaultMultiInstance(element);
+    const value = createDefaultMultiInstance(element);
     const loopCharacteristics = getLoopCharacteristics(element);
     const taskParameters = {
       assigneeMode: toStr(getTaskParameterValue(element, 'assigneeMode')),
@@ -39868,18 +39767,18 @@
 
     if (!loopCharacteristics) {
       return {
-        ...defaults,
+        ...value,
         ...taskParameters
       };
     }
 
     return {
-      ...defaults,
+      ...value,
       ...taskParameters,
       enabled: true,
       isSequential: isTruthy(loopCharacteristics.isSequential),
-      collection: getStr(getProperty(loopCharacteristics, 'flowable:collection'), defaults.collection),
-      elementVariable: getStr(getProperty(loopCharacteristics, 'flowable:elementVariable'), defaults.elementVariable),
+      collection: getStr(getProperty(loopCharacteristics, 'flowable:collection'), value.collection),
+      elementVariable: getStr(getProperty(loopCharacteristics, 'flowable:elementVariable'), value.elementVariable),
       loopCardinality: getExpressionBody(getProperty(loopCharacteristics, 'loopCardinality')),
       completionCondition: getExpressionBody(getProperty(loopCharacteristics, 'completionCondition'))
     };
@@ -39899,35 +39798,6 @@
     };
   }
 
-  function validateDraft(draft = {}) {
-    const normalizedDraft = {
-      enabled: !!draft.enabled,
-      isSequential: !!draft.isSequential,
-      collection: toStr(draft.collection),
-      elementVariable: toStr(draft.elementVariable),
-      loopCardinality: toStr(draft.loopCardinality),
-      completionCondition: toStr(draft.completionCondition),
-      assigneeMode: toStr(draft.assigneeMode),
-      ids: toStr(draft.ids),
-      names: toStr(draft.names)
-    };
-    const errors = {};
-
-    if (normalizedDraft.enabled && !getStr(normalizedDraft.collection).trim()) {
-      errors.collection = 'collection is required when multi-instance is enabled';
-    }
-
-    if (normalizedDraft.enabled && !getStr(normalizedDraft.elementVariable).trim()) {
-      errors.elementVariable = 'elementVariable is required when multi-instance is enabled';
-    }
-
-    if (normalizedDraft.enabled && normalizedDraft.assigneeMode === ASSIGNEE_MODE_USER && !getStr(normalizedDraft.ids).trim()) {
-      errors.ids = 'ids is required when assigneeMode is user';
-    }
-
-    return createValidationResult$1(errors, 'draft', normalizedDraft);
-  }
-
   function createFormalExpression(moddle, parent, body) {
     const nextBody = getStr(body).trim();
     if (!nextBody) {
@@ -39939,14 +39809,14 @@
     return expression;
   }
 
-  function createLoopCharacteristics(context, element, draft) {
+  function createLoopCharacteristics(context, element, value) {
     const businessObject = getBusinessObject(element);
     const loopCharacteristics = createElement('bpmn:MultiInstanceLoopCharacteristics', {
-      isSequential: draft.isSequential,
-      'flowable:collection': getStr(draft.collection).trim(),
-      'flowable:elementVariable': getStr(draft.elementVariable).trim(),
-      loopCardinality: createFormalExpression(context.moddle, null, draft.loopCardinality),
-      completionCondition: createFormalExpression(context.moddle, null, draft.completionCondition)
+      isSequential: value.isSequential,
+      'flowable:collection': getStr(value.collection).trim(),
+      'flowable:elementVariable': getStr(value.elementVariable).trim(),
+      loopCardinality: createFormalExpression(context.moddle, null, value.loopCardinality),
+      completionCondition: createFormalExpression(context.moddle, null, value.completionCondition)
     }, businessObject, context.bpmnFactory);
 
     if (loopCharacteristics.loopCardinality) {
@@ -39989,73 +39859,42 @@
     };
   }
 
-  function syncAssigneeParameters(context, element, draft) {
+  function syncAssigneeParameters(context, element, value) {
     const ensured = writeDefaultExtensionElements$1(context, element);
-    const oldExtensionValues = queryTypedExtensionElements(element, 'all');
+    const oldExtensionElements = ensured.extensionElements;
+    const oldExtensionValues = getProperty(oldExtensionElements, 'values') || [];
     const oldParametersElement = queryTypedExtensionElement(element, 'taskExt:Parameters');
-    const oldParameterValues = getProperty(oldParametersElement, 'values');
+    const oldParameterValues = getProperty(oldParametersElement, 'values') || [];
+    const preservedExtensionValues = oldExtensionValues.filter((value) => value !== oldParametersElement);
     const preservedParameterValues = (Array.isArray(oldParameterValues) ? oldParameterValues : []).filter((parameter) => {
       const name = toStr(getProperty(parameter, 'name')).trim();
       return name !== 'assigneeMode' && name !== 'ids' && name !== 'names';
     });
-    const isUserMode = draft.assigneeMode === ASSIGNEE_MODE_USER;
+    const isUserMode = value.assigneeMode === ASSIGNEE_MODE_USER;
     const newParameterValues = isUserMode
       ? [
         ...preservedParameterValues,
-        createElement('taskExt:Parameter', {
-          name: 'assigneeMode',
-          value: ASSIGNEE_MODE_USER
-        }, null, context.bpmnFactory),
-        createElement('taskExt:Parameter', {
-          name: 'ids',
-          value: getStr(draft.ids).trim()
-        }, null, context.bpmnFactory),
-        createElement('taskExt:Parameter', {
-          name: 'names',
-          value: toStr(draft.names)
-        }, null, context.bpmnFactory)
+        createElement('taskExt:Parameter', { name: 'assigneeMode', value: ASSIGNEE_MODE_USER }, null, context.bpmnFactory),
+        createElement('taskExt:Parameter', { name: 'ids', value: getStr(value.ids) }, null, context.bpmnFactory),
+        createElement('taskExt:Parameter', { name: 'names', value: toStr(value.names) }, null, context.bpmnFactory)
       ]
       : preservedParameterValues;
-    const preservedExtensionValues = oldExtensionValues.filter((value) => value !== oldParametersElement);
     const hasExtensionElements = !ensured.commands.length;
 
     if (!hasExtensionElements && !newParameterValues.length) {
       return {updated: false};
     }
 
-    if (!hasExtensionElements) {
-      const extensionElements = ensured.extensionElements;
-      const parametersElement = createElement(
-          'taskExt:Parameters',
-          { values: newParameterValues },
-          extensionElements,
-          context.bpmnFactory
-      );
-      newParameterValues.forEach((parameter) => {
-        parameter.$parent = parametersElement;
-      });
-      extensionElements.values = [ parametersElement ];
-
-      return {
-        updated: true,
-        result: context.modeling.updateProperties(element, { extensionElements })
-      };
-    }
-
     let newExtensionValues = preservedExtensionValues;
     if (newParameterValues.length) {
-      const parametersElement = createElement(
-          'taskExt:Parameters',
-          { values: newParameterValues },
-          ensured.extensionElements,
-          context.bpmnFactory
-      );
+      const parametersElement = createElement('taskExt:Parameters', { values: newParameterValues }, oldExtensionElements, context.bpmnFactory);
       newParameterValues.forEach((parameter) => {
         parameter.$parent = parametersElement;
       });
 
       newExtensionValues = [...newExtensionValues, parametersElement];
     }
+
     if (!newExtensionValues.length) {
       return {
         updated: true,
@@ -40071,7 +39910,7 @@
           cmd: 'element.updateModdleProperties',
           context: {
             element,
-            moddleElement: ensured.extensionElements,
+            moddleElement: oldExtensionElements,
             properties: {
               values: [ ...newExtensionValues ]
             }
@@ -40081,21 +39920,16 @@
     };
   }
 
-  function buildAssigneeParameterCommands(context, element, draft) {
+  function buildAssigneeParameterCommands(context, element, value) {
     const ensured = writeDefaultExtensionElements$1(context, element);
     const oldExtensionElements = ensured.extensionElements;
-    const oldExtensionValues = getProperty(oldExtensionElements, 'values');
-    const isUserMode = draft.assigneeMode === ASSIGNEE_MODE_USER;
+    const oldExtensionValues = getProperty(oldExtensionElements, 'values') || [];
+    const isUserMode = value.assigneeMode === ASSIGNEE_MODE_USER;
 
     const commands = [];
     let parametersElement = queryTypedExtensionElement(element, 'taskExt:Parameters');
     if (!parametersElement && isUserMode) {
-      parametersElement = createElement(
-          'taskExt:Parameters',
-          { values: [] },
-          oldExtensionElements,
-          context.bpmnFactory
-      );
+      parametersElement = createElement('taskExt:Parameters', { values: [] }, oldExtensionElements, context.bpmnFactory);
       commands.push({
         cmd: 'element.updateModdleProperties',
         context: {
@@ -40112,9 +39946,7 @@
       return commands;
     }
 
-    const parameterValues = Array.isArray(getProperty(parametersElement, 'values'))
-      ? getProperty(parametersElement, 'values')
-      : [];
+    const parameterValues = getProperty(parametersElement, 'values') || [];
     const preservedParameterValues = parameterValues.filter((parameter) => {
       const name = getStr(getProperty(parameter, 'name'), '').trim();
       return name !== 'assigneeMode' && name !== 'ids' && name !== 'names';
@@ -40123,18 +39955,9 @@
     const newParameterValues = isUserMode
       ? [
         ...preservedParameterValues,
-        createElement('taskExt:Parameter', {
-          name: 'assigneeMode',
-          value: ASSIGNEE_MODE_USER
-        }, parametersElement, context.bpmnFactory),
-        createElement('taskExt:Parameter', {
-          name: 'ids',
-          value: getStr(draft.ids).trim()
-        }, parametersElement, context.bpmnFactory),
-        createElement('taskExt:Parameter', {
-          name: 'names',
-          value: toStr(draft.names)
-        }, parametersElement, context.bpmnFactory)
+        createElement('taskExt:Parameter', { name: 'assigneeMode', value: ASSIGNEE_MODE_USER }, parametersElement, context.bpmnFactory),
+        createElement('taskExt:Parameter', { name: 'ids', value: getStr(value.ids) }, parametersElement, context.bpmnFactory),
+        createElement('taskExt:Parameter', { name: 'names', value: toStr(value.names) }, parametersElement, context.bpmnFactory)
       ]
       : preservedParameterValues;
 
@@ -40152,16 +39975,45 @@
     return [...ensured.commands, ...commands];
   }
 
-  function applyChange(context, element, draft = {}) {
-    const validation = validateDraft(draft);
+  function validateValue(value = {}) {
+    const nextValue = {
+      enabled: !!value.enabled,
+      isSequential: !!value.isSequential,
+      collection: toStr(value.collection),
+      elementVariable: toStr(value.elementVariable),
+      loopCardinality: toStr(value.loopCardinality),
+      completionCondition: toStr(value.completionCondition),
+      assigneeMode: toStr(value.assigneeMode),
+      ids: toStr(value.ids),
+      names: toStr(value.names)
+    };
+    const errors = {};
+
+    if (nextValue.enabled && !getStr(nextValue.collection).trim()) {
+      errors.collection = 'collection is required when multi-instance is enabled';
+    }
+
+    if (nextValue.enabled && !getStr(nextValue.elementVariable).trim()) {
+      errors.elementVariable = 'elementVariable is required when multi-instance is enabled';
+    }
+
+    if (nextValue.enabled && nextValue.assigneeMode === ASSIGNEE_MODE_USER && !getStr(nextValue.ids).trim()) {
+      errors.ids = 'ids is required when assigneeMode is user';
+    }
+
+    return createValidationResult$1(errors, 'value', nextValue);
+  }
+
+  function applyChange(context, element, value = {}) {
+    const validation = validateValue(value);
     const loopCharacteristics = getLoopCharacteristics(element);
 
     if (!validation.valid) {
       return { updated: false, validation };
     }
 
-    if (!validation.draft.enabled) {
-      syncAssigneeParameters(context, element, validation.draft);
+    if (!validation.value.enabled) {
+      syncAssigneeParameters(context, element, validation.value);
 
       if (!loopCharacteristics) {
         return { updated: false, validation };
@@ -40176,9 +40028,9 @@
 
     if (!loopCharacteristics) {
       const businessObject = getBusinessObject(element);
-      const nextLoopCharacteristics = createLoopCharacteristics(context, element, validation.draft);
+      const nextLoopCharacteristics = createLoopCharacteristics(context, element, validation.value);
       const commands = [
-        ...buildAssigneeParameterCommands(context, element, validation.draft),
+        ...buildAssigneeParameterCommands(context, element, validation.value),
         {
           cmd: 'element.updateModdleProperties',
           context: {
@@ -40195,12 +40047,12 @@
       return { updated: true, validation, result };
     }
 
-    const nextDraft = validation.draft;
-    const nextLoopCharacteristics = createLoopCharacteristics(context, element, nextDraft);
+    const nextData = validation.value;
+    const nextLoopCharacteristics = createLoopCharacteristics(context, element, nextData);
     const result = context.modeling.updateProperties(element, {
       loopCharacteristics: nextLoopCharacteristics
     });
-    syncAssigneeParameters(context, element, validation.draft);
+    syncAssigneeParameters(context, element, validation.value);
 
     return { updated: true, validation, result };
   }
@@ -40215,38 +40067,25 @@
     }
 
     entry.getValue = () => {
-      const derivedDraft = copyMultiInstance(element);
-      const pendingDraft = uiState && uiState.pendingMultiInstanceDraft;
+      const derivedValue = copyMultiInstance(element);
+      const pendingResult = uiState && uiState.pendingMultiInstanceResult;
 
-      if (!pendingDraft || pendingDraft.elementId !== getElementId(element)) {
-        return derivedDraft;
+      if (!pendingResult || pendingResult.elementId !== getElementId(element)) {
+        return derivedValue;
       }
 
-      if (isSameMultiInstanceState(derivedDraft, pendingDraft.draft)) {
-        uiState.pendingMultiInstanceDraft = null;
-        return derivedDraft;
+      if (isSameMultiInstanceState(derivedValue, pendingResult.value)) {
+        uiState.pendingMultiInstanceResult = null;
+        return derivedValue;
       }
 
-      return pendingDraft.draft;
+      return pendingResult.value;
     };
-    entry.validate = (draft) => validateDraft(draft);
-    entry.pickUsers = (draft = {}) => {
-      if (!userPicker) {
-        return null;
-      }
-
-      return userPicker({
-        element,
-        draft,
-        groupId: 'multi-instance',
-        entryKey: entry.key || null
-      });
-    };
-    entry.setValue = (draft) => {
+    entry.setValue = (value) => {
       if (uiState) {
-        uiState.pendingMultiInstanceDraft = {
+        uiState.pendingMultiInstanceResult = {
           elementId: getElementId(element),
-          draft: createMultiInstanceProperties(draft)
+          value: createMultiInstanceProperties(value)
         };
         uiState.suppressMultiInstanceRender = {
           elementId: getElementId(element),
@@ -40254,31 +40093,33 @@
         };
       }
 
-      if (!context) {
-        return {
-          updated: false,
-          notApplied: true,
-          reason: 'missing-context',
-          validation: validateDraft(draft)
-        };
-      }
-
-      const result = applyChange(context, element, draft);
+      const result = applyChange(context, element, value);
 
       if (uiState && (!result || !result.updated)) {
-        uiState.pendingMultiInstanceDraft = null;
+        uiState.pendingMultiInstanceResult = null;
       }
 
       return result;
+    };
+    entry.validate = (value) => validateValue(value);
+    entry.pickUsers = (value = {}) => {
+      if (!userPicker) {
+        return null;
+      }
+
+      return userPicker({
+        element,
+        value: value,
+        groupId: 'multi-instance',
+        entryKey: entry.key || null
+      });
     };
 
     return entry;
   }
 
   function bindMultiInstanceEntry(entry, group, element, options) {
-    // const entry = findGroupEntry(panelState, 'multi-instance', 'multiInstanceEditor');
-
-    if (!!(entry && group && group.id === 'multi-instance' && entry.key === 'multiInstanceEditor')) {
+    if (!(entry && group && group.id === 'multi-instance' && entry.key === 'multiInstanceEditor')) {
       return;
     }
 
@@ -40286,24 +40127,8 @@
   }
 
   var writer$1 = {
-    bindMultiInstanceEntry,
-    createMultiInstanceEntryAdapter,
-    createDefaultMultiInstance,
-    validateDraft
+    bindMultiInstanceEntry
   };
-
-  function applySelectMode(selectEl, options = {}) {
-    const selectMode = options.selectMode || 'native';
-    if (typeof selectEl.setAttribute !== 'function') {
-      return;
-    }
-
-    if (selectMode === 'layui' && options.layFilter) {
-      selectEl.setAttribute('lay-filter', options.layFilter);
-    } else {
-      selectEl.setAttribute('lay-ignore', '');
-    }
-  }
 
   function previewUI(value) {
     const names = getMultiInstanceSelectedNames(value);
@@ -40317,7 +40142,7 @@
     ).join('');
   }
 
-  function editorUI(draft) {
+  function editorUI(state) {
     return `
     <div class="layui-bpmn-panel__multi-instance-editor" data-editor-kind="multi-instance">
     <div class="layui-bpmn-panel__multi-instance-fields">
@@ -40364,7 +40189,7 @@
       <label class="layui-form-label layui-bpmn-panel__entry-label"><span>已选用户</span></label>
       <div class="layui-input-block layui-bpmn-panel__multi-instance-field-mount">
         <div class="layui-bpmn-panel__entry-preview layui-bpmn-panel__multi-instance-preview layui-bpmn-panel__multi-instance-preview--readonly" data-field="names">
-          ${previewUI(draft.names)}
+          ${previewUI(state.names)}
         </div>
         <div class="layui-bpmn-panel__entry-error"></div>
       </div>
@@ -40429,17 +40254,29 @@
     toggleClassName(binding.fieldEl, 'layui-bpmn-panel__multi-instance-field--disabled', !!disabled);
   }
 
+  function setMultiInstanceFieldErrors(fieldBindings, validation) {
+    Object.keys(fieldBindings).forEach((field) => {
+      const binding = fieldBindings[field];
+      const message = getFieldValidationMessage(validation, field);
+      setControlError(binding.controlEl, binding.errorEl, message);
+    });
+  }
+
+  function clearMultiInstanceFieldErrors(fieldBindings) {
+    setMultiInstanceFieldErrors(fieldBindings, null);
+  }
+
   class MultiInstanceComponent {
     constructor(entry) {
       this.entry = entry;
-      this.draft = createState(entry);
+      this.state = createState(entry);
     }
 
     mount(mountEl) {
       const entry = this.entry;
-      let draft = this.draft;
+      let state = this.state;
 
-      renderHtml(mountEl, editorUI(draft));
+      renderHtml(mountEl, editorUI(state));
 
       const editorEl = mountEl.querySelector('[data-editor-kind="multi-instance"]');
       const fieldsEl = editorEl.querySelector('.layui-bpmn-panel__multi-instance-fields');
@@ -40464,14 +40301,13 @@
       const completionConditionEl = completionConditionField.controlEl;
       const namesPreviewEl = namesField.controlEl;
 
-      enabledInputEl.checked = !!draft.enabled;
-      isSequentialInputEl.checked = !!draft.isSequential;
-      assigneeModeSelectEl.value = draft.assigneeMode;
-      applySelectMode(assigneeModeSelectEl, { selectMode: 'native' });
-      collectionInputEl.value = draft.collection;
-      elementVariableInputEl.value = draft.elementVariable;
-      loopCardinalityInputEl.value = draft.loopCardinality;
-      completionConditionEl.value = draft.completionCondition;
+      enabledInputEl.checked = !!state.enabled;
+      isSequentialInputEl.checked = !!state.isSequential;
+      assigneeModeSelectEl.value = state.assigneeMode;
+      collectionInputEl.value = state.collection;
+      elementVariableInputEl.value = state.elementVariable;
+      loopCardinalityInputEl.value = state.loopCardinality;
+      completionConditionEl.value = state.completionCondition;
 
       const fieldBindings = {
         enabled: enabledField,
@@ -40484,18 +40320,18 @@
         completionCondition: completionConditionField
       };
 
-      const syncComponentDraft = () => {
-        this.draft = draft;
+      const syncComponentValue = () => {
+        this.state = state;
       };
 
       function syncNamesPreview() {
-        renderPreviewValue(namesPreviewEl, draft.names);
+        renderPreviewValue(namesPreviewEl, state.names);
       }
 
       function syncUserButtonsState() {
-        const count = getMultiInstanceSelectedNames(draft.names).length;
-        const isUserMode = draft.assigneeMode === 'user';
-        const disabled = !draft.enabled;
+        const count = getMultiInstanceSelectedNames(state.names).length;
+        const isUserMode = state.assigneeMode === 'user';
+        const disabled = !state.enabled;
 
         pickUsersButtonEl.disabled = disabled;
         clearUsersButtonEl.disabled = disabled || !isUserMode || count === 0;
@@ -40503,19 +40339,19 @@
       }
 
       function syncAssigneeModeFields() {
-        const isUserMode = draft.assigneeMode === 'user';
+        const isUserMode = state.assigneeMode === 'user';
 
         idsField.fieldEl.hidden = !isUserMode;
         namesField.fieldEl.hidden = !isUserMode;
       }
 
       function syncFieldAvailability() {
-        const disabled = !draft.enabled;
+        const disabled = !state.enabled;
 
         setControlDisabled(isSequentialField, disabled);
         setControlDisabled(assigneeModeField, disabled);
-        setControlDisabled(idsField, disabled || draft.assigneeMode !== 'user');
-        setControlDisabled(namesField, disabled || draft.assigneeMode !== 'user');
+        setControlDisabled(idsField, disabled || state.assigneeMode !== 'user');
+        setControlDisabled(namesField, disabled || state.assigneeMode !== 'user');
         setControlDisabled(collectionField, disabled);
         setControlDisabled(elementVariableField, disabled);
         setControlDisabled(loopCardinalityField, disabled);
@@ -40523,10 +40359,8 @@
         syncUserButtonsState();
       }
 
-      function submitDraft(nextDraft, options = {}) {
-        const validation = options.skipValidation
-          ? { valid: true }
-          : (typeof entry.validate === 'function' ? entry.validate(nextDraft) : { valid: true });
+      function submitValue(value, options = {}) {
+        const validation = options.skipValidation ? { valid: true } : entry.validate(value);
 
         if (!options.skipValidation) {
           setMultiInstanceFieldErrors(fieldBindings, validation);
@@ -40536,12 +40370,12 @@
           return {updated: false, validation};
         }
 
-        const result = typeof entry.setValue === 'function' ? entry.setValue(nextDraft) : { updated: false };
+        const result = entry.setValue(value);
         setMultiInstanceFieldErrors(fieldBindings, result && result.validation);
 
         if (result && result.updated === true) {
-          draft = createMultiInstanceProperties(nextDraft);
-          syncComponentDraft();
+          state = createMultiInstanceProperties(value);
+          syncComponentValue();
         }
 
         return result;
@@ -40549,16 +40383,12 @@
 
       function bindCommitOnBlur(controlEl, onReadValue) {
         function commitValue() {
-          if (!draft.enabled) {
+          if (!state.enabled) {
             return;
           }
 
-          const nextDraft = {
-            ...draft,
-            ...onReadValue()
-          };
-
-          const result = submitDraft(nextDraft);
+          const nextValue = { ...state, ...onReadValue() };
+          const result = submitValue(nextValue);
           if (result && result.updated === true) {
             syncFieldAvailability();
           }
@@ -40583,94 +40413,94 @@
       syncFieldAvailability();
 
       enabledInputEl.addEventListener('change', () => {
-        if (!!enabledInputEl.checked === !!draft.enabled) {
+        if (!!enabledInputEl.checked === !!state.enabled) {
           syncFieldAvailability();
           return;
         }
 
-        const lastDraft = { ...draft };
-        const nextDraft = {...draft, enabled: !!enabledInputEl.checked};
+        const lastValue = { ...state };
+        const nextValue = {...state, enabled: !!enabledInputEl.checked};
 
-        draft = createMultiInstanceProperties(nextDraft);
-        syncComponentDraft();
+        state = createMultiInstanceProperties(nextValue);
+        syncComponentValue();
         syncFieldAvailability();
 
-        const result = nextDraft.enabled ? submitDraft(nextDraft) : submitDraft(nextDraft, { skipValidation: true });
+        const result = nextValue.enabled ? submitValue(nextValue) : submitValue(nextValue, { skipValidation: true });
         if (result && result.updated === true) {
           clearMultiInstanceFieldErrors(fieldBindings);
           syncFieldAvailability();
           return;
         }
 
-        if (!nextDraft.enabled) {
-          draft = createMultiInstanceProperties(lastDraft);
-          enabledInputEl.checked = !!draft.enabled;
-          syncComponentDraft();
+        if (!nextValue.enabled) {
+          state = createMultiInstanceProperties(lastValue);
+          enabledInputEl.checked = !!state.enabled;
+          syncComponentValue();
           syncFieldAvailability();
         }
       });
 
       isSequentialInputEl.addEventListener('change', () => {
-        draft.isSequential = !!isSequentialInputEl.checked;
-        syncComponentDraft();
+        state.isSequential = !!isSequentialInputEl.checked;
+        syncComponentValue();
 
-        if (draft.enabled) {
-          submitDraft({...draft});
+        if (state.enabled) {
+          submitValue({...state});
         }
       });
 
       assigneeModeSelectEl.addEventListener('change', () => {
         let nextValue = assigneeModeSelectEl.value;
 
-        draft.assigneeMode = toStr(nextValue).trim();
-        assigneeModeSelectEl.value = draft.assigneeMode;
+        state.assigneeMode = toStr(nextValue).trim();
+        assigneeModeSelectEl.value = state.assigneeMode;
 
-        if (draft.assigneeMode !== 'user') {
-          draft.ids = '';
-          draft.names = '';
+        if (state.assigneeMode !== 'user') {
+          state.ids = '';
+          state.names = '';
         }
 
-        syncComponentDraft();
+        syncComponentValue();
         syncNamesPreview();
         syncUserButtonsState();
         syncAssigneeModeFields();
         syncFieldAvailability();
 
-        if (!draft.enabled) {
+        if (!state.enabled) {
           return;
         }
 
-        if (draft.assigneeMode === 'user' && !toStr(draft.ids).trim()) {
+        if (state.assigneeMode === 'user' && !toStr(state.ids).trim()) {
           clearMultiInstanceFieldErrors(fieldBindings);
           return;
         }
 
-        submitDraft({...draft});
+        submitValue({...state});
       });
 
       clearUsersButtonEl.addEventListener('click', () => {
-        if (!draft.enabled || draft.assigneeMode !== 'user') {
+        if (!state.enabled || state.assigneeMode !== 'user') {
           return;
         }
 
-        draft.ids = '';
-        draft.names = '';
-        syncComponentDraft();
+        state.ids = '';
+        state.names = '';
+        syncComponentValue();
 
         syncNamesPreview();
         syncUserButtonsState();
 
-        submitDraft({...draft});
+        submitValue({...state});
       });
 
       pickUsersButtonEl.addEventListener('click', async () => {
-        if (!draft.enabled || typeof entry.pickUsers !== 'function') {
+        if (!state.enabled || typeof entry.pickUsers !== 'function') {
           return;
         }
 
         let pickedUsers = null;
         try {
-          pickedUsers = await entry.pickUsers({ ...draft });
+          pickedUsers = await entry.pickUsers({ ...state });
         } catch (error) {
           return;
         }
@@ -40679,51 +40509,51 @@
           return;
         }
 
-        draft = applyPickedUsersToDraft(draft, pickedUsers);
-        syncComponentDraft();
+        state = applyPickedUsersToValue(state, pickedUsers);
+        syncComponentValue();
 
-        assigneeModeSelectEl.value = draft.assigneeMode;
+        assigneeModeSelectEl.value = state.assigneeMode;
         syncNamesPreview();
         syncUserButtonsState();
         syncAssigneeModeFields();
         syncFieldAvailability();
 
-        submitDraft({...draft});
+        submitValue({...state});
       });
 
       collectionInputEl.addEventListener('input', () => {
-        draft.collection = toStr(collectionInputEl.value);
-        syncComponentDraft();
+        state.collection = toStr(collectionInputEl.value);
+        syncComponentValue();
 
-        if (draft.enabled) {
-          submitDraft({...draft});
+        if (state.enabled) {
+          submitValue({...state});
         }
       });
 
       elementVariableInputEl.addEventListener('input', () => {
-        draft.elementVariable = toStr(elementVariableInputEl.value);
-        syncComponentDraft();
+        state.elementVariable = toStr(elementVariableInputEl.value);
+        syncComponentValue();
 
-        if (draft.enabled) {
-          submitDraft({...draft});
+        if (state.enabled) {
+          submitValue({...state});
         }
       });
 
       loopCardinalityInputEl.addEventListener('input', () => {
-        draft.loopCardinality = toStr(loopCardinalityInputEl.value);
-        syncComponentDraft();
+        state.loopCardinality = toStr(loopCardinalityInputEl.value);
+        syncComponentValue();
 
-        if (draft.enabled) {
-          submitDraft({...draft});
+        if (state.enabled) {
+          submitValue({...state});
         }
       });
 
       completionConditionEl.addEventListener('input', () => {
-        draft.completionCondition = toStr(completionConditionEl.value);
-        syncComponentDraft();
+        state.completionCondition = toStr(completionConditionEl.value);
+        syncComponentValue();
 
-        if (draft.enabled) {
-          submitDraft({...draft});
+        if (state.enabled) {
+          submitValue({...state});
         }
       });
 
@@ -40737,11 +40567,9 @@
         loopCardinality: toStr(loopCardinalityInputEl.value)
       }));
       completionConditionEl.addEventListener('blur', () => {
-        if (!draft.enabled) {
-          return;
+        if (state.enabled) {
+          submitValue({...state, completionCondition: toStr(completionConditionEl.value)});
         }
-
-        submitDraft({...draft, completionCondition: toStr(completionConditionEl.value)});
       });
 
       return {
@@ -40816,18 +40644,8 @@
     };
   }
 
-  function unwrapDraftValue(value) {
-    return value && value.draft ? value.draft : value;
-  }
-
   function unwrapItemsValue(value) {
     return Array.isArray(value) ? value : value && value.items;
-  }
-
-  function createDefaultExtension() {
-    return {
-      key: ''
-    };
   }
 
   function createExtensionProperties(extension = {}) {
@@ -40836,18 +40654,11 @@
     };
   }
 
-  function resolveExtensionProperties(value = {}) {
-    return createExtensionProperties(value.extension || value.draft || value);
-  }
-
   function createExtensionValue(element) {
     return {
       kind: 'extension-editor',
       scope: 'parameter',
-      items: listExtensions(element),
-      draft: createDefaultExtension(),
-      createDefaultExtension,
-      validators
+      items: listExtensions(element)
     };
 
   }
@@ -40872,27 +40683,13 @@
     };
   }
 
-  function getParameterAtIndex(element, index) {
-    const { parametersElement, values } = getParametersValues(element);
-    const parameter = Number.isInteger(index) && index >= 0 && index < values.length
-      ? values[index]
-      : null;
-
-    return {
-      parametersElement,
-      values,
-      parameter
-    };
-  }
-
   function getParameterIndex(value = {}) {
     if (Number.isInteger(value.parameterIndex)) {
       return value.parameterIndex;
     }
 
-    const draft = unwrapDraftValue(value);
-
-    return Number.isInteger(draft && draft.parameterIndex) ? draft.parameterIndex : null;
+    const data = value.value;
+    return Number.isInteger(data && data.parameterIndex) ? data.parameterIndex : -1;
   }
 
   function getExtensionIndex(value = {}) {
@@ -40900,20 +40697,8 @@
       return value.extensionIndex;
     }
 
-    if (Number.isInteger(value.index)) {
-      return value.index;
-    }
-
-    const draft = unwrapDraftValue(value);
-
-    return Number.isInteger(draft && draft.extensionIndex) ? draft.extensionIndex : null;
-  }
-
-  function createExtensionValidationForItems(items = []) {
-    return {
-      ...uniqueKeys(items),
-      extensions: Array.isArray(items) ? items.map((item) => createExtensionProperties(item)) : []
-    };
+    const data =  value.value;
+    return Number.isInteger(data && data.extensionIndex) ? data.extensionIndex : -1;
   }
 
   function createDefaultParameterExtensionsElement(context, element, parameter) {
@@ -40944,26 +40729,23 @@
     const items = listExtensions(element);
     const parameterIndex = getParameterIndex(value);
     const extensionIndex = getExtensionIndex(value);
-    const draft = resolveExtensionProperties(value);
+    const nextValue = createExtensionProperties(value.value);
 
     if (action === 'add') {
       return [
         ...items,
         {
-          parameterIndex,
+          parameterIndex: parameterIndex == -1 ? null : parameterIndex,
           extensionIndex: null,
-          ...draft
+          ...nextValue
         }
       ];
-    }
-
-    if (action === 'update') {
-      return items.map((item) => (item.parameterIndex === parameterIndex && item.extensionIndex === extensionIndex
-              ? { ...item, ...draft } : item
+    } else if (action === 'update') {
+      return items.map((item) => (
+          item.parameterIndex === parameterIndex && item.extensionIndex === extensionIndex
+              ? { ...item, ...nextValue } : item
       ));
-    }
-
-    if (action === 'remove') {
+    } else if (action === 'remove') {
       return items.filter((item) => !(item.parameterIndex === parameterIndex && item.extensionIndex === extensionIndex));
     }
 
@@ -40972,7 +40754,8 @@
 
   function applyExtensionAdd(context, element, value = {}, validation) {
     const parameterIndex = getParameterIndex(value);
-    const { parameter } = getParameterAtIndex(element, parameterIndex);
+    const { values: parameters } = getParametersValues(element);
+    const parameter = -1 < parameterIndex && parameterIndex < parameters.length ? parameters[parameterIndex] : null;
 
     if (!parameter) {
       return { updated: false, reason: 'parameter-not-found', validation };
@@ -40980,9 +40763,7 @@
 
     const ensured = createDefaultParameterExtensionsElement(context, element, parameter);
     const { values } = getExtensionValues(parameter);
-    const newExtension = createElement('taskExt:Extension',
-        resolveExtensionProperties(value),
-        ensured.extensionsElement, context.bpmnFactory);
+    const newExtension = createElement('taskExt:Extension', createExtensionProperties(value.value), ensured.extensionsElement, context.bpmnFactory);
 
     const result = executeCommands(context.commandStack, [
       ...ensured.commands,
@@ -41002,24 +40783,21 @@
       updated: true,
       result,
       validation,
-      extension: newExtension,
       value: createExtensionValue(element)
     };
   }
 
   function applyExtensionUpdate(context, element, value = {}, validation) {
     const parameterIndex = getParameterIndex(value);
+    const { values: parameters } = getParametersValues(element);
+    const parameter = -1 < parameterIndex && parameterIndex < parameters.length ? parameters[parameterIndex] : null;
     const extensionIndex = getExtensionIndex(value);
-    const { parameter } = getParameterAtIndex(element, parameterIndex);
     const { values } = getExtensionValues(parameter);
-    const extension = Number.isInteger(extensionIndex) ? values[extensionIndex] : null;
+
+    const extension = -1 < extensionIndex && extensionIndex < values.length ? values[extensionIndex] : null;
 
     if (!extension) {
-      return {
-        updated: false,
-        reason: 'extension-not-found',
-        validation
-      };
+      return { updated: false, reason: 'extension-not-found', validation };
     }
 
     const result = executeCommands(context.commandStack, [{
@@ -41027,7 +40805,7 @@
         context: {
           element,
           moddleElement: extension,
-          properties: resolveExtensionProperties(value)
+          properties: createExtensionProperties(value.value)
         }
       }]
     );
@@ -41036,17 +40814,17 @@
       updated: true,
       result,
       validation,
-      extension,
       value: createExtensionValue(element)
     };
   }
 
   function applyExtensionRemove(context, element, value = {}, validation) {
     const parameterIndex = getParameterIndex(value);
+    const { values: parameters } = getParametersValues(element);
+    const parameter = -1 < parameterIndex && parameterIndex < parameters.length ? parameters[parameterIndex] : null;
     const extensionIndex = getExtensionIndex(value);
-    const { parameter } = getParameterAtIndex(element, parameterIndex);
     const { extensionsElement, values } = getExtensionValues(parameter);
-    const extension = Number.isInteger(extensionIndex) ? values[extensionIndex] : null;
+    const extension = -1 < extensionIndex && extensionIndex < values.length ? values[extensionIndex] : null;
 
     if (!extensionsElement || !extension) {
       return {
@@ -41120,8 +40898,7 @@
       }
 
       const extensionElements = nextExtensions
-          .map((extension) => createElement('taskExt:Extension', extension,
-              ensured.extensionsElement, context.bpmnFactory))
+          .map((extension) => createElement('taskExt:Extension', extension, ensured.extensionsElement, context.bpmnFactory))
           .filter(Boolean);
 
       commands.push(...ensured.commands, {
@@ -41155,14 +40932,14 @@
   }
 
   function validateParameter(parameter = {}) {
-    const normalizedParameter = createParameterProperties(parameter);
+    const nextValue = createParameterProperties(parameter);
     const errors = {};
 
-    if (!getStr(normalizedParameter.name).trim()) {
+    if (!getStr(nextValue.name).trim()) {
       errors.name = 'name is required';
     }
 
-    return createValidationResult(errors, 'parameter', normalizedParameter);
+    return createValidationResult(errors, 'value', nextValue);
   }
 
   function addParameter(context, element, parameter = {}) {
@@ -41213,8 +40990,7 @@
     return {
       updated: true,
       result,
-      parameter: parameterElement,
-      parametersElement
+      value: parameter
     };
   }
 
@@ -41239,15 +41015,7 @@
     return {
       updated: true,
       result,
-      parameter: parameterElement,
-      parametersElement
-    };
-  }
-
-  function createDefaultParameter(name = 'Parameter_0') {
-    return {
-      name: getStr(name, 'Parameter_0') || 'Parameter_0',
-      value: ''
+      value: parameter
     };
   }
 
@@ -41261,10 +41029,7 @@
   function createParameterValue(element) {
     return {
       kind: 'parameter-editor',
-      items: listParameters(element),
-      draft: createDefaultParameter(),
-      createDefaultParameter: createDefaultParameter,
-      validateParameter
+      items: listParameters(element)
     };
   }
 
@@ -41273,10 +41038,7 @@
 
     return values.map((parameter, index) => ({
       index,
-      ...createParameterProperties({
-        name: getProperty(parameter, 'name'),
-        value: getProperty(parameter, 'value')
-      })
+      ...createParameterProperties({ name: getProperty(parameter, 'name'), value: getProperty(parameter, 'value') })
     }));
   }
 
@@ -41290,20 +41052,18 @@
         parameterIndex,
         parameterName: getStr(getProperty(parameter, 'name')),
         extensionIndex,
-        ...createExtensionProperties({
-          key: getProperty(extension, 'key')
-        })
+        ...createExtensionProperties({ key: getProperty(extension, 'key') })
       }));
     });
   }
 
-  function uniqueKeys(extensions = []) {
-    const normalizedExtensions = Array.isArray(extensions)
+  function validateExtensions(extensions = []) {
+    const nextData = Array.isArray(extensions)
       ? extensions.map((extension) => createExtensionProperties(extension))
       : [];
     const keyIndexes = new Map();
 
-    normalizedExtensions.forEach((extension, index) => {
+    nextData.forEach((extension, index) => {
       const key = getStr(extension.key).trim();
 
       if (!key) {
@@ -41336,12 +41096,12 @@
       valid: issues.length === 0,
       duplicateKeys: issues.map((issue) => issue.key),
       issues,
-      extensions: normalizedExtensions
+      extensions: nextData
     };
   }
 
   function applyParameterChange(context, element, value = {}) {
-    const nextValue = unwrapDraftValue(value);
+    const nextValue = value.value;
     const validation = validateParameter(nextValue);
     const nextIndex = Number.isInteger(value && value.index)
       ? value.index
@@ -41352,8 +41112,8 @@
     }
 
     const result = nextIndex === null
-      ? addParameter(context, element, validation.parameter)
-      : updateParameter(context, element, nextIndex, validation.parameter);
+      ? addParameter(context, element, validation.value)
+      : updateParameter(context, element, nextIndex, validation.value);
 
     return {
       ...result,
@@ -41364,44 +41124,36 @@
   function applyExtensionChange(context, element, value = {}) {
     const action = getStr(value.action);
     const nextItems = action ? getNextExtensionItemsForAction(element, value) : unwrapItemsValue(value);
-    const validation = createExtensionValidationForItems(nextItems);
+    const validation = validateExtensions(nextItems);
 
     if (!validation.valid) {
       return { updated: false, validation };
     }
 
-    if (action === 'add') {
-      return applyExtensionAdd(context, element, value, validation);
-    }
+    switch (action) {
+      case 'add':
+        return applyExtensionAdd(context, element, value, validation);
+      case 'update':
+        return applyExtensionUpdate(context, element, value, validation);
+      case 'remove':
+        return applyExtensionRemove(context, element, value, validation);
+      default:
+        if (Array.isArray(nextItems)) {
+          return applyExtensionListReplacement(context, element, value, validation);
+        }
 
-    if (action === 'update') {
-      return applyExtensionUpdate(context, element, value, validation);
+        return {updated: false, reason: 'unsupported-action', validation};
     }
-
-    if (action === 'remove') {
-      return applyExtensionRemove(context, element, value, validation);
-    }
-
-    if (Array.isArray(nextItems)) {
-      return applyExtensionListReplacement(context, element, value, validation);
-    }
-
-    return {
-      updated: false,
-      reason: 'unsupported-action',
-      validation
-    };
   }
 
   function createParameterEntryAdapter(entry, element, options = {}) {
     const context = options.context || null;
-
     if (!entry) {
       return entry;
     }
 
     entry.getValue = () => createParameterValue(element);
-    entry.validate = (value = {}) => validateParameter(unwrapDraftValue(value));
+    entry.validate = (value = {}) => validateParameter(value.value);
     entry.setValue = (value = {}) => applyParameterChange(context, element, value);
 
     return entry;
@@ -41409,21 +41161,18 @@
 
   function createExtensionEntryAdapter(entry, element, options = {}) {
     const context = options.context || null;
-
     if (!entry) {
       return entry;
     }
 
     entry.getValue = () => createExtensionValue(element);
-    entry.validate = (value = {}) => uniqueKeys(unwrapItemsValue(value));
+    entry.validate = (value = {}) => validateExtensions(value.values);
     entry.setValue = (value = {}) => applyExtensionChange(context, element, value);
 
     return entry;
   }
 
   function bindParameterEntry(entry, group, element, options = {}) {
-    // const entry = findGroupEntry(panelState, 'parameters', 'parameterEditor');
-
     if (!!(entry && group && group.id === 'parameters' && entry.key === 'parameterEditor')) {
       return;
     }
@@ -41432,59 +41181,18 @@
   }
 
   function bindExtensionEntry(entry, group, element, options = {}) {
-    // const entry = findGroupEntry(panelState, 'parameters', 'extensionEditor');
-
-    if (!!(entry && group && group.id === 'parameters' && entry.key === 'extensionEditor')) {
+    if (!(entry && group && group.id === 'parameters' && entry.key === 'extensionEditor')) {
       return;
     }
 
     createExtensionEntryAdapter(entry, element, options);
   }
 
-  const validators = {
-    uniqueKeys
-  };
-
-  const parameters = {
-    bindParameterEntry,
-    createDefaultParameter,
-    createEntryAdapter: createParameterEntryAdapter,
-    createValue: createParameterValue,
-    validateParameter
-  };
-
-  const extensions = {
-    bindExtensionEntry,
-    createDefaultExtension,
-    createEntryAdapter: createExtensionEntryAdapter,
-    createValue: createExtensionValue,
-    validators
-  };
 
   var writer = {
     bindExtensionEntry,
-    bindParameterEntry,
-    createExtensionEntryAdapter,
-    createParameterEntryAdapter,
-    createDefaultExtension,
-    createDefaultParameter,
-    extensions,
-    parameters,
-    validateParameter,
-    validators
+    bindParameterEntry
   };
-
-  function getEntryValue(entry) {
-    if (!entry || typeof entry.getValue !== 'function') {
-      return null;
-    }
-
-    try {
-      return entry.getValue();
-    } catch (error) {
-      return null;
-    }
-  }
 
   function getItems(value) {
     return value && Array.isArray(value.items) ? value.items : [];
@@ -41542,7 +41250,7 @@
     }
 
     mount(mountEl) {
-      const value = getEntryValue(this.entry);
+      const value = this.entry.getValue();
 
       if (this.entry && this.entry.component === 'ExtensionEditor') {
         renderHtml(mountEl, extensionPreviewUI(value));
@@ -41633,9 +41341,11 @@
   }
 
   function resolveEntryComponent(entry) {
-    return entryComponents.find((component) => (component
+    return entryComponents.find((component) => (
+        component
         && typeof component.supportsEntry === 'function'
-        && component.supportsEntry(entry))) || null;
+        && component.supportsEntry(entry)
+    )) || null;
   }
 
   function renderGroup(group, element, options = {}) {
@@ -41685,14 +41395,14 @@
   const VALIDATOR_KIND = 'panel-validator';
   const VALIDATOR_STATUS = 'not-implemented';
 
-  function getGroupIds$1(schema) {
-    return (schema && Array.isArray(schema.groups) ? schema.groups : []).map((group) => group.id);
+  function getGroupIds$1(setting) {
+    return (setting && Array.isArray(setting.groups) ? setting.groups : []).map((group) => group.id);
   }
 
-  function createValidationContext(schema, element) {
+  function createValidationContext(setting, element) {
     return {
       elementId: element && element.id ? element.id : '',
-      groupIds: getGroupIds$1(schema)
+      groupIds: getGroupIds$1(setting)
     };
   }
 
@@ -41707,18 +41417,18 @@
     };
   }
 
+  function createGroupValidationDescriptor(element, groupId, values = {}) {
+    return createDescriptor$1('panel-validate-group', element, {
+      groupId,
+      values
+    });
+  }
+
   function createFieldValidationDescriptor(element, groupId, fieldId, value) {
     return createDescriptor$1('panel-validate-field', element, {
       groupId,
       fieldId,
       value
-    });
-  }
-
-  function createGroupValidationDescriptor(element, groupId, values = {}) {
-    return createDescriptor$1('panel-validate-group', element, {
-      groupId,
-      values
     });
   }
 
@@ -41728,8 +41438,8 @@
     });
   }
 
-  function createValidator(schema, element) {
-    const context = createValidationContext(schema, element);
+  function createValidator(setting, element) {
+    const context = createValidationContext(setting, element);
 
     const validator = {
       kind: VALIDATOR_KIND,
@@ -41766,8 +41476,8 @@
   const WRITER_KIND = 'panel-writer';
   const WRITER_STATUS = 'not-implemented';
 
-  function getGroupIds(schema) {
-    return (schema && Array.isArray(schema.groups) ? schema.groups : []).map((group) => group.id);
+  function getGroupIds(setting) {
+    return (setting && Array.isArray(setting.groups) ? setting.groups : []).map((group) => group.id);
   }
 
   function createDescriptor(type, element, payload = {}) {
@@ -41780,6 +41490,13 @@
     };
   }
 
+  function createGroupWriteDescriptor(element, groupId, values = {}) {
+    return createDescriptor('panel-write-group', element, {
+      groupId,
+      values
+    });
+  }
+
   function createFieldWriteDescriptor(element, groupId, fieldId, value) {
     return createDescriptor('panel-write-field', element, {
       groupId,
@@ -41788,15 +41505,8 @@
     });
   }
 
-  function createGroupWriteDescriptor(element, groupId, values = {}) {
-    return createDescriptor('panel-write-group', element, {
-      groupId,
-      values
-    });
-  }
-
-  function createWriter(schema, element) {
-    const groupIds = getGroupIds(schema);
+  function createWriter(setting, element) {
+    const groupIds = getGroupIds(setting);
 
     return {
       kind: WRITER_KIND,
@@ -41817,7 +41527,7 @@
     };
   }
 
-  const EMPTY_PANEL_STATE = {
+  const EMPTY_SETTING = {
     title: '未选择节点',
     elementType: '',
     groups: []
@@ -41843,35 +41553,21 @@
   }
 
   function getElementValue(element, key) {
-    const businessObject = getElementBusinessObject(element);
-
     if (!key) {
       return '';
     }
 
+    const businessObject = getElementBusinessObject(element);
+    const value = getProperty(businessObject, key) !== undefined ? getProperty(businessObject, key) : '';
     if (key === 'conditionExpression') {
-      const conditionExpression = businessObject.conditionExpression || (
-        typeof businessObject.get === 'function' ? businessObject.get('conditionExpression') : null
-      );
-
-      if (!conditionExpression) {
+      if (!value) {
         return '';
       }
 
-      return conditionExpression.body || conditionExpression.value || '';
+      return value.body || value.value || '';
     }
 
-    if (Object.prototype.hasOwnProperty.call(businessObject, key)) {
-      return businessObject[key] === undefined || businessObject[key] === null ? '' : businessObject[key];
-    }
-
-    if (typeof businessObject.get === 'function') {
-      const value = businessObject.get(key);
-
-      return value === undefined || value === null ? '' : value;
-    }
-
-    return '';
+    return value;
   }
 
   function getElementType(element) {
@@ -41964,10 +41660,10 @@
   }
 
   function createEmptyPanelSetting() {
-    const setting = createPanelSetting(null, EMPTY_PANEL_STATE.groups);
+    const setting = createPanelSetting(null, EMPTY_SETTING.groups);
 
-    setting.title = EMPTY_PANEL_STATE.title;
-    setting.elementType = EMPTY_PANEL_STATE.elementType;
+    setting.title = EMPTY_SETTING.title;
+    setting.elementType = EMPTY_SETTING.elementType;
 
     return setting;
   }
@@ -42156,8 +41852,10 @@
     return `
     <form class="layui-form layui-form-pane layui-bpmn-panel">
         <fieldset class="layui-elem-field layui-field-title layui-bpmn-panel__header">
-        <legend class="layui-bpmn-panel__title">${escapeHtml(title)}</legend>
-        <div class="layui-bpmn-panel__type">${escapeHtml(elementType)}</div>
+        <legend class="layui-bpmn-panel__title">${escapeHtml(title)}
+            <span class="layui-bpmn-panel__type">${escapeHtml(elementType)}</span>
+        </legend>
+       <!-- <div class="layui-bpmn-panel__type">${escapeHtml(elementType)}</div> -->
         </fieldset>
         <div class="layui-bpmn-panel__body">${bodyHtml}</div>
     </form>

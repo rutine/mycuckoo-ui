@@ -1,16 +1,7 @@
 import {toStr} from '../../common/utils.js';
 import {escapeAttr, renderHtml} from '../../common/html.js';
 import {getFieldValidationMessage, setControlError} from "../../common/errors";
-import {
-  createListenerDraft,
-  createListenerValue,
-  getEntryValue,
-  LAYUI_SELECT_BINDING_PROP,
-  LAYUI_SELECT_FILTER_PROP,
-  syncListenerItems
-} from './ListenersState.js';
 import writer from './ListenersWriter.js';
-
 
 function editorUI() {
   return `
@@ -23,15 +14,13 @@ function editorUI() {
   `;
 }
 
-function itemsUI(items, selectMode) {
+function itemsUI(items) {
   if (!items.length) {
     return '<div class="layui-bpmn-panel__entry-preview layui-bpmn-panel__entry-preview--empty">-</div>';
   }
 
   return items.map((item, index) => {
     const indexText = String(index);
-    const selectMode1 = (selectMode || 'native') === 'layui' ? `lay-filter="listener-event-${index}` : 'lay-ignore';
-    const selectMode2 = (selectMode || 'native') === 'layui' ? `lay-filter="listener-type-${index}` : 'lay-ignore';
 
     return `
       <div class="layui-bpmn-panel__listener-item" data-listener-index="${escapeAttr(indexText)}">
@@ -40,7 +29,7 @@ function itemsUI(items, selectMode) {
         <div class="layui-form-item layui-bpmn-panel__listener-field" data-field="event">
           <label class="layui-form-label layui-bpmn-panel__entry-label">事件</label>
           <div class="layui-input-block layui-bpmn-panel__listener-field-mount">
-            <select class="layui-input layui-bpmn-panel__listener-select" data-field="event" ${selectMode1}>
+            <select class="layui-input layui-bpmn-panel__listener-select" data-field="event" lay-ignore>
               <option value="assignment">任务分派事件</option>
               <option value="create">创建事件</option>
               <option value="complete">完成事件</option>
@@ -54,7 +43,7 @@ function itemsUI(items, selectMode) {
         <div class="layui-form-item layui-bpmn-panel__listener-field" data-field="type">
           <label class="layui-form-label layui-bpmn-panel__entry-label">监听器类型</label>
           <div class="layui-input-block layui-bpmn-panel__listener-field-mount">
-            <select class="layui-input layui-bpmn-panel__listener-select" data-field="type" ${selectMode2}>
+            <select class="layui-input layui-bpmn-panel__listener-select" data-field="type" lay-ignore>
               <option value="expression">表达式</option>
               <option value="class">类</option>
               <option value="delegateExpression">代理表达式</option>
@@ -78,23 +67,6 @@ function itemsUI(items, selectMode) {
   });
 }
 
-function setSelectMode(selectEl, options = {}) {
-  const selectMode = options.selectMode || 'native';
-  if (selectMode === 'layui') {
-    selectEl[LAYUI_SELECT_FILTER_PROP] = options.layFilter || '';
-  }
-
-  if (typeof selectEl.setAttribute !== 'function') {
-    return;
-  }
-
-  if (selectMode === 'layui' && options.layFilter) {
-    selectEl.setAttribute('lay-filter', options.layFilter);
-  } else {
-    selectEl.setAttribute('lay-ignore', '');
-  }
-}
-
 function focusControl(controlEl) {
   if (!controlEl) {
     return;
@@ -106,10 +78,6 @@ function focusControl(controlEl) {
   if (toStr(controlEl.value) && typeof controlEl.select === 'function') {
     controlEl.select();
   }
-}
-
-function createState(entry) {
-  return createListenerValue(getEntryValue(entry));
 }
 
 function getBindingFieldEls(itemEl, field) {
@@ -124,26 +92,6 @@ function getBindingFieldEls(itemEl, field) {
   };
 }
 
-function setLayuiSelectBinding(selectEl, onChange) {
-  if (!selectEl || typeof onChange !== 'function') {
-    return;
-  }
-
-  const layFilter = typeof selectEl.getAttribute === 'function'
-      ? toStr(selectEl.getAttribute('lay-filter')).trim()
-      : toStr(selectEl[LAYUI_SELECT_FILTER_PROP]).trim();
-
-  if (!layFilter) {
-    return;
-  }
-
-  selectEl[LAYUI_SELECT_BINDING_PROP] = {
-    element: selectEl,
-    filter: layFilter,
-    onChange
-  };
-}
-
 function setListenerFieldErrors(fieldBindings, validation) {
   Object.keys(fieldBindings).forEach((field) => {
     const binding = fieldBindings[field];
@@ -152,10 +100,35 @@ function setListenerFieldErrors(fieldBindings, validation) {
   });
 }
 
+function createListenerProperties(item = {}) {
+  return {
+    event: toStr(item.event).trim() || 'assignment',
+    type: toStr(item.type).trim() || 'expression',
+    value: toStr(item.value)
+  };
+}
+
+function createListenerValue(value) {
+  const items = value && Array.isArray(value.items) ? value.items : [];
+
+  return {
+    items: items.map((item) => createListenerProperties(item))
+  };
+}
+
+function syncListenerItems(state, value) {
+  const newState = createListenerValue(value);
+
+  state.items = newState.items;
+
+  return state;
+}
+
+
 export default class ListenersComponent {
   constructor(entry) {
     this.entry = entry;
-    this.state = createState(entry);
+    this.state = createListenerValue(entry.getValue());
   }
 
   mount(mountEl) {
@@ -170,9 +143,8 @@ export default class ListenersComponent {
 
     function renderItems(options = {}) {
       const focusIndex = Number.isInteger(options.focusIndex) ? options.focusIndex : -1;
-      const selectMode = entry.ui && entry.ui.selectMode === 'native' ? 'native' : 'layui';
 
-      renderHtml(itemsEl, itemsUI(state.items, selectMode));
+      renderHtml(itemsEl, itemsUI(state.items));
 
       if (!state.items.length) {
         return;
@@ -181,8 +153,8 @@ export default class ListenersComponent {
       itemsEl.querySelectorAll('.layui-bpmn-panel__listener-item').forEach((itemEl) => {
         const index = Number(itemEl.getAttribute('data-listener-index'));
         const item = state.items[index];
-        const draft = createListenerDraft(item);
-        let lastDraft = JSON.stringify(draft);
+        const value = createListenerProperties(item);
+        let lastValue = JSON.stringify(value);
 
         const eventField = getBindingFieldEls(itemEl, 'event');
         const typeField = getBindingFieldEls(itemEl, 'type');
@@ -194,41 +166,34 @@ export default class ListenersComponent {
           value: valueField
         };
 
-        setSelectMode(eventField.controlEl, {selectMode: selectMode, layFilter: `listener-event-${index}`});
-        setSelectMode(typeField.controlEl, {selectMode: selectMode, layFilter: `listener-type-${index}`});
+        eventField.controlEl.value = value.event;
+        typeField.controlEl.value = value.type;
+        valueField.controlEl.value = value.value;
 
-        eventField.controlEl.value = draft.event;
-        typeField.controlEl.value = draft.type;
-        valueField.controlEl.value = draft.value;
-
-        function submitDraft() {
-          const newDraft = createListenerDraft({
+        function submitData() {
+          const newValue = createListenerProperties({
             event: eventField.controlEl.value,
             type: typeField.controlEl.value,
             value: valueField.controlEl.value
           });
-          const nextDraft = JSON.stringify(newDraft);
-          if (nextDraft === lastDraft) {
+          const nextValue = JSON.stringify(newValue);
+          if (nextValue === lastValue) {
             return;
           }
 
-          const validation = typeof entry.validate === 'function' ? entry.validate(newDraft) : null;
+          const validation = typeof entry.validate === 'function' ? entry.validate(newValue) : null;
           setListenerFieldErrors(fieldBindings, validation);
           if (validation && validation.valid === false) {
             return;
           }
 
-          const result = typeof entry.setValue === 'function'
-            ? entry.setValue({action: 'update', index, draft: newDraft})
-            : { updated: false };
-          const resultValidation = result && result.validation ? result.validation : null;
-          setListenerFieldErrors(fieldBindings, resultValidation);
+          const result = entry.setValue({action: 'update', index, value: newValue});
           if (!result || !result.updated) {
             return;
           }
 
-          lastDraft = nextDraft;
-          state.items[index] = newDraft;
+          lastValue = nextValue;
+          state.items[index] = newValue;
 
           if (result.value) {
             syncListenerItems(state, result.value);
@@ -236,29 +201,21 @@ export default class ListenersComponent {
           }
         }
 
-        setLayuiSelectBinding(eventField.controlEl, (nextValue) => {
-          eventField.controlEl.value = toStr(nextValue);
-          submitDraft();
-        });
-        setLayuiSelectBinding(typeField.controlEl, (nextValue) => {
-          typeField.controlEl.value = toStr(nextValue);
-          submitDraft();
-        });
-        eventField.controlEl.addEventListener('change', submitDraft);
-        typeField.controlEl.addEventListener('change', submitDraft);
-        valueField.controlEl.addEventListener('blur', submitDraft);
+        eventField.controlEl.addEventListener('change', submitData);
+        typeField.controlEl.addEventListener('change', submitData);
+        valueField.controlEl.addEventListener('blur', submitData);
         valueField.controlEl.addEventListener('keydown', (event) => {
           if (event && event.key === 'Enter') {
             if (typeof event.preventDefault === 'function') {
               event.preventDefault();
             }
 
-            submitDraft();
+            submitData();
           }
         });
 
         deleteButtonEl.addEventListener('click', () => {
-          const result = typeof entry.setValue === 'function' ? entry.setValue({action: 'remove', index}) : { updated: false };
+          const result = entry.setValue({action: 'remove', index});
           if (!result || !result.updated) {
             return;
           }
@@ -280,7 +237,7 @@ export default class ListenersComponent {
 
     const addButtonEl = actionsEl.querySelector('[data-action="add-listener"]');
     addButtonEl.addEventListener('click', () => {
-      const result = typeof entry.setValue === 'function' ? entry.setValue({ action: 'add' }) : { updated: false };
+      const result = entry.setValue({ action: 'add' });
       if (!result || !result.updated) {
         return;
       }
@@ -288,7 +245,7 @@ export default class ListenersComponent {
       if (result.value) {
         syncListenerItems(state, result.value);
       } else {
-        state.items.push(createListenerDraft());
+        state.items.push(createListenerProperties());
       }
 
       renderItems({focusIndex: state.items.length - 1});

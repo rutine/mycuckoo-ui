@@ -5,17 +5,6 @@ import {
 } from '../../common/html.js';
 import writer from './ParametersWriter.js';
 
-function getEntryValue(entry) {
-  if (!entry || typeof entry.getValue !== 'function') {
-    return null;
-  }
-
-  try {
-    return entry.getValue();
-  } catch (error) {
-    return null;
-  }
-}
 
 function getItems(value) {
   return value && Array.isArray(value.items) ? value.items : [];
@@ -73,7 +62,7 @@ export default class ParametersComponent {
   }
 
   mount(mountEl) {
-    const value = getEntryValue(this.entry);
+    const value = this.entry.getValue();
 
     if (this.entry && this.entry.component === 'ExtensionEditor') {
       renderHtml(mountEl, extensionPreviewUI(value));

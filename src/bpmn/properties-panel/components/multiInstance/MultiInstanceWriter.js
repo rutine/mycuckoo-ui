@@ -1,43 +1,20 @@
 import {
   createElement,
+  executeCommands,
   getBusinessObject,
-  getTaskCollectionName,
-  getTaskIndexFromElement,
   getExpressionBody,
   getProperty,
-  executeCommands,
-  queryTypedExtensionElements,
+  getTaskCollectionName,
+  getTaskIndexFromElement,
   queryTypedExtensionElement
 } from '../../../ModdleUtils.js';
-import {
-  findGroupEntry,
-  getElementId,
-  getStr,
-  toStr
-} from '../../common/utils.js';
+import {getElementId, getStr, toStr} from '../../common/utils.js';
 import {createMultiInstanceProperties} from "./MultiInstanceState";
 
 const DEFAULT_ELEMENT_VARIABLE = 'assignee';
 const DEFAULT_COMPLETION_CONDITION = '${auditFlowService.hasComplete(execution)}';
 const ASSIGNEE_MODE_USER = 'user';
 
-
-function createValidationResult(errors = {}, payloadKey, payload) {
-  const result = {
-    valid: Object.keys(errors).length === 0,
-    errors,
-    issues: Object.keys(errors).map((field) => ({
-      field,
-      message: errors[field]
-    }))
-  };
-
-  if (payloadKey) {
-    result[payloadKey] = payload;
-  }
-
-  return result;
-}
 
 function isTruthy(value) {
   return value === true || value === 'true';
@@ -74,8 +51,25 @@ function isSameMultiInstanceState(left, right) {
   return JSON.stringify(nextLeft) === JSON.stringify(nextRight);
 }
 
+function createValidationResult(errors = {}, payloadKey, payload) {
+  const result = {
+    valid: Object.keys(errors).length === 0,
+    errors,
+    issues: Object.keys(errors).map((field) => ({
+      field,
+      message: errors[field]
+    }))
+  };
+
+  if (payloadKey) {
+    result[payloadKey] = payload;
+  }
+
+  return result;
+}
+
 function copyMultiInstance(element) {
-  const defaults = createDefaultMultiInstance(element);
+  const value = createDefaultMultiInstance(element);
   const loopCharacteristics = getLoopCharacteristics(element);
   const taskParameters = {
     assigneeMode: toStr(getTaskParameterValue(element, 'assigneeMode')),
@@ -85,18 +79,18 @@ function copyMultiInstance(element) {
 
   if (!loopCharacteristics) {
     return {
-      ...defaults,
+      ...value,
       ...taskParameters
     };
   }
 
   return {
-    ...defaults,
+    ...value,
     ...taskParameters,
     enabled: true,
     isSequential: isTruthy(loopCharacteristics.isSequential),
-    collection: getStr(getProperty(loopCharacteristics, 'flowable:collection'), defaults.collection),
-    elementVariable: getStr(getProperty(loopCharacteristics, 'flowable:elementVariable'), defaults.elementVariable),
+    collection: getStr(getProperty(loopCharacteristics, 'flowable:collection'), value.collection),
+    elementVariable: getStr(getProperty(loopCharacteristics, 'flowable:elementVariable'), value.elementVariable),
     loopCardinality: getExpressionBody(getProperty(loopCharacteristics, 'loopCardinality')),
     completionCondition: getExpressionBody(getProperty(loopCharacteristics, 'completionCondition'))
   };
@@ -116,35 +110,6 @@ function createDefaultMultiInstance(element) {
   };
 }
 
-function validateDraft(draft = {}) {
-  const normalizedDraft = {
-    enabled: !!draft.enabled,
-    isSequential: !!draft.isSequential,
-    collection: toStr(draft.collection),
-    elementVariable: toStr(draft.elementVariable),
-    loopCardinality: toStr(draft.loopCardinality),
-    completionCondition: toStr(draft.completionCondition),
-    assigneeMode: toStr(draft.assigneeMode),
-    ids: toStr(draft.ids),
-    names: toStr(draft.names)
-  };
-  const errors = {};
-
-  if (normalizedDraft.enabled && !getStr(normalizedDraft.collection).trim()) {
-    errors.collection = 'collection is required when multi-instance is enabled';
-  }
-
-  if (normalizedDraft.enabled && !getStr(normalizedDraft.elementVariable).trim()) {
-    errors.elementVariable = 'elementVariable is required when multi-instance is enabled';
-  }
-
-  if (normalizedDraft.enabled && normalizedDraft.assigneeMode === ASSIGNEE_MODE_USER && !getStr(normalizedDraft.ids).trim()) {
-    errors.ids = 'ids is required when assigneeMode is user';
-  }
-
-  return createValidationResult(errors, 'draft', normalizedDraft);
-}
-
 function createFormalExpression(moddle, parent, body) {
   const nextBody = getStr(body).trim();
   if (!nextBody) {
@@ -159,14 +124,14 @@ function createFormalExpression(moddle, parent, body) {
   return expression;
 }
 
-function createLoopCharacteristics(context, element, draft) {
+function createLoopCharacteristics(context, element, value) {
   const businessObject = getBusinessObject(element);
   const loopCharacteristics = createElement('bpmn:MultiInstanceLoopCharacteristics', {
-    isSequential: draft.isSequential,
-    'flowable:collection': getStr(draft.collection).trim(),
-    'flowable:elementVariable': getStr(draft.elementVariable).trim(),
-    loopCardinality: createFormalExpression(context.moddle, null, draft.loopCardinality),
-    completionCondition: createFormalExpression(context.moddle, null, draft.completionCondition)
+    isSequential: value.isSequential,
+    'flowable:collection': getStr(value.collection).trim(),
+    'flowable:elementVariable': getStr(value.elementVariable).trim(),
+    loopCardinality: createFormalExpression(context.moddle, null, value.loopCardinality),
+    completionCondition: createFormalExpression(context.moddle, null, value.completionCondition)
   }, businessObject, context.bpmnFactory);
 
   if (loopCharacteristics.loopCardinality) {
@@ -209,73 +174,42 @@ function writeDefaultExtensionElements(context, element) {
   };
 }
 
-function syncAssigneeParameters(context, element, draft) {
+function syncAssigneeParameters(context, element, value) {
   const ensured = writeDefaultExtensionElements(context, element);
-  const oldExtensionValues = queryTypedExtensionElements(element, 'all');
+  const oldExtensionElements = ensured.extensionElements;
+  const oldExtensionValues = getProperty(oldExtensionElements, 'values') || [];
   const oldParametersElement = queryTypedExtensionElement(element, 'taskExt:Parameters');
-  const oldParameterValues = getProperty(oldParametersElement, 'values');
+  const oldParameterValues = getProperty(oldParametersElement, 'values') || [];
+  const preservedExtensionValues = oldExtensionValues.filter((value) => value !== oldParametersElement);
   const preservedParameterValues = (Array.isArray(oldParameterValues) ? oldParameterValues : []).filter((parameter) => {
     const name = toStr(getProperty(parameter, 'name')).trim();
     return name !== 'assigneeMode' && name !== 'ids' && name !== 'names';
   });
-  const isUserMode = draft.assigneeMode === ASSIGNEE_MODE_USER;
+  const isUserMode = value.assigneeMode === ASSIGNEE_MODE_USER;
   const newParameterValues = isUserMode
     ? [
       ...preservedParameterValues,
-      createElement('taskExt:Parameter', {
-        name: 'assigneeMode',
-        value: ASSIGNEE_MODE_USER
-      }, null, context.bpmnFactory),
-      createElement('taskExt:Parameter', {
-        name: 'ids',
-        value: getStr(draft.ids).trim()
-      }, null, context.bpmnFactory),
-      createElement('taskExt:Parameter', {
-        name: 'names',
-        value: toStr(draft.names)
-      }, null, context.bpmnFactory)
+      createElement('taskExt:Parameter', { name: 'assigneeMode', value: ASSIGNEE_MODE_USER }, null, context.bpmnFactory),
+      createElement('taskExt:Parameter', { name: 'ids', value: getStr(value.ids) }, null, context.bpmnFactory),
+      createElement('taskExt:Parameter', { name: 'names', value: toStr(value.names) }, null, context.bpmnFactory)
     ]
     : preservedParameterValues;
-  const preservedExtensionValues = oldExtensionValues.filter((value) => value !== oldParametersElement);
   const hasExtensionElements = !ensured.commands.length;
 
   if (!hasExtensionElements && !newParameterValues.length) {
     return {updated: false};
   }
 
-  if (!hasExtensionElements) {
-    const extensionElements = ensured.extensionElements;
-    const parametersElement = createElement(
-        'taskExt:Parameters',
-        { values: newParameterValues },
-        extensionElements,
-        context.bpmnFactory
-    );
-    newParameterValues.forEach((parameter) => {
-      parameter.$parent = parametersElement;
-    });
-    extensionElements.values = [ parametersElement ];
-
-    return {
-      updated: true,
-      result: context.modeling.updateProperties(element, { extensionElements })
-    };
-  }
-
   let newExtensionValues = preservedExtensionValues;
   if (newParameterValues.length) {
-    const parametersElement = createElement(
-        'taskExt:Parameters',
-        { values: newParameterValues },
-        ensured.extensionElements,
-        context.bpmnFactory
-    );
+    const parametersElement = createElement('taskExt:Parameters', { values: newParameterValues }, oldExtensionElements, context.bpmnFactory);
     newParameterValues.forEach((parameter) => {
       parameter.$parent = parametersElement;
     });
 
     newExtensionValues = [...newExtensionValues, parametersElement];
   }
+
   if (!newExtensionValues.length) {
     return {
       updated: true,
@@ -291,7 +225,7 @@ function syncAssigneeParameters(context, element, draft) {
         cmd: 'element.updateModdleProperties',
         context: {
           element,
-          moddleElement: ensured.extensionElements,
+          moddleElement: oldExtensionElements,
           properties: {
             values: [ ...newExtensionValues ]
           }
@@ -301,21 +235,16 @@ function syncAssigneeParameters(context, element, draft) {
   };
 }
 
-function buildAssigneeParameterCommands(context, element, draft) {
+function buildAssigneeParameterCommands(context, element, value) {
   const ensured = writeDefaultExtensionElements(context, element);
   const oldExtensionElements = ensured.extensionElements;
-  const oldExtensionValues = getProperty(oldExtensionElements, 'values');
-  const isUserMode = draft.assigneeMode === ASSIGNEE_MODE_USER;
+  const oldExtensionValues = getProperty(oldExtensionElements, 'values') || [];
+  const isUserMode = value.assigneeMode === ASSIGNEE_MODE_USER;
 
   const commands = [];
   let parametersElement = queryTypedExtensionElement(element, 'taskExt:Parameters');
   if (!parametersElement && isUserMode) {
-    parametersElement = createElement(
-        'taskExt:Parameters',
-        { values: [] },
-        oldExtensionElements,
-        context.bpmnFactory
-    );
+    parametersElement = createElement('taskExt:Parameters', { values: [] }, oldExtensionElements, context.bpmnFactory);
     commands.push({
       cmd: 'element.updateModdleProperties',
       context: {
@@ -332,9 +261,7 @@ function buildAssigneeParameterCommands(context, element, draft) {
     return commands;
   }
 
-  const parameterValues = Array.isArray(getProperty(parametersElement, 'values'))
-    ? getProperty(parametersElement, 'values')
-    : [];
+  const parameterValues = getProperty(parametersElement, 'values') || [];
   const preservedParameterValues = parameterValues.filter((parameter) => {
     const name = getStr(getProperty(parameter, 'name'), '').trim();
     return name !== 'assigneeMode' && name !== 'ids' && name !== 'names';
@@ -343,18 +270,9 @@ function buildAssigneeParameterCommands(context, element, draft) {
   const newParameterValues = isUserMode
     ? [
       ...preservedParameterValues,
-      createElement('taskExt:Parameter', {
-        name: 'assigneeMode',
-        value: ASSIGNEE_MODE_USER
-      }, parametersElement, context.bpmnFactory),
-      createElement('taskExt:Parameter', {
-        name: 'ids',
-        value: getStr(draft.ids).trim()
-      }, parametersElement, context.bpmnFactory),
-      createElement('taskExt:Parameter', {
-        name: 'names',
-        value: toStr(draft.names)
-      }, parametersElement, context.bpmnFactory)
+      createElement('taskExt:Parameter', { name: 'assigneeMode', value: ASSIGNEE_MODE_USER }, parametersElement, context.bpmnFactory),
+      createElement('taskExt:Parameter', { name: 'ids', value: getStr(value.ids) }, parametersElement, context.bpmnFactory),
+      createElement('taskExt:Parameter', { name: 'names', value: toStr(value.names) }, parametersElement, context.bpmnFactory)
     ]
     : preservedParameterValues;
 
@@ -372,16 +290,45 @@ function buildAssigneeParameterCommands(context, element, draft) {
   return [...ensured.commands, ...commands];
 }
 
-function applyChange(context, element, draft = {}) {
-  const validation = validateDraft(draft);
+function validateValue(value = {}) {
+  const nextValue = {
+    enabled: !!value.enabled,
+    isSequential: !!value.isSequential,
+    collection: toStr(value.collection),
+    elementVariable: toStr(value.elementVariable),
+    loopCardinality: toStr(value.loopCardinality),
+    completionCondition: toStr(value.completionCondition),
+    assigneeMode: toStr(value.assigneeMode),
+    ids: toStr(value.ids),
+    names: toStr(value.names)
+  };
+  const errors = {};
+
+  if (nextValue.enabled && !getStr(nextValue.collection).trim()) {
+    errors.collection = 'collection is required when multi-instance is enabled';
+  }
+
+  if (nextValue.enabled && !getStr(nextValue.elementVariable).trim()) {
+    errors.elementVariable = 'elementVariable is required when multi-instance is enabled';
+  }
+
+  if (nextValue.enabled && nextValue.assigneeMode === ASSIGNEE_MODE_USER && !getStr(nextValue.ids).trim()) {
+    errors.ids = 'ids is required when assigneeMode is user';
+  }
+
+  return createValidationResult(errors, 'value', nextValue);
+}
+
+function applyChange(context, element, value = {}) {
+  const validation = validateValue(value);
   const loopCharacteristics = getLoopCharacteristics(element);
 
   if (!validation.valid) {
     return { updated: false, validation };
   }
 
-  if (!validation.draft.enabled) {
-    syncAssigneeParameters(context, element, validation.draft);
+  if (!validation.value.enabled) {
+    syncAssigneeParameters(context, element, validation.value);
 
     if (!loopCharacteristics) {
       return { updated: false, validation };
@@ -396,9 +343,9 @@ function applyChange(context, element, draft = {}) {
 
   if (!loopCharacteristics) {
     const businessObject = getBusinessObject(element);
-    const nextLoopCharacteristics = createLoopCharacteristics(context, element, validation.draft);
+    const nextLoopCharacteristics = createLoopCharacteristics(context, element, validation.value);
     const commands = [
-      ...buildAssigneeParameterCommands(context, element, validation.draft),
+      ...buildAssigneeParameterCommands(context, element, validation.value),
       {
         cmd: 'element.updateModdleProperties',
         context: {
@@ -415,12 +362,12 @@ function applyChange(context, element, draft = {}) {
     return { updated: true, validation, result };
   }
 
-  const nextDraft = validation.draft;
-  const nextLoopCharacteristics = createLoopCharacteristics(context, element, nextDraft);
+  const nextData = validation.value;
+  const nextLoopCharacteristics = createLoopCharacteristics(context, element, nextData);
   const result = context.modeling.updateProperties(element, {
     loopCharacteristics: nextLoopCharacteristics
   });
-  syncAssigneeParameters(context, element, validation.draft);
+  syncAssigneeParameters(context, element, validation.value);
 
   return { updated: true, validation, result };
 }
@@ -435,38 +382,25 @@ function createMultiInstanceEntryAdapter(entry, element, options = {}) {
   }
 
   entry.getValue = () => {
-    const derivedDraft = copyMultiInstance(element);
-    const pendingDraft = uiState && uiState.pendingMultiInstanceDraft;
+    const derivedValue = copyMultiInstance(element);
+    const pendingResult = uiState && uiState.pendingMultiInstanceResult;
 
-    if (!pendingDraft || pendingDraft.elementId !== getElementId(element)) {
-      return derivedDraft;
+    if (!pendingResult || pendingResult.elementId !== getElementId(element)) {
+      return derivedValue;
     }
 
-    if (isSameMultiInstanceState(derivedDraft, pendingDraft.draft)) {
-      uiState.pendingMultiInstanceDraft = null;
-      return derivedDraft;
+    if (isSameMultiInstanceState(derivedValue, pendingResult.value)) {
+      uiState.pendingMultiInstanceResult = null;
+      return derivedValue;
     }
 
-    return pendingDraft.draft;
+    return pendingResult.value;
   };
-  entry.validate = (draft) => validateDraft(draft);
-  entry.pickUsers = (draft = {}) => {
-    if (!userPicker) {
-      return null;
-    }
-
-    return userPicker({
-      element,
-      draft,
-      groupId: 'multi-instance',
-      entryKey: entry.key || null
-    });
-  };
-  entry.setValue = (draft) => {
+  entry.setValue = (value) => {
     if (uiState) {
-      uiState.pendingMultiInstanceDraft = {
+      uiState.pendingMultiInstanceResult = {
         elementId: getElementId(element),
-        draft: createMultiInstanceProperties(draft)
+        value: createMultiInstanceProperties(value)
       };
       uiState.suppressMultiInstanceRender = {
         elementId: getElementId(element),
@@ -474,31 +408,33 @@ function createMultiInstanceEntryAdapter(entry, element, options = {}) {
       };
     }
 
-    if (!context) {
-      return {
-        updated: false,
-        notApplied: true,
-        reason: 'missing-context',
-        validation: validateDraft(draft)
-      };
-    }
-
-    const result = applyChange(context, element, draft);
+    const result = applyChange(context, element, value);
 
     if (uiState && (!result || !result.updated)) {
-      uiState.pendingMultiInstanceDraft = null;
+      uiState.pendingMultiInstanceResult = null;
     }
 
     return result;
+  };
+  entry.validate = (value) => validateValue(value);
+  entry.pickUsers = (value = {}) => {
+    if (!userPicker) {
+      return null;
+    }
+
+    return userPicker({
+      element,
+      value: value,
+      groupId: 'multi-instance',
+      entryKey: entry.key || null
+    });
   };
 
   return entry;
 }
 
 function bindMultiInstanceEntry(entry, group, element, options) {
-  // const entry = findGroupEntry(panelState, 'multi-instance', 'multiInstanceEditor');
-
-  if (!!(entry && group && group.id === 'multi-instance' && entry.key === 'multiInstanceEditor')) {
+  if (!(entry && group && group.id === 'multi-instance' && entry.key === 'multiInstanceEditor')) {
     return;
   }
 

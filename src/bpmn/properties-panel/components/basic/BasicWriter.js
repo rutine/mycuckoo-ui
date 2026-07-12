@@ -28,7 +28,7 @@ function writeProperties(element, context, fieldId, value) {
   const nextValue = typeof value === 'boolean' ? value : toStr(value);
   return {
     updated: true,
-    result: context.modeling.updateProperties(element, {
+    value: context.modeling.updateProperties(element, {
       [fieldId]: nextValue === '' ? undefined : nextValue
     })
   };
@@ -43,14 +43,7 @@ function createEntryAdapter(entry, group, panelState, element, options = {}) {
 
   if (getRawValue) {
     entry.getValue = () => {
-      const value = getRawValue(element, {
-        element,
-        groupId: group.id || null,
-        entryKey: entry.key || null,
-        writer: panelState.writer,
-        validator: panelState.validator
-      });
-
+      const value = getRawValue(element);
       if (entry.key === 'flowable:assignee' && !toStr(value).trim()) {
         return DEFAULT_USER_TASK_ASSIGNEE;
       }
@@ -61,6 +54,14 @@ function createEntryAdapter(entry, group, panelState, element, options = {}) {
 
   if (setRawValue) {
     entry.setValue = (value) => {
+      // const rs = setRawValue(value, {
+      //   element,
+      //   groupId: group.id || null,
+      //   entryKey: entry.key || null,
+      //   writer: panelState.writer,
+      //   validator: panelState.validator
+      // });
+
       const nextValue = typeof entry.normalizeValue === 'function' ? entry.normalizeValue(value) : value;
       if (uiState) {
         uiState.pendingSimpleEntry = {

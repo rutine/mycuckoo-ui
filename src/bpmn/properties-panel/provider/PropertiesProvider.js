@@ -28,8 +28,9 @@ function ui(panelState) {
   return `
     <form class="layui-form layui-form-pane layui-bpmn-panel">
         <fieldset class="layui-elem-field layui-field-title layui-bpmn-panel__header">
-        <legend class="layui-bpmn-panel__title">${escapeHtml(title)}</legend>
-        <div class="layui-bpmn-panel__type">${escapeHtml(elementType)}</div>
+        <legend class="layui-bpmn-panel__title">${escapeHtml(title)}
+            <span class="layui-bpmn-panel__type">${escapeHtml(elementType)}</span>
+        </legend>
         </fieldset>
         <div class="layui-bpmn-panel__body">${bodyHtml}</div>
     </form>

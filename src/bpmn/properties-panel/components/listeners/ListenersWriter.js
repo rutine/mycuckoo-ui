@@ -1,15 +1,11 @@
 import {
   createElement,
+  executeCommands,
   getBusinessObject,
   getProperty,
-  executeCommands,
   queryTypedExtensionElements
 } from '../../../ModdleUtils.js';
-import {
-  getStr,
-  findGroupEntry,
-  getElementId
-} from '../../common/utils.js';
+import {getElementId, getStr} from '../../common/utils.js';
 
 const DEFAULT_LISTENER_EVENT = 'assignment';
 const DEFAULT_LISTENER_TYPE = 'expression';
@@ -19,9 +15,32 @@ const SUPPORTED_LISTENER_EVENTS = [ 'assignment', 'create', 'complete', 'delete'
 const SUPPORTED_LISTENER_ACTIONS = [ 'add', 'remove', 'update' ];
 
 
+function listListeners(element) {
+  return queryTypedExtensionElements(element, 'flowable:TaskListener').map((listener) => {
+    let binding = {type: DEFAULT_LISTENER_TYPE, value: ''};
+    for (const type of SUPPORTED_LISTENER_TYPES) {
+      const value = getStr(getProperty(listener, type));
+      if (value.trim()) {
+        binding = { type, value };
+        break;
+      }
+    }
 
-function unwrapDraftValue(value) {
-  return value && value.draft ? value.draft : value;
+    return {
+      event: getStr(getProperty(listener, 'event')),
+      type: binding.type,
+      value: binding.value
+    };
+  });
+}
+
+function getListenerElement(element, index) {
+  const listeners = queryTypedExtensionElements(element, 'flowable:TaskListener');
+  if (!Number.isInteger(index) || index < 0 || index >= listeners.length) {
+    return null;
+  }
+
+  return listeners[index];
 }
 
 function createValidationResult(errors = {}, payloadKey, payload) {
@@ -49,15 +68,15 @@ function createDefaultListener() {
   };
 }
 
-function createListenerProperties(draft) {
+function createListenerProperties(value) {
   const properties = {
-    event: draft.event,
+    event: value.event,
     expression: undefined,
     class: undefined,
     delegateExpression: undefined
   };
 
-  properties[draft.type] = draft.value;
+  properties[value.type] = value.value;
 
   return properties;
 }
@@ -65,10 +84,7 @@ function createListenerProperties(draft) {
 function createListenerValue(element) {
   return {
     kind: 'listener-editor',
-    items: listListeners(element),
-    draft: createDefaultListener(),
-    createDefaultDraft: createDefaultListener,
-    validateDraft
+    items: listListeners(element)
   };
 }
 
@@ -99,34 +115,6 @@ function writeDefaultExtensionElements(context, element) {
       }
     }]
   };
-}
-
-function listListeners(element) {
-  return queryTypedExtensionElements(element, 'flowable:TaskListener').map((listener) => {
-    let binding = {type: DEFAULT_LISTENER_TYPE, value: ''};
-    for (const type of SUPPORTED_LISTENER_TYPES) {
-      const value = getStr(getProperty(listener, type));
-      if (value.trim()) {
-        binding = { type, value };
-        break;
-      }
-    }
-
-    return {
-      event: getStr(getProperty(listener, 'event')),
-      type: binding.type,
-      value: binding.value
-    };
-  });
-}
-
-function getListenerElement(element, index) {
-  const listeners = queryTypedExtensionElements(element, 'flowable:TaskListener');
-  if (!Number.isInteger(index) || index < 0 || index >= listeners.length) {
-    return null;
-  }
-
-  return listeners[index];
 }
 
 function addListener(context, element) {
@@ -160,24 +148,19 @@ function addListener(context, element) {
   };
 }
 
-function updateListener(context, element, index, draft) {
+function updateListener(context, element, index, data) {
   const listener = getListenerElement(element, index);
   if (!listener) {
     return { updated: false, reason: 'listener-not-found' };
   }
 
-  const validation = validateDraft(draft);
-  if (!validation.valid) {
-    return { updated: false, validation };
-  }
-
   context.commandStack.execute('element.updateModdleProperties', {
     element,
     moddleElement: listener,
-    properties: createListenerProperties(validation.draft)
+    properties: createListenerProperties(data)
   });
 
-  return { updated: true, validation, value: createListenerValue(element) };
+  return { updated: true, value: createListenerValue(element) };
 }
 
 function removeListener(context, element, index) {
@@ -199,31 +182,31 @@ function removeListener(context, element, index) {
   return { updated: true, value: createListenerValue(element) };
 }
 
-function validateDraft(draft = {}) {
-  const normalizedDraft = {
-    event: getStr(draft.event, DEFAULT_LISTENER_EVENT),
-    type: getStr(draft.type, DEFAULT_LISTENER_TYPE),
-    value: getStr(draft.value)
+function validateValue(value = {}) {
+  const nextValue = {
+    event: getStr(value.event, DEFAULT_LISTENER_EVENT),
+    type: getStr(value.type, DEFAULT_LISTENER_TYPE),
+    value: getStr(value.value)
   };
   const errors = {};
 
-  if (!normalizedDraft.event.trim()) {
+  if (!nextValue.event.trim()) {
     errors.event = 'event is required';
   }
 
-  if (!SUPPORTED_LISTENER_EVENTS.includes(normalizedDraft.event)) {
+  if (!SUPPORTED_LISTENER_EVENTS.includes(nextValue.event)) {
     errors.event = 'listener event is not supported';
   }
 
-  if (!SUPPORTED_LISTENER_TYPES.includes(normalizedDraft.type)) {
+  if (!SUPPORTED_LISTENER_TYPES.includes(nextValue.type)) {
     errors.type = 'listener type is not supported';
   }
 
-  if (!normalizedDraft.value.trim()) {
+  if (!nextValue.value.trim()) {
     errors.value = 'value is required';
   }
 
-  return createValidationResult(errors, 'draft', normalizedDraft);
+  return createValidationResult(errors, 'value', nextValue);
 }
 
 function validateAction(value = {}) {
@@ -243,47 +226,33 @@ function validateAction(value = {}) {
 
 function applyChange(context, element, value = {}) {
   if (!context || !context.commandStack || !context.bpmnFactory) {
-    return {
-      updated: false,
-      notApplied: true,
-      reason: 'missing-context'
-    };
+    return {updated: false, notApplied: true, reason: 'missing-context'};
   }
 
   const actionValidation = validateAction(value);
   if (!actionValidation.valid) {
     if (actionValidation.errors && actionValidation.errors.action) {
-      return {
-        updated: false,
-        reason: 'unsupported-action'
-      };
+      return {updated: false, reason: 'unsupported-action'};
     }
 
-    return {
-      updated: false,
-      reason: 'listener-not-found'
-    };
+    return {updated: false, reason: 'listener-not-found'};
   }
 
   switch (value.action) {
-  case 'add':
-    return addListener(context, element);
-  case 'remove':
-    return removeListener(context, element, value.index);
-  case 'update':
-    return updateListener(context, element, value.index, value.draft);
-  default:
-    return {
-      updated: false,
-      reason: 'unsupported-action'
-    };
+    case 'add':
+      return addListener(context, element);
+    case 'update':
+      return updateListener(context, element, value.index, value.value);
+    case 'remove':
+      return removeListener(context, element, value.index);
+    default:
+      return {updated: false, reason: 'unsupported-action'};
   }
 }
 
 function createListenerEntryAdapter(entry, element, options = {}) {
   const context = options.context || null;
   const uiState = options.uiState || null;
-  const listenerSelectMode = options.listenerSelectMode === 'layui' ? 'layui' : 'native';
 
   if (!entry) {
     return entry;
@@ -308,17 +277,16 @@ function createListenerEntryAdapter(entry, element, options = {}) {
 
     return result;
   };
-  entry.validate = (value = {}) => validateDraft(unwrapDraftValue(value));
+  entry.validate = (value = {}) => validateValue(value);
   entry.ui = {
-    ...(entry.ui || {}),
-    selectMode: listenerSelectMode
+    ...(entry.ui || {})
   };
 
   return entry;
 }
 
 function bindListenerEntry(entry, group, element, options) {
-  if (!!(entry && group && !group && group.id !== 'listeners' && entry.key !== 'listenerEditor')) {
+  if (!(entry && group && group.id === 'listeners' && entry.key === 'listenerEditor')) {
     return;
   }
 

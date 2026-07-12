@@ -1,9 +1,4 @@
-import {
-  getProperty,
-  getBusinessObject,
-  updateModdleProperties, getExpressionBody
-} from '../../../ModdleUtils.js';
-import { findGroupEntry } from '../../common/utils.js';
+import {getBusinessObject, getExpressionBody, getProperty, updateModdleProperties} from '../../../ModdleUtils.js';
 
 function writeDefaultExpression(context, element) {
   const businessObject = getBusinessObject(element);
@@ -62,7 +57,7 @@ function createFlowConditionEntryAdapter(entry, element, options = {}) {
 }
 
 function bindFlowConditionEntry(entry, group, element, options = {}) {
-  if (!!(entry && group && group.id !== 'flow-condition' && entry.key !== 'conditionExpression')) {
+  if (!(entry && group && group.id === 'flow-condition' && entry.key === 'conditionExpression')) {
     return;
   }
 

@@ -663,12 +663,8 @@
     });
   }
 
-  function normalizeText(value) {
-    if (value === undefined || value === null) {
-      return '';
-    }
-
-    return String(value).trim();
+  function toStr(value) {
+    return (value === undefined || value === null) ? '' : String(value).trim();
   }
 
   function normalizeUsers(users) {
@@ -678,8 +674,8 @@
 
     return users
       .map(function(user) {
-        const id = normalizeText(user && (user.id || user.userId || user.account));
-        const name = normalizeText(user && (user.name || user.userName || user.account));
+        const id = toStr(user && (user.id || user.userId || user.account));
+        const name = toStr(user && (user.name || user.userName || user.account));
 
         if (!id) {
           return null;
@@ -695,12 +691,12 @@
       });
   }
 
-  function buildUrl(url, requestId, draft) {
-    const safeDraft = draft || {};
+  function buildUrl(url, requestId, data) {
+    const safeData = data || {};
     const params = [
       ['requestId', requestId],
-      ['ids', normalizeText(safeDraft.ids)],
-      ['names', normalizeText(safeDraft.names)]
+      ['ids', toStr(safeData.ids)],
+      ['names', toStr(safeData.names)]
     ];
     const query = params
       .filter(function(entry) {
@@ -723,13 +719,13 @@
       return value + 'px';
     }
 
-    return normalizeText(value);
+    return toStr(value);
   }
 
   function createUserPicker(options = {}) {
     const layer = options.layer;
-    const title = normalizeText(options.title) || '选择用户';
-    const url = normalizeText(options.url) || './view/uum/userPicker.html';
+    const title = toStr(options.title) || '选择用户';
+    const url = toStr(options.url) || './view/uum/userPicker.html';
     const width = toLayerSize(options.width || 960) || '960px';
     const height = toLayerSize(options.height || 640) || '640px';
     let seed = 0;
@@ -763,13 +759,13 @@
       return true;
     }
 
-    return function userPicker(draft) {
+    return function userPicker(data) {
       seed += 1;
 
       const requestId = 'modeler-user-picker-' + seed;
 
       return new Promise(function(resolve, reject) {
-        const content = buildUrl(url, requestId, draft);
+        const content = buildUrl(url, requestId, data && data.value ? data.value : data);
 
         layer.open({
           type: 2,
@@ -784,8 +780,8 @@
           title: title,
           content: content,
           beforeEnd: function(layero, index) {
-            const data = layer.getChildFrame('#ID_selected_cache', index).attr('json');
-            data ? resolvePending(requestId, JSON.parse(data)) : rejectPending(requestId);
+            const result = layer.getChildFrame('#ID_selected_cache', index).attr('json');
+            result ? resolvePending(requestId, JSON.parse(result)) : rejectPending(requestId);
             return true;
           },
           end: function() {

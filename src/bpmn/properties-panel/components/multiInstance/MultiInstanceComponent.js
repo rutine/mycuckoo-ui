@@ -3,26 +3,13 @@ import {escapeHtml, renderHtml} from '../../common/html.js';
 import {getFieldValidationMessage, setControlError} from "../../common/errors";
 
 import {
-  applyPickedUsersToDraft,
+  applyPickedUsersToValue,
   createMultiInstanceProperties,
   createState,
   getMultiInstanceSelectedNames
 } from './MultiInstanceState.js';
 import writer from './MultiInstanceWriter.js';
 
-
-function applySelectMode(selectEl, options = {}) {
-  const selectMode = options.selectMode || 'native';
-  if (typeof selectEl.setAttribute !== 'function') {
-    return;
-  }
-
-  if (selectMode === 'layui' && options.layFilter) {
-    selectEl.setAttribute('lay-filter', options.layFilter);
-  } else {
-    selectEl.setAttribute('lay-ignore', '');
-  }
-}
 
 function previewUI(value) {
   const names = getMultiInstanceSelectedNames(value);
@@ -36,7 +23,7 @@ function previewUI(value) {
   ).join('');
 }
 
-function editorUI(draft) {
+function editorUI(state) {
   return `
     <div class="layui-bpmn-panel__multi-instance-editor" data-editor-kind="multi-instance">
     <div class="layui-bpmn-panel__multi-instance-fields">
@@ -83,7 +70,7 @@ function editorUI(draft) {
       <label class="layui-form-label layui-bpmn-panel__entry-label"><span>已选用户</span></label>
       <div class="layui-input-block layui-bpmn-panel__multi-instance-field-mount">
         <div class="layui-bpmn-panel__entry-preview layui-bpmn-panel__multi-instance-preview layui-bpmn-panel__multi-instance-preview--readonly" data-field="names">
-          ${previewUI(draft.names)}
+          ${previewUI(state.names)}
         </div>
         <div class="layui-bpmn-panel__entry-error"></div>
       </div>
@@ -163,14 +150,14 @@ function clearMultiInstanceFieldErrors(fieldBindings) {
 export default class MultiInstanceComponent {
   constructor(entry) {
     this.entry = entry;
-    this.draft = createState(entry);
+    this.state = createState(entry);
   }
 
   mount(mountEl) {
     const entry = this.entry;
-    let draft = this.draft;
+    let state = this.state;
 
-    renderHtml(mountEl, editorUI(draft));
+    renderHtml(mountEl, editorUI(state));
 
     const editorEl = mountEl.querySelector('[data-editor-kind="multi-instance"]');
     const fieldsEl = editorEl.querySelector('.layui-bpmn-panel__multi-instance-fields');
@@ -195,14 +182,13 @@ export default class MultiInstanceComponent {
     const completionConditionEl = completionConditionField.controlEl;
     const namesPreviewEl = namesField.controlEl;
 
-    enabledInputEl.checked = !!draft.enabled;
-    isSequentialInputEl.checked = !!draft.isSequential;
-    assigneeModeSelectEl.value = draft.assigneeMode;
-    applySelectMode(assigneeModeSelectEl, { selectMode: 'native' });
-    collectionInputEl.value = draft.collection;
-    elementVariableInputEl.value = draft.elementVariable;
-    loopCardinalityInputEl.value = draft.loopCardinality;
-    completionConditionEl.value = draft.completionCondition;
+    enabledInputEl.checked = !!state.enabled;
+    isSequentialInputEl.checked = !!state.isSequential;
+    assigneeModeSelectEl.value = state.assigneeMode;
+    collectionInputEl.value = state.collection;
+    elementVariableInputEl.value = state.elementVariable;
+    loopCardinalityInputEl.value = state.loopCardinality;
+    completionConditionEl.value = state.completionCondition;
 
     const fieldBindings = {
       enabled: enabledField,
@@ -215,18 +201,18 @@ export default class MultiInstanceComponent {
       completionCondition: completionConditionField
     };
 
-    const syncComponentDraft = () => {
-      this.draft = draft;
+    const syncComponentValue = () => {
+      this.state = state;
     };
 
     function syncNamesPreview() {
-      renderPreviewValue(namesPreviewEl, draft.names);
+      renderPreviewValue(namesPreviewEl, state.names);
     }
 
     function syncUserButtonsState() {
-      const count = getMultiInstanceSelectedNames(draft.names).length;
-      const isUserMode = draft.assigneeMode === 'user';
-      const disabled = !draft.enabled;
+      const count = getMultiInstanceSelectedNames(state.names).length;
+      const isUserMode = state.assigneeMode === 'user';
+      const disabled = !state.enabled;
 
       pickUsersButtonEl.disabled = disabled;
       clearUsersButtonEl.disabled = disabled || !isUserMode || count === 0;
@@ -234,19 +220,19 @@ export default class MultiInstanceComponent {
     }
 
     function syncAssigneeModeFields() {
-      const isUserMode = draft.assigneeMode === 'user';
+      const isUserMode = state.assigneeMode === 'user';
 
       idsField.fieldEl.hidden = !isUserMode;
       namesField.fieldEl.hidden = !isUserMode;
     }
 
     function syncFieldAvailability() {
-      const disabled = !draft.enabled;
+      const disabled = !state.enabled;
 
       setControlDisabled(isSequentialField, disabled);
       setControlDisabled(assigneeModeField, disabled);
-      setControlDisabled(idsField, disabled || draft.assigneeMode !== 'user');
-      setControlDisabled(namesField, disabled || draft.assigneeMode !== 'user');
+      setControlDisabled(idsField, disabled || state.assigneeMode !== 'user');
+      setControlDisabled(namesField, disabled || state.assigneeMode !== 'user');
       setControlDisabled(collectionField, disabled);
       setControlDisabled(elementVariableField, disabled);
       setControlDisabled(loopCardinalityField, disabled);
@@ -254,10 +240,8 @@ export default class MultiInstanceComponent {
       syncUserButtonsState();
     }
 
-    function submitDraft(nextDraft, options = {}) {
-      const validation = options.skipValidation
-        ? { valid: true }
-        : (typeof entry.validate === 'function' ? entry.validate(nextDraft) : { valid: true });
+    function submitValue(value, options = {}) {
+      const validation = options.skipValidation ? { valid: true } : entry.validate(value);
 
       if (!options.skipValidation) {
         setMultiInstanceFieldErrors(fieldBindings, validation);
@@ -267,12 +251,12 @@ export default class MultiInstanceComponent {
         return {updated: false, validation};
       }
 
-      const result = typeof entry.setValue === 'function' ? entry.setValue(nextDraft) : { updated: false };
+      const result = entry.setValue(value);
       setMultiInstanceFieldErrors(fieldBindings, result && result.validation);
 
       if (result && result.updated === true) {
-        draft = createMultiInstanceProperties(nextDraft);
-        syncComponentDraft();
+        state = createMultiInstanceProperties(value);
+        syncComponentValue();
       }
 
       return result;
@@ -280,16 +264,12 @@ export default class MultiInstanceComponent {
 
     function bindCommitOnBlur(controlEl, onReadValue) {
       function commitValue() {
-        if (!draft.enabled) {
+        if (!state.enabled) {
           return;
         }
 
-        const nextDraft = {
-          ...draft,
-          ...onReadValue()
-        };
-
-        const result = submitDraft(nextDraft);
+        const nextValue = { ...state, ...onReadValue() };
+        const result = submitValue(nextValue);
         if (result && result.updated === true) {
           syncFieldAvailability();
         }
@@ -314,94 +294,94 @@ export default class MultiInstanceComponent {
     syncFieldAvailability();
 
     enabledInputEl.addEventListener('change', () => {
-      if (!!enabledInputEl.checked === !!draft.enabled) {
+      if (!!enabledInputEl.checked === !!state.enabled) {
         syncFieldAvailability();
         return;
       }
 
-      const lastDraft = { ...draft };
-      const nextDraft = {...draft, enabled: !!enabledInputEl.checked};
+      const lastValue = { ...state };
+      const nextValue = {...state, enabled: !!enabledInputEl.checked};
 
-      draft = createMultiInstanceProperties(nextDraft);
-      syncComponentDraft();
+      state = createMultiInstanceProperties(nextValue);
+      syncComponentValue();
       syncFieldAvailability();
 
-      const result = nextDraft.enabled ? submitDraft(nextDraft) : submitDraft(nextDraft, { skipValidation: true });
+      const result = nextValue.enabled ? submitValue(nextValue) : submitValue(nextValue, { skipValidation: true });
       if (result && result.updated === true) {
         clearMultiInstanceFieldErrors(fieldBindings);
         syncFieldAvailability();
         return;
       }
 
-      if (!nextDraft.enabled) {
-        draft = createMultiInstanceProperties(lastDraft);
-        enabledInputEl.checked = !!draft.enabled;
-        syncComponentDraft();
+      if (!nextValue.enabled) {
+        state = createMultiInstanceProperties(lastValue);
+        enabledInputEl.checked = !!state.enabled;
+        syncComponentValue();
         syncFieldAvailability();
       }
     });
 
     isSequentialInputEl.addEventListener('change', () => {
-      draft.isSequential = !!isSequentialInputEl.checked;
-      syncComponentDraft();
+      state.isSequential = !!isSequentialInputEl.checked;
+      syncComponentValue();
 
-      if (draft.enabled) {
-        submitDraft({...draft});
+      if (state.enabled) {
+        submitValue({...state});
       }
     });
 
     assigneeModeSelectEl.addEventListener('change', () => {
       let nextValue = assigneeModeSelectEl.value;
 
-      draft.assigneeMode = toStr(nextValue).trim();
-      assigneeModeSelectEl.value = draft.assigneeMode;
+      state.assigneeMode = toStr(nextValue).trim();
+      assigneeModeSelectEl.value = state.assigneeMode;
 
-      if (draft.assigneeMode !== 'user') {
-        draft.ids = '';
-        draft.names = '';
+      if (state.assigneeMode !== 'user') {
+        state.ids = '';
+        state.names = '';
       }
 
-      syncComponentDraft();
+      syncComponentValue();
       syncNamesPreview();
       syncUserButtonsState();
       syncAssigneeModeFields();
       syncFieldAvailability();
 
-      if (!draft.enabled) {
+      if (!state.enabled) {
         return;
       }
 
-      if (draft.assigneeMode === 'user' && !toStr(draft.ids).trim()) {
+      if (state.assigneeMode === 'user' && !toStr(state.ids).trim()) {
         clearMultiInstanceFieldErrors(fieldBindings);
         return;
       }
 
-      submitDraft({...draft});
+      submitValue({...state});
     });
 
     clearUsersButtonEl.addEventListener('click', () => {
-      if (!draft.enabled || draft.assigneeMode !== 'user') {
+      if (!state.enabled || state.assigneeMode !== 'user') {
         return;
       }
 
-      draft.ids = '';
-      draft.names = '';
-      syncComponentDraft();
+      state.ids = '';
+      state.names = '';
+      syncComponentValue();
 
       syncNamesPreview();
       syncUserButtonsState();
 
-      submitDraft({...draft});
+      submitValue({...state});
     });
 
     pickUsersButtonEl.addEventListener('click', async () => {
-      if (!draft.enabled || typeof entry.pickUsers !== 'function') {
+      if (!state.enabled || typeof entry.pickUsers !== 'function') {
         return;
       }
 
       let pickedUsers = null;
       try {
-        pickedUsers = await entry.pickUsers({ ...draft });
+        pickedUsers = await entry.pickUsers({ ...state });
       } catch (error) {
         return;
       }
@@ -410,51 +390,51 @@ export default class MultiInstanceComponent {
         return;
       }
 
-      draft = applyPickedUsersToDraft(draft, pickedUsers);
-      syncComponentDraft();
+      state = applyPickedUsersToValue(state, pickedUsers);
+      syncComponentValue();
 
-      assigneeModeSelectEl.value = draft.assigneeMode;
+      assigneeModeSelectEl.value = state.assigneeMode;
       syncNamesPreview();
       syncUserButtonsState();
       syncAssigneeModeFields();
       syncFieldAvailability();
 
-      submitDraft({...draft});
+      submitValue({...state});
     });
 
     collectionInputEl.addEventListener('input', () => {
-      draft.collection = toStr(collectionInputEl.value);
-      syncComponentDraft();
+      state.collection = toStr(collectionInputEl.value);
+      syncComponentValue();
 
-      if (draft.enabled) {
-        submitDraft({...draft});
+      if (state.enabled) {
+        submitValue({...state});
       }
     });
 
     elementVariableInputEl.addEventListener('input', () => {
-      draft.elementVariable = toStr(elementVariableInputEl.value);
-      syncComponentDraft();
+      state.elementVariable = toStr(elementVariableInputEl.value);
+      syncComponentValue();
 
-      if (draft.enabled) {
-        submitDraft({...draft});
+      if (state.enabled) {
+        submitValue({...state});
       }
     });
 
     loopCardinalityInputEl.addEventListener('input', () => {
-      draft.loopCardinality = toStr(loopCardinalityInputEl.value);
-      syncComponentDraft();
+      state.loopCardinality = toStr(loopCardinalityInputEl.value);
+      syncComponentValue();
 
-      if (draft.enabled) {
-        submitDraft({...draft});
+      if (state.enabled) {
+        submitValue({...state});
       }
     });
 
     completionConditionEl.addEventListener('input', () => {
-      draft.completionCondition = toStr(completionConditionEl.value);
-      syncComponentDraft();
+      state.completionCondition = toStr(completionConditionEl.value);
+      syncComponentValue();
 
-      if (draft.enabled) {
-        submitDraft({...draft});
+      if (state.enabled) {
+        submitValue({...state});
       }
     });
 
@@ -468,11 +448,9 @@ export default class MultiInstanceComponent {
       loopCardinality: toStr(loopCardinalityInputEl.value)
     }));
     completionConditionEl.addEventListener('blur', () => {
-      if (!draft.enabled) {
-        return;
+      if (state.enabled) {
+        submitValue({...state, completionCondition: toStr(completionConditionEl.value)});
       }
-
-      submitDraft({...draft, completionCondition: toStr(completionConditionEl.value)});
     });
 
     return {
