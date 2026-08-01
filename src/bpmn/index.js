@@ -8,6 +8,7 @@ import MyTranslate from './translate';
 import taskModdleDescriptor from './properties-panel/descriptors/taskExt.json';
 import userTaskModdleDescriptor from './properties-panel/descriptors/userTask.json';
 import MyPropertiesPanelModule from './properties-panel';
+import MyViewer from "./MyViewer";
 
 export default {
   modules: [
@@ -22,5 +23,6 @@ export default {
     taskExt: taskModdleDescriptor,
     userTask: userTaskModdleDescriptor
   },
-  myPropertiesPanel: MyPropertiesPanelModule
+  myPropertiesPanel: MyPropertiesPanelModule,
+  myViewer: MyViewer
 };

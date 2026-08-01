@@ -70,7 +70,8 @@ export const RESOURCES = {
     assignRow: 'res:userMgr:assignRow'
   },
   flowMgr: {
-    defView: 'res:flowDefinitionMgr:view'
+    defView: 'res:flowDefinitionMgr:view',
+    instanceView: 'res:flowInstanceMgr:view'
   }
 };
 

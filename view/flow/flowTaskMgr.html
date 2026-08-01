@@ -2,11 +2,9 @@
 <html>
 <head>
   <meta http-equiv="Content-Type" content="text/html; charset=utf-8" />
-  <title>审批流</title>
+  <title>我的待办</title>
   <link type="image/x-icon" href="../../static/images/favicon.ico" rel="shortcut icon" />
   <link type="text/css" href="../../static/layui/2.13.5/css/layui.css" rel="stylesheet" />
-  <link type="text/css" href="../../static/dtree/css/dtree.css" rel="stylesheet" />
-  <link type="text/css" href="../../static/dtree/css/font/dtreefont.css" rel="stylesheet" />
   <link type="text/css" href="../../static/css/mycuckoo.css" rel="stylesheet" />
   <style>
     html, body {
@@ -31,10 +29,13 @@
     <form class="layui-col-md12 layui-form mycuckoo-search">
       <div class="layui-inline">
         <div class="layui-input-inline">
-          <input class="layui-input" name="q[code]" placeholder="用户号">
+          <input class="layui-input" name="q[taskName]" placeholder="任务名称">
         </div>
         <div class="layui-input-inline">
-          <input class="layui-input" name="q[name]" placeholder="用户名">
+          <input class="layui-input" name="q[processDefinitionName]" placeholder="流程名称">
+        </div>
+        <div class="layui-input-inline">
+          <input class="layui-input" name="q[initiator]" placeholder="发起人">
         </div>
         <div class="layui-input-inline">
           <button class="layui-btn" lay-filter="search" lay-submit>
@@ -51,17 +52,42 @@
 <script type="text/javascript" src="../../static/layui/2.13.5/layui.js" charset="UTF-8"></script>
 <script type="text/javascript" src="../../static/mycuckoo.bundle.js" charset="UTF-8"></script>
 <script type="text/javascript">
-  layui.use(['jquery', 'form', 'dropdown', 'table'], function() {
+  layui.use(['jquery', 'layer', 'form', 'dropdown', 'table'], function() {
     const $ = layui.jquery,
+      layer = layui.layer,
       form = layui.form,
       dropdown = layui.dropdown,
       table = layui.table;
 
-    //本地缓存数据
     const queryObj = MyCuckoo.getQueryObject(location.search);
     const resources = MyCuckoo.getResource(queryObj.reskey);
     const resourceMap = MyCuckoo.getDictMap(resources);
-    const resourceObj = MyCuckoo.getMainResource(resources);
+    const resourceObj = MyCuckoo.getMainResource(resources)
+
+    function readVariable(data, key) {
+      let variables = data && data.variables;
+      if (!variables) {
+        return data && data[key] ? data[key] : '';
+      }
+      if (Array.isArray(variables)) {
+        let matched = variables.find(item => item && item.name === key);
+        return matched ? matched.value : '';
+      }
+
+      return variables[key] === undefined || variables[key] === null ? '' : variables[key];
+    }
+
+    function formatVariables(data) {
+      let variables = data && data.variables;
+      if (!variables) {
+        return '';
+      }
+      if (typeof variables === 'string') {
+        return variables;
+      }
+
+      return JSON.stringify(variables);
+    }
 
     table.render({
       id: 'table',
@@ -70,18 +96,41 @@
       method: resourceObj.method,
       cellMinWidth: 100,
       height: MyCuckoo.tableHeight,
-      toolbar: MyCuckoo.getActions(resources, 'table'),
+      // toolbar: MyCuckoo.getActions(resources, 'table'),
       resources: resources,
       cols: [[
         {type: 'numbers'},
-        {type: 'radio'},
-        {field: 'key', title: 'key'},
-        {field: 'name', title: '名称'},
-        {field: 'description', title: '描述'},
-        {field: 'resourceName', title: '资源文件'},
-        {field: 'diagramResourceName', title: '图片文件'},
-        {field: 'version', title: '版本号'},
-        {field: 'hasStartFormKey', title: '是否有表单'},
+        // {type: 'radio'},
+        {field: 'taskName', title: '任务名称', minWidth: 160},
+        {field: 'taskKey', title: '任务Key', minWidth: 150},
+        {field: 'assignee', title: '办理人', minWidth: 120},
+        {field: 'definitionName', title: '流程名称', minWidth: 160},
+        {field: 'definitionKey', title: '流程Key', minWidth: 150},
+        {field: 'definitionVersion', title: '版本', width: 80},
+        {field: 'instanceId', title: '流程实例ID', minWidth: 180},
+        {field: 'initiator', title: '发起人', minWidth: 120,
+          templet: function(d) {
+            return readVariable(d, 'initiator');
+          }
+        },
+        {field: 'formType', title: '表单类型', minWidth: 120,
+          templet: function(d) {
+            return readVariable(d, 'formType');
+          }
+        },
+        {field: 'formId', title: '表单ID', minWidth: 120,
+          templet: function(d) {
+            return readVariable(d, 'formId');
+          }
+        },
+        {field: 'createTime', title: '创建时间', minWidth: 170},
+        {field: 'dueDate', title: '到期时间', minWidth: 170},
+        {field: 'variables', title: '业务变量', minWidth: 220,
+          templet: function(d) {
+            let variables = formatVariables(d);
+            return '<span title="' + variables + '">' + variables + '</span>';
+          }
+        },
         {fixed: "right", title: "操作", align: "center", width: 120, toolbar: MyCuckoo.getActions(resources, 'col'), resources: resources}
       ]],
       page: true,
@@ -97,20 +146,19 @@
           data: res.data.content
         }
       },
-      done: function(res, curr, count) {
+      done: function() {
         new IndexMgr();
       }
     });
 
     let indexMgrInst = null;
     const IndexMgr = function () {
-      if (indexMgrInst) { //实例已存在
+      if (indexMgrInst) {
         return;
       }
       const that = indexMgrInst = this;
 
       form.on('submit(search)', function (data) {
-        //执行重载
         table.reload('table', {
           page: {pageNo: 1},
           where: data.field
@@ -119,7 +167,6 @@
         return false;
       });
 
-      //单元格工具事件
       table.on('tool(table)', function (obj) {
         obj.elem = this;
         that.on(obj);
@@ -127,10 +174,6 @@
 
       table.on('toolbar(table)', function (obj) {
         if (obj.event.indexOf('LAYTABLE_') == 0) {
-          return;
-        }
-        if (obj.event.endsWith('add')) {
-          that.on(obj);
           return;
         }
 
@@ -161,58 +204,15 @@
       reload: function() {
         table.reload('table', { page: { pageNo: 1 } });
       },
-      //增加
-      add: function(obj) {
-        MyCuckoo.dialog('流程设计', '../../modeler.html?reskey={reskey}&action={action}',
-                {...queryObj, 'action': obj.event}
-        );
-      },
-      //修改
-      modify: function(obj) {
-        let data = obj.data;
-        let url = MyCuckoo.resolve('../../modeler.html?reskey={reskey}&action={action}&key={key}&name={name}&description={description}', {
-          ...queryObj, 'action': obj.event,
-          key: data.key,
-          name: data.name || '',
-          description: data.description || ''
-        });
-        MyCuckoo.dialog('流程设计', url);
-      },
-      //查看
       view: function(obj) {
         let data = obj.data;
-        let url = MyCuckoo.resolve('../../modeler.html?reskey={reskey}&action={action}&key={key}&name={name}&description={description}', {
-          ...queryObj, 'action': obj.event,
-          key: data.key,
-          name: data.name || '',
-          description: data.description || ''
-        });
-        MyCuckoo.dialog('流程预览', url);
-      },
-      //删除
-      delete: function(obj) {
-        let data = obj.data;
-        let that = this;
-        MyCuckoo.confirm({title: '警告提示', msg: '您确认删除此记录吗?',
-          okBtn: '是', cancelBtn: '否', ok: function() {
-            $.request(resourceMap[obj.event], {id: data.userId}).then(json => {
-              MyCuckoo.msg({ msg: json.msg });
+        let url = MyCuckoo.resolve('flowTaskMgrForm.html?reskey={reskey}&action={action}&instanceId={id}&deployId={deployId}',
+                { ...queryObj, 'action': obj.event, 'id': data.instanceId, 'deployId': data.deployId})
 
-              that.reload();
-            });
-          }});
+        MyCuckoo.dialog('任务表单', url);
       },
-      //创建实例
-      create: function(obj) {
-        let data = obj.data;
-        let that = this;
-        MyCuckoo.confirm({msg : '您确认创建流程实例？', ok : function() {
-            $.request(resourceMap[obj.event], {processDefinitionId: data.id, formType: 'common-audit'}).then(function(json) {
-              MyCuckoo.msg({ msg: '创建流程成功' });
-
-              that.reload();
-            });
-          }});
+      complete: function(obj) {
+        this.view(obj);
       },
       more: function (obj) {
         let that = this;
@@ -230,7 +230,7 @@
           }
         });
       }
-      //end
     }
   });
 </script>
+</html>
