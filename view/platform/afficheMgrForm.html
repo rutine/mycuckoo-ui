@@ -94,7 +94,7 @@
       $form.find('.toolbar').html(MyCuckoo.getActions(resourceObj || {}, 'form'));
 
       //表单初始赋值
-      if (queryObj.id && resourceObj) {
+      if (queryObj.id && resourceObj.canAccess()) {
         if(resourceObj.code === MyCuckoo.res.afficheMgr.view) {
           $('#ID_filePicker').addClass('layui-hide');
           $('#ID_uploadStart').addClass('layui-hide');

@@ -84,7 +84,13 @@
 
     //初始化结构树
     let selectNode = null;
-    let uri = MyCuckoo.api.getUrl(resourceMap[MyCuckoo.res.deptMgr.tree]);
+    const action = resourceMap[MyCuckoo.res.deptMgr.tree];
+    if (!action.canAccess()) {
+      MyCuckoo.msg({ msg: '无权访问此资源' });
+      return;
+    }
+
+    let uri = MyCuckoo.api.getUrl(action);
     const treeObj = tree.render({
       elem: '#tree',
       method: 'get',

@@ -135,7 +135,7 @@
       $form.find('.toolbar').html(MyCuckoo.getActions(resourceObj || {}, 'form'));
 
       //表单初始赋值
-      if (queryObj.id && resourceObj) {
+      if (queryObj.id && resourceObj.canAccess()) {
         $.request(resourceMap[MyCuckoo.res.userMgr.view], queryObj).then(json => {
           form.val('editForm', json.data);
 
@@ -263,7 +263,7 @@
       },
       selectDept: function(ele) {
         let action = resourceMap[MyCuckoo.res.deptMgr.tree];
-        if (!action) {
+        if (!action.canAccess()) {
           MyCuckoo.msg({msg: '无权访问此资源'});
           return;
         }
@@ -272,7 +272,7 @@
       },
       selectRole: function(ele) {
         let action = resourceMap[MyCuckoo.res.deptMgr.tree];
-        if (!action) {
+        if (!action.canAccess()) {
           MyCuckoo.msg({msg: '无权访问此资源'});
           return;
         }

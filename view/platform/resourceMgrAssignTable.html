@@ -68,10 +68,16 @@
     const typeMap = MyCuckoo.getDictMap(types);
     const filterTypeMap = MyCuckoo.getDictMap(filterTypes);
 
+    const action = resourceMap[MyCuckoo.res.resourceMgr.selector];
+    if (!action.canAccess()) {
+      MyCuckoo.msg({ msg: '无权访问此资源' });
+      return;
+    }
+
     const tableInst = table.render({
       id: 'table',
       elem: '#ID_table',
-      url: MyCuckoo.resolve(MyCuckoo.api.getUrl(resourceMap[MyCuckoo.res.resourceMgr.selector]), queryObj),
+      url: MyCuckoo.resolve(MyCuckoo.api.getUrl(action), queryObj),
       method: 'get',
       height: MyCuckoo.tableHeight,
       css: [
@@ -90,7 +96,7 @@
 //
 //          return arr.join('');
 
-          let name = typeMap[d.type] ? typeMap[d.type]['name'] : d.type;
+          let name = typeMap[d.type].name || d.type;
           let arr = ['<a class="layui-btn layui-btn-primary table-col-dropdown-type">',
             '<span>' + name + '</span>',
             '<i class="layui-icon layui-icon-down layui-font-12"></i>',
@@ -101,7 +107,7 @@
         {field: 'field', title: '字段', edit: 'text'},
         {field: 'title', title: '标题', edit: 'text'},
         {field: 'filterType', title: '过滤类型', templet: function(d) {
-          let name = filterTypeMap[d.filterType] ? filterTypeMap[d.filterType]['name'] : d.filterType;
+          let name = filterTypeMap[d.filterType].name || d.filterType;
           let arr = ['<a class="layui-btn layui-btn-primary table-col-dropdown-filterType">',
                       '<span>' + name + '</span>',
                       '<i class="layui-icon layui-icon-down layui-font-12"></i>',

@@ -181,7 +181,7 @@
         form.render('select');
 
         //表单初始赋值
-        if (queryObj.id && resourceObj) {
+        if (queryObj.id && resourceObj.canAccess()) {
           $.request(resourceMap[MyCuckoo.res.organMgr.view], queryObj).then(json => {
             form.val('editForm', json.data);
 
@@ -273,7 +273,7 @@
       },
       selectBelongDist: function(obj) {
         let action = resourceMap[MyCuckoo.res.districtMgr.tree];
-        if (!action) {
+        if (!action.canAccess()) {
           MyCuckoo.msg({msg: '无权访问此资源'});
           return;
         }
@@ -282,7 +282,7 @@
       },
       selectOrgan: function(obj) {
         let action = resourceMap[MyCuckoo.res.organMgr.tree];
-        if (!action) {
+        if (!action.canAccess()) {
           MyCuckoo.msg({msg: '无权访问此资源'});
           return;
         }

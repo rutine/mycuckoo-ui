@@ -115,7 +115,7 @@
       $form.find('.toolbar').html(MyCuckoo.getActions(resourceObj || {}, 'form'));
 
       //表单初始赋值
-      if (queryObj.id && resourceObj) {
+      if (queryObj.id && resourceObj.canAccess()) {
         $.request(resourceMap[MyCuckoo.res.schedulerMgr.view], queryObj).then(json => {
           form.val('editForm', json.data);
 

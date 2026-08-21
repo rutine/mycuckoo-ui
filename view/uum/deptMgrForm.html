@@ -69,7 +69,7 @@
 
       //初始化
       //表单初始赋值
-      if (queryObj.id && resourceObj) {
+      if (queryObj.id && resourceObj.canAccess()) {
         $.request(resourceMap[MyCuckoo.res.deptMgr.view], queryObj).then(json => {
           form.val('editForm', json.data);
 
@@ -156,7 +156,7 @@
       },
       selectDept: function(obj) {
         let action = resourceMap[MyCuckoo.res.deptMgr.tree];
-        if (!action) {
+        if (!action.canAccess()) {
           MyCuckoo.msg({msg: '无权访问此资源'});
           return;
         }

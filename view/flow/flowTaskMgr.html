@@ -206,8 +206,8 @@
       },
       view: function(obj) {
         let data = obj.data;
-        let url = MyCuckoo.resolve('flowTaskMgrForm.html?reskey={reskey}&action={action}&instanceId={id}&deployId={deployId}',
-                { ...queryObj, 'action': obj.event, 'id': data.instanceId, 'deployId': data.deployId})
+        let url = MyCuckoo.resolve('flowTaskMgrForm.html?reskey={reskey}&action={action}&instanceId={id}&deployId={deployId}&taskId={taskId}',
+                { ...queryObj, 'action': obj.event, 'id': data.instanceId, 'deployId': data.deployId, 'taskId': data.taskId})
 
         MyCuckoo.dialog('任务表单', url);
       },

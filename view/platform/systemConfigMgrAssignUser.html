@@ -53,10 +53,16 @@
       resourceMap = MyCuckoo.getDictMap(resources),
       resourceObj = resourceMap[queryObj.action];
 
+    const action = resourceMap[MyCuckoo.res.systemConfigMgr.selector];
+    if (!action.canAccess()) {
+      MyCuckoo.msg({ msg: '无权访问此资源' });
+      return;
+    }
+
     table.render({
       id: 'table',
       elem: '#ID_table',
-      url: MyCuckoo.api.getUrl(resourceMap[MyCuckoo.res.systemConfigMgr.selector]),
+      url: MyCuckoo.api.getUrl(action),
       method: 'get',
       cellMinWidth: 100,
       cols: [[

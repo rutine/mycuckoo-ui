@@ -155,7 +155,7 @@
     const queryObj = MyCuckoo.getQueryObject(location.search);
     const resources = MyCuckoo.getResource(queryObj.reskey);
     const resourceMap = MyCuckoo.getDictMap(resources);
-    const resourceObj = resourceMap[queryObj.action] || MyCuckoo.getMainResource(resources);
+    const resourceObj = resourceMap[queryObj.action];
     const useMockData = false;
     const mockTaskData = {
       initiatorName: '张三',
@@ -206,7 +206,7 @@
         }
 
         const that = this;
-        if (!resourceObj) {
+        if (!resourceObj.canAccess()) {
           MyCuckoo.msg({msg: '未找到待办任务资源', icon: 2});
           return;
         }

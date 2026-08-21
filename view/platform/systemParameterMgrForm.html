@@ -86,7 +86,7 @@
         form.render('select');
 
         //表单初始赋值
-        if (queryObj.id && resourceObj) {
+        if (queryObj.id && resourceObj.canAccess()) {
           if (resourceObj.code !== MyCuckoo.res.systemParameterMgr.add) {
             $form.find('input[name=key]').attr('disabled', 'disabled');
           }

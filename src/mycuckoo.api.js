@@ -175,8 +175,8 @@ function installHttpHelpers($, host) {
   $._mycuckooBaseGet = baseGet;
 
   $.request = function(action, uriVariables, params) {
-    if (!action) {
-      throw new Error('无权访问此资源');
+    if (!action || !action.canAccess()) {
+      throw new Error(action ? '无权访问此资源:"' + action.code + '"' : '无权访问此资源');
     }
 
     const method = String(action.method || '').toLowerCase();

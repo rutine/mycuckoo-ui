@@ -151,10 +151,16 @@
       initSelectedUsers(queryObj.ids, queryObj.names);
       updateSelectedSummary();
 
+      const action = resourceMap[MyCuckoo.res.userMgr.list];
+      if (!action.canAccess()) {
+        MyCuckoo.msg({ msg: '无权访问此资源' });
+        return;
+      }
+
       table.render({
         id: 'table',
         elem: '#ID_table',
-        url: MyCuckoo.api.getUrl(resourceMap[MyCuckoo.res.userMgr.list]),
+        url: MyCuckoo.api.getUrl(action),
         method: 'get',
         cellMinWidth: 100,
         height: 'full-200',

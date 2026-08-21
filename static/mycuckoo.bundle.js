@@ -168,17 +168,17 @@
 
       getResourceMap() {
         const menu = this.getSession('myMenu');
-        const map = Object.create(null);
+        const resources = [];
 
         if (menu && menu.fourth) {
-          Object.values(menu.fourth).forEach(resources => {
-            (resources || []).forEach(resource => {
-              map[resource.code] = resource;
+          Object.values(menu.fourth).forEach(group => {
+            (group || []).forEach(resource => {
+              resources.push(resource);
             });
           });
         }
 
-        return map;
+        return this.getDictMap(resources);
       },
 
       getMainResource(operator = []) {
@@ -221,10 +221,31 @@
           return dicts || {};
         }
 
-        return dicts.reduce(function(map, item) {
-          map[item.code] = item;
-          return map;
-        }, {});
+        const createResource = function(resource, code, allowed) {
+          return Object.assign({ code: code }, resource, {
+            canAccess: function() {
+              return allowed;
+            }
+          });
+        };
+
+        const map = Object.create(null);
+
+        dicts.forEach(function(item) {
+          map[item.code] = createResource(item, item.code, true);
+        });
+
+        return new Proxy(map, {
+          get: function(target, code) {
+            if (typeof code !== 'string') {
+              return target[code];
+            }
+
+            return Object.prototype.hasOwnProperty.call(target, code)
+              ? target[code]
+              : createResource({}, code, false);
+          }
+        });
       },
 
       cloneObject: cloneObject,
@@ -538,7 +559,7 @@
     $._mycuckooBaseGet = baseGet;
 
     $.request = function(action, uriVariables, params) {
-      if (!action) {
+      if (!action || !action.canAccess()) {
         throw new Error('无权访问此资源');
       }
 

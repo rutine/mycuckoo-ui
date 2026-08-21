@@ -36,10 +36,16 @@
       resourceObj = resourceMap[queryObj.action],
       $form = $('form[name=editForm]');
 
+    const action = resourceMap[MyCuckoo.res.roleMgr.list];
+    if (!action.canAccess()) {
+      MyCuckoo.msg({ msg: '无权访问此资源' });
+      return;
+    }
+
     table.render({
       id: 'table',
       elem: '#ID_table',
-      url: MyCuckoo.api.getUrl(resourceMap[MyCuckoo.res.roleMgr.list]),
+      url: MyCuckoo.api.getUrl(action),
       method: 'get',
       cellMinWidth: 100,
       height: MyCuckoo.tableHeight,
