@@ -16,8 +16,8 @@
     .task-header { display: flex; align-items: center; gap: 10px; height: 56px; padding: 0 16px; box-sizing: border-box; background: #fff; border-bottom: 1px solid #eee; }
     .task-title { margin-right: 8px; font-size: 16px; font-weight: 600; color: #333; }
     .task-content { height: calc(100% - 56px); background: #fff;}
-    .task-tabs { margin: 0; height: 100%; }
 
+    .task-tabs { margin: 0; height: 100%; }
     .task-tabs .layui-tabs-header { padding-left: 16px; }
     .task-tabs .layui-tabs-body { height: calc(100% - 41px); padding: 0; }
     .task-tabs .layui-tabs-item { height: 100%; overflow: auto; }
@@ -46,7 +46,7 @@
       <span id="ID_task_name" class="layui-badge-rim"></span>
 
       <div class="toolbar">
-
+        <button type="button" class="layui-btn layui-btn-sm layui-btn-primary" data-event="close" lay-submit>关闭</button>
       </div>
     </header>
 
@@ -120,60 +120,24 @@
   </main>
 </div>
 
-<div id="ID_task_approval">
-  <form class="layui-form layui-padding-1" lay-filter="taskApproval">
-    <div class="layui-form-item">
-      <label class="layui-form-label">处理意见</label>
-      <div class="layui-input-block">
-        <textarea class="layui-textarea" name="comment" lay-verify="required" placeholder="请输入处理意见" required></textarea>
-      </div>
-    </div>
-    <div class="layui-form-item">
-      <label class="layui-form-label"></label>
-      <div class="layui-input-block">
-        <input type="radio" name="type" value="NORMAL" title="通过" checked>
-        <input type="radio" name="type" value="REJECT" title="驳回">
-        <input type="radio" name="type" value="RETURN" title="退回">
-      </div>
-    </div>
-    <div class="layui-form-item" style="margin-bottom:0;text-align:center">
-      <button type="button" class="layui-btn layui-btn-sm" data-event="save" lay-submit>提交</button>
-      <button type="button" class="layui-btn layui-btn-sm layui-btn-primary" data-layer-close>取消</button>
-    </div>
-  </form>
-</div>
-
 <script type="text/javascript" src="../../static/layui/2.13.5/layui.js" charset="UTF-8"></script>
 <script type="text/javascript" src="../../static/mycuckoo.bundle.js" charset="UTF-8"></script>
 <script type="text/javascript" src="../../static/bpmn/modeler-plugins.js" charset="UTF-8"></script>
 <script type="text/javascript">
-  layui.use(['jquery', 'tabs', 'form', 'layer'], function() {
+  layui.use(['jquery', 'tabs', 'form'], function() {
     const $ = layui.jquery;
     const form = layui.form;
-    const layer = layui.layer;
     const tabs = layui.tabs;
     const queryObj = MyCuckoo.getQueryObject(location.search);
     const resources = MyCuckoo.getResource(queryObj.reskey);
     const resourceMap = MyCuckoo.getDictMap(resources);
     const resourceObj = resourceMap[queryObj.action];
-    const useMockData = false;
-    const mockTaskData = {
-      initiatorName: '张三',
-      taskName: '部门审批',
-      form: {申请编号: 'SQ20260729001', 申请事项: '采购办公设备', 申请金额: '12,800.00 元', 申请日期: '2026-07-29', 申请说明: '用于新员工工位配置。'},
-      records: [
-        {taskName: '提交申请', assigneeName: '张三', deptName: '行政部', startTime: '2026-07-29 09:30:00', endTime: '2026-07-29 09:35:20', duration: '5分20秒', comment: '提交申请'},
-        {taskName: '部门审批', assigneeName: '李四', deptName: '采购部', startTime: '2026-07-29 09:35:20', candidate: '李四、王五'}
-      ],
-      xml: '<definitions xmlns="http://www.omg.org/spec/BPMN/20100524/MODEL" xmlns:bpmndi="http://www.omg.org/spec/BPMN/20100524/DI" xmlns:dc="http://www.omg.org/spec/DD/20100524/DC" xmlns:di="http://www.omg.org/spec/DD/20100524/DI" targetNamespace="http://bpmn.io/schema/bpmn"><process id="TaskFormDemo" name="审批流程" isExecutable="false"><startEvent id="StartEvent_1" name="开始"/><userTask id="UserTask_1" name="提交申请"/><userTask id="UserTask_2" name="部门审批"/><endEvent id="EndEvent_1" name="结束"/><sequenceFlow id="Flow_1" sourceRef="StartEvent_1" targetRef="UserTask_1"/><sequenceFlow id="Flow_2" sourceRef="UserTask_1" targetRef="UserTask_2"/><sequenceFlow id="Flow_3" sourceRef="UserTask_2" targetRef="EndEvent_1"/></process><bpmndi:BPMNDiagram id="Diagram_1"><bpmndi:BPMNPlane id="Plane_1" bpmnElement="TaskFormDemo"><bpmndi:BPMNShape id="StartEvent_1_di" bpmnElement="StartEvent_1"><dc:Bounds x="100" y="142" width="36" height="36"/></bpmndi:BPMNShape><bpmndi:BPMNShape id="UserTask_1_di" bpmnElement="UserTask_1"><dc:Bounds x="210" y="120" width="110" height="80"/></bpmndi:BPMNShape><bpmndi:BPMNShape id="UserTask_2_di" bpmnElement="UserTask_2"><dc:Bounds x="420" y="120" width="110" height="80"/></bpmndi:BPMNShape><bpmndi:BPMNShape id="EndEvent_1_di" bpmnElement="EndEvent_1"><dc:Bounds x="630" y="142" width="36" height="36"/></bpmndi:BPMNShape><bpmndi:BPMNEdge id="Flow_1_di" bpmnElement="Flow_1"><di:waypoint x="136" y="160"/><di:waypoint x="210" y="160"/></bpmndi:BPMNEdge><bpmndi:BPMNEdge id="Flow_2_di" bpmnElement="Flow_2"><di:waypoint x="320" y="160"/><di:waypoint x="420" y="160"/></bpmndi:BPMNEdge><bpmndi:BPMNEdge id="Flow_3_di" bpmnElement="Flow_3"><di:waypoint x="530" y="160"/><di:waypoint x="630" y="160"/></bpmndi:BPMNEdge></bpmndi:BPMNPlane></bpmndi:BPMNDiagram></definitions>',
-      nodes: [{key: 'StartEvent_1', completed: true}, {key: 'UserTask_1', completed: true}, {key: 'UserTask_2', completed: false}]
-    };
 
     const FlowTaskForm = function() {
       this.viewer = null;
       this.data = null;
-      this.init();
       this.binds();
+      this.init();
       this.load();
     };
 
@@ -181,14 +145,6 @@
       constructor: FlowTaskForm,
       binds: function() {
         const that = this;
-
-        $('.toolbar').find('a.layui-btn').on('click', function() {
-          let event = $(this).data('event');
-          let arr = event.split(':');
-          let eve = arr[arr.length - 1];
-          that[eve] && that[eve]({event: eve, elem: this});
-        });
-
         form.on('submit', function (data) {
           let event = $(this).data('event');
           that[event] && that[event]({event: event, data: data.field});
@@ -205,26 +161,14 @@
             setTimeout(function() { that.loadDiagram(); }, 0);
           }
         });
-
-        $('.toolbar').html(MyCuckoo.getActions(resourceObj || {}, 'form'));
       },
       load: function() {
-        if (useMockData) {
-          this.data = mockTaskData;
-          this.renderTask();
-          return;
-        }
-
         const that = this;
-        if (!resourceObj.canAccess()) {
-          MyCuckoo.msg({msg: '未找到待办任务资源', icon: 2});
-          return;
-        }
-        $.request(resourceMap[MyCuckoo.res.flowMgr.instanceView], queryObj).then(function(response) {
+        $.request(resourceObj, queryObj).then(function(response) {
           that.data = response.data;
           that.renderTask();
         }).catch(function() {
-          MyCuckoo.msg({msg: '待办任务加载失败', icon: 2});
+          MyCuckoo.msg({msg: '流程实例加载失败', icon: 2});
         });
       },
       renderTask: function() {
@@ -253,31 +197,6 @@
             $('#ID_task_record').html('<ul class="layui-timeline">' + recordHtml + '</ul>');
 
         form.render();
-      },
-      complete: function(obj) {
-        const that = this;
-        layer.open({
-          type: 1,
-          title: '流程审批',
-          area: ['420px', '260px'],
-          content: $('#ID_task_approval'),
-          success: function(layero, index) {
-            $(layero).on('click', '[data-layer-close]', function() { layer.close(index); });
-            // $(layero).find('form').on('submit', function(event) {
-            //   event.preventDefault();
-            //
-            // });
-            // form.render();
-          }
-        });
-      },
-      save: function (obj) {
-        const that = this;
-        $.request(resourceObj, {...obj.data, ...queryObj}).then(function(json) {
-          MyCuckoo.msg({msg: (json && json.msg) || '任务完成成功'});
-          layer.closeLast('page');
-          that.load();
-        });
       },
       close: function() {
         let index = parent.layer.getFrameIndex(window.name);

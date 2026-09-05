@@ -71,6 +71,7 @@ export const RESOURCES = {
   },
   flowMgr: {
     defView: 'res:flowDefinitionMgr:view',
+    defVariable: 'res:flowDefinitionMgr:variable',
     instanceView: 'res:flowInstanceMgr:view'
   }
 };

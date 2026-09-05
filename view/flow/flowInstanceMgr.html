@@ -59,9 +59,9 @@
 
     //本地缓存数据
     const queryObj = MyCuckoo.getQueryObject(location.search);
-    const operator = MyCuckoo.getResource(queryObj.reskey);
-    const operatorMap = MyCuckoo.getDictMap(operator);
-    const action = MyCuckoo.getMainResource(operator);
+    const resources = MyCuckoo.getResource(queryObj.reskey);
+    const resourceMap = MyCuckoo.getDictMap(resources);
+    const action = MyCuckoo.getMainResource(resources);
 
     table.render({
       id: 'table',
@@ -70,13 +70,13 @@
       method: action.method,
       cellMinWidth: 100,
       height: MyCuckoo.tableHeight,
-      toolbar: MyCuckoo.getActions(operator, 'table'),
-      // operator: operator,
+      toolbar: MyCuckoo.getActions(resources, 'table'),
+      // resources: resources,
       cols: [[
         {type: 'numbers'},
         {type: 'radio'},
         {field: 'name', title: '名称'},
-        {field: 'processInstanceId', title: '实例ID'},
+        {field: 'instanceId', title: '实例ID'},
         {field: 'key', title: '流程编码'},
         {field: 'businessKey', title: '业务类型'},
         {field: 'startUser', title: '发起人'},
@@ -84,7 +84,7 @@
         {field: 'status', title: '状态'},
         {field: 'startTime', title: '启动时间'},
         {field: 'endTime', title: '结束时间'},
-        {fixed: "right", title: "操作", align: "center", width: 120, toolbar: MyCuckoo.getActions(operator, 'col'), operator: operator}
+        {fixed: "right", title: "操作", align: "center", width: 120, toolbar: MyCuckoo.getActions(resources, 'col'), resources: resources}
       ]],
       page: true,
       request: {
@@ -163,42 +163,17 @@
       reload: function() {
         table.reload('table', { page: { pageNo: 1 } });
       },
-      //增加
-      add: function(obj) {
-        let url = MyCuckoo.resolve('userMgrForm.html?reskey={reskey}&action={action}',
-            {...queryObj, 'action': obj.event})
-        MyCuckoo.dialog('用户信息', url);
-      },
-      //修改
-      modify: function(obj) {
-        let data = obj.data;
-        let url = MyCuckoo.resolve('userMgrForm.html?reskey={reskey}&action={action}&id={id}',
-            { ...queryObj, 'action': obj.event, 'id': data.userId})
-        MyCuckoo.dialog('用户信息', url);
-      },
       //查看
       view: function(obj) {
         let data = obj.data;
-        let url = MyCuckoo.resolve('userMgrForm.html?reskey={reskey}&action={action}&id={id}',
-            {...queryObj, 'action': obj.event, 'id': data.userId})
-        MyCuckoo.dialog('用户信息', url);
-      },
-      //删除
-      delete: function(obj) {
-        let data = obj.data;
-        let that = this;
-        MyCuckoo.confirm({title: '警告提示', msg: '您确认删除此记录吗?',
-          okBtn: '是', cancelBtn: '否', ok: function() {
-            $.request(operatorMap[obj.event], {id: data.userId}).then(json => {
-              MyCuckoo.msg({ msg: json.msg });
+        let url = MyCuckoo.resolve('flowInstanceMgrForm.html?reskey={reskey}&action={action}&instanceId={id}&deployId={deployId}',
+                { ...queryObj, 'action': obj.event, 'id': data.id, 'deployId': data.deployId });
 
-              that.reload();
-            });
-          }});
+        MyCuckoo.dialog('实例信息', url);
       },
       more: function (obj) {
         let that = this;
-        let btns = MyCuckoo.getActions(operator, 'more');
+        let btns = MyCuckoo.getActions(resources, 'more');
         dropdown.render({
           elem: obj.elem,
           show: true,

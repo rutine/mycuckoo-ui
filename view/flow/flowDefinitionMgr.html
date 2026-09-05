@@ -51,8 +51,9 @@
 <script type="text/javascript" src="../../static/layui/2.13.5/layui.js" charset="UTF-8"></script>
 <script type="text/javascript" src="../../static/mycuckoo.bundle.js" charset="UTF-8"></script>
 <script type="text/javascript">
-  layui.use(['jquery', 'form', 'dropdown', 'table'], function() {
+  layui.use(['jquery', 'layer', 'form', 'dropdown', 'table'], function() {
     const $ = layui.jquery,
+      layer = layui.layer,
       form = layui.form,
       dropdown = layui.dropdown,
       table = layui.table;
@@ -62,6 +63,12 @@
     const resources = MyCuckoo.getResource(queryObj.reskey);
     const resourceMap = MyCuckoo.getDictMap(resources);
     const resourceObj = MyCuckoo.getMainResource(resources);
+    const userPicker = MyCuckoo.createUserPicker({
+      layer: layer,
+      width: 520,
+      height: 420,
+      url: '../uum/userPicker.html'
+    });
 
     table.render({
       id: 'table',
@@ -206,13 +213,163 @@
       create: function(obj) {
         let data = obj.data;
         let that = this;
-        MyCuckoo.confirm({msg : '您确认创建流程实例？', ok : function() {
-            $.request(resourceMap[obj.event], {processDefinitionId: data.id, formType: 'common-audit'}).then(function(json) {
-              MyCuckoo.msg({ msg: '创建流程成功' });
+        const action = resourceMap[obj.event];
+        const variableAction = resourceMap[MyCuckoo.res.flowMgr.defVariable];
 
-              that.reload();
+        // 发起前先获取流程默认变量（默认审批人），用于展示与调整
+        if (!variableAction.canAccess()) {
+          that.createDirect(action, data);
+          return;
+        }
+
+        $.request(variableAction, { definitionId: data.id }).then(function(json) {
+          if (!json || json.code !== 0) {
+            that.createDirect(action, data);
+            return;
+          }
+
+          that.openInstanceDialog(action, data, json.data || {});
+        }).catch(function() {
+          // 变量接口异常时不阻断发起，回退到默认确认流程
+          that.createDirect(action, data);
+        });
+      },
+      //直接发起（变量接口不可用或流程无默认变量时回退）
+      createDirect: function(action, data) {
+        const that = this;
+        MyCuckoo.confirm({msg : '您确认创建流程实例？', ok : function() {
+          that.doCreate(action, data, null);
+        }});
+      },
+      //提交创建实例
+      doCreate: function(action, data, formVariables) {
+        const that = this;
+        const params = { definitionId: data.id, formType: 'common-audit' };
+        if (formVariables) {
+          params.formVariables = formVariables;
+        }
+
+        $.request(action, params).then(function(json) {
+          if (json && json.code === 0) {
+            MyCuckoo.msg({ msg: '创建流程成功' });
+            that.reload();
+          } else {
+            MyCuckoo.msg({ msg: (json && json.msg) || '创建流程失败', icon: 2 });
+          }
+        });
+      },
+      //创建实例前调整流程变量
+      openInstanceDialog: function(action, data, variables) {
+        const that = this;
+        const usersMap = Object.assign({}, (variables && variables.users) || {});
+        const rows = [];
+
+        Object.keys(variables || {}).forEach(function(key) {
+          const value = variables[key];
+          if (key === 'users' || !Array.isArray(value)) {
+            return;
+          }
+
+          const ids = value.map(function(id) { return String(id); });
+          rows.push({ key: key, ids: ids, names: ids.map(function(id) { return usersMap[id] || id; }) });
+        });
+
+        if (!rows.length) {
+          that.createDirect(action, data);
+          return;
+        }
+
+        const CN_NUM = ['一', '二', '三', '四', '五', '六', '七', '八', '九', '十'];
+        function levelName(index) {
+          const n = index + 1;
+          return n <= 10 ? CN_NUM[n - 1] + '级审批' : '第' + n + '级审批';
+        }
+
+        function renderTags(row, index) {
+          if (!row.ids.length) {
+            return '<span class="layui-badge layui-bg-gray var-empty">请选择审批人</span>';
+          }
+
+          let html = '';
+          row.ids.forEach(function(id, i) {
+            html += '<span class="layui-badge layui-bg-blue var-tag" data-index="' + index + '" data-id="' + id + '">' + row.names[i] + '<i class="layui-icon layui-icon-close var-tag-del"></i></span>';
+          });
+          return html;
+        }
+
+        function buildHtml() {
+          let html = '<div class="var-dialog"><style>'
+            + '.var-dialog{height:100%;box-sizing:border-box;overflow-y:auto;padding:14px 16px;}'
+            + '.var-row-title{font-weight:600;margin-bottom:8px;}'
+            + '.var-required{color:#ff4d4f;margin-left:4px;}'
+            + '.var-tag{padding-right:16px;margin:0 8px 0 0;}'
+            + '.var-tag-del{position:absolute;top:-6px;right:-4px;width:14px;height:14px;line-height:14px;text-align:center;font-size:10px;color:#fff;background:#ff4d4f;border-radius:50%;cursor:pointer;}'
+            + '</style>';
+          rows.forEach(function(row, index) {
+            html += '<div class="layui-panel" style="padding:8px 12px 10px;margin-bottom:10px;">';
+            html += '<div class="var-row-title">' + levelName(index) + '<span class="var-required">*</span><button type="button" class="layui-btn layui-btn-xs pick-user" style="margin-left:8px;" data-index="' + index + '">选择审批人</button></div>';
+            html += '<div class="var-tags" data-index="' + index + '">' + renderTags(row, index) + '</div>';
+            html += '</div>';
+          });
+          return html + '</div>';
+        }
+
+        layer.open({
+          type: 1,
+          title: '创建流程实例',
+          area: ['480px', '100%'],
+          offset: 'r',
+          anim: 'slideLeft',
+          shade: 0.4,
+          fixed: true,
+          resize: false,
+          move: false,
+          content: buildHtml(),
+          btn: ['确定', '取消'],
+          success: function(layero) {
+            layero.find('.pick-user').on('click', function() {
+              const idx = $(this).data('index');
+              const row = rows[idx];
+
+              userPicker({ ids: row.ids.join(','), names: row.names.join(',') }).then(function(users) {
+                row.ids = users.map(function(u) { return u.id; });
+                row.names = users.map(function(u) { return u.name; });
+                users.forEach(function(u) { usersMap[u.id] = u.name; });
+                layero.find('.var-tags[data-index=' + idx + ']').html(renderTags(row, idx));
+              }).catch(function() {});
             });
-          }});
+
+            layero.on('click', '.var-tag-del', function() {
+              const $tag = $(this).closest('.var-tag');
+              const idx = $tag.data('index');
+              const id = String($tag.data('id'));
+              const row = rows[idx];
+              const pos = row.ids.indexOf(id);
+
+              if (pos > -1) {
+                row.ids.splice(pos, 1);
+                row.names.splice(pos, 1);
+                layero.find('.var-tags[data-index=' + idx + ']').html(renderTags(row, idx));
+              }
+            });
+          },
+          yes: function(index, layero) {
+            if (rows.some(function(row) { return !row.ids.length; })) {
+              MyCuckoo.msg({ msg: '每级审批必须至少选择一个用户', icon: 2 });
+              return;
+            }
+
+            layer.close(index);
+
+            const formVariables = {};
+            rows.forEach(function(row) { formVariables[row.key] = row.ids; });
+            if (Object.keys(usersMap).length) {
+              formVariables.users = usersMap;
+            }
+
+            that.doCreate(action, data, formVariables);
+          }
+        });
       },
       more: function (obj) {
         let that = this;

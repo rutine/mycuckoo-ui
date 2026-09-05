@@ -455,6 +455,7 @@
     },
     flowMgr: {
       defView: 'res:flowDefinitionMgr:view',
+      defVariable: 'res:flowDefinitionMgr:variable',
       instanceView: 'res:flowInstanceMgr:view'
     }
   };
@@ -560,7 +561,7 @@
 
     $.request = function(action, uriVariables, params) {
       if (!action || !action.canAccess()) {
-        throw new Error('无权访问此资源');
+        throw new Error(action ? '无权访问此资源:"' + action.code + '"' : '无权访问此资源');
       }
 
       const method = String(action.method || '').toLowerCase();
