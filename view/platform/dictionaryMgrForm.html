@@ -10,7 +10,7 @@
 <body>
 <div class="mycuckoo-main">
   <form class="layui-form layui-form-pane" name="editForm" lay-filter="editForm">
-    <input type="hidden" name="bigTypeId" />
+    <input type="hidden" name="dictId" />
 
     <div class="layui-form-item">
       <div class="layui-inline">
@@ -50,7 +50,7 @@
           <th>操作</th>
         </tr>
         </thead>
-        <tbody id="ID_mycuckoo_dict_small_type_content"></tbody>
+        <tbody id="ID_mycuckoo_dict_items"></tbody>
       </table>
     </div>
 
@@ -85,7 +85,7 @@
         $.request(resourceMap[MyCuckoo.res.dictionaryMgr.view], queryObj).then(function(json) {
           form.val('editForm', json.data);
 
-          that.smallTypeGrid(json.data.smallTypes);
+          that.itemGrid(json.data.items);
 
           if (resourceObj.code === MyCuckoo.res.dictionaryMgr.view) {
             $form.find('input, select, textarea').attr('disabled', 'disabled')
@@ -117,10 +117,10 @@
 
         this[event] && this[event](obj);
       },
-      smallTypeGrid: function(smallTypes) {
+      itemGrid: function(items) {
         let that = this;
-        let $ele = $form.find('#ID_mycuckoo_dict_small_type_content');
-        smallTypes.forEach(function(item, index) {
+        let $ele = $form.find('#ID_mycuckoo_dict_items');
+        items.forEach(function(item, index) {
           if (resourceObj.code === MyCuckoo.res.dictionaryMgr.view) {
             let tr = $([
               '<tr>',
@@ -135,7 +135,7 @@
             let tr = $([
               '<tr>',
               '<td>',
-              item.smallTypeId ? ' <input type="hidden" name="smallTypeId[' + that.index + ']" value="' + item.smallTypeId + '">' : '',
+              item.itemId ? ' <input type="hidden" name="itemId[' + that.index + ']" value="' + item.itemId + '">' : '',
               ' <input type="text" name="code[' + that.index + ']" value="' + item.code + '" class="layui-input" lay-verify="required" maxlength="20">',
               '</td>',
               '<td>',
@@ -156,7 +156,7 @@
         });
       },
       addRow: function(ele) {
-        this.smallTypeGrid([{name: '', code: ''}]);
+        this.itemGrid([{name: '', code: ''}]);
       },
       convert: function(data) {
         let reg = /(\w+)\[(\w+)\]/;
@@ -172,9 +172,9 @@
             delete data[p];
           }
         }
-        data.smallTypes = [];
+        data.items = [];
         for (let p in obj) {
-          data.smallTypes.push(obj[p]);
+          data.items.push(obj[p]);
         }
 
         return data;

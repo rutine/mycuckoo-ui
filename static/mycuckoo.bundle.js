@@ -659,7 +659,7 @@
       },
 
       getDict(params) {
-        return $.get(host + '/platform/system/dictionary/mgr/small-type', params);
+        return $.get(host + '/platform/system/dictionary/mgr/items', params);
       },
 
       fileMgr: {

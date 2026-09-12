@@ -174,14 +174,14 @@
       modify: function(obj) {
         let data = obj.data;
         let url = MyCuckoo.resolve('dictionaryMgrForm.html?reskey={reskey}&action={action}&id={id}',
-            { ...queryObj, 'action': obj.event, 'id': data.bigTypeId})
+            { ...queryObj, 'action': obj.event, 'id': data.dictId})
         MyCuckoo.dialog('字典信息', url);
       },
       //查看
       view: function(obj) {
         let data = obj.data;
         let url = MyCuckoo.resolve('dictionaryMgrForm.html?reskey={reskey}&action={action}&id={id}',
-            { ...queryObj, 'action': obj.event, 'id': data.bigTypeId})
+            { ...queryObj, 'action': obj.event, 'id': data.dictId})
         MyCuckoo.dialog('字典信息', url);
       },
       //启用
@@ -193,7 +193,7 @@
         }
 
         let that = this;
-        $.request(resourceMap[obj.event], {id: data.bigTypeId, disEnableFlag: 'enable'}).then(json => {
+        $.request(resourceMap[obj.event], {id: data.dictId, disEnableFlag: 'enable'}).then(json => {
           MyCuckoo.msg({ msg: '字典启用成功' });
 
           that.reload();
@@ -209,7 +209,7 @@
 
         let that = this;
         MyCuckoo.confirm({msg : '您确认停用此字典?', ok : function() {
-          $.request(resourceMap[obj.event], {id: data.bigTypeId, disEnableFlag: 'disable'}).then(function(json) {
+          $.request(resourceMap[obj.event], {id: data.dictId, disEnableFlag: 'disable'}).then(function(json) {
             MyCuckoo.msg({ msg: '字典停用成功' });
 
             that.reload();
