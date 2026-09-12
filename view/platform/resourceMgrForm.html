@@ -123,13 +123,13 @@
       $form.find('.toolbar').html(MyCuckoo.getActions(resourceObj || {}, 'form'));
 
       //初始化
-      $.request(resourceMap[MyCuckoo.res.moduleMgr.optSelector], {id: queryObj.moduleId}).then(function(json) {
+      $.request(resourceMap[MyCuckoo.res.operateMgr.selector], {}).then(function(json) {
         let $select = $form.find('select[name=operateId]');
         $select.empty();
         $select.append('<option value="">请选择或搜索</option>');
-        for (let i = 0; i < json.data.source.length; i++) {
-          let item = json.data.source[i];
-          $select.append('<option value="' + item.id + '">' + item.text + '</option>');
+        for (let i = 0; i < json.data.length; i++) {
+          let item = json.data[i];
+          $select.append('<option value="' + item.operateId + '">' + item.name + '(' + item.code + ')</option>');
         }
         form.render('select');
 

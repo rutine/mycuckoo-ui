@@ -306,18 +306,6 @@
           });
         }});
       },
-      //分配菜单操作
-      assignOpt: function(obj) {
-        let data = obj.data;
-        if(data.level != 3) {
-          MyCuckoo.alert({ msg: '请您选择第三级模块菜单'});
-          return;
-        }
-
-        let url = MyCuckoo.resolve('moduleMgrAssignOpts.html?reskey={reskey}&action={action}&id={id}&name={name}',
-          { ...queryObj, 'action': obj.event, 'id': data.id, 'name': data.name})
-        MyCuckoo.dialog('模块信息', url);
-      },
       //分配菜单资源
       assignRes: function(obj) {
         let data = obj.data;

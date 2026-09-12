@@ -235,7 +235,7 @@
           return;
         }
 
-        let url = MyCuckoo.resolve('roleMgrAssignModOpt.html?reskey={reskey}&action={action}&id={id}&name={name}',
+        let url = MyCuckoo.resolve('roleMgrAssignModRes.html?reskey={reskey}&action={action}&id={id}&name={name}',
             { ...queryObj, 'action': obj.event, 'id': data.roleId, 'name': data.name})
 
         MyCuckoo.dialog('分配权限', url);

@@ -24,12 +24,12 @@ export const RESOURCES = {
     add: 'res:moduleMgr:add',
     view: 'res:moduleMgr:view',
     tree: 'res:moduleMgr:tree',
-    optSelector: 'res:moduleMgr:optSelector',
     resSelector: 'res:moduleMgr:resSelector'
   },
   operateMgr: {
     add: 'res:operateMgr:add',
-    view: 'res:operateMgr:view'
+    view: 'res:operateMgr:view',
+    selector: 'res:operateMgr:selector'
   },
   organMgr: {
     view: 'res:organMgr:view',
