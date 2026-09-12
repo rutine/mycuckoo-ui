@@ -72,11 +72,11 @@
       cols: [[
         {type: 'numbers'},
         {type: 'radio'},
-        {field: 'modName', title: '模块'},
-        {field: 'optName', title: '操作'},
+        {field: 'title', title: '标题'},
+        {field: 'content', title: '内容'},
         {field: 'busiId', title: '业务ID'},
         {field: 'ip', title: 'IP'},
-        {field: 'userName', title: '操作人姓名'},
+        {field: 'userName', title: '操作人'},
         {field: 'userRole', title: '操作人角色'},
         {field: 'createTime', title: '操作时间', sort: true}
       ]],
@@ -108,8 +108,8 @@
       let searchInst = searchInput.render({
         elem: 'input.search-tag-input',
         data: [//初始值
-          {field: 'q[modName]', name: '模块'},
-          {field: 'q[name]', name: '操作'},
+          {field: 'q[title]', name: '标题'},
+          {field: 'q[content]', name: '内容'},
           {field: 'q[userName]', name: '操作人姓名'}
         ],
         beforeCreate: function (data, value) {
@@ -162,7 +162,7 @@
       //查看
       view(obj) {
         let data = obj.data;
-        $.request(resourceMap[obj.event], {id: data.optId}).then(json => {
+        $.request(resourceMap[obj.event], {id: data.logId}).then(json => {
           MyCuckoo.msg({title : '日志内容查看', msg : json.data });
         });
       },
