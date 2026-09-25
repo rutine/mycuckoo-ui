@@ -70,14 +70,12 @@
       toolbar: MyCuckoo.getActions(resources, 'table'),
       resources: resources,
       cols: [[
-        {type: 'numbers'},
-        {type: 'radio'},
-        {field: 'title', title: '标题'},
+        {type: 'numbers', title: '序号'},
+        {field: 'title', title: '标题', templet: '<span class="layui-font-blue">{{= d.title }}</span>'},
         {field: 'content', title: '内容'},
         {field: 'busiId', title: '业务ID'},
         {field: 'ip', title: 'IP'},
         {field: 'userName', title: '操作人'},
-        {field: 'userRole', title: '操作人角色'},
         {field: 'createTime', title: '操作时间', sort: true}
       ]],
       page: true,
@@ -140,6 +138,11 @@
 
         obj.data = data[0]
         that.on(obj);
+      });
+
+      // 行双击事件
+      table.on('row(table)', function(obj) {
+        that.on(Object.assign({event: 'res:systemLogMgr:view'}, obj));
       });
     }
 

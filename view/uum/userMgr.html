@@ -304,7 +304,7 @@
 
         let url = MyCuckoo.resolve('userMgrAssignModRes.html?reskey={reskey}&action={action}&id={id}&name={name}',
             { ...queryObj, 'action': obj.event, 'id': data.userId, 'name': data.name})
-        MyCuckoo.dialog('分配权限', url);
+        MyCuckoo.dialog('分配权限(角色名称: '  + data.name + ')', url);
       },
       more: function (obj) {
         let that = this;

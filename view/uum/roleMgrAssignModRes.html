@@ -8,13 +8,15 @@
   <link type="text/css" href="../../static/css/mycuckoo.css" rel="stylesheet" />
   <link type="text/css" href="../../static/dtree/css/dtree.css" rel="stylesheet" />
   <link type="text/css" href="../../static/dtree/css/font/dtreefont.css" rel="stylesheet" />
+  <style>
+    .role-assign-page { height: 100vh; overflow: hidden; }
+    .role-assign-page .role-assign-tree-item > .layui-input-block { height: calc(100vh - 230px); max-height: none; overflow-x: hidden; overflow-y: auto; }
+    .role-assign-page .role-assign-tree-item .dtree { width: 100%; min-height: 100%; box-sizing: border-box; }
+    .role-assign-page .role-assign-actions { position: fixed; right: 0; bottom: 8px; left: 0; z-index: 1; margin: 0; text-align: center; }
+  </style>
 </head>
-<body>
-  <div class="mycuckoo-main">
-    <fieldset class="layui-elem-field layui-field-title" style="margin-top: 30px;">
-      <legend>角色名称</legend>
-    </fieldset>
-
+<body class="role-assign-page">
+  <div class="mycuckoo-main" style="padding: 0">
     <div class="layui-tab">
       <ul class="layui-tab-title">
         <li class="layui-this">模块操作权限分配</li>
@@ -32,14 +34,14 @@
               </div>
             </div>
 
-            <div class="layui-form-item">
+            <div class="layui-form-item role-assign-tree-item">
               <label class="layui-form-label">模块</label>
-              <div class="layui-input-block" style="max-height: 310px; overflow: auto;">
+              <div class="layui-input-block">
                 <ul id="ID_tree" lay-filter="tree"></ul>
               </div>
             </div>
 
-            <div class="layui-btn-container" style="margin-bottom: 6px; text-align: center;">
+            <div class="layui-btn-container role-assign-actions">
               <a href="javascript:" class="layui-btn layui-btn-sm" data-event="assignRes" lay-submit>
                 <i class="layui-icon layui-icon-ok"></i>保存
               </a>
@@ -61,7 +63,7 @@
               </div>
             </div>
 
-            <div class="layui-btn-container" style="margin-bottom: 6px; text-align: center;">
+            <div class="layui-btn-container role-assign-actions">
               <a href="javascript:" class="layui-btn layui-btn-sm" data-event="assignRow" lay-submit>
                 <i class="layui-icon layui-icon-ok"></i>保存
               </a>
@@ -92,7 +94,6 @@
     const FormMgr = function () {
       //表单初始赋值
       if (queryObj.id) {
-        $('fieldset > legend').text('角色名称: ' + queryObj.name);
         $.request(resourceMap[MyCuckoo.res.roleMgr.resSelector], queryObj).then(json => {
           form.val('roleAssignModOpt', json.data);
           form.val('roleAssignRowPriv', json.data);

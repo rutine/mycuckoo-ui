@@ -8,12 +8,15 @@
   <link type="text/css" href="../../static/css/mycuckoo.css" rel="stylesheet" />
   <link type="text/css" href="../../static/dtree/css/dtree.css" rel="stylesheet" />
   <link type="text/css" href="../../static/dtree/css/font/dtreefont.css" rel="stylesheet" />
-</head>
-<body>
-<div class="mycuckoo-main">
-  <fieldset class="layui-elem-field layui-field-title" style="margin-top: 30px;">
-    <legend>用户名称</legend>
-  </fieldset>
+  <style>
+    .user-assign-page { height: 100vh; overflow: hidden; }
+    .user-assign-page .user-assign-tree-item > .layui-input-block { height: calc(100vh - 180px); max-height: none; overflow-x: hidden; overflow-y: auto; }
+    .user-assign-page #ID_usr_scope .user-assign-tree-item > .layui-input-block { height: calc(100vh - 240px); }
+    .user-assign-page .user-assign-tree-item .dtree { width: 100%; min-height: 100%; box-sizing: border-box; }
+    .user-assign-page .user-assign-actions { position: fixed; right: 0; bottom: 8px; left: 0; z-index: 1; margin: 0; text-align: center; }
+  </style></head>
+<body class="user-assign-page">
+<div class="mycuckoo-main" style="padding: 0">
 
   <div class="layui-tab">
     <ul class="layui-tab-title">
@@ -32,14 +35,14 @@
             </div>
           </div>
 
-          <div class="layui-form-item">
+          <div class="layui-form-item user-assign-tree-item">
             <label class="layui-form-label">模块</label>
-            <div class="layui-input-block" style="max-height: 310px; overflow: auto;">
+            <div class="layui-input-block">
               <ul id="ID_opt_tree" data-id="0" lay-filter="tree"></ul>
             </div>
           </div>
 
-          <div class="layui-btn-container" style="margin-bottom: 6px; text-align: center;">
+          <div class="layui-btn-container user-assign-actions">
             <a href="javascript:" class="layui-btn layui-btn-sm" data-event="assignRes" lay-submit="submit">
               <i class="layui-icon layui-icon-ok"></i>保存
             </a>
@@ -62,18 +65,18 @@
           </div>
 
           <div id="ID_dept_scope" class="layui-hide scope">
-            <div class="layui-form-item">
+            <div class="layui-form-item user-assign-tree-item">
               <label class="layui-form-label">部门</label>
-              <div class="layui-input-block" style="max-height: 310px; overflow: auto;">
+              <div class="layui-input-block">
                 <ul id="ID_dept_scope_tree" data-id="0" lay-filter="row-tree"></ul>
               </div>
             </div>
           </div>
 
           <div id="ID_rol_scope" class="layui-hide scope">
-            <div class="layui-form-item">
+            <div class="layui-form-item user-assign-tree-item">
               <label class="layui-form-label">角色</label>
-              <div class="layui-input-block" style="max-height: 310px; overflow: auto;">
+              <div class="layui-input-block">
                 <ul id="ID_rol_scope_tree" data-id="0" lay-filter="row-tree"></ul>
               </div>
             </div>
@@ -89,15 +92,15 @@
                 <i class="layui-icon layui-icon-search"></i>
               </a>
             </div>
-            <div class="layui-form-item">
+            <div class="layui-form-item user-assign-tree-item">
               <label class="layui-form-label">用户</label>
-              <div class="layui-input-block" style="max-height: 310px; overflow: auto;">
+              <div class="layui-input-block">
                 <ul id="ID_usr_scope_tree" data-id="0" lay-filter="row-tree"></ul>
               </div>
             </div>
           </div>
 
-          <div class="layui-btn-container" style="margin-bottom: 6px; text-align: center;">
+          <div class="layui-btn-container user-assign-actions">
             <a href="javascript:" class="layui-btn layui-btn-sm" data-event="assignRow" lay-submit="submit">
               <i class="layui-icon layui-icon-ok"></i>保存
             </a>
@@ -131,7 +134,6 @@
       const formMgr = this;
       //表单初始赋值
       if (queryObj.id) {
-        $('fieldset > legend').text('用户名称:' + queryObj.name);
         $.request(resourceMap[MyCuckoo.res.userMgr.resSelector], queryObj).then(json => {
           form.val('userAssignModOpt', json.data);
           form.val('userAssignRowPriv', json.data);
