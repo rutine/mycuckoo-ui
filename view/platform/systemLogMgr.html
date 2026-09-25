@@ -31,7 +31,7 @@
 
       <div class="layui-inline">
         <div class="search-tag-container layui-input-inline">
-          <input class="search-tag-input" type="text" name="q[modName]" placeholder="请输入搜索关键词">
+          <input class="search-tag-input" type="text" name="keyword" placeholder="请输入搜索关键词">
         </div>
         <div class="layui-input-inline">
           <button class="layui-btn" lay-filter="search" lay-submit>
@@ -120,12 +120,9 @@
         }
       });
 
-      form.on('submit(search)', function(data) {
-        //执行重载
-        table.reload('table', {
-          page: {pageNo: 1},
-          where: data.field
-        });
+      form.on('submit', function(data) {
+        data.event = data.elem.getAttribute('lay-filter');
+        that.on(data);
 
         return false;
       });
@@ -158,6 +155,13 @@
         }
 
         this[event](obj);
+      },
+      reload: function(params = {}) {
+        table.reload('table', { page: { pageNo: 1 }, where: params });
+      },
+      search: function (obj) {
+        let that = this;
+        that.reload(obj.field);
       },
       //查看
       view(obj) {

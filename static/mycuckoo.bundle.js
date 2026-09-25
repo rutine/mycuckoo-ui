@@ -75,73 +75,45 @@
   }
 
   function renderTableActions(operator, mode) {
-    const arr = ['<div>', '<div class="layui-btn-group btn-toolbar">'];
-
-    operator.forEach(item => {
-      if ((item.group & mode) !== mode) return;
-
-      arr.push('<button class="layui-btn layui-btn-sm" lay-event="' + item.code + '">');
-      arr.push('<i class="layui-icon layui-icon-' + item.iconCls + '"></i>' + item.name);
-      arr.push('</button>');
-    });
-
-    arr.push('</div>', '</div>');
-    return arr.join('');
+    return [
+      '<div><div class="layui-btn-group btn-toolbar">',
+      operator.filter(item => (item.group & mode) === mode).map(item => {
+        return '<button class="layui-btn layui-btn-sm" lay-event="' + item.code + '">'
+            + '<i class="layui-icon layui-icon-' + item.iconCls + '"></i>' + item.name + '</button>';
+      }),
+      '</div></div>'
+    ].join('');
   }
 
   function renderColActions(operator, mode) {
-    const arr = ['<div>', '<div class="layui-clear-space">'];
-    let i = 0;
-
-    operator.forEach(item => {
-      if ((item.group & mode) !== mode) {
-        return;
-      } else if (i === 0) {
-        arr.push('<a class="layui-btn layui-btn-xs" lay-event="' + item.code + '">');
-        arr.push('<i class="layui-icon layui-icon-' + item.iconCls + '"></i>' + item.name);
-        arr.push('</a>');
-      } else if (i === 1) {
-        arr.push('<a class="layui-btn layui-btn-xs" lay-event="more">更多');
-        arr.push('<i class="layui-icon layui-icon-down"></i>');
-        arr.push('</a>');
-      }
-      i++;
-    });
-
-    arr.push('</div>', '</div>');
-    return arr.join('');
+    let items = operator.filter(item => (item.group & mode) === mode);
+    let maxShow = 2;
+    return [
+      '<div><div class="layui-clear-space">',
+      items.slice(0, maxShow).map(item => {
+        return '<a class="layui-btn layui-btn-xs" lay-event="' + item.code + '">'
+            + '<i class="layui-icon layui-icon-' + item.iconCls + '"></i>' + item.name + '</a>'
+      }),
+      items.length <= maxShow ? '' : '<a class="layui-btn layui-btn-xs" lay-event="more">更多<i class="layui-icon layui-icon-down"></i></a>',
+      '</div></div>'
+    ].join('');
   }
 
   function renderFormActions(operator, mode) {
-    const item = operator;
-    const arr = ['<div>', '<div class="layui-btn-container" style="margin-bottom: 6px; text-align: center;">'];
-
-    if ((item.group & mode) === mode) {
-      arr.push('<a href="javascript: " class="layui-btn layui-btn-sm" data-event="' + item.code + '" lay-submit>');
-      arr.push('<i class="layui-icon layui-icon-ok"></i>' + item.name);
-      arr.push('</a>');
-    }
-
-    arr.push('<a href="javascript: " class="layui-btn layui-btn-sm" data-event="close">');
-    arr.push('<i class="layui-icon layui-icon-close"></i>关闭');
-    arr.push('</a>');
-    arr.push('</div>', '</div>');
-
-    return arr.join('');
+    return [
+      '<div><div class="layui-btn-container" style="margin-bottom: 6px; text-align: center;">',
+      [operator].filter(item => (item.group & mode) === mode).map(item => {
+        return '<a href="javascript: " class="layui-btn layui-btn-sm" data-event="' + item.code + '" lay-submit>'
+            + '<i class="layui-icon layui-icon-ok"></i>' + item.name + '</a>'
+      }),
+      '<a href="javascript: " class="layui-btn layui-btn-sm" data-event="close"><i class="layui-icon layui-icon-close"></i>关闭</a>',
+      '</div></div>'
+    ].join('');
   }
 
   function getMoreActions(operator, mode) {
-    const arr = [];
-    let i = 0;
-
-    operator.forEach(item => {
-      if ((item.group & mode) !== mode || i++ === 0) {
-        return;
-      }
-      arr.push(item);
-    });
-
-    return arr;
+    let maxShow = 2;
+    return operator.filter(item => (item.group & mode) === mode).slice(maxShow);
   }
 
   function createMyCuckoo(global = window) {
@@ -655,7 +627,35 @@
       },
 
       postTable(params) {
-        return $.postJson(host + '/platform/config/list-table-config?tableCode={code}', params);
+        return $.postJson(host + '/platform/config/list-table-config?tableCode={code}', params).then(res => {
+          let dictsCache = {};
+          let columns = res.data.filter(field => field.type !== 'id').map(field => {
+            const base = {
+              ...field,
+              field: field.field, title: field.title, width: field.width
+            };
+
+            switch (field.type) {
+              case 'seq':
+                return { type: 'numbers', title: field.title };
+              case 'dict': {
+                const map = field.dictMap || (dictsCache[field.dict] || (dictsCache[field.dict] = MyCuckoo.getDictMap(field.dict)));
+                return {
+                  ...base,
+                  colConfig: field,
+                  templet: d => {
+                    const item = map[d[field.field]];
+                    return item ? item.name : (d[field.field] ?? '');
+                  },
+                };
+              }
+              default:
+                return { ...base, colConfig: field };
+            }
+          });
+
+          return {data: res.data, columns: columns};
+        });
       },
 
       getDict(params) {

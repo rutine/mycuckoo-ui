@@ -66,3 +66,24 @@
 .mycuckoo-main { padding: 8px; }
 .mycuckoo-search { margin-bottom: 8px; }
 .mycuckoo-search .layui-input { width: 190px; }
+
+
+/*--------------------------------高级筛选-----------------------------------*/
+.advanced-filter-empty-line { height: 1px; margin: 12px 0; border: 0; background-color: #e6e6e6; }
+.advanced-filter-picker-inline { position: relative; height: 38px; overflow: visible; }
+.advanced-filter-picker-inline .layui-form-select { position: static; }
+.advanced-filter-picker-inline .layui-form-select dl { top: 100%; max-height: 260px; overflow-y: auto; }
+.advanced-filter-multi { position: relative; }
+.advanced-filter-multi-trigger { height: 38px; line-height: 36px; padding: 0 30px 0 10px; cursor: pointer; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; background-color: #fff; }
+.advanced-filter-multi-trigger .layui-icon { position: absolute; right: 10px; top: 50%; margin-top: 0; transform: translateY(-50%); line-height: 1; color: #999; pointer-events: none; }
+.advanced-filter-multi-value { display: block; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.advanced-filter-multi-placeholder { color: #999; }
+.advanced-filter-multi-dropdown { padding: 0 !important; }
+.advanced-filter-multi-panel { box-sizing: border-box; padding: 8px; background: #fff; }
+.advanced-filter-multi-search { margin-bottom: 6px; }
+.advanced-filter-multi-list { max-height: 180px; overflow-y: auto; }
+.advanced-filter-multi-option { display: flex; align-items: center; padding: 6px 8px; line-height: 20px; cursor: pointer; border-radius: 2px; }
+.advanced-filter-multi-option:hover { background-color: #f6f6f6; }
+.advanced-filter-multi-option input { flex: 0 0 auto; margin: 0 8px 0 0; }
+.advanced-filter-multi-option span { overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.advanced-filter-multi-empty { padding: 8px; color: #999; font-size: 12px; text-align: center; }

@@ -30,7 +30,7 @@
       <div class="layui-inline">
         <label class="layui-form-label">搜索：</label>
         <div class="layui-input-inline">
-          <input class="layui-input" name="keyword" placeholder="名称">
+          <input class="layui-input" name="keyword" placeholder="搜索：名称">
         </div>
         <div class="layui-input-inline">
           <button class="layui-btn" lay-filter="search" lay-submit>
@@ -102,12 +102,9 @@
       }
       const that = indexMgrInst = this;
 
-      form.on('submit(search)', function(data) {
-        //执行重载
-        table.reload('table', {
-          page: {pageNo: 1},
-          where: data.field
-        });
+      form.on('submit', function(data) {
+        data.event = data.elem.getAttribute('lay-filter');
+        that.on(data);
 
         return false;
       });
@@ -151,8 +148,12 @@
 
         this[event](obj);
       },
-      reload: function() {
-        table.reload('table', { page: { pageNo: 1 } });
+      reload: function(params = {}) {
+        table.reload('table', { page: { pageNo: 1 }, where: params });
+      },
+      search: function (obj) {
+        let that = this;
+        that.reload(obj.field);
       },
       //增加
       add: function(obj) {

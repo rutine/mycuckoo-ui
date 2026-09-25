@@ -29,13 +29,7 @@
     <form class="layui-col-md12 layui-form mycuckoo-search">
       <div class="layui-inline">
         <div class="layui-input-inline">
-          <input class="layui-input" name="q[taskName]" placeholder="任务名称">
-        </div>
-        <div class="layui-input-inline">
-          <input class="layui-input" name="q[processDefinitionName]" placeholder="流程名称">
-        </div>
-        <div class="layui-input-inline">
-          <input class="layui-input" name="q[initiator]" placeholder="发起人">
+          <input class="layui-input" name="keyword" placeholder="搜索：任务名称">
         </div>
         <div class="layui-input-inline">
           <button class="layui-btn" lay-filter="search" lay-submit>
@@ -158,11 +152,9 @@
       }
       const that = indexMgrInst = this;
 
-      form.on('submit(search)', function (data) {
-        table.reload('table', {
-          page: {pageNo: 1},
-          where: data.field
-        });
+      form.on('submit', function(data) {
+        data.event = data.elem.getAttribute('lay-filter');
+        that.on(data);
 
         return false;
       });
@@ -201,8 +193,12 @@
 
         this[event](obj);
       },
-      reload: function() {
-        table.reload('table', { page: { pageNo: 1 } });
+      reload: function(params = {}) {
+        table.reload('table', { page: { pageNo: 1 }, where: params });
+      },
+      search: function (obj) {
+        let that = this;
+        that.reload(obj.field);
       },
       view: function(obj) {
         let data = obj.data;

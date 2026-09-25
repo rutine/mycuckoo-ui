@@ -107,7 +107,7 @@ layui.define(['jquery', 'dropdown', 'tabs'], function (exports) {
      */
     tabs.on('afterChange(mycuckoo-tab)', function (data) {
       menuStorage.set(this);
-      tab.reload($(this));
+      // tab.reload($(this));
 
       resizeFrame();
     });

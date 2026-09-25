@@ -39,10 +39,7 @@
     <form class="layui-col-md12 layui-form mycuckoo-search">
       <div class="layui-inline">
         <div class="layui-input-inline">
-          <input class="layui-input" name="q[code]" placeholder="模块编码">
-        </div>
-        <div class="layui-input-inline">
-          <input class="layui-input" name="q[name]" placeholder="模块名称">
+          <input class="layui-input" name="keyword" placeholder="搜索：名称">
         </div>
         <div class="layui-input-inline">
           <button class="layui-btn" lay-filter="search" lay-submit>
@@ -117,30 +114,13 @@
     const resourceMap = MyCuckoo.getDictMap(resources);
     const resourceObj = MyCuckoo.getMainResource(resources);
 
-    MyCuckoo.api.postTable({code: 'table_code_menu'}).then(function (json) {
+    MyCuckoo.api.postTable({code: 'table_code_menu'}).then(data => {
       let col = [
         {type: 'radio'},
+        ...data.columns,
+        // {fixed: "right", title: "操作", align: "center", width: 120, toolbar: '#ID_tool', resources: resources}
+        {fixed: "right", title: "操作", align: "center", width: 120, toolbar: MyCuckoo.getActions(resources, 'col'), resources: resources}
       ]
-      for (let i in json.data) {
-        let obj = json.data[i];
-        if (obj['type'] === 'id') {
-          //主键不显示
-          continue;
-        } else if (obj['type'] === 'seq') {
-          col.push({type: 'numbers', title: obj['title']});
-        } else if (obj['type'] === 'dict') {
-          if (!obj['dictMap']) {
-            obj['dictMap'] = MyCuckoo.getDictMap(obj['dict']);
-          }
-          col.push({field: obj['field'], title: obj['title'], sort: obj['sort'], width: obj['width'], colConfig: obj, templet: function(d) {
-              return this.colConfig['dictMap'][d[this.colConfig['field']]]['name'];
-          }});
-        } else {
-          col.push({field: obj['field'], title: obj['title'], sort: obj['sort'], width: obj['width'], colConfig: obj});
-        }
-      }
-      // col.push({fixed: "right", title: "操作", align: "center", width: 120, toolbar: '#ID_tool', resources: operesourcesrator});
-      col.push({fixed: "right", title: "操作", align: "center", width: 120, toolbar: MyCuckoo.getActions(resources, 'col'), resources: resources});
 
       const tableInst = table.render({
         id: 'table',
@@ -179,9 +159,9 @@
       }
       const that = indexMgrInst  = this;
 
-      form.on('submit(search)', function(data) {
-        //执行重载
-        that.reload({where: data.field});
+      form.on('submit', function(data) {
+        data.event = data.elem.getAttribute('lay-filter');
+        that.on(data);
 
         return false;
       });
@@ -230,8 +210,12 @@
 
         this[event](obj);
       },
-      reload: function(config) {
-        table.reload('table', config || {});
+      reload: function(params) {
+        table.reload('table', {where: Object.assign({'tableCode': 'table_code_menu'}, params)});
+      },
+      search: function (obj) {
+        let that = this;
+        that.reload(obj.field);
       },
       //增加
       add: function(obj) {

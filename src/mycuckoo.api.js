@@ -271,7 +271,35 @@ export function createMyCuckooApi($, options = {}) {
     },
 
     postTable(params) {
-      return $.postJson(host + '/platform/config/list-table-config?tableCode={code}', params);
+      return $.postJson(host + '/platform/config/list-table-config?tableCode={code}', params).then(res => {
+        let dictsCache = {};
+        let columns = res.data.filter(field => field.type !== 'id').map(field => {
+          const base = {
+            ...field,
+            field: field.field, title: field.title, width: field.width
+          };
+
+          switch (field.type) {
+            case 'seq':
+              return { type: 'numbers', title: field.title };
+            case 'dict': {
+              const map = field.dictMap || (dictsCache[field.dict] || (dictsCache[field.dict] = MyCuckoo.getDictMap(field.dict)));
+              return {
+                ...base,
+                colConfig: field,
+                templet: d => {
+                  const item = map[d[field.field]];
+                  return item ? item.name : (d[field.field] ?? '');
+                },
+              };
+            }
+            default:
+              return { ...base, colConfig: field };
+          }
+        });
+
+        return {data: res.data, columns: columns};
+      });
     },
 
     getDict(params) {
