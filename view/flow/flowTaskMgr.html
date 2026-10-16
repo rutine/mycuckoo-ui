@@ -6,25 +6,9 @@
   <link type="image/x-icon" href="../../static/images/favicon.ico" rel="shortcut icon" />
   <link type="text/css" href="../../static/layui/2.13.5/css/layui.css" rel="stylesheet" />
   <link type="text/css" href="../../static/css/mycuckoo.css" rel="stylesheet" />
-  <style>
-    html, body {
-      height: 100%;
-      overflow: hidden;
-    }
-
-    body {
-      margin: 0;
-    }
-
-    .mycuckoo-main {
-      height: 100%;
-      box-sizing: border-box;
-      overflow: hidden;
-    }
-  </style>
 </head>
 <body>
-<div class="mycuckoo-main">
+<div class="mycuckoo-container">
   <div class="layui-row">
     <form class="layui-col-md12 layui-form mycuckoo-search">
       <div class="layui-inline">
@@ -56,7 +40,7 @@
     const queryObj = MyCuckoo.getQueryObject(location.search);
     const resources = MyCuckoo.getResource(queryObj.reskey);
     const resourceMap = MyCuckoo.getDictMap(resources);
-    const resourceObj = MyCuckoo.getMainResource(resources)
+    const resourceObj = MyCuckoo.getMainResource(resourceMap)
 
     function readVariable(data, key) {
       let variables = data && data.variables;

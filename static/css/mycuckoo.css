@@ -1,5 +1,8 @@
 @charset "utf-8";
 /* CSS Document */
+/* 页面整体撑满，不留滚动条 */
+html, body { height: 100%; margin: 0; padding: 0; overflow: hidden; }
+
 /*--------------------------------公共-----------------------------------*/
 .left { float: left; }
 .right { float: right; }
@@ -14,6 +17,7 @@
 
 
 /*--------------------------------菜单-----------------------------------*/
+.mycuckoo-container { height: 100%; box-sizing: border-box; overflow: hidden; }
 .mycuckoo-container .layui-header { background: linear-gradient(90deg, #5f8fb8 0%, #78a6c8 100%); }
 .mycuckoo-container .sidebar-open { height: 45px; float: left; }
 .mycuckoo-container .sidebar-open i { display: block; background: rgba(255, 255, 255, 0.1) 0 0 no-repeat; color: #fff; width: 32px; height: 32px; line-height: 32px; border-radius: 3px; text-align: center; margin: 15px; cursor: pointer; }
@@ -63,7 +67,7 @@
 .mycuckoo-site-nav { position: relative; padding: 0 20px; z-index: 99; border-bottom: 1px solid #e5e5e5; height: 39px; line-height: 39px; overflow: hidden; }
 
 /*--------------------------------内容-----------------------------------*/
-.mycuckoo-main { padding: 8px; }
+.mycuckoo-main { height: 100%; box-sizing: border-box; padding: 6px; overflow: auto; }
 .mycuckoo-search { margin-bottom: 8px; }
 .mycuckoo-search .layui-input { width: 190px; }
 

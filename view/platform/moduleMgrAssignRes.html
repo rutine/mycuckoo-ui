@@ -21,38 +21,107 @@
       background-color: #16b777 !important;
     }
 
-    .layui-form-checked > .lay-skin-tag,
-    .layui-form-radioed > .lay-skin-tag {
-      color: #fff !important;
-      background-color: #16b777 !important;
+    /* 表单撑满，底部留出固定按钮的空间 */
+    form[name=editForm] {
+      height: 100%;
+      display: flex;
+      flex-direction: column;
+      padding-bottom: 50px;
+      box-sizing: border-box;
+    }
+
+    /* 主体区：撑满剩余高度 */
+    .mycuckoo-assign-body {
+      flex: 1;
+      display: flex;
+      overflow: hidden;
+      min-height: 0;
+    }
+
+    /* 左栏 */
+    .mycuckoo-assign-left {
+      width: 25%;
+      display: flex;
+      flex-direction: column;
+      border-right: 1px solid #e6e6e6;
+      min-width: 0;
+    }
+
+    /* 右栏 */
+    .mycuckoo-assign-right {
+      flex: 1;
+      display: flex;
+      flex-direction: column;
+      min-width: 0;
+    }
+
+    /* 树容器：撑满并滚动 */
+    .mycuckoo-tree-wrap {
+      flex: 1;
+      overflow: auto;
+      padding: 6px 0;
+      min-height: 0;
+    }
+
+    /* 配置容器：撑满并滚动 */
+    .mycuckoo-config-wrap {
+      flex: 1;
+      overflow: auto;
+      padding: 0 10px;
+      min-height: 0;
+    }
+
+    /* 配置行 */
+    .mycuckoo-checkbox-set {
+      border-bottom: 1px solid #f0f0f0;
+      padding: 6px 0;
+    }
+
+    .mycuckoo-checkbox-set:hover {
+      background: #fafafa;
+    }
+
+    /* 底部按钮：固定底部 */
+    .layui-footer {
+      position: fixed;
+      left: 0;
+      right: 0;
+      bottom: 0;
+      height: 50px;
+      line-height: 50px;
+      padding: 0 10px;
+      background: #fff;
+      border-top: 1px solid #e6e6e6;
+      text-align: right;
+      box-sizing: border-box;
+      z-index: 10;
     }
   </style>
 </head>
 <body>
-  <div class="mycuckoo-main">
-    <form class="layui-form layui-form-pane" name="editForm" lay-filter="moduleAssignResource">
-      <div class="layui-row">
-        <div class="layui-col-md3">
-          <div class="layui-row mycuckoo-row-header">
-            <div class="layui-col-md12"><span style="font-weight: bold;">选择资源</span></div>
-          </div>
-          <div class="layui-row">
-            <div class="layui-col-md12" style="overflow: scroll">
-              <div id="ID_mycuckoo-tree"></div>
-            </div>
-          </div>
-        </div>
-        <div class="layui-col-md9">
-          <div class="layui-row mycuckoo-row-header">
-            <div class="layui-col-sm3"><span style="font-weight: bold;">配置资源</span></div>
-            <div class="layui-col-sm9"><span style="font-weight: bold;">应用位置</span></div>
-          </div>
-        </div>
+<form class="layui-form" name="editForm" lay-filter="moduleAssignResource">
+  <div class="mycuckoo-assign-body">
+    <!-- 左：选择资源 -->
+    <div class="mycuckoo-assign-left">
+      <div class="layui-card-header" style="font-weight: bold;">选择资源</div>
+      <div class="mycuckoo-tree-wrap">
+        <div id="ID_mycuckoo-tree"></div>
       </div>
+    </div>
 
-      <div class="toolbar"></div>
-    </form>
+    <!-- 右：配置资源 -->
+    <div class="mycuckoo-assign-right">
+      <div class="layui-card-header layui-row" style="padding: 0 10px;">
+        <div class="layui-col-sm3" style="font-weight: bold; line-height: 40px;">配置资源</div>
+        <div class="layui-col-sm9" style="font-weight: bold; line-height: 40px;">应用位置</div>
+      </div>
+      <div class="mycuckoo-config-wrap"></div>
+    </div>
   </div>
+
+  <!-- 底部按钮 -->
+  <div class="layui-footer toolbar"></div>
+</form>
 </body>
 <script type="text/javascript" src="../../static/layui/2.13.5/layui.js" charset="UTF-8"></script>
 <script type="text/javascript" src="../../static/mycuckoo.bundle.js" charset="UTF-8"></script>
@@ -73,13 +142,11 @@
       //渲染操作按钮
       $form.find('.toolbar').html(MyCuckoo.getActions(resourceObj || {}, 'form'));
 
-      $form.find('#ID_mycuckoo-tree').height($(window).height());
-
       //表单初始赋值
       if (queryObj.id) {
         $.request(resourceMap[MyCuckoo.res.moduleMgr.resSelector], queryObj).then(function(json) {
           let source = json.data.source;
-          let $elem = $form.find('.layui-col-md9');
+          let $elem = $form.find('.mycuckoo-config-wrap');
 
           //初始化结构树
           tree.render({
@@ -164,12 +231,12 @@
 
           elem.append([
             '<div class="layui-row mycuckoo-checkbox-set mycuckoo-checkbox-set-' + data.id + '" data-id="' + data.id + '">',
-            ' <div class="layui-col-sm3 layui-font-green">',
+            ' <div class="layui-col-sm3 layui-font-green" style="line-height: 32px;">',
             function () {
               return '<span class="layui-badge"><span>' + arr.join('</span><span> => </span><span>') + '</span></span>';
             }(),
             ' </div>',
-            ' <div class="layui-col-sm9">',
+            ' <div class="layui-col-sm9" style="line-height: 32px;">',
             '   <input type="checkbox" name="resGroup" lay-skin="none" value="1" ' + ((data.group & 1) == 1 ? 'checked' : '') + '>',
             '   <div lay-checkbox class="lay-skin-tag layui-badge">列表</div>',
             '   <input type="checkbox" name="resGroup" lay-skin="none" value="2" ' + ((data.group & 2) == 2 ? 'checked' : '') + '>',
@@ -277,4 +344,5 @@
     //end
   });
 </script>
+</body>
 </html>

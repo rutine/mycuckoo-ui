@@ -18,16 +18,16 @@ MyCuckoo-UI
 # 效果:
 
 登录页:
-![登录页](static/demo/login.png)
+![登录页](docs/demo/login.png)
 
 主页:
-![主页](static/demo/index.png)
+![主页](docs/demo/index.png)
 
 菜单管理:
-![菜单管理](static/demo/menuMgr.png)
+![菜单管理](docs/demo/menuMgr.png)
 
 系统配置:
-![系统配置](static/demo/systemConfig.png)
+![系统配置](docs/demo/systemConfig.png)
 
 # 更新记录
 

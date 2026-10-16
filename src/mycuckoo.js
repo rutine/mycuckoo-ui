@@ -1,5 +1,3 @@
-import {slice} from "@bpmn-io/properties-panel/preact/src/util";
-
 const ACTION_GROUP = {
   index: 1,
   table: 2,
@@ -152,14 +150,18 @@ export function createMyCuckoo(global = window) {
       return this.getDictMap(resources);
     },
 
-    getMainResource(operator = []) {
-      for (let i = operator.length - 1; i >= 0; i--) {
-        if ((operator[i].group & ACTION_GROUP.index) === ACTION_GROUP.index) {
-          return operator[i];
+    getMainResource(resourceMap = {}) {
+      let mainResource = null;
+
+      for (const code in resourceMap) {
+        const resource = resourceMap[code];
+
+        if ((resource.group & ACTION_GROUP.index) === ACTION_GROUP.index) {
+          mainResource = resource;
         }
       }
 
-      return null;
+      return mainResource;
     },
 
     getActions(operator, where) {
