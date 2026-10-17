@@ -48,14 +48,13 @@
 
 .layui-bpmn-panel__group-content {
   min-height: 48px;
-  padding-top: 8px;
-  padding-bottom: 6px;
+  padding: 3px;
 }
 
 .layui-bpmn-panel__group-fields {
   display: flex;
   flex-direction: column;
-  gap: 8px;
+  gap: 3px;
 }
 
 .layui-bpmn-panel__entry {

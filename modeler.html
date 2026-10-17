@@ -14,13 +14,14 @@
   <link rel="stylesheet" href="./static/bpmn/18.0.0/css/diagram-js.css" />
   <link rel="stylesheet" href="./static/bpmn/18.0.0/css/bpmn-js.css" />
   <link rel="stylesheet" href="./static/bpmn/18.0.0/css/bpmn.css" />
-  <link rel="stylesheet" href="s./tatic/css/modeler.css?v=20260418-0830" />
+  <link rel="stylesheet" href="./static/css/modeler.css?v=20260418-0830" />
  <!-- <link rel="stylesheet" href="https://unpkg.com/bpmn-js@18.0.0/dist/assets/bpmn-font/css/bpmn.css" />-->
 
-  <style type="text/css">
+  <style>
     html, body, .mycuckoo-main {
       height: 100%;
       margin: 0;
+      overflow: hidden;
     }
 
     .mycuckoo-main > .layui-row:last-child {
@@ -39,7 +40,7 @@
       padding: 4px 0;
     }
 
-    .modeler-pane, #ID_modeler_right {
+    .modeler-pane, #ID_modeler_property {
       height: 100%;
     }
 
@@ -103,12 +104,12 @@
     <div class="layui-col-lg3"></div>
   </div>
 
-  <div id="ID_modeler_edit_row" class="layui-row modeler-workspace">
+  <div id="ID_modeler_edit_body" class="layui-row modeler-workspace">
     <div id="ID_modeler_editor" class="layui-col-lg9 layui-col-md8 layui-col-sm8 layui-panel modeler-pane"></div>
-    <div id="ID_modeler_right" class="layui-col-lg3 layui-col-md4 layui-col-sm4"></div>
+    <div id="ID_modeler_property" class="layui-col-lg3 layui-col-md4 layui-col-sm4"></div>
   </div>
 
-  <div id="ID_modeler_preview_row" class="layui-row layui-hide modeler-workspace">
+  <div id="ID_modeler_preview_body" class="layui-row layui-hide modeler-workspace">
     <div id="ID_modeler_viewer" class="layui-col-lg12 modeler-pane"></div>
   </div>
 
@@ -126,7 +127,6 @@
     layui.use(['jquery', 'form'], function() {
       const $ = layui.jquery,
         layer = layui.layer,
-        form = layui.form,
         queryObj = MyCuckoo.getQueryObject(location.search),
         resources = MyCuckoo.getResource(queryObj.reskey),
         resourceMap = MyCuckoo.getDictMap(resources),
@@ -244,7 +244,7 @@
             this.modeler = new BpmnJS({
               container: '#ID_modeler_editor',
               myPropertiesPanel: {
-                parent: '#ID_modeler_right',
+                parent: '#ID_modeler_property',
                 userPicker: userPicker,
                 listenerSelectMode: 'layui1'
               },
@@ -273,7 +273,7 @@
           }
         },
         viewDemo: function() {
-          $.request({url: './modeler-demo.bpmn', method: 'get'}).then(xml => {
+          $.request({url: './modeler-demo.bpmn', method: 'get', canAccess: function() {return true}}).then(xml => {
             this.doOpenDiagram(xml, false);
           });
         },
@@ -395,8 +395,8 @@
 
           this.toggleXmlButton(previewOnly);
 
-          $('#ID_modeler_edit_row').toggleClass('layui-hide', previewOnly);
-          $('#ID_modeler_preview_row').toggleClass('layui-hide', !previewOnly);
+          $('#ID_modeler_edit_body').toggleClass('layui-hide', previewOnly);
+          $('#ID_modeler_preview_body').toggleClass('layui-hide', !previewOnly);
           $toolbar.children().toggleClass('layui-hide', previewOnly);
 
           if (previewOnly) {

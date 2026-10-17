@@ -84,13 +84,13 @@ function renderTableActions(operator, mode) {
 
 function renderColActions(operator, mode) {
   let items = operator.filter(item => (item.group & mode) === mode);
-  let maxShow = 2;
+  let maxShow = 1;
   return [
     '<div><div class="layui-clear-space">',
-    items.slice(0, maxShow).map(item => {
+    ...(items.slice(0, maxShow).map(item => {
       return '<a class="layui-btn layui-btn-xs" lay-event="' + item.code + '">'
           + '<i class="layui-icon layui-icon-' + item.iconCls + '"></i>' + item.name + '</a>'
-    }),
+    })),
     items.length <= maxShow ? '' : '<a class="layui-btn layui-btn-xs" lay-event="more">更多<i class="layui-icon layui-icon-down"></i></a>',
     '</div></div>'
   ].join('');
@@ -109,7 +109,7 @@ function renderFormActions(operator, mode) {
 }
 
 function getMoreActions(operator, mode) {
-  let maxShow = 2;
+  let maxShow = 1;
   return operator.filter(item => (item.group & mode) === mode).slice(maxShow);
 }
 

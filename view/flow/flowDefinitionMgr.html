@@ -114,7 +114,12 @@
         if (obj.event.indexOf('LAYTABLE_') == 0) {
           return;
         }
-        if (obj.event.endsWith('add')) {
+        if (obj.event.endsWith('modify')) {
+          let data = table.checkStatus(obj.config.id).data;
+          if (data.length === 1) {
+            obj.data = data[0];
+          }
+
           that.on(obj);
           return;
         }
@@ -150,20 +155,15 @@
         let that = this;
         that.reload(obj.field);
       },
-      //增加
-      add: function(obj) {
-        MyCuckoo.dialog('流程设计', '../../modeler.html?reskey={reskey}&action={action}',
-                {...queryObj, 'action': obj.event}
-        );
-      },
-      //修改
+      //新增或修改
       modify: function(obj) {
         let data = obj.data;
         let url = MyCuckoo.resolve('../../modeler.html?reskey={reskey}&action={action}&key={key}&name={name}&description={description}', {
-          ...queryObj, 'action': obj.event,
-          key: data.key,
-          name: data.name || '',
-          description: data.description || ''
+          ...queryObj,
+          action: obj.event,
+          key: data?.key || '',
+          name: data?.name || '',
+          description: data?.description || ''
         });
         MyCuckoo.dialog('流程设计', url);
       },
@@ -171,7 +171,8 @@
       view: function(obj) {
         let data = obj.data;
         let url = MyCuckoo.resolve('../../modeler.html?reskey={reskey}&action={action}&key={key}&name={name}&description={description}', {
-          ...queryObj, 'action': obj.event,
+          ...queryObj,
+          action: obj.event,
           key: data.key,
           name: data.name || '',
           description: data.description || ''
