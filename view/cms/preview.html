@@ -1,0 +1,146 @@
+<!DOCTYPE html>
+<html>
+<head>
+  <meta charset="utf-8" />
+  <title>表单预览</title>
+  <link rel="stylesheet" href="../../static/layui/2.13.5/css/layui.css" />
+  <style>
+    body { padding: 15px 20px; background: #fff; }
+    .preview-group { border: 1px solid #e6e6e6; border-radius: 4px; padding: 10px; margin-bottom: 10px; }
+    .preview-group-title { font-weight: bold; margin-bottom: 10px; color: #16b777; }
+    .layui-form-item { margin-bottom: 0; }
+    .layui-rate-preview .layui-icon {
+      font-size: 20px;
+      margin-right: 4px;
+    }
+  </style>
+</head>
+<body>
+<form class="layui-form" id="ID_preview_form"></form>
+<script src="../../static/layui/2.13.5/layui.js"></script>
+<script>
+  layui.use(['jquery', 'form', 'laydate'], function() {
+    const $ = layui.jquery, form = layui.form, laydate = layui.laydate;
+
+    const fields = JSON.parse(sessionStorage.getItem('designer_fields') || '[]');
+
+    function renderList(list) {
+      let html = '';
+      let rowCols = 0;
+      let rowHtml = '';
+
+      function flushRow() {
+        if (rowHtml) {
+          html += '<div class="layui-row">' + rowHtml + '</div>';
+          rowHtml = '';
+          rowCols = 0;
+        }
+      }
+
+      list.forEach(function(item) {
+        const col = item.col || 12;
+        const colCls = 'layui-col-md' + col;
+        if (rowCols + col > 12) flushRow();
+
+        if (item.type === 0) {
+          const inner = renderList(item.children || []);
+          rowHtml += '<div class="' + colCls + '" style="padding:0 6px 10px;box-sizing:border-box;">' +
+              '<div class="preview-group">' +
+              '<div class="preview-group-title">' + (item.title || '分组') + '</div>' +
+              inner +
+              '</div></div>';
+        } else {
+          rowHtml += '<div class="' + colCls + '" style="padding:0 6px 10px;box-sizing:border-box;">' +
+              renderItem(item) + '</div>';
+        }
+        rowCols += col;
+        if (rowCols >= 12) flushRow();
+      });
+      flushRow();
+      return html;
+    }
+
+    function renderItem(item) {
+      const required = item.required ? '<span style="color:red;">*</span>' : '';
+      return '<div class="layui-form-item" style="margin-bottom:0;">' +
+          '<label class="layui-form-label">' + required + item.title + '</label>' +
+          '<div class="layui-input-block">' + renderControl(item) + '</div>' +
+          '</div>';
+    }
+
+    function renderControl(item) {
+      const verify = item.required ? 'lay-verify="required"' : '';
+      const def = item.defaultValue || '';
+
+      switch (item.type) {
+        case 1:
+          return '<input type="text" name="' + item.field + '" class="layui-input" value="' + def + '" placeholder="' + (item.placeholder || '') + '" ' + verify + ' />';
+        case 2:
+          return '<textarea name="' + item.field + '" class="layui-textarea" placeholder="' + (item.placeholder || '') + '" ' + verify + '>' + def + '</textarea>';
+        case 3:
+          return (item.options || []).map(function(o) {
+            return '<input type="radio" name="' + item.field + '" value="' + o.value + '" title="' + o.name + '" ' + verify + '>';
+          }).join('');
+        case 4:
+          return (item.options || []).map(function(o) {
+            return '<input type="checkbox" name="' + item.field + '" value="' + o.value + '" title="' + o.name + '">';
+          }).join('');
+        case 5:
+          return '<input type="checkbox" lay-skin="switch" lay-text="' + (item.defaultValue || '是|否') + '" ' + (item.defaultBool ? 'checked' : '') + ' disabled>';
+        case 6:
+          return '<select name="' + item.field + '" ' + verify + '>' +
+              '<option value="">' + (item.placeholder || '请选择') + '</option>' +
+              (item.options || []).map(function(o) {
+                return '<option value="' + o.value + '" ' + (String(def) === String(o.value) ? 'selected' : '') + '>' + o.name + '</option>';
+              }).join('') +
+              '</select>';
+        case 7:
+          return '<input type="text" class="layui-input" placeholder="' + (item.placeholder || '请选择') + '" readonly />';
+        case 8:
+          return '<input type="number" name="' + item.field + '" class="layui-input" value="' + def + '" ' + verify + ' />';
+        case 9:
+          return '<input type="number" step="0.01" name="' + item.field + '" class="layui-input" value="' + def + '" ' + verify + ' />';
+        case 10:
+        case 11:
+          return '<input type="text" name="' + item.field + '" class="layui-input" readonly ' + verify + ' />';
+        case 12:
+          return '<input type="text" name="' + item.field + '" class="layui-input" lay-verify="' + (item.required ? 'required|' : '') + 'phone" />';
+        case 13:
+          return '<input type="text" name="' + item.field + '" class="layui-input" lay-verify="' + (item.required ? 'required|' : '') + 'email" />';
+        case 14:
+        case 15:
+          const tip = [];
+          if (item.exts) tip.push('格式：' + item.exts);
+          if (item.max) tip.push('大小：不超过 ' + item.max + 'KB');
+          if (item.defaultBool) tip.push('可多选');
+          return '<button type="button" class="layui-btn layui-btn-primary layui-btn-sm">' +
+              '<i class="layui-icon layui-icon-upload"></i> 选择' + (item.type === 15 ? '图片' : '文件') + '</button>' +
+              '<div class="layui-word-aux" style="font-size:12px;color:#999;">' + (tip.join('，') || '点击上传') + '</div>';
+        case 16:
+          return '<span class="layui-rate-preview">' +
+              '<i class="layui-icon layui-icon-rate-solid" style="color:#FFB800;"></i>'.repeat(item.max || 5) +
+              '</span>';
+        default:
+          return '<input type="text" name="' + item.field + '" class="layui-input" />';
+      }
+    }
+
+    function initDate(list) {
+      list.forEach(function(item) {
+        if (item.type === 0) {
+          initDate(item.children || []);
+        } else if (item.type === 10) {
+          laydate.render({ elem: '[name="' + item.field + '"]', type: 'date' });
+        } else if (item.type === 11) {
+          laydate.render({ elem: '[name="' + item.field + '"]', type: 'datetime' });
+        }
+      });
+    }
+
+    $('#ID_preview_form').html(renderList(fields));
+    initDate(fields);
+    form.render();
+  });
+</script>
+</body>
+</html>

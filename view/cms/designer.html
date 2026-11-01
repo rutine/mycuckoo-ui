@@ -1,0 +1,1365 @@
+<!DOCTYPE html>
+<html>
+<head>
+  <meta http-equiv="Content-Type" content="text/html; charset=utf-8" />
+  <title>表单设计器</title>
+  <link type="image/x-icon" href="../../static/images/favicon.ico" rel="shortcut icon" />
+  <link type="text/css" href="../../static/layui/2.13.5/css/layui.css" rel="stylesheet" />
+  <link type="text/css" href="../../static/css/mycuckoo.css" rel="stylesheet" />
+  <style>
+    .designer-layout {
+      display: flex;
+      height: 100%;
+      box-sizing: border-box;
+      padding-bottom: 50px;
+    }
+
+    .designer-aside {
+      width: 180px;
+      flex-shrink: 0;
+      border-right: 1px solid #e6e6e6;
+      background: #fafafa;
+      overflow-y: auto;
+      padding: 10px;
+      box-sizing: border-box;
+    }
+
+    .designer-canvas-wrap {
+      flex: 1;
+      min-width: 0;
+      overflow-y: auto;
+      padding: 15px;
+      box-sizing: border-box;
+      background: #f0f2f5;
+    }
+
+    .designer-props {
+      width: 300px;
+      flex-shrink: 0;
+      border-left: 1px solid #e6e6e6;
+      background: #fafafa;
+      overflow-y: auto;
+      padding: 10px;
+      box-sizing: border-box;
+    }
+
+    .designer-field-item {
+      display: flex;
+      align-items: center;
+      padding: 6px 10px;
+      margin-bottom: 6px;
+      background: #fff;
+      border: 1px solid #e6e6e6;
+      border-radius: 4px;
+      font-size: 13px;
+      cursor: move;
+      user-select: none;
+      transition: all 0.15s;
+    }
+
+    .designer-field-item:hover {
+      border-color: #16b777;
+      color: #16b777;
+    }
+
+    .designer-field-item i {
+      margin-right: 6px;
+    }
+
+    .designer-item,
+    .designer-group {
+      position: relative;
+      padding: 10px;
+      border: 1px solid transparent;
+      border-radius: 4px;
+      transition: all 0.15s;
+      cursor: move;
+      background: #fff;
+      height: 100%;
+      box-sizing: border-box;
+    }
+
+    .designer-item:hover,
+    .designer-group:hover {
+      border-color: #b5e6d5;
+      background: #f8fffc;
+    }
+
+    .designer-item.active,
+    .designer-group.active {
+      border-color: #16b777;
+      background: #f0fbf6;
+    }
+
+    .designer-item .item-actions,
+    .designer-group .item-actions {
+      position: absolute;
+      top: 4px;
+      right: 4px;
+      display: none;
+      z-index: 2;
+    }
+
+    .designer-item:hover .item-actions,
+    .designer-item.active .item-actions,
+    .designer-group:hover .item-actions,
+    .designer-group.active .item-actions {
+      display: block;
+    }
+
+    .designer-item .item-actions a,
+    .designer-group .item-actions a {
+      display: inline-block;
+      width: 22px;
+      height: 22px;
+      line-height: 22px;
+      text-align: center;
+      color: #999;
+      border-radius: 3px;
+      margin-left: 2px;
+      background: #fff;
+    }
+
+    .designer-item .item-actions a:hover,
+    .designer-group .item-actions a:hover {
+      background: #f2f2f2;
+      color: #16b777;
+    }
+
+    .designer-item .item-actions a.del:hover,
+    .designer-group .item-actions a.del:hover {
+      color: #ff5722;
+    }
+
+    .designer-item .layui-form-item,
+    .designer-group .layui-form-item {
+      margin-bottom: 0;
+    }
+
+    .designer-group {
+      border: 1px dashed #b5e6d5;
+      background: #fafffd;
+    }
+
+    .designer-group.active {
+      border-style: solid;
+    }
+
+    .designer-group .group-header {
+      display: flex;
+      align-items: center;
+      padding: 6px 10px;
+      font-size: 13px;
+      font-weight: bold;
+      color: #16b777;
+      border-bottom: 1px dashed #b5e6d5;
+    }
+
+    .designer-group .group-header i {
+      margin-right: 6px;
+    }
+
+    .designer-group .group-body {
+      padding: 8px 0;
+      min-height: 40px;
+    }
+
+    .designer-empty-mini {
+      text-align: center;
+      color: #ccc;
+      font-size: 12px;
+      padding: 10px 0;
+    }
+
+    .designer-empty {
+      text-align: center;
+      color: #bbb;
+      padding: 60px 0;
+      font-size: 14px;
+      border: 1px dashed #e6e6e6;
+      border-radius: 4px;
+    }
+
+    .designer-props .layui-form-label {
+      width: 76px;
+      padding: 9px 0;
+      font-size: 13px;
+    }
+
+    .designer-props .layui-input-block {
+      margin-left: 86px;
+    }
+
+    .designer-props .layui-input,
+    .designer-props .layui-textarea {
+      font-size: 13px;
+    }
+
+    .designer-props .layui-form-item {
+      margin-bottom: 10px;
+    }
+
+    .designer-props .option-row {
+      display: flex;
+      align-items: center;
+      margin-bottom: 6px;
+    }
+
+    .designer-props .option-row input {
+      flex: 1;
+      margin-right: 6px;
+    }
+
+    .designer-props .option-row a {
+      color: #ff5722;
+      cursor: pointer;
+    }
+
+    .designer-props .empty-tip {
+      color: #999;
+      font-size: 13px;
+      text-align: center;
+      padding: 40px 0;
+    }
+
+    .sortable-ghost {
+      opacity: 0.4;
+      background: #f0fbf6;
+      border: 1px dashed #16b777 !important;
+    }
+
+    .sortable-chosen {
+      box-shadow: 0 2px 12px rgba(22, 183, 119, 0.25);
+    }
+
+    .drop-hover {
+      outline: 2px dashed #16b777;
+      outline-offset: -2px;
+    }
+
+    .toolbar {
+      position: fixed;
+      left: 0;
+      right: 0;
+      bottom: 0;
+      height: 50px;
+      padding: 0 10px;
+      background: #fff;
+      border-top: 1px solid #e6e6e6;
+      box-sizing: border-box;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      gap: 8px;
+      z-index: 10;
+    }
+
+    .layui-rate-preview .layui-icon {
+      font-size: 20px;
+      margin-right: 4px;
+    }
+  </style>
+</head>
+<body>
+<div class="designer-layout">
+  <div class="designer-aside">
+    <div style="font-weight:bold;font-size:13px;margin-bottom:8px;">字段类型</div>
+    <div id="ID_field_panel"></div>
+  </div>
+
+  <div class="designer-canvas-wrap layui-form">
+    <div class="layui-card" style="max-width:960px;margin:0 auto;">
+      <div class="layui-card-body" id="ID_canvas">
+        <div class="designer-empty" id="ID_empty">从左侧拖拽字段到此处</div>
+      </div>
+    </div>
+  </div>
+
+  <div class="designer-props">
+    <div style="font-weight:bold;font-size:13px;margin-bottom:10px;">字段属性</div>
+    <div class="layui-form" id="ID_props">
+      <div class="empty-tip">请选择画布中的字段</div>
+    </div>
+  </div>
+</div>
+
+<div class="toolbar">
+  <a class="layui-btn layui-btn-sm layui-btn-normal" data-event="save">保存</a>
+  <a class="layui-btn layui-btn-sm layui-btn-primary" data-event="preview">预览</a>
+  <a class="layui-btn layui-btn-sm layui-btn-primary" data-event="export">导出JSON</a>
+  <a class="layui-btn layui-btn-sm layui-btn-primary" data-event="importJson">导入JSON</a>
+  <a class="layui-btn layui-btn-sm layui-btn-primary" data-event="undo">撤销</a>
+  <a class="layui-btn layui-btn-sm layui-btn-primary" data-event="redo">重做</a>
+  <a class="layui-btn layui-btn-sm layui-btn-primary" data-event="clear">清空</a>
+</div>
+</body>
+
+<script src="https://cdn.jsdelivr.net/npm/sortablejs@1.15.0/Sortable.min.js"></script>
+<script type="text/javascript" src="../../static/layui/2.13.5/layui.js" charset="UTF-8"></script>
+<script type="text/javascript" src="../../static/mycuckoo.bundle.js" charset="UTF-8"></script>
+<script type="text/javascript">
+  layui.use(['jquery', 'form', 'layer'], function() {
+    const $ = layui.jquery,
+      form = layui.form,
+      layer = layui.layer,
+      queryObj = MyCuckoo.getQueryObject(location.search),
+      resources = MyCuckoo.getResource(queryObj.reskey),
+      resourceMap = MyCuckoo.getDictMap(resources),
+      resourceObj = resourceMap[queryObj.action];
+
+    // ============ 字段类型（0=分组，1~16 普通字段） ============
+    const FIELD_TYPES = [
+      { type: 0,  name: '分组',     icon: 'layui-icon-component' },
+      { type: 1,  name: '单行文本', icon: 'layui-icon-edit' },
+      { type: 2,  name: '多行文本', icon: 'layui-icon-template-1' },
+      { type: 3,  name: '单选',     icon: 'layui-icon-radio' },
+      { type: 4,  name: '多选',     icon: '' },
+      { type: 5,  name: '开关',     icon: 'layui-icon-play' },
+      { type: 6,  name: '选择框',   icon: '' },
+      { type: 7,  name: '级联选择', icon: 'layui-icon-form' },
+      { type: 8,  name: '数字',     icon: 'layui-icon-engine' },
+      { type: 9,  name: '小数',     icon: 'layui-icon-engine' },
+      { type: 10, name: '日期',     icon: 'layui-icon-date' },
+      { type: 11, name: '日期时间', icon: 'layui-icon-date' },
+      { type: 12, name: '手机',     icon: 'layui-icon-cellphone' },
+      { type: 13, name: '邮箱',     icon: 'layui-icon-email' },
+      { type: 14, name: '文件',     icon: 'layui-icon-file' },
+      { type: 15, name: '图片',     icon: 'layui-icon-picture' },
+      { type: 16, name: '评分',     icon: 'layui-icon-star' }
+    ];
+
+    // ============ 状态 ============
+    let fieldList = [];
+    let activeId = null;
+    let undoStack = [];
+    let redoStack = [];
+    let sortableInstances = [];
+    let uid = 1;
+
+    function genId(prefix) {
+      return (prefix || 'f_') + Date.now() + '_' + (uid++);
+    }
+
+    function snapshot() { return JSON.stringify(fieldList); }
+
+    function pushUndo() {
+      undoStack.push(snapshot());
+      if (undoStack.length > 50) undoStack.shift();
+      redoStack = [];
+    }
+
+    function findFieldById(id, list) {
+      list = list || fieldList;
+      for (let i = 0; i < list.length; i++) {
+        const item = list[i];
+        if (item.id === id) return { item: item, parent: list, index: i };
+        if (item.type === 0 && item.children) {
+          const found = findFieldById(id, item.children);
+          if (found) return found;
+        }
+      }
+      return null;
+    }
+
+    function getActiveField() {
+      if (!activeId) return null;
+      const found = findFieldById(activeId);
+      return found ? found.item : null;
+    }
+
+    // ============ 字段名校验 ============
+    function collectFieldNames(list, names, duplicates) {
+      list.forEach(function(item) {
+        if (item.type === 0) {
+          collectFieldNames(item.children || [], names, duplicates);
+        } else if (item.field) {
+          if (names.indexOf(item.field) >= 0) {
+            if (duplicates.indexOf(item.field) < 0) duplicates.push(item.field);
+          } else {
+            names.push(item.field);
+          }
+        }
+      });
+    }
+
+    function validateFieldNames() {
+      const names = [];
+      const duplicates = [];
+      collectFieldNames(fieldList, names, duplicates);
+      return duplicates;
+    }
+
+    function existsFieldName(name) {
+      let exists = false;
+      (function collect(list) {
+        list.forEach(function(f) {
+          if (f.type === 0) {
+            collect(f.children || []);
+          } else if (f.field === name) {
+            exists = true;
+          }
+        });
+      })(fieldList);
+      return exists;
+    }
+
+    function genFieldName() {
+      let name = 'field_' + Date.now();
+      let i = 1;
+      while (existsFieldName(name)) {
+        name = 'field_' + Date.now() + '_' + (i++);
+      }
+      return name;
+    }
+
+    // ============ 渲染左侧面板 ============
+    function renderFieldPanel() {
+      const html = FIELD_TYPES.map(function(item) {
+        const iconHtml = item.icon ? '<i class="layui-icon ' + item.icon + '"></i>' : '';
+        return '<div class="designer-field-item" data-type="' + item.type + '">' +
+            iconHtml + item.name +
+            '</div>';
+      }).join('');
+      $('#ID_field_panel').html(html);
+    }
+
+    // ============ 渲染画布 ============
+    function renderCanvas() {
+      const $canvas = $('#ID_canvas');
+      if (!fieldList.length) {
+        $canvas.html('<div class="designer-empty" id="ID_empty">从左侧拖拽字段到此处</div>');
+        return;
+      }
+
+      let html = '';
+      let rowCols = 0;
+      let rowHtml = '';
+
+      function flushRow() {
+        if (rowHtml) {
+          html += '<div class="layui-row">' + rowHtml + '</div>';
+          rowHtml = '';
+          rowCols = 0;
+        }
+      }
+
+      fieldList.forEach(function(item) {
+        const col = item.col || 12;
+        const colCls = 'layui-col-md' + col;
+        if (rowCols + col > 12) flushRow();
+        rowHtml += '<div class="' + colCls + '" data-id="' + item.id + '" style="padding:0 6px 8px;box-sizing:border-box;">' +
+            (item.type === 0 ? renderGroup(item) : renderField(item)) +
+            '</div>';
+        rowCols += col;
+        if (rowCols >= 12) flushRow();
+      });
+      flushRow();
+
+      $canvas.html(html);
+      form.render();
+      initSortable();
+    }
+
+    function renderField(item) {
+      const active = item.id === activeId ? ' active' : '';
+      return '<div class="designer-item' + active + '" data-id="' + item.id + '">' +
+          '<div class="item-actions">' +
+          '<a href="javascript:;" class="moveup" title="上移"><i class="layui-icon layui-icon-up"></i></a>' +
+          '<a href="javascript:;" class="movedown" title="下移"><i class="layui-icon layui-icon-down"></i></a>' +
+          '<a href="javascript:;" class="copy" title="复制"><i class="layui-icon layui-icon-template"></i></a>' +
+          '<a href="javascript:;" class="del" title="删除"><i class="layui-icon layui-icon-delete"></i></a>' +
+          '</div>' +
+          renderControl(item) +
+          '</div>';
+    }
+
+    function renderGroup(item) {
+      const active = item.id === activeId ? ' active' : '';
+      let childrenHtml = '';
+      if (item.children && item.children.length) {
+        let rowCols = 0;
+        let rowHtml = '';
+        item.children.forEach(function(child) {
+          const col = child.col || 12;
+          const colCls = 'layui-col-md' + col;
+          if (rowCols + col > 12) {
+            childrenHtml += '<div class="layui-row">' + rowHtml + '</div>';
+            rowHtml = '';
+            rowCols = 0;
+          }
+          rowHtml += '<div class="' + colCls + '" data-id="' + child.id + '" style="padding:0 6px 8px;box-sizing:border-box;">' +
+              renderField(child) + '</div>';
+          rowCols += col;
+          if (rowCols >= 12) {
+            childrenHtml += '<div class="layui-row">' + rowHtml + '</div>';
+            rowHtml = '';
+            rowCols = 0;
+          }
+        });
+        if (rowHtml) childrenHtml += '<div class="layui-row">' + rowHtml + '</div>';
+      } else {
+        childrenHtml = '<div class="designer-empty-mini">拖拽字段到分组内</div>';
+      }
+
+      return '<div class="designer-group' + active + '" data-id="' + item.id + '">' +
+          '<div class="item-actions">' +
+          '<a href="javascript:;" class="moveup" title="上移"><i class="layui-icon layui-icon-up"></i></a>' +
+          '<a href="javascript:;" class="movedown" title="下移"><i class="layui-icon layui-icon-down"></i></a>' +
+          '<a href="javascript:;" class="del" title="删除"><i class="layui-icon layui-icon-delete"></i></a>' +
+          '</div>' +
+          '<div class="group-header"><i class="layui-icon layui-icon-component"></i>' + (item.title || '分组') + '</div>' +
+          '<div class="group-body" data-group-id="' + item.id + '">' + childrenHtml + '</div>' +
+          '</div>';
+    }
+
+    // ============ 字段预览 ============
+    function renderControl(item) {
+      const required = item.required ? '<span style="color:red;">*</span>' : '';
+      const label = '<label class="layui-form-label">' + required + (item.title || '未命名字段') + '</label>';
+      let control = '';
+
+      switch (item.type) {
+        case 1:
+        case 12:
+        case 13:
+          control = '<input type="text" class="layui-input" placeholder="' + (item.placeholder || '') + '" readonly />';
+          break;
+        case 2:
+          control = '<textarea class="layui-textarea" placeholder="' + (item.placeholder || '') + '" readonly></textarea>';
+          break;
+        case 3:
+          control = (item.options || []).map(function(opt) {
+            return '<input type="radio" name="p_' + item.id + '" title="' + opt.name + '" disabled>';
+          }).join('') || '<span style="color:#ccc;">未配置选项</span>';
+          break;
+        case 4:
+          control = (item.options || []).map(function(opt) {
+            return '<input type="checkbox" name="p_' + item.id + '" title="' + opt.name + '" disabled>';
+          }).join('') || '<span style="color:#ccc;">未配置选项</span>';
+          break;
+        case 5:
+          control = '<input type="checkbox" lay-skin="switch" lay-text="' + (item.defaultValue || '是|否') + '" ' + (item.defaultBool ? 'checked' : '') + ' disabled>';
+          break;
+        case 6:
+          control = '<select class="layui-input" disabled>' +
+              '<option value="">' + (item.placeholder || '请选择') + '</option>' +
+              (item.options || []).map(function(opt) {
+                return '<option value="' + opt.value + '">' + opt.name + '</option>';
+              }).join('') +
+              '</select>';
+          break;
+        case 7:
+          control = '<input type="text" class="layui-input" placeholder="' + (item.placeholder || '请选择') + '" readonly />';
+          break;
+        case 8:
+          control = '<input type="number" class="layui-input" readonly />';
+          break;
+        case 9:
+          control = '<input type="number" step="0.01" class="layui-input" readonly />';
+          break;
+        case 10:
+        case 11:
+          control = '<input type="text" class="layui-input" placeholder="' + (item.type === 11 ? 'yyyy-MM-dd HH:mm:ss' : 'yyyy-MM-dd') + '" readonly />';
+          break;
+        case 14:
+          control = '<button type="button" class="layui-btn layui-btn-primary layui-btn-sm">' +
+              '<i class="layui-icon layui-icon-upload"></i> 选择文件</button>' +
+              '<div class="layui-word-aux" style="font-size:12px;color:#999;">' +
+              renderUploadTip(item) + '</div>';
+          break;
+        case 15:
+          control = '<button type="button" class="layui-btn layui-btn-primary layui-btn-sm">' +
+              '<i class="layui-icon layui-icon-upload"></i> 选择图片</button>' +
+              '<div class="layui-word-aux" style="font-size:12px;color:#999;">' +
+              renderUploadTip(item) + '</div>';
+          break;
+        case 16:
+          const max = item.max || 5;
+          control = '<span class="layui-rate-preview">' +
+              '<i class="layui-icon layui-icon-rate-solid" style="color:#FFB800;"></i>'.repeat(max) +
+              '</span>';
+          break;
+      }
+
+      return '<div class="layui-form-item" style="margin-bottom:0;">' + label +
+          '<div class="layui-input-block">' + control + '</div>' +
+          '</div>';
+    }
+
+    function renderUploadTip(item) {
+      let tips = [];
+      if (item.exts) tips.push('格式：' + item.exts);
+      if (item.max) tips.push('大小：不超过 ' + item.max + 'KB');
+      if (item.defaultBool) tips.push('可多选');
+      return tips.join('，') || '点击上传';
+    }
+
+    // ============ 右侧属性 ============
+    function renderProps() {
+      const $props = $('#ID_props');
+      const item = getActiveField();
+      if (!item) {
+        $props.html('<div class="empty-tip">请选择画布中的字段</div>');
+        return;
+      }
+
+      if (item.type === 0) {
+        let html = '';
+        html += '<div class="layui-form-item">' +
+            '<label class="layui-form-label">类型</label>' +
+            '<div class="layui-input-block"><input type="text" class="layui-input" value="分组" readonly /></div>' +
+            '</div>';
+        html += '<div class="layui-form-item">' +
+            '<label class="layui-form-label">标题</label>' +
+            '<div class="layui-input-block"><input type="text" class="layui-input prop-title" value="' + (item.title || '') + '" /></div>' +
+            '</div>';
+        html += '<div class="layui-form-item">' +
+            '<label class="layui-form-label">宽度</label>' +
+            '<div class="layui-input-block">' +
+            '<select class="prop-col" lay-filter="prop-col">' +
+            '<option value="12" ' + (item.col === 12 ? 'selected' : '') + '>整行</option>' +
+            '<option value="6" ' + (item.col === 6 ? 'selected' : '') + '>半行(1/2)</option>' +
+            '<option value="4" ' + (item.col === 4 ? 'selected' : '') + '>三分之一</option>' +
+            '<option value="3" ' + (item.col === 3 ? 'selected' : '') + '>四分之一</option>' +
+            '</select>' +
+            '</div></div>';
+        $props.html(html);
+        form.render();
+        return;
+      }
+
+      const typeName = (FIELD_TYPES.find(t => t.type === item.type) || {}).name || '未知';
+      let html = '';
+
+      html += '<div class="layui-form-item">' +
+          '<label class="layui-form-label">类型</label>' +
+          '<div class="layui-input-block"><input type="text" class="layui-input" value="' + typeName + '" readonly /></div>' +
+          '</div>';
+
+      html += '<div class="layui-form-item">' +
+          '<label class="layui-form-label">字段名</label>' +
+          '<div class="layui-input-block"><input type="text" class="layui-input prop-field" value="' + (item.field || '') + '" placeholder="英文/下划线" /></div>' +
+          '</div>';
+
+      html += '<div class="layui-form-item">' +
+          '<label class="layui-form-label">标题</label>' +
+          '<div class="layui-input-block"><input type="text" class="layui-input prop-title" value="' + (item.title || '') + '" /></div>' +
+          '</div>';
+
+      html += '<div class="layui-form-item">' +
+          '<label class="layui-form-label">宽度</label>' +
+          '<div class="layui-input-block">' +
+          '<select class="prop-col" lay-filter="prop-col">' +
+          '<option value="12" ' + (item.col === 12 ? 'selected' : '') + '>整行</option>' +
+          '<option value="6" ' + (item.col === 6 ? 'selected' : '') + '>半行(1/2)</option>' +
+          '<option value="4" ' + (item.col === 4 ? 'selected' : '') + '>三分之一</option>' +
+          '<option value="3" ' + (item.col === 3 ? 'selected' : '') + '>四分之一</option>' +
+          '</select>' +
+          '</div></div>';
+
+      if ([1, 2, 6, 12, 13].indexOf(item.type) >= 0) {
+        html += '<div class="layui-form-item">' +
+            '<label class="layui-form-label">提示</label>' +
+            '<div class="layui-input-block"><input type="text" class="layui-input prop-placeholder" value="' + (item.placeholder || '') + '" /></div>' +
+            '</div>';
+      }
+
+      if ([1, 2, 6, 8, 9, 12, 13].indexOf(item.type) >= 0) {
+        html += '<div class="layui-form-item">' +
+            '<label class="layui-form-label">默认值</label>' +
+            '<div class="layui-input-block"><input type="text" class="layui-input prop-default" value="' + (item.defaultValue || '') + '" /></div>' +
+            '</div>';
+      }
+
+      if ([3, 4, 6].indexOf(item.type) >= 0) {
+        html += '<div class="layui-form-item">' +
+            '<label class="layui-form-label">选项</label>' +
+            '<div class="layui-input-block">' +
+            '<div class="prop-options">';
+        (item.options || []).forEach(function(opt) {
+          html += '<div class="option-row">' +
+              '<input type="text" class="layui-input opt-name" value="' + opt.name + '" placeholder="选项名" />' +
+              '<input type="text" class="layui-input opt-value" value="' + opt.value + '" placeholder="值" />' +
+              '<a href="javascript:;" class="opt-del"><i class="layui-icon layui-icon-delete"></i></a>' +
+              '</div>';
+        });
+        html += '</div>' +
+            '<button type="button" class="layui-btn layui-btn-xs layui-btn-primary prop-add-option">添加选项</button>' +
+            '</div></div>';
+      }
+
+      html += '<div class="layui-form-item">' +
+          '<label class="layui-form-label">必填</label>' +
+          '<div class="layui-input-block">' +
+          '<input type="checkbox" class="prop-required" lay-skin="switch" lay-text="是|否" ' + (item.required ? 'checked' : '') + '>' +
+          '</div></div>';
+
+      if ([1, 2, 12, 13].indexOf(item.type) >= 0) {
+        html += '<div class="layui-form-item">' +
+            '<label class="layui-form-label">最大长度</label>' +
+            '<div class="layui-input-block"><input type="number" class="layui-input prop-max" value="' + (item.max || '') + '" /></div>' +
+            '</div>';
+      }
+
+      if ([8, 9].indexOf(item.type) >= 0) {
+        html += '<div class="layui-form-item">' +
+            '<label class="layui-form-label">最小值</label>' +
+            '<div class="layui-input-block"><input type="number" class="layui-input prop-minValue" value="' + (item.minValue !== null && item.minValue !== undefined ? item.minValue : '') + '" /></div>' +
+            '</div>';
+        html += '<div class="layui-form-item">' +
+            '<label class="layui-form-label">最大值</label>' +
+            '<div class="layui-input-block"><input type="number" class="layui-input prop-maxValue" value="' + (item.maxValue !== null && item.maxValue !== undefined ? item.maxValue : '') + '" /></div>' +
+            '</div>';
+      }
+
+      if ([1, 2, 12, 13].indexOf(item.type) >= 0) {
+        html += '<div class="layui-form-item">' +
+            '<label class="layui-form-label">正则</label>' +
+            '<div class="layui-input-block"><input type="text" class="layui-input prop-regex" value="' + (item.regex || '') + '" placeholder="可选" /></div>' +
+            '</div>';
+      }
+
+      if ([14, 15].indexOf(item.type) >= 0) {
+        html += '<div class="layui-form-item">' +
+            '<label class="layui-form-label">文件类型</label>' +
+            '<div class="layui-input-block">' +
+            '<select class="prop-accept" lay-filter="prop-accept">' +
+            '<option value="">不限</option>' +
+            '<option value="file" ' + (item.accept === 'file' ? 'selected' : '') + '>文件</option>' +
+            '<option value="images" ' + (item.accept === 'images' ? 'selected' : '') + '>图片</option>' +
+            '<option value="video" ' + (item.accept === 'video' ? 'selected' : '') + '>视频</option>' +
+            '<option value="audio" ' + (item.accept === 'audio' ? 'selected' : '') + '>音频</option>' +
+            '</select>' +
+            '</div></div>';
+
+        html += '<div class="layui-form-item">' +
+            '<label class="layui-form-label">扩展名</label>' +
+            '<div class="layui-input-block">' +
+            '<input type="text" class="layui-input prop-exts" value="' + (item.exts || '') + '" placeholder="如 pdf,doc,docx" />' +
+            '</div></div>';
+
+        html += '<div class="layui-form-item">' +
+            '<label class="layui-form-label">大小(KB)</label>' +
+            '<div class="layui-input-block">' +
+            '<input type="number" class="layui-input prop-max" value="' + (item.max || '') + '" placeholder="如 10240" />' +
+            '</div></div>';
+
+        html += '<div class="layui-form-item">' +
+            '<label class="layui-form-label">多选</label>' +
+            '<div class="layui-input-block">' +
+            '<input type="checkbox" class="prop-defaultBool" lay-skin="switch" lay-text="是|否" ' + (item.defaultBool ? 'checked' : '') + '>' +
+            '</div></div>';
+      }
+
+      if (item.type === 5) {
+        html += '<div class="layui-form-item">' +
+            '<label class="layui-form-label">开关文字</label>' +
+            '<div class="layui-input-block"><input type="text" class="layui-input prop-default" value="' + (item.defaultValue || '是|否') + '" placeholder="如 是|否" /></div>' +
+            '</div>';
+        html += '<div class="layui-form-item">' +
+            '<label class="layui-form-label">默认开</label>' +
+            '<div class="layui-input-block">' +
+            '<input type="checkbox" class="prop-defaultBool" lay-skin="switch" lay-text="开|关" ' + (item.defaultBool ? 'checked' : '') + '>' +
+            '</div></div>';
+      }
+
+      if (item.type === 16) {
+        html += '<div class="layui-form-item">' +
+            '<label class="layui-form-label">最大分值</label>' +
+            '<div class="layui-input-block"><input type="number" class="layui-input prop-max" value="' + (item.max || 5) + '" min="1" max="10" /></div>' +
+            '</div>';
+        html += '<div class="layui-form-item">' +
+            '<label class="layui-form-label">半星</label>' +
+            '<div class="layui-input-block">' +
+            '<input type="checkbox" class="prop-defaultBool" lay-skin="switch" lay-text="是|否" ' + (item.defaultBool ? 'checked' : '') + '>' +
+            '</div></div>';
+      }
+
+      if (item.type === 7) {
+        html += '<div class="layui-form-item">' +
+            '<label class="layui-form-label">提示</label>' +
+            '<div class="layui-input-block"><input type="text" class="layui-input prop-placeholder" value="' + (item.placeholder || '') + '" /></div>' +
+            '</div>';
+        html += '<div class="layui-form-item">' +
+            '<label class="layui-form-label">级联数据</label>' +
+            '<div class="layui-input-block">' +
+            '<textarea class="layui-textarea prop-cascaderData" placeholder=\'JSON 格式，如 [{"value":"1","label":"浙江省","children":[{"value":"11","label":"杭州市"}]}]\'>' +
+            (item.cascaderData ? JSON.stringify(item.cascaderData) : '') +
+            '</textarea>' +
+            '</div></div>';
+      }
+
+      html += '<div class="layui-form-item">' +
+          '<label class="layui-form-label">处理器</label>' +
+          '<div class="layui-input-block">' +
+          '<select class="prop-processor" lay-filter="prop-processor">' +
+          '<option value="">无</option>' +
+          '<option value="mobile" ' + (item.processor === 'mobile' ? 'selected' : '') + '>手机号脱敏</option>' +
+          '<option value="amount" ' + (item.processor === 'amount' ? 'selected' : '') + '>金额分/元</option>' +
+          '<option value="dict" ' + (item.processor === 'dict' ? 'selected' : '') + '>字典转换</option>' +
+          '<option value="multi" ' + (item.processor === 'multi' ? 'selected' : '') + '>多选数组</option>' +
+          '<option value="encrypt" ' + (item.processor === 'encrypt' ? 'selected' : '') + '>加密</option>' +
+          '</select>' +
+          '</div></div>';
+
+      html += '<div class="layui-form-item">' +
+          '<label class="layui-form-label">说明</label>' +
+          '<div class="layui-input-block"><input type="text" class="layui-input prop-extra" value="' + (item.extra || '') + '" /></div>' +
+          '</div>';
+
+      $props.html(html);
+      form.render();
+    }
+
+    // ============ Sortable ============
+    function initSortable() {
+      sortableInstances.forEach(function(inst) {
+        try { inst.destroy(); } catch (e) {}
+      });
+      sortableInstances = [];
+
+      const canvasEl = document.getElementById('ID_canvas');
+      sortableInstances.push(Sortable.create(canvasEl, {
+        animation: 150,
+        handle: '.designer-item, .designer-group',
+        draggable: '.layui-col-md12, .layui-col-md6, .layui-col-md4, .layui-col-md3',
+        ghostClass: 'sortable-ghost',
+        chosenClass: 'sortable-chosen',
+        group: { name: 'canvas', pull: true, put: true },
+        onEnd: function() {
+          pushUndo();
+          rebuildFieldListFromDom();
+          activeId = null;
+          renderAll();
+        }
+      }));
+
+      $('.group-body').each(function() {
+        const groupId = $(this).data('group-id');
+        sortableInstances.push(Sortable.create(this, {
+          animation: 150,
+          handle: '.designer-item',
+          draggable: '.layui-col-md12, .layui-col-md6, .layui-col-md4, .layui-col-md3',
+          ghostClass: 'sortable-ghost',
+          chosenClass: 'sortable-chosen',
+          group: { name: 'group-' + groupId, pull: true, put: true },
+          onEnd: function() {
+            pushUndo();
+            rebuildFieldListFromDom();
+            activeId = null;
+            renderAll();
+          }
+        }));
+      });
+    }
+
+    function rebuildFieldListFromDom() {
+      function collectFrom(el) {
+        const result = [];
+        $(el).children('.layui-row').each(function() {
+          $(this).children('[data-id]').each(function() {
+            const id = $(this).data('id');
+            const found = findFieldById(id);
+            if (!found) return;
+            const item = found.item;
+            if (item.type === 0) {
+              const $groupBody = $(this).find('.group-body');
+              item.children = collectFrom($groupBody[0]);
+            }
+            result.push(item);
+          });
+        });
+        $(el).children('[data-id]').each(function() {
+          const id = $(this).data('id');
+          const found = findFieldById(id);
+          if (found && result.indexOf(found.item) < 0) {
+            if (found.item.type === 0) {
+              const $groupBody = $(this).find('.group-body');
+              found.item.children = collectFrom($groupBody[0]);
+            }
+            result.push(found.item);
+          }
+        });
+        return result;
+      }
+      fieldList = collectFrom($('#ID_canvas')[0]);
+    }
+
+    function renderAll() {
+      renderCanvas();
+      renderProps();
+    }
+
+    // ============ IndexMgr ============
+    let indexMgrInst = null;
+    const IndexMgr = function() {
+      if (indexMgrInst) return;
+      const that = indexMgrInst = this;
+
+      // ============ 左侧拖拽 ============
+      $('#ID_field_panel').on('mousedown', '.designer-field-item', function(e) {
+        e.preventDefault();
+        const type = $(this).data('type');
+        const typeItem = FIELD_TYPES.find(t => t.type === type);
+        if (!typeItem) return;
+
+        const $ghost = $('<div class="designer-field-item" style="position:fixed;z-index:9999;pointer-events:none;opacity:0.8;background:#fff;">' +
+            (typeItem.icon ? '<i class="layui-icon ' + typeItem.icon + '"></i>' : '') + typeItem.name + '</div>');
+        $('body').append($ghost);
+
+        let lastTarget = null;
+
+        function onMove(ev) {
+          $ghost.css({ left: ev.clientX + 10, top: ev.clientY + 10 });
+          const el = document.elementFromPoint(ev.clientX, ev.clientY);
+          if (!el) return;
+          const target = el.closest('[data-id], .group-body, #ID_canvas');
+          if (!target) return;
+          if (lastTarget && lastTarget !== target) lastTarget.classList.remove('drop-hover');
+          lastTarget = target;
+          target.classList.add('drop-hover');
+        }
+
+        function onUp(ev) {
+          $(document).off('mousemove', onMove).off('mouseup', onUp);
+          $ghost.remove();
+          if (lastTarget) {
+            lastTarget.classList.remove('drop-hover');
+            lastTarget = null;
+          }
+
+          const el = document.elementFromPoint(ev.clientX, ev.clientY);
+          if (!el) return;
+
+          pushUndo();
+
+          const newField = {
+            id: type === 0 ? genId('g_') : genId('f_'),
+            type: type,
+            field: type === 0 ? undefined : genFieldName(),
+            title: typeItem.name,
+            required: false,
+            col: 12,
+            options: [3, 4, 6].indexOf(type) >= 0 ? [{ name: '选项1', value: '1' }] : undefined,
+            defaultValue: type === 5 ? '是|否' : undefined,
+            defaultBool: [4, 5, 14, 15, 16].indexOf(type) >= 0 ? false : undefined,
+            max: type === 16 ? 5 : undefined,
+            cascaderData: type === 7 ? [] : undefined
+          };
+          if (type === 0) newField.children = [];
+
+          const groupBody = el.closest('.group-body');
+          const col = el.closest('[data-id]');
+
+          if (groupBody) {
+            const groupId = groupBody.dataset.groupId;
+            const groupItem = findFieldById(groupId);
+            if (groupItem && groupItem.item.type === 0) {
+              groupItem.item.children = groupItem.item.children || [];
+              groupItem.item.children.push(newField);
+            }
+          } else if (col && col.closest('#ID_canvas')) {
+            const found = findFieldById(col.dataset.id);
+            if (found) {
+              const rect = col.getBoundingClientRect();
+              const after = ev.clientY > rect.top + rect.height / 2;
+              found.parent.splice(found.index + (after ? 1 : 0), 0, newField);
+            }
+          } else {
+            fieldList.push(newField);
+          }
+
+          activeId = newField.id;
+          renderAll();
+        }
+
+        $(document).on('mousemove', onMove).on('mouseup', onUp);
+      });
+
+      // ============ 点击选中 ============
+      $('#ID_canvas').on('click', '.designer-item, .designer-group', function(e) {
+        if ($(e.target).closest('.item-actions').length) return;
+        const $field = $(e.target).closest('.designer-item');
+        activeId = $field.length ? $field.data('id') : $(this).data('id');
+        renderAll();
+      });
+
+      // ============ 操作按钮 ============
+      $('#ID_canvas').on('click', '.item-actions a', function(e) {
+        e.stopPropagation();
+        const $item = $(this).closest('.designer-item, .designer-group');
+        const id = $item.data('id');
+        const action = $(this).attr('class').split(' ')[0];
+        const found = findFieldById(id);
+        if (!found) return;
+
+        if (action === 'del') {
+          layer.confirm('确定删除？', {icon: 3, title: '提示'}, function(ci) {
+            pushUndo();
+            found.parent.splice(found.index, 1);
+            if (activeId === id) activeId = null;
+            renderAll();
+            layer.close(ci);
+          });
+        } else if (action === 'copy') {
+          pushUndo();
+          const copy = JSON.parse(JSON.stringify(found.item));
+          copy.id = genId(copy.type === 0 ? 'g_' : 'f_');
+          if (copy.field) copy.field = genFieldName();
+          if (copy.children) {
+            copy.children = copy.children.map(function(c) {
+              c.id = genId('f_');
+              c.field = genFieldName();
+              return c;
+            });
+          }
+          found.parent.splice(found.index + 1, 0, copy);
+          activeId = copy.id;
+          renderAll();
+        } else if (action === 'moveup') {
+          if (found.index === 0) return;
+          pushUndo();
+          const item = found.parent.splice(found.index, 1)[0];
+          found.parent.splice(found.index - 1, 0, item);
+          renderAll();
+        } else if (action === 'movedown') {
+          if (found.index === found.parent.length - 1) return;
+          pushUndo();
+          const item = found.parent.splice(found.index, 1)[0];
+          found.parent.splice(found.index + 1, 0, item);
+          renderAll();
+        }
+      });
+
+      // ============ 属性修改 ============
+      function bindProp(selector, handler) {
+        $('#ID_props').on('input change', selector, function() {
+          const item = getActiveField();
+          if (!item) return;
+          handler.call(this, item);
+          renderCanvas();
+        });
+      }
+
+      bindProp('.prop-title', function(item) { item.title = $(this).val(); });
+      bindProp('.prop-placeholder', function(item) { item.placeholder = $(this).val(); });
+      bindProp('.prop-default', function(item) { item.defaultValue = $(this).val(); });
+      bindProp('.prop-extra', function(item) { item.extra = $(this).val(); });
+      bindProp('.prop-regex', function(item) { item.regex = $(this).val(); });
+      bindProp('.prop-exts', function(item) { item.exts = $(this).val(); });
+      bindProp('.prop-max', function(item) {
+        const val = $(this).val();
+        item.max = val ? parseInt(val) : null;
+      });
+      bindProp('.prop-minValue', function(item) { item.minValue = $(this).val(); });
+      bindProp('.prop-maxValue', function(item) { item.maxValue = $(this).val(); });
+      bindProp('.prop-cascaderData', function(item) {
+        try {
+          item.cascaderData = $(this).val() ? JSON.parse($(this).val()) : [];
+        } catch (e) {
+          item.cascaderData = [];
+        }
+      });
+
+      $('#ID_props').on('input', '.prop-field', function() {
+        const item = getActiveField();
+        if (!item) return;
+
+        const val = $(this).val();
+        item.field = val;
+        renderCanvas();
+
+        let duplicate = false;
+        (function collect(list) {
+          list.forEach(function(f) {
+            if (f.type === 0) {
+              collect(f.children || []);
+            } else if (f.field && f.field === val && f.id !== item.id) {
+              duplicate = true;
+            }
+          });
+        })(fieldList);
+
+        if (val && duplicate) {
+          $(this).css('border-color', '#ff5722');
+          $(this).attr('title', '字段名重复');
+        } else {
+          $(this).css('border-color', '');
+          $(this).removeAttr('title');
+        }
+      });
+
+      form.on('select(prop-col)', function(obj) {
+        const item = getActiveField();
+        if (!item) return;
+        item.col = parseInt(obj.value);
+        renderAll();
+      });
+
+      form.on('select(prop-processor)', function(obj) {
+        const item = getActiveField();
+        if (!item) return;
+        item.processor = obj.value;
+      });
+
+      form.on('select(prop-accept)', function(obj) {
+        const item = getActiveField();
+        if (!item) return;
+        item.accept = obj.value;
+      });
+
+      $('#ID_props').on('change', '.prop-defaultBool', function() {
+        const item = getActiveField();
+        if (!item) return;
+        item.defaultBool = $(this).prop('checked');
+        renderCanvas();
+      });
+
+      $('#ID_props').on('change', '.prop-required', function() {
+        const item = getActiveField();
+        if (!item) return;
+        item.required = $(this).prop('checked');
+        renderCanvas();
+      });
+
+      $('#ID_props').on('input', '.opt-name', function() {
+        const item = getActiveField();
+        if (!item) return;
+        const i = $(this).closest('.option-row').index();
+        item.options[i].name = $(this).val();
+        renderCanvas();
+      });
+
+      $('#ID_props').on('input', '.opt-value', function() {
+        const item = getActiveField();
+        if (!item) return;
+        const i = $(this).closest('.option-row').index();
+        item.options[i].value = $(this).val();
+      });
+
+      $('#ID_props').on('click', '.opt-del', function() {
+        const item = getActiveField();
+        if (!item) return;
+        const i = $(this).closest('.option-row').index();
+        pushUndo();
+        item.options.splice(i, 1);
+        renderProps();
+        renderCanvas();
+      });
+
+      $('#ID_props').on('click', '.prop-add-option', function() {
+        const item = getActiveField();
+        if (!item) return;
+        pushUndo();
+        if (!item.options) item.options = [];
+        item.options.push({
+          name: '选项' + (item.options.length + 1),
+          value: String(item.options.length + 1)
+        });
+        renderProps();
+        renderCanvas();
+      });
+
+      // ============ 底部按钮事件 ============
+      $('.toolbar a.layui-btn').on('click', function() {
+        const event = $(this).data('event');
+        that.on({ event: event, elem: this });
+      });
+
+      // ============ 快捷键 ============
+      $(document).on('keydown', function(e) {
+        if (e.ctrlKey || e.metaKey) {
+          if (e.key === 'z' || e.key === 'Z') {
+            e.preventDefault();
+            if (e.shiftKey) that.on({ event: 'redo' }); else that.on({ event: 'undo' });
+          } else if (e.key === 'y' || e.key === 'Y') {
+            e.preventDefault();
+            that.on({ event: 'redo' });
+          }
+        }
+      });
+    }
+
+    IndexMgr.prototype = {
+      constructor: IndexMgr,
+      on: function(obj) {
+        let arr = obj.event.split(':');
+        let event = arr[arr.length - 1];
+        if (!this[event]) {
+          MyCuckoo.alert({ title: '警示', msg: '此操作无效, 如有疑问, 请联系管理员!' });
+          return;
+        }
+        this[event](obj);
+      },
+      save: function(obj) {
+        if (!fieldList.length) {
+          MyCuckoo.msg({ msg: '请先添加字段' });
+          return;
+        }
+
+        const duplicates = validateFieldNames();
+        if (duplicates.length) {
+          MyCuckoo.alert({ title: '提示', msg: '字段名重复：' + duplicates.join('、') });
+          return;
+        }
+
+        const payload = {
+          id: queryObj.id || null,
+          code: queryObj.code || $('#ID_form_code').val(),
+          name: queryObj.name || $('#ID_form_name').val(),
+          bizType: queryObj.bizType || $('#ID_biz_type').val(),
+          memo: $('#ID_memo').val(),
+          configs: fieldList
+        };
+
+        let action = { url: MyCuckoo.resolve('http://localhost:8080/cms/form'), method: 'post', canAccess: () => true };
+        action = resourceObj;
+        $.request(action, payload).then(json => {
+          MyCuckoo.msg({ msg: json.msg });
+          this.refresh();
+        });
+      },
+      preview: function(obj) {
+        if (!fieldList.length) {
+          MyCuckoo.msg({ msg: '请先添加字段' });
+          return;
+        }
+        sessionStorage.setItem('designer_fields', JSON.stringify(fieldList));
+        MyCuckoo.dialog('表单预览', 'preview.html');
+      },
+      export: function(obj) {
+        if (!fieldList.length) {
+          MyCuckoo.msg({ msg: '请先添加字段' });
+          return;
+        }
+        const json = JSON.stringify(fieldList, null, 2);
+        layer.open({
+          type: 1,
+          title: '导出 JSON',
+          area: ['600px', '400px'],
+          content: '<textarea style="width:100%;height:100%;border:none;padding:10px;box-sizing:border-box;font-family:monospace;font-size:12px;" readonly>' + json + '</textarea>',
+          btn: ['复制', '关闭'],
+          yes: function(index) {
+            const ta = document.createElement('textarea');
+            ta.value = json;
+            document.body.appendChild(ta);
+            ta.select();
+            document.execCommand('copy');
+            document.body.removeChild(ta);
+            MyCuckoo.msg({ msg: '已复制' });
+            layer.close(index);
+          }
+        });
+      },
+      importJson: function(obj) {
+        layer.prompt({
+          formType: 2,
+          title: '粘贴 JSON 配置',
+          area: ['600px', '300px']
+        }, function(value, index) {
+          try {
+            const data = JSON.parse(value);
+            if (!Array.isArray(data)) throw new Error('必须是数组');
+
+            const names = [];
+            const dupes = [];
+            (function collect(list) {
+              list.forEach(function(f) {
+                if (f.type === 0) {
+                  collect(f.children || []);
+                } else if (f.field) {
+                  if (names.indexOf(f.field) >= 0) {
+                    if (dupes.indexOf(f.field) < 0) dupes.push(f.field);
+                  } else {
+                    names.push(f.field);
+                  }
+                }
+              });
+            })(data);
+
+            if (dupes.length) {
+              MyCuckoo.alert({ title: '提示', msg: '导入的配置字段名重复：' + dupes.join('、') });
+              return;
+            }
+
+            pushUndo();
+            fieldList = data;
+            activeId = null;
+            renderAll();
+            MyCuckoo.msg({ msg: '导入成功' });
+            layer.close(index);
+          } catch (e) {
+            MyCuckoo.msg({ msg: 'JSON 格式错误：' + e.message });
+          }
+        });
+      },
+      undo: function(obj) {
+        if (!undoStack.length) {
+          MyCuckoo.msg({ msg: '没有可撤销的操作' });
+          return;
+        }
+        redoStack.push(snapshot());
+        fieldList = JSON.parse(undoStack.pop());
+        activeId = null;
+        renderAll();
+      },
+      redo: function(obj) {
+        if (!redoStack.length) {
+          MyCuckoo.msg({ msg: '没有可重做的操作' });
+          return;
+        }
+        undoStack.push(snapshot());
+        fieldList = JSON.parse(redoStack.pop());
+        activeId = null;
+        renderAll();
+      },
+      clear: function(obj) {
+        MyCuckoo.confirm({
+          msg: '确定清空所有字段？',
+          ok: function() {
+            pushUndo();
+            fieldList = [];
+            activeId = null;
+            renderAll();
+          }
+        });
+      },
+      refresh: function() {
+        const that = this;
+        setTimeout(function() {
+          that.close();
+        }, 1500);
+      },
+      close: function() {
+        const index = parent.layer.getFrameIndex(window.name);
+        parent.layer.close(index);
+      }
+    };
+
+
+    // ============ 初始化 ============
+    renderFieldPanel();
+
+    const indexMgr = new IndexMgr();
+
+    // 加载数据
+    if (queryObj.code) {
+      console.log(resourceObj)
+      let action = { url: MyCuckoo.resolve('http://localhost:8080/cms/form/code/{code}', {...queryObj}), method: 'get', canAccess: () => true };
+      action = resourceMap[MyCuckoo.res.formMgr.view];
+      $.request(action, queryObj).then(json => {
+        if (json.code === 0 && json.data) {
+          const form = json.data;
+          if (form.configs) {
+            fieldList = form.configs;
+          }
+        }
+        renderAll();
+      });
+    } else {
+      renderAll();
+    }
+  });
+</script>
+</body>
+</html>

@@ -91,3 +91,19 @@ html, body { height: 100%; margin: 0; padding: 0; overflow: hidden; }
 .advanced-filter-multi-option input { flex: 0 0 auto; margin: 0 8px 0 0; }
 .advanced-filter-multi-option span { overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
 .advanced-filter-multi-empty { padding: 8px; color: #999; font-size: 12px; text-align: center; }
+
+/* ==================== 表单组件样式 ==================== */
+.mycuckoo-form-group { border: 1px solid #e6e6e6; border-radius: 4px; padding: 10px; margin-bottom: 10px; }
+.mycuckoo-form-group-title { font-weight: bold; margin-bottom: 10px; color: #16b777; }
+.mycuckoo-form-col { padding: 0 6px 10px; box-sizing: border-box; }
+.mycuckoo-form-tip { font-size: 12px; color: #999; margin-top: 4px; }
+
+.mycuckoo-upload-img-item { display: inline-block; position: relative; margin: 0 8px 8px 0; }
+.mycuckoo-upload-img-item img { width: 80px; height: 80px; object-fit: cover; border: 1px solid #e6e6e6; border-radius: 4px; }
+.mycuckoo-upload-img-item .close { position: absolute; top: -6px; right: -6px; width: 18px; height: 18px; line-height: 18px; text-align: center; background: #ff5722; color: #fff; border-radius: 50%; font-size: 12px; cursor: pointer; }
+
+.mycuckoo-upload-file-item { display: inline-block; margin: 0 8px 8px 0; padding: 4px 8px; background: #f2f2f2; border-radius: 4px; font-size: 12px; }
+.mycuckoo-upload-file-item .close { margin-left: 6px; color: #ff5722; cursor: pointer; }
+
+.view-mode .mycuckoo-upload-img-item .close,
+.view-mode .mycuckoo-upload-file-item .close { display: none; }

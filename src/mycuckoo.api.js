@@ -73,6 +73,12 @@ export const RESOURCES = {
     defView: 'res:flowDefinitionMgr:view',
     defVariable: 'res:flowDefinitionMgr:variable',
     instanceView: 'res:flowInstanceMgr:view'
+  },
+  formMgr: {
+    design: 'res:formMgr:design',
+    view: 'res:formMgr:view',
+    saveData: 'res:formMgr:saveData',
+    viewData: 'res:formMgr:viewData'
   }
 };
 
