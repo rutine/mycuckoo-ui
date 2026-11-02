@@ -503,7 +503,7 @@
                 }
 
                 const action = {
-                    url: MyCuckoo.resolve('http://localhost:8080/cms/form/data/{formCode}?bizId={bizId}', {
+                    url: MyCuckoo.resolve('http://localhost:8080/cms/form/mgr/data/{formCode}?bizId={bizId}', {
                         formCode: state.formCode,
                         bizId: state.bizId
                     }),
@@ -563,7 +563,7 @@
                 };
 
                 const action = {
-                    url: MyCuckoo.resolve('http://localhost:8080/cms/form/data'),
+                    url: MyCuckoo.resolve('http://localhost:8080/cms/form/mgr/data'),
                     method: 'post',
                     canAccess: () => true
                 };

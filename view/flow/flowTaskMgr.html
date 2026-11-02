@@ -186,8 +186,14 @@
       },
       view: function(obj) {
         let data = obj.data;
-        let url = MyCuckoo.resolve('flowTaskMgrForm.html?reskey={reskey}&action={action}&instanceId={id}&deployId={deployId}&taskId={taskId}',
-                { ...queryObj, 'action': obj.event, 'id': data.instanceId, 'deployId': data.deployId, 'taskId': data.taskId})
+        let url = MyCuckoo.resolve('flowTaskMgrForm.html?reskey={reskey}&action={action}&instanceId={id}&deployId={deployId}&formId={formId}&taskId={taskId}',
+                { ...queryObj,
+                  action: obj.event,
+                  id: data.instanceId,
+                  deployId: data.deployId,
+                  formId: data.definitionId,
+                  taskId: data.taskId
+                });
 
         MyCuckoo.dialog('任务表单', url);
       },

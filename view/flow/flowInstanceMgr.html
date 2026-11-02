@@ -148,8 +148,14 @@
       //查看
       view: function(obj) {
         let data = obj.data;
-        let url = MyCuckoo.resolve('flowInstanceMgrForm.html?reskey={reskey}&action={action}&instanceId={id}&deployId={deployId}',
-                { ...queryObj, 'action': obj.event, 'id': data.id, 'deployId': data.deployId });
+        let url = MyCuckoo.resolve('flowInstanceMgrForm.html?reskey={reskey}&action={action}&instanceId={id}&deployId={deployId}&formId={formId}',
+                {
+                  ...queryObj,
+                  action: obj.event,
+                  id: data.id,
+                  deployId: data.deployId,
+                  formId: data.definitionId
+                });
 
         MyCuckoo.dialog('实例信息', url);
       },

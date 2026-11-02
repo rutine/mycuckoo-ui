@@ -1212,7 +1212,7 @@
           configs: fieldList
         };
 
-        let action = { url: MyCuckoo.resolve('http://localhost:8080/cms/form'), method: 'post', canAccess: () => true };
+        let action = { url: MyCuckoo.resolve('http://localhost:8080/cms/form/mgr'), method: 'post', canAccess: () => true };
         action = resourceObj;
         $.request(action, payload).then(json => {
           MyCuckoo.msg({ msg: json.msg });
@@ -1345,7 +1345,7 @@
     // 加载数据
     if (queryObj.code) {
       console.log(resourceObj)
-      let action = { url: MyCuckoo.resolve('http://localhost:8080/cms/form/code/{code}', {...queryObj}), method: 'get', canAccess: () => true };
+      let action = { url: MyCuckoo.resolve('http://localhost:8080/cms/form/mgr/code/{code}', {...queryObj}), method: 'get', canAccess: () => true };
       action = resourceMap[MyCuckoo.res.formMgr.view];
       $.request(action, queryObj).then(json => {
         if (json.code === 0 && json.data) {

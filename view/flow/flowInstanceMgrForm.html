@@ -52,42 +52,22 @@
     <section class="task-content">
       <div id="ID_task_tabs" class="layui-tabs task-tabs">
         <ul class="layui-tabs-header">
-<!--          <li class="layui-this">表单信息</li>-->
-          <li class="layui-this">流转记录</li>
+          <li>表单信息</li>
+          <li>流转记录</li>
           <li>流程图</li>
         </ul>
+
         <div class="layui-tabs-body">
-          <!--
-          <div class="layui-tabs-item layui-show">
-            <form class="layui-form" lay-filter="taskForm">
-              <div id="ID_task_form" class="layui-container">
-                <div class="layui-form-item">
-                  <label class="layui-form-label">申请编号</label>
-                  <div class="layui-input-block"><input name="申请编号" type="text" class="layui-input" readonly></div>
-                </div>
-                <div class="layui-form-item">
-                  <label class="layui-form-label">申请事项</label>
-                  <div class="layui-input-block"><input name="申请事项" type="text" class="layui-input" readonly></div>
-                </div>
-                <div class="layui-form-item">
-                  <label class="layui-form-label">申请金额</label>
-                  <div class="layui-input-block"><input name="申请金额" type="text" class="layui-input" readonly></div>
-                </div>
-                <div class="layui-form-item">
-                  <label class="layui-form-label">申请日期</label>
-                  <div class="layui-input-block"><input name="申请日期" type="text" class="layui-input" readonly></div>
-                </div>
-                <div class="layui-form-item">
-                  <label class="layui-form-label">申请说明</label>
-                  <div class="layui-input-block"><textarea name="申请说明" class="layui-textarea" readonly></textarea></div>
-                </div>
-            </div>
+          <div class="layui-tabs-item">
+            <form class="layui-form" lay-filter="customBizForm">
+              <div id="ID_custom_form_container"></div>
             </form>
           </div>
-          -->
-          <div class="layui-tabs-item layui-show">
+
+          <div class="layui-tabs-item">
             <div id="ID_task_record" class="layui-container"></div>
           </div>
+
           <div class="layui-tabs-item">
             <div class="diagram-panel">
               <div id="ID_flow_canvas" class="canvas"></div>
@@ -104,7 +84,7 @@
                     <i class="layui-icon layui-icon-screen-full"></i>
                   </button>
                   <button type="button" class="layui-btn layui-btn-sm layui-btn-primary" data-event="zoomIn" title="放大" aria-label="放大">
-                    <i class="layui-icon layui-icon-addition"></i>
+                    <i class="layui-icon layui-icon-add-1"></i>
                   </button>
                   <button type="button" class="layui-btn layui-btn-sm layui-btn-primary" data-event="zoomOut" title="缩小" aria-label="缩小">
                     <i class="layui-icon layui-icon-subtraction"></i>
@@ -122,6 +102,7 @@
 <script type="text/javascript" src="../../static/layui/2.13.5/layui.js" charset="UTF-8"></script>
 <script type="text/javascript" src="../../static/mycuckoo.bundle.js" charset="UTF-8"></script>
 <script type="text/javascript" src="../../static/bpmn/modeler-plugins.js" charset="UTF-8"></script>
+<script type="text/javascript" src="../../static/mycuckoo-form.js" charset="UTF-8"></script>
 <script type="text/javascript">
   layui.use(['jquery', 'tabs', 'form'], function() {
     const $ = layui.jquery;
@@ -135,6 +116,9 @@
     const FlowTaskForm = function() {
       this.viewer = null;
       this.data = null;
+      this.tabsFilter = 'taskTabs';
+      // 这里判断条件根据实际业务调整，formId 和 id 存在才显示
+      this.hasCustomForm = !!(queryObj.formId && queryObj.instanceId);
       this.binds();
       this.init();
       this.load();
@@ -151,11 +135,38 @@
       },
       init: function() {
         const that = this;
+
+        // 1. 渲染 tabs 实例
         tabs.render({
-          id: 'taskTabs',
+          id: this.tabsFilter,
           elem: document.getElementById('ID_task_tabs')
         });
-        tabs.on('afterChange(taskTabs)', function(data) {
+
+        // 2. 处理表单 Tab 的显示与关闭
+        if (!this.hasCustomForm) {
+          // 不满足条件：关闭第一个 Tab，关闭后默认会选中下一个（流转记录）
+          tabs.close(this.tabsFilter, 0);
+        } else {
+          // 满足条件：渲染表单，并强制切换到第一个 Tab
+          setTimeout(function() {
+            MyCuckoo.form.render({
+              elem: '#ID_custom_form_container',
+              formFilter: 'customBizForm',
+              formCode: queryObj.formId,
+              bizId: queryObj.instanceId,
+              mode: 'view'
+            });
+            form.render();
+          }, 50);
+          // 延迟一点点切换，确保 tabs.close 或 render 的内部状态已就绪
+          setTimeout(function() {
+            tabs.change(that.tabsFilter, 0);
+          }, 60);
+        }
+
+        // 3. 监听 Tab 切换
+        tabs.on('afterChange(' + this.tabsFilter + ')', function(data) {
+          // 如果切到了最后一个 Tab（流程图），加载图形
           if (data.length > 1 && data.index === data.length - 1) {
             setTimeout(function() { that.loadDiagram(); }, 0);
           }
@@ -174,14 +185,18 @@
         const data = this.data;
         $('#ID_start_user').text('发起人: ' + (data.initiatorName || '-'));
         $('#ID_task_name').text('任务节点: ' + (data.taskName || '-'));
-        form.val('taskForm', data.form);
-            const recordHtml = (data.records || []).map(function(item) {
-              const assignee = item.assigneeName || item.candidate || '-';
-              const department = item.deptName ? ' <span class="layui-badge-rim">' + item.deptName + '</span>' : '';
-              const done = Boolean(item.endTime);
-              return '<li class="layui-timeline-item">' +
-                '<i class="layui-icon layui-timeline-axis ' + (done ? 'layui-bg-green' : 'layui-bg-orange') + '">' + (done ? '&#xe605;' : '&#xe63f;') + '</i>' +
-                '<div class="layui-timeline-content layui-text">' +
+
+        if (data.form) {
+          form.val('taskForm', data.form);
+        }
+
+        const recordHtml = (data.records || []).map(function(item) {
+          const assignee = item.assigneeName || item.candidate || '-';
+          const department = item.deptName ? ' <span class="layui-badge-rim">' + item.deptName + '</span>' : '';
+          const done = Boolean(item.endTime);
+          return '<li class="layui-timeline-item">' +
+                  '<i class="layui-icon layui-timeline-axis ' + (done ? 'layui-bg-green' : 'layui-bg-orange') + '">' + (done ? '&#xe605;' : '&#xe63f;') + '</i>' +
+                  '<div class="layui-timeline-content layui-text">' +
                   '<h5 class="layui-timeline-title">' + item.taskName + '</h5>' +
                   '<div class="layui-panel layui-bg-gray">' +
                   '<div><b>办理人: </b>' + assignee + department + '</div>' +
@@ -190,10 +205,10 @@
                   (item.duration ? '<div><b>耗时: </b>' + item.duration + '</div>' : '') +
                   (item.comment ? '<div><b>处理意见: </b>' + item.comment.comment + '</div>' : '') +
                   '</div>' +
-                '</div>' +
-              '</li>';
-            }).join('');
-            $('#ID_task_record').html('<ul class="layui-timeline">' + recordHtml + '</ul>');
+                  '</div>' +
+                  '</li>';
+        }).join('');
+        $('#ID_task_record').html('<ul class="layui-timeline">' + recordHtml + '</ul>');
 
         form.render();
       },
@@ -231,7 +246,7 @@
           const node = nodeMap.get(element.id);
           if (node) canvas.addMarker(element.id, node.completed ? 'highlight' : 'highlight-todo');
           (element.outgoing || []).forEach(function(outgoing) {
-            const target = nodeMap.get(outgoing.targetRef.id);
+            const target = nodeMap[outgoing.targetRef.id];
             if (target) canvas.addMarker(outgoing.id, target.completed ? 'highlight' : 'highlight-todo');
           });
         });
