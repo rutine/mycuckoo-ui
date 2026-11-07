@@ -186,12 +186,12 @@
       },
       view: function(obj) {
         let data = obj.data;
-        let url = MyCuckoo.resolve('flowTaskMgrForm.html?reskey={reskey}&action={action}&instanceId={id}&deployId={deployId}&formId={formId}&taskId={taskId}',
+        let url = MyCuckoo.resolve('flowTaskMgrForm.html?reskey={reskey}&action={action}&instanceId={id}&deployId={deployId}&bizType={bizType}&taskId={taskId}',
                 { ...queryObj,
                   action: obj.event,
                   id: data.instanceId,
                   deployId: data.deployId,
-                  formId: data.definitionId,
+                  bizType: data.definitionId,
                   taskId: data.taskId
                 });
 

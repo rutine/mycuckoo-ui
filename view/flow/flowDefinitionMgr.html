@@ -34,7 +34,6 @@
 <script type="text/javascript">
   layui.use(['jquery', 'layer', 'form', 'dropdown', 'table'], function() {
     const $ = layui.jquery,
-      layer = layui.layer,
       form = layui.form,
       dropdown = layui.dropdown,
       table = layui.table;
@@ -44,12 +43,6 @@
     const resources = MyCuckoo.getResource(queryObj.reskey);
     const resourceMap = MyCuckoo.getDictMap(resources);
     const resourceObj = MyCuckoo.getMainResource(resourceMap);
-    const userPicker = MyCuckoo.createUserPicker({
-      layer: layer,
-      width: 520,
-      height: 420,
-      url: '../uum/userPicker.html'
-    });
 
     table.render({
       id: 'table',
@@ -195,43 +188,24 @@
       // 设计表单
       design: function(obj) {
         let data = obj.data;
-        let url = MyCuckoo.resolve('../cms/designer.html?reskey={reskey}&action={action}&code={code}&name={name}&bizType={bizType}', {
+        let url = MyCuckoo.resolve('../cms/designer.html?reskey={reskey}&action={action}&bizType={bizType}&name={name}', {
           ...queryObj,
           action: obj.event,
-          code: data.id,
-          name: data.name,
-          bizType: data.key
+          bizType: data.id,
+          name: data.name
         });
         MyCuckoo.dialog('设计表单', url);
       },
       // 创建实例
       create: function(obj) {
         let data = obj.data;
-        let url = MyCuckoo.resolve('flowDefinitionMgrCreateInstance.html?reskey={reskey}&action={action}&definitionId={definitionId}&formType={formType}&formCode={formCode}', {
+        let url = MyCuckoo.resolve('flowDefinitionMgrCreateInstance.html?reskey={reskey}&action={action}&definitionId={definitionId}&bizType={bizType}', {
           ...queryObj,
           action: obj.event,
           definitionId: data.id,
-          formType: data.key,
-          formCode: data.id
+          bizType: data.id
         });
         MyCuckoo.dialog('创建流程实例', url);
-      },
-      //提交创建实例
-      doCreate: function(action, data, formVariables) {
-        const that = this;
-        const params = { definitionId: data.id, formType: 'common-audit' };
-        if (formVariables) {
-          params.formVariables = formVariables;
-        }
-
-        $.request(action, params).then(function(json) {
-          if (json && json.code === 0) {
-            MyCuckoo.msg({ msg: '创建流程成功' });
-            that.reload();
-          } else {
-            MyCuckoo.msg({ msg: (json && json.msg) || '创建流程失败', icon: 2 });
-          }
-        });
       },
       more: function (obj) {
         let that = this;

@@ -153,8 +153,8 @@
       this.viewer = null;
       this.data = null;
       this.tabsFilter = 'taskTabs';
-      // 与第一份一致：formId 与 instanceId 都存在才渲染自定义表单
-      this.hasCustomForm = !!(queryObj.formId && queryObj.instanceId);
+      // 与第一份一致：bizType 与 instanceId 都存在才渲染自定义表单
+      this.hasCustomForm = !!(queryObj.bizType && queryObj.instanceId);
       this.init();
       this.binds();
       this.load();
@@ -200,7 +200,7 @@
             MyCuckoo.form.render({
               elem: '#ID_custom_form_container',
               formFilter: 'customBizForm',
-              formCode: queryObj.formId,
+              bizType: queryObj.bizType,
               bizId: queryObj.instanceId,
               mode: 'view'
             });

@@ -23,7 +23,7 @@
             formConfig: [],
             formData: {},
             dataId: null,
-            formCode: '',
+            bizType: '',
             bizId: '',
             mode: 'edit',
             loaded: false,
@@ -473,7 +473,7 @@
              * @param {Object} options
              * @param {string} options.elem 容器选择器
              * @param {string} [options.formFilter] 外部容器的 lay-filter 名称，默认 'editForm'
-             * @param {string} options.formCode 表单编码
+             * @param {string} options.bizType 业务类型
              * @param {string} [options.bizId] 业务ID
              * @param {string} [options.mode] edit / view
              * @param {Function} [options.onLoaded] 加载完成回调
@@ -483,7 +483,7 @@
                     formConfig: [],
                     formData: {},
                     dataId: null,
-                    formCode: options.formCode || '',
+                    bizType: options.bizType || '',
                     bizId: options.bizId || '',
                     mode: options.mode || 'edit',
                     loaded: false,
@@ -491,8 +491,8 @@
                     formFilter: options.formFilter || 'editForm'
                 };
 
-                if (!state.formCode) {
-                    layer.msg('缺少 formCode 参数', { icon: 2 });
+                if (!state.bizType) {
+                    layer.msg('缺少 bizType 参数', { icon: 2 });
                     return;
                 }
 
@@ -503,8 +503,8 @@
                 }
 
                 const action = {
-                    url: MyCuckoo.resolve('http://localhost:8080/cms/form/mgr/data/{formCode}?bizId={bizId}', {
-                        formCode: state.formCode,
+                    url: MyCuckoo.resolve('http://localhost:8080/cms/form/mgr/data/{bizType}?bizId={bizId}', {
+                        bizType: state.bizType,
                         bizId: state.bizId
                     }),
                     method: 'get',
@@ -537,7 +537,7 @@
             /**
              * 校验表单
              */
-            validateForm: function () {
+            validate: function () {
                 return validate();
             },
 
@@ -556,7 +556,7 @@
 
                 const payload = {
                     id: state.dataId,
-                    formCode: state.formCode,
+                    bizType: state.bizType,
                     bizId: state.bizId,
                     data: result,
                     ...params

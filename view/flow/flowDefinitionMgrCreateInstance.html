@@ -135,8 +135,7 @@
       const that = createMgrInst = this;
 
       that.definitionId = queryObj.definitionId;
-      that.formType = queryObj.formType;
-      that.formCode = queryObj.formCode;
+      that.bizType = queryObj.bizType;
       that.bizId = queryObj.bizId || '';
 
       that.userPicker = MyCuckoo.createUserPicker({
@@ -154,7 +153,7 @@
       MyCuckoo.form.render({
         elem: '#ID_form_container',
         formFilter: 'editForm',
-        formCode: that.formCode,
+        bizType: that.bizType,
         bizId: that.bizId,
         mode: 'edit'
       });
@@ -342,7 +341,7 @@
           return;
         }
 
-        if (!MyCuckoo.form.validateForm()) {
+        if (!MyCuckoo.form.validate()) {
           return;
         }
 
@@ -361,8 +360,8 @@
 
         const params = {
           definitionId: that.definitionId,
-          formType: that.formType,
-          formId: that.formCode,
+          formType: that.bizType,
+          formId: that.bizType,
           // formData: formData,
           formVariables: formVariables
         };
@@ -370,15 +369,12 @@
         $.request(resourceObj, params).then(json => {
           if (json && json.code === 0) {
             MyCuckoo.msg({ msg: '创建流程成功, 正在保持表单数据...' });
-            MyCuckoo.form.save({bizId: json.data.id}).then(result => {
+            MyCuckoo.form.save({bizId: json.data}).then(result => {
               if (result && result.code === 0) {
-                MyCuckoo.msg({ msg: '创建流程成功, 正在保持表单数据...' });
-                MyCuckoo.form.save({bizId: json.data.id}).then(result => {
-                  MyCuckoo.msg({ msg: '表单数据保存成功' });
-                  setTimeout(function() {
-                    that.close();
-                  }, 1500);
-                });
+                MyCuckoo.msg({ msg: '表单数据保存成功' });
+                setTimeout(function() {
+                  that.close();
+                }, 1500);
               } else {
                 MyCuckoo.msg({ msg: (json && json.msg) || '保存表单数据失败', icon: 2 });
               }

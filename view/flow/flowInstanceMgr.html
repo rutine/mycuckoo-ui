@@ -148,13 +148,13 @@
       //查看
       view: function(obj) {
         let data = obj.data;
-        let url = MyCuckoo.resolve('flowInstanceMgrForm.html?reskey={reskey}&action={action}&instanceId={id}&deployId={deployId}&formId={formId}',
+        let url = MyCuckoo.resolve('flowInstanceMgrForm.html?reskey={reskey}&action={action}&instanceId={id}&deployId={deployId}&bizType={bizType}',
                 {
                   ...queryObj,
                   action: obj.event,
                   id: data.id,
                   deployId: data.deployId,
-                  formId: data.definitionId
+                  bizType: data.definitionId
                 });
 
         MyCuckoo.dialog('实例信息', url);
