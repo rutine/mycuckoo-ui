@@ -6,6 +6,7 @@ import {
   getElementType
 } from './BasicSetting.js';
 import { createSequenceFlowSetting } from './SequenceFlowSetting.js';
+import { createStartEventSetting } from './StartEventSetting.js';
 import { createUserTaskSetting } from './UserTaskSetting.js';
 
 const FALLBACK_GROUPS = [
@@ -41,10 +42,11 @@ const PROCESS_GROUPS = [
 const SCHEMA_ROUTES = {
   'bpmn:Process': (element) => createPanelSetting(element, PROCESS_GROUPS),
   'bpmn:SequenceFlow': createSequenceFlowSetting,
+  'bpmn:StartEvent': createStartEventSetting,
   'bpmn:UserTask': createUserTaskSetting
 };
 
-function resolvePanelSetting(element) {
+function resolvePanelSetting(element, options = {}) {
   if (!element) {
     return createEmptyPanelSetting();
   }
@@ -53,7 +55,7 @@ function resolvePanelSetting(element) {
   const resolver = SCHEMA_ROUTES[elementType];
 
   if (resolver) {
-    return resolver(element);
+    return resolver(element, options);
   }
 
   return createPanelSetting(element, FALLBACK_GROUPS);

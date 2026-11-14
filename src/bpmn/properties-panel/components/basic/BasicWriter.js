@@ -1,5 +1,5 @@
 import {getElementId, toStr,} from '../../common/utils.js';
-import {getProperty} from "../../../ModdleUtils";
+import {getProperty} from "../../../ModdleUtils.js";
 
 const DEFAULT_USER_TASK_ASSIGNEE = '${assignee}';
 
@@ -62,16 +62,22 @@ function createEntryAdapter(entry, group, panelState, element, options = {}) {
       //   validator: panelState.validator
       // });
 
-      const nextValue = typeof entry.normalizeValue === 'function' ? entry.normalizeValue(value) : value;
+      const isPicker = entry.component === 'Picker' && value !== null && typeof value === 'object';
+      const nextValue = isPicker ? value : (typeof entry.normalizeValue === 'function' ? entry.normalizeValue(value) : value);
       if (uiState) {
         uiState.pendingSimpleEntry = {
           elementId: getElementId(element),
           entryKey: entry.key || null,
-          value: toStr(nextValue)
+          value: toStr(isPicker ? nextValue.id : nextValue)
         };
       }
 
-      const result = writeProperties(element, context, entry.key, nextValue);
+      const result = isPicker && typeof entry.createProperties === 'function'
+          ? {
+            updated: true,
+            value: context.modeling.updateProperties(element, entry.createProperties(nextValue))
+          }
+          : writeProperties(element, context, entry.key, nextValue);
       if (uiState && (!result || !result.updated)) {
         uiState.pendingSimpleEntry = null;
       }

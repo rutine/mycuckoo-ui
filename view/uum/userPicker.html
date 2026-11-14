@@ -38,7 +38,7 @@
   <div class="picker-selected">
     <div>已选用户（<span id="ID_selected_count">0</span>）</div>
     <div id="ID_selected_summary">未选择</div>
-    <div id="ID_selected_cache" class="layui-hide"></>
+    <div id="ID_selected_cache" class="layui-hide"></div>
   </div>
 
   <table id="ID_table" class="layui-hide" lay-filter="table"></table>
@@ -48,12 +48,12 @@
       <a href="javascript:" class="layui-btn layui-btn-sm" data-event="assign" lay-submit="submit">
         <i class="layui-icon layui-icon-ok"></i>保存
       </a>
-      <a href="javascript:" class="layui-btn layui-btn-sm" data-event="close">
+      <a href="javascript:" class="layui-btn layui-btn-sm layui-btn-primary" data-event="close">
         <i class="layui-icon layui-icon-close"></i>取消
       </a>
     </div>
   </form>
-</div>
+</div>>
 </body>
 <script type="text/javascript" src="../../static/layui/2.13.5/layui.js" charset="UTF-8"></script>
 <script type="text/javascript" src="../../static/mycuckoo.bundle.js" charset="UTF-8"></script>
@@ -134,7 +134,7 @@
 
       $('#ID_selected_count').text(String(users.length));
       $('#ID_selected_summary').text(names.length ? names.join(', ') : '未选择');
-      $('#ID_selected_cache').attr('json', users.length ? JSON.stringify(users) : '');
+      $('#ID_selected_cache').attr('data-json', users.length ? JSON.stringify(users) : '');
     }
 
     function closeDialog() {

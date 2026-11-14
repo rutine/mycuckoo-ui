@@ -83,10 +83,8 @@
       },
       cols: [[
         {field: 'text', title: '名称', width: 200},
-        {field: 'code', title: '操作', width: 200, templet: function(d) {
-          return (d.method ? d.method + '@' : '') + (d.code ? d.code : '')
-        }},
-        {field: 'path', title: 'url', templet: function(d) { return d.method ? d.path : '' }},
+        {field: 'code', title: '资源', width: 200, templet: function(d) { return d.code ? d.code : '' }},
+        {field: 'path', title: 'url', templet: function(d) { return d.method ? (d.method + '@'  + d.path) : '' }},
         {field: 'order', title: '顺序', templet: function(d) { return d.method ? d.order : '' }},
         {field: 'status', title: '状态', templet: function(d) {
             return d.method ? (d.status == 'enable' ? '启用' : '停用') : ''

@@ -138,25 +138,19 @@
       that.bizType = queryObj.bizType;
       that.bizId = queryObj.bizId || '';
 
-      that.userPicker = MyCuckoo.createUserPicker({
+      that.userPicker = MyCuckoo.createPicker({
         layer: layer,
         width: 520,
         height: 420,
-        url: '../uum/userPicker.html'
+        title: '选择用户',
+        url: '../uum/userPicker.html',
+        requestIdPrefix: 'flow-user-picker-',
+        cancelError: new Error('User picker cancelled')
       });
 
       that.variables = {};
       that.rows = [];
       that.usersMap = {};
-
-      // 初始化表单组件
-      MyCuckoo.form.render({
-        elem: '#ID_form_container',
-        formFilter: 'editForm',
-        bizType: that.bizType,
-        bizId: that.bizId,
-        mode: 'edit'
-      });
 
       // 加载审批人
       that.loadVariables();
@@ -217,6 +211,20 @@
             that.variables = json.data || {};
           }
           that.buildRows();
+
+          if (that.variables.formKey) {
+            // 初始化表单组件
+            MyCuckoo.form.render({
+              elem: '#ID_form_container',
+              formFilter: 'editForm',
+              formId: that.variables.formKey,
+              bizId: that.bizId,
+              mode: 'edit'
+            });
+          } else {
+            document.querySelector('#ID_form_container').closest('.layui-card').classList.add('layui-hide');
+          }
+
         }).catch(function() {
           that.buildRows();
         });
@@ -336,13 +344,14 @@
       create: function(obj) {
         let that = this;
 
-        if (!MyCuckoo.form.isLoaded()) {
-          MyCuckoo.msg({ msg: '表单加载中，请稍候', icon: 2 });
-          return;
-        }
-
-        if (!MyCuckoo.form.validate()) {
-          return;
+        if (that.variables.formKey) {
+          if (!MyCuckoo.form.isLoaded()) {
+            MyCuckoo.msg({msg: '表单加载中，请稍候', icon: 2});
+            return;
+          }
+          if (!MyCuckoo.form.validate()) {
+            return;
+          }
         }
 
         if (that.rows.some(function(row) { return !row.ids.length; })) {
@@ -361,22 +370,27 @@
         const params = {
           definitionId: that.definitionId,
           formType: that.bizType,
-          formId: that.bizType,
+          formId: that.variables.formKey,
           // formData: formData,
           formVariables: formVariables
         };
 
         $.request(resourceObj, params).then(json => {
           if (json && json.code === 0) {
+            if (!that.variables.formKey) {
+              MyCuckoo.msg({ msg: '创建流程成功' });
+              return;
+            }
+
             MyCuckoo.msg({ msg: '创建流程成功, 正在保持表单数据...' });
             MyCuckoo.form.save({bizId: json.data}).then(result => {
               if (result && result.code === 0) {
-                MyCuckoo.msg({ msg: '表单数据保存成功' });
-                setTimeout(function() {
+                MyCuckoo.msg({msg: '表单数据保存成功'});
+                setTimeout(function () {
                   that.close();
                 }, 1500);
               } else {
-                MyCuckoo.msg({ msg: (json && json.msg) || '保存表单数据失败', icon: 2 });
+                MyCuckoo.msg({msg: (json && json.msg) || '保存表单数据失败', icon: 2});
               }
             });
           } else {

@@ -106,7 +106,7 @@
         return '<a href="javascript: " class="layui-btn layui-btn-sm" data-event="' + item.code + '" lay-submit>'
             + '<i class="layui-icon layui-icon-ok"></i>' + item.name + '</a>'
       }),
-      '<a href="javascript: " class="layui-btn layui-btn-sm" data-event="close"><i class="layui-icon layui-icon-close"></i>关闭</a>',
+      '<a href="javascript: " class="layui-btn layui-btn-sm layui-btn-primary" data-event="close"><i class="layui-icon layui-icon-close"></i>关闭</a>',
       '</div></div>'
     ].join('');
   }
@@ -700,53 +700,6 @@
     return (value === undefined || value === null) ? '' : String(value).trim();
   }
 
-  function normalizeUsers(users) {
-    if (!Array.isArray(users)) {
-      return [];
-    }
-
-    return users
-      .map(function(user) {
-        const id = toStr(user && (user.id || user.userId || user.account));
-        const name = toStr(user && (user.name || user.userName || user.account));
-
-        if (!id) {
-          return null;
-        }
-
-        return {
-          id: id,
-          name: name || id
-        };
-      })
-      .filter(function(user) {
-        return !!user;
-      });
-  }
-
-  function buildUrl(url, requestId, data) {
-    const safeData = data || {};
-    const params = [
-      ['requestId', requestId],
-      ['ids', toStr(safeData.ids)],
-      ['names', toStr(safeData.names)]
-    ];
-    const query = params
-      .filter(function(entry) {
-        return !!entry[1];
-      })
-      .map(function(entry) {
-        return encodeURIComponent(entry[0]) + '=' + encodeURIComponent(entry[1]);
-      })
-      .join('&');
-
-    if (!query) {
-      return url;
-    }
-
-    return url + (url.indexOf('?') === -1 ? '?' : '&') + query;
-  }
-
   function toLayerSize(value) {
     if (typeof value === 'number') {
       return value + 'px';
@@ -755,12 +708,31 @@
     return toStr(value);
   }
 
-  function createUserPicker(options = {}) {
+  function buildUrl(url, query) {
+    const params = Object.keys(query || {})
+      .map(function(key) {
+        return [key, toStr(query[key])];
+      })
+      .filter(function(entry) {
+        return !!entry[1];
+      })
+      .map(function(entry) {
+        return encodeURIComponent(entry[0]) + '=' + encodeURIComponent(entry[1]);
+      })
+      .join('&');
+
+    if (!params) {
+      return url;
+    }
+
+    return url + (url.indexOf('?') === -1 ? '?' : '&') + params;
+  }
+
+  function createPicker(options = {}) {
     const layer = options.layer;
-    const title = toStr(options.title) || '选择用户';
-    const url = toStr(options.url) || './view/uum/userPicker.html';
-    const width = toLayerSize(options.width || 960) || '960px';
-    const height = toLayerSize(options.height || 640) || '640px';
+    const url = toStr(options.url);
+    const width = toLayerSize(options.width || 900) || '900px';
+    const height = toLayerSize(options.height || 600) || '600px';
     let seed = 0;
     const pending = Object.create(null);
 
@@ -768,82 +740,87 @@
       throw new Error('Layer API is required');
     }
 
-    function resolvePending(requestId, users) {
+    function settle(requestId, result) {
       const record = pending[requestId];
-
       if (!record) {
-        return false;
+        return;
       }
 
       delete pending[requestId];
-      record.resolve(normalizeUsers(users));
-      return true;
-    }
 
-    function rejectPending(requestId, error) {
-      const record = pending[requestId];
-
-      if (!record) {
-        return false;
+      if (!result.hasValue) {
+        if (options.cancelError) {
+          record.reject(options.cancelError);
+        } else {
+          record.resolve(null);
+        }
+        return;
       }
 
-      delete pending[requestId];
-      record.reject(new Error('User picker cancelled'));
-      return true;
+      try {
+        record.resolve(result.value);
+      } catch (error) {
+        record.reject(error);
+      }
     }
 
-    return function userPicker(data) {
+    return function framePicker(data) {
       seed += 1;
-
-      const requestId = 'modeler-user-picker-' + seed;
+      const requestId = (options.requestIdPrefix || 'frame-picker-') + seed;
 
       return new Promise(function(resolve, reject) {
-        const content = buildUrl(url, requestId, data && data.value ? data.value : data);
+        pending[requestId] = {resolve, reject};
 
-        layer.open({
-          type: 2,
-          skin: 'layui-bg-gray',
-          area: [width, height],
-          fix: true,
-          maxmin: false,
-          shadeClose: false,
-          shade: 0.4,
-          resize: false,
-          move: false,
-          title: title,
-          content: content,
-          beforeEnd: function(layero, index) {
-            const result = layer.getChildFrame('#ID_selected_cache', index).attr('json');
-            result ? resolvePending(requestId, JSON.parse(result)) : rejectPending(requestId);
-            return true;
-          },
-          end: function() {
-            if (!pending[requestId]) {
-              return;
+        try {
+          layer.open({
+            type: 2,
+            skin: 'layui-bg-gray',
+            area: [width, height],
+            fix: true,
+            maxmin: false,
+            shadeClose: false,
+            shade: 0.4,
+            resize: false,
+            move: false,
+            title: toStr(options.title),
+            content: buildUrl(url, {requestId, ...(data?.value || {})}),
+            beforeEnd: function(layero, index) {
+              let rawResult;
+              try {
+                rawResult = layer.getChildFrame('#ID_selected_cache', index).attr('data-json');
+              } catch (error) {
+                delete pending[requestId];
+                reject(error);
+                return true;
+              }
+
+              let hasValue = rawResult !== undefined && rawResult !== null && rawResult !== '';
+              settle(requestId, {
+                hasValue: hasValue,
+                value: hasValue ? JSON.parse(rawResult) : null
+              });
+              return true;
+            },
+            end: function() {
+              settle(requestId, {hasValue: false});
             }
-
-            const record = pending[requestId];
-            delete pending[requestId];
-            record.reject(new Error('User picker cancelled'));
-          }
-        });
-
-        pending[requestId] = {
-          resolve: resolve,
-          reject: reject
-        };
+          });
+        } catch (error) {
+          delete pending[requestId];
+          reject(error);
+        }
       });
     };
   }
 
-  function installUserPicker(global = window) {
+  function installFramePicker(global = window) {
     global.MyCuckoo = Object.assign(global.MyCuckoo || {}, {
-      createUserPicker: createUserPicker
+      createPicker: createPicker
     });
   }
 
   installMyCuckoo(window);
-  installUserPicker(window);
+  installFramePicker(window);
   installMyCuckooApi(window);
 
 })();

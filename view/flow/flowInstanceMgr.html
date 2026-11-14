@@ -57,7 +57,7 @@
         {type: 'numbers'},
         {type: 'radio'},
         {field: 'name', title: '名称'},
-        {field: 'instanceId', title: '实例ID'},
+        {field: 'id', title: '实例ID'},
         {field: 'key', title: '流程编码'},
         {field: 'businessKey', title: '业务类型'},
         {field: 'startUser', title: '发起人'},
@@ -148,16 +148,15 @@
       //查看
       view: function(obj) {
         let data = obj.data;
-        let url = MyCuckoo.resolve('flowInstanceMgrForm.html?reskey={reskey}&action={action}&instanceId={id}&deployId={deployId}&bizType={bizType}',
+        let url = MyCuckoo.resolve('flowInstanceMgrForm.html?reskey={reskey}&action={action}&instanceId={id}&deployId={deployId}',
                 {
                   ...queryObj,
                   action: obj.event,
                   id: data.id,
-                  deployId: data.deployId,
-                  bizType: data.definitionId
+                  deployId: data.deployId
                 });
 
-        MyCuckoo.dialog('实例信息', url);
+        MyCuckoo.dialog('', url);
       },
       more: function (obj) {
         let that = this;

@@ -7,7 +7,7 @@ import {
   createFieldWriteDescriptor,
   createWriter
 } from './writer.js';
-import {getProperty} from "../../ModdleUtils";
+import {getProperty} from "../../ModdleUtils.js";
 
 export const EMPTY_SETTING = {
   title: '未选择节点',
@@ -18,6 +18,7 @@ export const EMPTY_SETTING = {
 export const COMPONENTS = {
   EXPRESSION_EDITOR: 'ExpressionEditor',
   PARAMETER_EDITOR: 'ParameterEditor',
+  PICKER: 'Picker',
   SELECT: 'Select',
   SWITCH: 'Switch',
   TEXT_INPUT: 'TextInput',
@@ -166,6 +167,16 @@ export function createSelectEntry(key, label, options = {}) {
     key,
     label,
     options: options.options || [],
+    ...options
+  });
+}
+
+export function createPickerEntry(key, label, options = {}) {
+  return createEntry({
+    component: COMPONENTS.PICKER,
+    key,
+    label,
+    emptyText: options.emptyText || '未选择',
     ...options
   });
 }

@@ -158,7 +158,7 @@
           name: data?.name || '',
           description: data?.description || ''
         });
-        MyCuckoo.dialog('流程设计', url);
+        MyCuckoo.dialog('', url);
       },
       //查看
       view: function(obj) {
@@ -170,7 +170,7 @@
           name: data.name || '',
           description: data.description || ''
         });
-        MyCuckoo.dialog('流程预览', url);
+        MyCuckoo.dialog('', url);
       },
       //删除
       delete: function(obj) {
@@ -185,17 +185,6 @@
             });
           }});
       },
-      // 设计表单
-      design: function(obj) {
-        let data = obj.data;
-        let url = MyCuckoo.resolve('../cms/designer.html?reskey={reskey}&action={action}&bizType={bizType}&name={name}', {
-          ...queryObj,
-          action: obj.event,
-          bizType: data.id,
-          name: data.name
-        });
-        MyCuckoo.dialog('设计表单', url);
-      },
       // 创建实例
       create: function(obj) {
         let data = obj.data;
@@ -203,9 +192,9 @@
           ...queryObj,
           action: obj.event,
           definitionId: data.id,
-          bizType: data.id
+          bizType: 'workflow'
         });
-        MyCuckoo.dialog('创建流程实例', url);
+        MyCuckoo.dialog('', url);
       },
       more: function (obj) {
         let that = this;

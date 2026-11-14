@@ -32,14 +32,6 @@
       height: calc(100% - 38px);
     }
 
-    .modeler-toolbar {
-      display: flex;
-      align-items: center;
-      gap: 8px;
-      flex-wrap: wrap;
-      padding: 4px 0;
-    }
-
     .modeler-pane, #ID_modeler_property {
       height: 100%;
     }
@@ -47,6 +39,8 @@
     .modeler-pane {
       position: relative;
     }
+
+    .modeler-workspace .layui-btn-group { position: absolute; left:18px; bottom: 18px; z-index: 2; }
 
     .djs-container {
       background: url("data:image/svg+xml;base64,PHN2ZyB3aWR0aD0iNDAiIGhlaWdodD0iNDAiIHhtbG5zPSJodHRwOi8vd3d3LnczLm9yZy8yMDAwL3N2ZyI+PGRlZnM+PHBhdHRlcm4gaWQ9ImEiIHdpZHRoPSI0MCIgaGVpZ2h0PSI0MCIgcGF0dGVyblVuaXRzPSJ1c2VyU3BhY2VPblVzZSI+PHBhdGggZD0iTTAgMTBoNDBNMTAgMHY0ME0wIDIwaDQwTTIwIDB2NDBNMCAzMGg0ME0zMCAwdjQwIiBmaWxsPSJub25lIiBzdHJva2U9IiNlMGUwZTAiIG9wYWNpdHk9Ii4yIi8+PHBhdGggZD0iTTQwIDBIMHY0MCIgZmlsbD0ibm9uZSIgc3Ryb2tlPSIjZTBlMGUwIi8+PC9wYXR0ZXJuPjwvZGVmcz48cmVjdCB3aWR0aD0iMTAwJSIgaGVpZ2h0PSIxMDAlIiBmaWxsPSJ1cmwoI2EpIi8+PC9zdmc+");
@@ -79,26 +73,29 @@
 <div class="mycuckoo-main">
   <div class="layui-row">
     <div class="layui-col-lg9">
-      <div class="layui-btn-group modeler-toolbar">
-        <a href="javascript: " class="layui-btn layui-btn-xs layui-btn-primary layui-border" data-event="create">
-          <i class="layui-icon layui-icon-add-1"></i> 新建设计
+      <div class="layui-btn-container">
+        <a href="javascript: " class="layui-btn layui-btn-xs layui-btn-primary" style="margin: 3px;" data-event="create">
+          <i class="layui-icon layui-icon-add-1"></i> 新建
         </a>
-        <a href="javascript: " class="layui-btn layui-btn-xs layui-btn-primary layui-border" data-event="viewDemo">
+        <a href="javascript: " class="layui-btn layui-btn-xs layui-btn-primary" style="margin: 3px;" data-event="viewDemo">
           <i class="layui-icon layui-icon-file"></i> 预览 Demo
         </a>
-        <a href="javascript: " class="layui-btn layui-btn-xs layui-btn-primary layui-border layui-hide" data-event="viewXml">
+        <a href="javascript: " class="layui-btn layui-btn-xs layui-btn-primary layui-hide" style="margin: 3px;" data-event="viewXml">
           <i class="layui-icon layui-icon-read"></i> 查看 XML
         </a>
-        <a href="javascript: " class="layui-btn layui-btn-xs layui-btn-primary layui-border layui-hide" data-event="save">
-          <i class="layui-icon layui-icon-ok"></i> 保存流程
+
+        <a href="javascript: " class="layui-btn layui-btn-xs layui-btn-primary layui-hide" style="margin: 3px;" data-event="diagram">
+          <i class="layui-icon layui-icon-export"></i> 下载 BPMN
         </a>
-        <div class="layui-layout-right"></div>
-          <a href="javascript: " class="layui-btn layui-btn-xs layui-btn-primary layui-border layui-hide" data-event="diagram">
-            <i class="layui-icon layui-icon-export"></i> 下载 BPMN
-          </a>
-          <a href="javascript: " class="layui-btn layui-btn-xs layui-btn-primary layui-border layui-hide" data-event="svg">
-            <i class="layui-icon layui-icon-download-circle"></i> 下载 SVG
-          </a>
+        <a href="javascript: " class="layui-btn layui-btn-xs layui-btn-primary layui-hide" style="margin: 3px;" data-event="svg">
+          <i class="layui-icon layui-icon-download-circle"></i> 下载 SVG
+        </a>
+        <a href="javascript: " class="layui-btn layui-btn-xs layui-btn-primary layui-hide" style="margin: 3px;" data-event="save">
+          <i class="layui-icon layui-icon-ok layui-font-blue"></i> 保存
+        </a>
+        <a href="javascript: " class="layui-btn layui-btn-xs layui-btn-primary layui-hide" style="margin: 3px;" data-event="close">
+          <i class="layui-icon layui-icon-close layui-font-red"></i> 关闭
+        </a>
       </div>
     </div>
     <div class="layui-col-lg3"></div>
@@ -107,10 +104,35 @@
   <div id="ID_modeler_edit_body" class="layui-row modeler-workspace">
     <div id="ID_modeler_editor" class="layui-col-lg9 layui-col-md8 layui-col-sm8 layui-panel modeler-pane"></div>
     <div id="ID_modeler_property" class="layui-col-lg3 layui-col-md4 layui-col-sm4"></div>
+    <div class="layui-btn-group">
+      <a href="javascript: "  class="layui-btn layui-btn-sm layui-btn-primary" data-event="fitViewport" title="适中" aria-label="适中">
+        <i class="layui-icon layui-icon-screen-full"></i>
+      </a>
+      <a href="javascript: "  class="layui-btn layui-btn-sm layui-btn-primary" data-event="zoomIn" title="放大" aria-label="放大">
+        <i class="layui-icon layui-icon-add-1"></i>
+      </a>
+      <a href="javascript: "  class="layui-btn layui-btn-sm layui-btn-primary" data-event="zoomOut" title="缩小" aria-label="缩小">
+        <i class="layui-icon layui-icon-subtraction"></i>
+      </a>
+    </div>
   </div>
 
   <div id="ID_modeler_preview_body" class="layui-row layui-hide modeler-workspace">
     <div id="ID_modeler_viewer" class="layui-col-lg12 modeler-pane"></div>
+    <div class="layui-btn-group">
+      <a href="javascript: "  class="layui-btn layui-btn-sm layui-btn-primary" data-event="fitViewport" title="适中" aria-label="适中">
+        <i class="layui-icon layui-icon-screen-full"></i>
+      </a>
+      <a href="javascript: "  class="layui-btn layui-btn-sm layui-btn-primary" data-event="zoomIn" title="放大" aria-label="放大">
+        <i class="layui-icon layui-icon-add-1"></i>
+      </a>
+      <a href="javascript: "  class="layui-btn layui-btn-sm layui-btn-primary" data-event="zoomOut" title="缩小" aria-label="缩小">
+        <i class="layui-icon layui-icon-subtraction"></i>
+      </a>
+      <a href="javascript: "  class="layui-btn layui-btn-sm layui-btn-primary" data-event="close" title="关闭" aria-label="关闭">
+        <i class="layui-icon layui-icon-close layui-font-red"></i>
+      </a>
+    </div>
   </div>
 
 </div>
@@ -131,14 +153,29 @@
         resources = MyCuckoo.getResource(queryObj.reskey),
         resourceMap = MyCuckoo.getDictMap(resources),
         resourceObj = resourceMap[queryObj.action],
-        $toolbar = $('.layui-btn-group');
+        $toolbar = $('.layui-btn-container');
 
-      const userPicker = MyCuckoo.createUserPicker({
-            width: 500,
-            height: 400,
-            layer: layer,
-            url: './view/uum/userPicker.html'
-          });
+      const userPicker = MyCuckoo.createPicker({
+        width: 500,
+        height: 400,
+        layer: layer,
+        title: '',
+        url: './view/uum/userPicker.html',
+        requestIdPrefix: 'modeler-user-picker-',
+        cancelError: new Error('User picker cancelled')
+      });
+
+      const formFramePicker = MyCuckoo.createPicker({
+        width: 500,
+        height: 400,
+        layer: layer,
+        title: '',
+        url: './view/cms/formPicker.html',
+        requestIdPrefix: 'modeler-form-picker-'
+      });
+      const formPicker = function(data) {
+        return formFramePicker(data);
+      };
 
       const setEncoded = function($link, name, data, type) {
         if (data) {
@@ -213,6 +250,11 @@
           that.on({event: event, elem: this});
         });
 
+        $('.modeler-workspace .layui-btn').on('click', function() {
+          let event = $(this).data('event');
+          that.on({event: event, elem: this});
+        });
+
         if (queryObj?.key) {
           this.init(queryObj);
         } else {
@@ -246,7 +288,8 @@
               myPropertiesPanel: {
                 parent: '#ID_modeler_property',
                 userPicker: userPicker,
-                listenerSelectMode: 'layui1'
+                listenerSelectMode: 'layui1',
+                formPicker: formPicker
               },
               height: '100%',
               additionalModules: [
@@ -480,6 +523,19 @@
               }
             }
           });
+        },
+        fitViewport: function() { if (this.modeler) this.modeler.get('canvas').zoom('fit-viewport', 'auto'); },
+        zoomIn: function() { this.zoomViewport(true); },
+        zoomOut: function() { this.zoomViewport(false); },
+        zoomViewport: function(zoomIn) {
+          if (!this.modeler) return;
+          const canvas = this.modeler.get('canvas');
+          const zoom = canvas.zoom() + (zoomIn ? 0.1 : -0.1);
+          if (zoom >= 0.2) canvas.zoom(zoom);
+        },
+        close: function() {
+          let index = parent.layer.getFrameIndex(window.name);
+          parent.layer.close(index);
         },
         init: async function(queryObj) {
           try {

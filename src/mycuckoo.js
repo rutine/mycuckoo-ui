@@ -103,7 +103,7 @@ function renderFormActions(operator, mode) {
       return '<a href="javascript: " class="layui-btn layui-btn-sm" data-event="' + item.code + '" lay-submit>'
           + '<i class="layui-icon layui-icon-ok"></i>' + item.name + '</a>'
     }),
-    '<a href="javascript: " class="layui-btn layui-btn-sm" data-event="close"><i class="layui-icon layui-icon-close"></i>关闭</a>',
+    '<a href="javascript: " class="layui-btn layui-btn-sm layui-btn-primary" data-event="close"><i class="layui-icon layui-icon-close"></i>关闭</a>',
     '</div></div>'
   ].join('');
 }

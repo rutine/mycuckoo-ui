@@ -45,7 +45,7 @@
       <span id="ID_task_name" class="layui-badge-rim"></span>
 
       <div class="toolbar">
-        <button type="button" class="layui-btn layui-btn-sm layui-btn-primary" data-event="close" lay-submit>关闭</button>
+        <button type="button" class="layui-btn layui-btn-sm layui-btn-primary" data-event="close">关闭</button>
       </div>
     </header>
 
@@ -117,8 +117,6 @@
       this.viewer = null;
       this.data = null;
       this.tabsFilter = 'taskTabs';
-      // 这里判断条件根据实际业务调整，bizType 和 id 存在才显示
-      this.hasCustomForm = !!(queryObj.bizType && queryObj.instanceId);
       this.binds();
       this.init();
       this.load();
@@ -128,6 +126,14 @@
       constructor: FlowTaskForm,
       binds: function() {
         const that = this;
+        // 事件委托，toolbar 重新渲染也不丢事件
+        $('.toolbar .layui-btn, .diagram-panel .layui-btn').on('click', function() {
+          let event = $(this).data('event');
+          let arr = String(event).split(':');
+          let eve = arr[arr.length - 1];
+          that[eve] && that[eve]({event: eve, elem: this});
+        });
+
         form.on('submit', function (data) {
           let event = $(this).data('event');
           that[event] && that[event]({event: event, data: data.field});
@@ -142,28 +148,6 @@
           elem: document.getElementById('ID_task_tabs')
         });
 
-        // 2. 处理表单 Tab 的显示与关闭
-        if (!this.hasCustomForm) {
-          // 不满足条件：关闭第一个 Tab，关闭后默认会选中下一个（流转记录）
-          tabs.close(this.tabsFilter, 0);
-        } else {
-          // 满足条件：渲染表单，并强制切换到第一个 Tab
-          setTimeout(function() {
-            MyCuckoo.form.render({
-              elem: '#ID_custom_form_container',
-              formFilter: 'customBizForm',
-              bizType: queryObj.bizType,
-              bizId: queryObj.instanceId,
-              mode: 'view'
-            });
-            form.render();
-          }, 50);
-          // 延迟一点点切换，确保 tabs.close 或 render 的内部状态已就绪
-          setTimeout(function() {
-            tabs.change(that.tabsFilter, 0);
-          }, 60);
-        }
-
         // 3. 监听 Tab 切换
         tabs.on('afterChange(' + this.tabsFilter + ')', function(data) {
           // 如果切到了最后一个 Tab（流程图），加载图形
@@ -177,9 +161,34 @@
         $.request(resourceObj, queryObj).then(function(response) {
           that.data = response.data;
           that.renderTask();
+          that.renderForm();
         }).catch(function() {
           MyCuckoo.msg({msg: '流程实例加载失败', icon: 2});
         });
+      },
+      renderForm: function () {
+        let that = this;
+        // 处理表单 Tab 的显示与关闭
+        if (!that.data.formKey) {
+          // 不满足条件：关闭第一个 Tab，关闭后默认会选中下一个（流转记录）
+          tabs.close(that.tabsFilter, 0);
+        } else {
+          // 满足条件：渲染表单，并强制切换到第一个 Tab
+          setTimeout(function() {
+            MyCuckoo.form.render({
+              elem: '#ID_custom_form_container',
+              formFilter: 'customBizForm',
+              formId: that.data.formKey,
+              bizId: queryObj.instanceId,
+              mode: 'view'
+            });
+            form.render();
+          }, 50);
+          // 延迟一点点切换，确保 tabs.close 或 render 的内部状态已就绪
+          setTimeout(function() {
+            tabs.change(that.tabsFilter, 0);
+          }, 60);
+        }
       },
       renderTask: function() {
         const data = this.data;

@@ -292,9 +292,30 @@
   <a class="layui-btn layui-btn-sm layui-btn-primary" data-event="redo">重做</a>
   <a class="layui-btn layui-btn-sm layui-btn-primary" data-event="clear">清空</a>
 </div>
+
+<form id="ID_form_save_dialog" class="layui-form layui-form-pane" lay-filter="saveForm" style="display: none; padding:6px 8px;">
+  <div class="layui-form-item">
+    <label class="layui-form-label">名称</label>
+    <div class="layui-input-block">
+      <input type="text" name="name" class="layui-input" maxlength="100" lay-verify="required" placeholder="请输入表单名称">
+    </div>
+  </div>
+  <div class="layui-form-item">
+    <label class="layui-form-label">类型</label>
+    <div class="layui-input-block">
+      <select name="bizType" lay-verify="required"><option value="">请选择表单类型</option></select>
+    </div>
+  </div>
+  <div class="layui-form-item layui-form-text">
+    <label class="layui-form-label">备注</label>
+    <div class="layui-input-block">
+      <textarea name="memo" class="layui-textarea" maxlength="500" lay-verify="required" placeholder="请输入备注"></textarea>
+    </div>
+  </div>
+  </form>
 </body>
 
-<script src="https://cdn.jsdelivr.net/npm/sortablejs@1.15.0/Sortable.min.js"></script>
+<script src="https://fastly.jsdelivr.net/npm/sortablejs@1.15.0/Sortable.min.js"></script>
 <script type="text/javascript" src="../../static/layui/2.13.5/layui.js" charset="UTF-8"></script>
 <script type="text/javascript" src="../../static/mycuckoo.bundle.js" charset="UTF-8"></script>
 <script type="text/javascript">
@@ -1203,19 +1224,62 @@
           return;
         }
 
-        const payload = {
-          id: queryObj.id || null,
-          name: queryObj.name || $('#ID_form_name').val(),
-          bizType: queryObj.bizType || $('#ID_biz_type').val(),
-          memo: $('#ID_memo').val(),
-          configs: fieldList
-        };
+        this.doSave();
+      },
+      async doSave() {
+        const that = this;
+        const $form = $('#ID_form_save_dialog');
+        const $type = $form.find('[name=bizType]');
 
-        let action = { url: MyCuckoo.resolve('http://localhost:8080/cms/form'), method: 'post', canAccess: () => true };
-        action = resourceObj;
-        $.request(action, payload).then(json => {
-          MyCuckoo.msg({ msg: json.msg });
-          this.refresh();
+        // 1. 先加载字典（await 等待完成）
+        if (!that.formTypes) {
+          try {
+            const json = await MyCuckoo.api.getDict({typeCodes: 'form_type'});
+            that.formTypes = (json && json.data && json.data['form_type']) || [];
+          } catch (e) {
+            MyCuckoo.alert({title: '提示', msg: '表单类型加载失败'});
+            return;
+          }
+
+          // 2. 填充下拉
+          $type.html('<option value="">请选择表单类型</option>');
+          that.formTypes.forEach(function (item) {
+            $type.append($('<option></option>').val(item.code).text(item.name));
+          });
+
+          if (queryObj.id) {
+            $form.find('select').attr('disabled', 'disabled')
+          }
+        }
+
+        form.val('saveForm', queryObj)
+
+        layer.open({
+          type: 1,
+          title: '新建表单',
+          area: ['360px', 'auto'],
+          content: $form,
+          btn: ['保存', '取消'],
+          btnAlign: 'c',
+          success: function() {
+            form.render('select');
+          },
+          yes: function(index) {
+            form.submit('saveForm', data => {
+              $.request(resourceObj, {
+                ...data.field,
+                id: queryObj.id ? queryObj.id : null,
+                configs: fieldList
+              }).then(json => {
+                layer.close(index);
+
+                MyCuckoo.msg({ msg: json.msg });
+                that.refresh();
+              });
+            });
+
+            return false;
+          }
         });
       },
       preview: function(obj) {
@@ -1224,7 +1288,7 @@
           return;
         }
         sessionStorage.setItem('designer_fields', JSON.stringify(fieldList));
-        MyCuckoo.dialog('表单预览', 'preview.html');
+        MyCuckoo.dialog('表单预览', 'formMgrPreview.html');
       },
       export: function(obj) {
         if (!fieldList.length) {
@@ -1342,8 +1406,8 @@
     const indexMgr = new IndexMgr();
 
     // 加载数据
-    if (queryObj.bizType) {
-      let action = { url: MyCuckoo.resolve('http://localhost:8080/cms/form/code/{code}', {...queryObj}), method: 'get', canAccess: () => true };
+    if (queryObj.id) {
+      let action = { url: MyCuckoo.resolve('http://localhost:8080/cms/form/mgr/{id}', {...queryObj}), method: 'get', canAccess: () => true };
       action = resourceMap[MyCuckoo.res.formMgr.view];
       $.request(action, queryObj).then(json => {
         if (json.code === 0 && json.data) {
@@ -1351,6 +1415,10 @@
           if (form.configs) {
             fieldList = form.configs;
           }
+
+          queryObj.name = form.name;
+          queryObj.bizType = form.bizType;
+          queryObj.memo = form.memo;
         }
         renderAll();
       });

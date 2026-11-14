@@ -24,6 +24,22 @@
       ]
     },
     {
+      "name": "StartEvent",
+      "extends": [ "bpmn:StartEvent" ],
+      "properties": [
+        {
+          "name": "formKey",
+          "isAttr": true,
+          "type": "String"
+        },
+        {
+          "name": "formName",
+          "isAttr": true,
+          "type": "String"
+        }
+      ]
+    },
+    {
       "name": "FlowableMultiInstanceLoopCharacteristics",
       "extends": [ "bpmn:MultiInstanceLoopCharacteristics" ],
       "properties": [

@@ -18,10 +18,10 @@ function mycuckooBundleEntry() {
         return [
           "import { installMyCuckoo } from './src/mycuckoo.js';",
           "import { installMyCuckooApi } from './src/mycuckoo.api.js';",
-          "import { installUserPicker } from './src/user-picker.js';",
+          "import { installFramePicker } from './src/frame-picker.js';",
           '',
           'installMyCuckoo(window);',
-          'installUserPicker(window);',
+          'installFramePicker(window);',
           'installMyCuckooApi(window);',
           ''
         ].join('\n');

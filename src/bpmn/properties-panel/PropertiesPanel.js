@@ -162,7 +162,8 @@ export default class PropertiesPanel {
       context: this._context,
       uiState: this._uiState,
       userPicker: this._config.userPicker,
-      listenerSelectMode: this._config.listenerSelectMode
+      listenerSelectMode: this._config.listenerSelectMode,
+      formPicker: this._config.formPicker
     });
 
     const form = rerenderLayuiForm();

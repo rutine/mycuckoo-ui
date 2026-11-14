@@ -38395,7 +38395,7 @@
     return element;
   }
 
-  function getProperty(obj, key) {
+  function getProperty$1(obj, key) {
     if (!obj || !key) {
       return undefined;
     }
@@ -38844,6 +38844,24 @@
   		]
   	},
   	{
+  		name: "StartEvent",
+  		"extends": [
+  			"bpmn:StartEvent"
+  		],
+  		properties: [
+  			{
+  				name: "formKey",
+  				isAttr: true,
+  				type: "String"
+  			},
+  			{
+  				name: "formName",
+  				isAttr: true,
+  				type: "String"
+  			}
+  		]
+  	},
+  	{
   		name: "FlowableMultiInstanceLoopCharacteristics",
   		"extends": [
   			"bpmn:MultiInstanceLoopCharacteristics"
@@ -39070,7 +39088,7 @@
       return;
     }
 
-    const value = toStr(getProperty(element.businessObject, 'flowable:assignee'));
+    const value = toStr(getProperty$1(element.businessObject, 'flowable:assignee'));
     if (!value.trim()) {
       context.modeling.updateProperties(element, {
         'flowable:assignee': DEFAULT_USER_TASK_ASSIGNEE
@@ -39124,16 +39142,22 @@
         //   validator: panelState.validator
         // });
 
-        const nextValue = typeof entry.normalizeValue === 'function' ? entry.normalizeValue(value) : value;
+        const isPicker = entry.component === 'Picker' && value !== null && typeof value === 'object';
+        const nextValue = isPicker ? value : (typeof entry.normalizeValue === 'function' ? entry.normalizeValue(value) : value);
         if (uiState) {
           uiState.pendingSimpleEntry = {
             elementId: getElementId(element),
             entryKey: entry.key || null,
-            value: toStr(nextValue)
+            value: toStr(isPicker ? nextValue.id : nextValue)
           };
         }
 
-        const result = writeProperties(element, context, entry.key, nextValue);
+        const result = isPicker && typeof entry.createProperties === 'function'
+            ? {
+              updated: true,
+              value: context.modeling.updateProperties(element, entry.createProperties(nextValue))
+            }
+            : writeProperties(element, context, entry.key, nextValue);
         if (uiState && (!result || !result.updated)) {
           uiState.pendingSimpleEntry = null;
         }
@@ -39191,6 +39215,18 @@
         <div class="layui-bpmn-panel__entry-error"></div>
     `;
     }
+    else if (entry.component === 'Picker') {
+      return `
+        <div class="layui-input-wrap">
+          <input type="text" class="layui-input" ${datasetAttributes} readonly>
+          <div class="layui-input-affix layui-input-suffix" style="width: 70px">
+            <i class="layui-icon layui-font-blue layui-icon-search" data-action="choose"></i> 
+            <i class="layui-icon layui-font-red layui-icon-clear" data-action="clear"></i>
+          </div>
+        </div>
+        <div class="layui-bpmn-panel__entry-error"></div>
+    `;
+    }
     else if (entry.component === 'ExpressionEditor') {
       return `<textarea class="layui-textarea" ${datasetAttributes}></textarea>
             <div class="layui-bpmn-panel__entry-error"></div>`;
@@ -39210,6 +39246,16 @@
       return;
     }
 
+    if (entry && entry.component === 'Picker') {
+      const rawValue = toStr(value);
+      const text = rawValue && typeof entry.getText === 'function' ? toStr(entry.getText()) : '';
+
+      controlEl.dataset.value = rawValue;
+      controlEl.value = text || rawValue;
+      controlEl.placeholder = entry.emptyText || '';
+      return;
+    }
+
     controlEl.value = toStr(value);
   }
 
@@ -39217,6 +39263,7 @@
   function isBasicEntry(entry) {
     return !!(entry && (entry.component === 'TextInput'
         || entry.component === 'ExpressionEditor'
+        || entry.component === 'Picker'
         || entry.component === 'Select'
         || entry.component === 'Switch'
     ));
@@ -39257,17 +39304,50 @@
         }
       }
 
-      controlEl.addEventListener('blur', submitValue);
-      controlEl.addEventListener('change', submitValue);
-      controlEl.addEventListener('keydown', (event) => {
-        if (String(controlEl.tagName || '').toLowerCase() === 'input' && event && event.key === 'Enter') {
-          if (typeof event.preventDefault === 'function') {
-            event.preventDefault();
-          }
-
-          submitValue();
+      function submitPicker(data) {
+        const nextValue = toStr(data && data.id);
+        const nextText = toStr(data && data.name);
+        const currentText = typeof entry.getText === 'function' ? toStr(entry.getText()) : '';
+        if (nextValue === lastValue && nextText === currentText) {
+          return false;
         }
-      });
+
+        const validation = typeof entry.validate === 'function' ? entry.validate(nextValue) : null;
+        const validationMessage = firstValidationMessage(validation);
+        if (validationMessage) {
+          setControlError(controlEl, errorEl, validationMessage);
+          return false;
+        }
+
+        const result = typeof entry.setValue === 'function' ? entry.setValue(data) : {updated: false};
+        const resultMessage = firstValidationMessage(result && result.validation);
+        setControlError(controlEl, errorEl, resultMessage);
+
+        if (result && result.updated) {
+          lastValue = nextValue;
+          return true;
+        }
+
+        return false;
+      }
+
+      if (entry.component !== 'Picker') {
+        controlEl.addEventListener('blur', submitValue);
+        controlEl.addEventListener('change', submitValue);
+        controlEl.addEventListener('keydown', (event) => {
+          if (String(controlEl.tagName || '').toLowerCase() === 'input' && event && event.key === 'Enter') {
+            if (typeof event.preventDefault === 'function') {
+              event.preventDefault();
+            }
+
+            submitValue();
+          }
+        });
+      }
+
+      return {
+        submitPicker
+      };
     }
 
     mount(mountEl) {
@@ -39279,7 +39359,44 @@
       const errorEl = mountEl.querySelector('.layui-bpmn-panel__entry-error');
 
       setControlValue(controlEl, this.entry, value);
-      this.bindEvents(controlEl, errorEl, value);
+      const binding = this.bindEvents(controlEl, errorEl, value);
+
+      if (this.entry.component === 'Picker') {
+        const entry = this.entry;
+        const chooseEl = mountEl.querySelector('[data-action="choose"]');
+        const clearEl = mountEl.querySelector('[data-action="clear"]');
+
+        chooseEl.addEventListener('click', function() {
+          if (typeof entry.pickValue !== 'function') {
+            return;
+          }
+
+          const currentValue = toStr(controlEl.dataset.value);
+          Promise.resolve(entry.pickValue({
+            element: null,
+            value: {ids: currentValue, names: controlEl.value},
+            entryKey: entry.key || null
+          })).then(function(selected) {
+            if (!selected || !toStr(selected.id)) {
+              return;
+            }
+
+            const nextValue = toStr(selected.id);
+            controlEl.dataset.value = nextValue;
+            controlEl.value = toStr(selected.name) || nextValue;
+            binding.submitPicker(selected);
+          }).catch(function(error) {
+            console.error('选择表单失败', error);
+          });
+        });
+
+        clearEl.addEventListener('click', function() {
+          controlEl.dataset.value = '';
+          controlEl.value = '';
+          controlEl.placeholder = entry.emptyText || '';
+          binding.submitPicker({id: '', name: ''});
+        });
+      }
 
       return {
         controlEl,
@@ -39308,7 +39425,7 @@
 
   function writeDefaultExpression(context, element) {
     const businessObject = getBusinessObject(element);
-    let conditionExpression = getProperty(businessObject, 'conditionExpression');
+    let conditionExpression = getProperty$1(businessObject, 'conditionExpression');
     if (conditionExpression) {
       return conditionExpression;
     }
@@ -39342,7 +39459,7 @@
 
   function getFlowCondition(element) {
     const businessObject = getBusinessObject(element);
-    const conditionExpression = getProperty(businessObject, 'conditionExpression');
+    const conditionExpression = getProperty$1(businessObject, 'conditionExpression');
     return getExpressionBody(conditionExpression);
   }
 
@@ -39418,7 +39535,7 @@
     return queryTypedExtensionElements(element, 'flowable:TaskListener').map((listener) => {
       let binding = {type: DEFAULT_LISTENER_TYPE, value: ''};
       for (const type of SUPPORTED_LISTENER_TYPES) {
-        const value = getStr(getProperty(listener, type));
+        const value = getStr(getProperty$1(listener, type));
         if (value.trim()) {
           binding = { type, value };
           break;
@@ -39426,7 +39543,7 @@
       }
 
       return {
-        event: getStr(getProperty(listener, 'event')),
+        event: getStr(getProperty$1(listener, 'event')),
         type: binding.type,
         value: binding.value
       };
@@ -39489,7 +39606,7 @@
 
   function writeDefaultExtensionElements$2(context, element) {
     const businessObject = getBusinessObject(element);
-    const extensionElements = getProperty(businessObject, 'extensionElements');
+    const extensionElements = getProperty$1(businessObject, 'extensionElements');
     if (extensionElements) {
       return {extensionElements, commands: []};
     }
@@ -39524,7 +39641,7 @@
         context.bpmnFactory
     );
 
-    let values = getProperty(ensured.extensionElements, 'values');
+    let values = getProperty$1(ensured.extensionElements, 'values');
     values = Array.isArray(values) ? values : [];
 
     executeCommands(context.commandStack, [
@@ -40032,21 +40149,21 @@
   }
 
   function getLoopCharacteristics(element) {
-    return getProperty(getBusinessObject(element), 'loopCharacteristics');
+    return getProperty$1(getBusinessObject(element), 'loopCharacteristics');
   }
 
   function getTaskParameter(element, name) {
     const parametersElement = queryTypedExtensionElement(element, 'taskExt:Parameters');
-    let values = getProperty(parametersElement, 'values');
+    let values = getProperty$1(parametersElement, 'values');
     values = Array.isArray(values) ? values : [];
-    const index = values.findIndex((parameter) => getStr(getProperty(parameter, 'name')).trim() === name);
+    const index = values.findIndex((parameter) => getStr(getProperty$1(parameter, 'name')).trim() === name);
 
     return index >= 0 ? values[index] : null;
   }
 
   function getTaskParameterValue(element, name, fallback = '') {
     const parameter = getTaskParameter(element, name);
-    const value = getProperty(parameter, 'value');
+    const value = getProperty$1(parameter, 'value');
 
     return typeof value === 'string' ? value : fallback;
   }
@@ -40096,10 +40213,10 @@
       ...taskParameters,
       enabled: true,
       isSequential: isTruthy(loopCharacteristics.isSequential),
-      collection: getStr(getProperty(loopCharacteristics, 'flowable:collection'), value.collection),
-      elementVariable: getStr(getProperty(loopCharacteristics, 'flowable:elementVariable'), value.elementVariable),
-      loopCardinality: getExpressionBody(getProperty(loopCharacteristics, 'loopCardinality')),
-      completionCondition: getExpressionBody(getProperty(loopCharacteristics, 'completionCondition'))
+      collection: getStr(getProperty$1(loopCharacteristics, 'flowable:collection'), value.collection),
+      elementVariable: getStr(getProperty$1(loopCharacteristics, 'flowable:elementVariable'), value.elementVariable),
+      loopCardinality: getExpressionBody(getProperty$1(loopCharacteristics, 'loopCardinality')),
+      completionCondition: getExpressionBody(getProperty$1(loopCharacteristics, 'completionCondition'))
     };
   }
 
@@ -40151,7 +40268,7 @@
 
   function writeDefaultExtensionElements$1(context, element) {
     const businessObject = getBusinessObject(element);
-    const extensionElements = getProperty(businessObject, 'extensionElements');
+    const extensionElements = getProperty$1(businessObject, 'extensionElements');
     if (extensionElements) {
       return {extensionElements, commands: []};
     }
@@ -40181,12 +40298,12 @@
   function syncAssigneeParameters(context, element, value) {
     const ensured = writeDefaultExtensionElements$1(context, element);
     const oldExtensionElements = ensured.extensionElements;
-    const oldExtensionValues = getProperty(oldExtensionElements, 'values') || [];
+    const oldExtensionValues = getProperty$1(oldExtensionElements, 'values') || [];
     const oldParametersElement = queryTypedExtensionElement(element, 'taskExt:Parameters');
-    const oldParameterValues = getProperty(oldParametersElement, 'values') || [];
+    const oldParameterValues = getProperty$1(oldParametersElement, 'values') || [];
     const preservedExtensionValues = oldExtensionValues.filter((value) => value !== oldParametersElement);
     const preservedParameterValues = (Array.isArray(oldParameterValues) ? oldParameterValues : []).filter((parameter) => {
-      const name = toStr(getProperty(parameter, 'name')).trim();
+      const name = toStr(getProperty$1(parameter, 'name')).trim();
       return name !== 'assigneeMode' && name !== 'ids' && name !== 'names';
     });
     const isUserMode = value.assigneeMode === ASSIGNEE_MODE_USER;
@@ -40242,7 +40359,7 @@
   function buildAssigneeParameterCommands(context, element, value) {
     const ensured = writeDefaultExtensionElements$1(context, element);
     const oldExtensionElements = ensured.extensionElements;
-    const oldExtensionValues = getProperty(oldExtensionElements, 'values') || [];
+    const oldExtensionValues = getProperty$1(oldExtensionElements, 'values') || [];
     const isUserMode = value.assigneeMode === ASSIGNEE_MODE_USER;
 
     const commands = [];
@@ -40265,9 +40382,9 @@
       return commands;
     }
 
-    const parameterValues = getProperty(parametersElement, 'values') || [];
+    const parameterValues = getProperty$1(parametersElement, 'values') || [];
     const preservedParameterValues = parameterValues.filter((parameter) => {
-      const name = getStr(getProperty(parameter, 'name'), '').trim();
+      const name = getStr(getProperty$1(parameter, 'name'), '').trim();
       return name !== 'assigneeMode' && name !== 'ids' && name !== 'names';
     });
 
@@ -40936,7 +41053,7 @@
 
   function writeDefaultExtensionElements(context, element) {
     const businessObject = getBusinessObject$1(element);
-    const extensionElements = getProperty(businessObject, 'extensionElements');
+    const extensionElements = getProperty$1(businessObject, 'extensionElements');
     if (extensionElements) {
       return {extensionElements, commands: []};
     }
@@ -40983,8 +41100,8 @@
   }
 
   function getExtensionValues(parameter) {
-    const extensionsElement = getProperty(parameter, 'extensions');
-    const values = getProperty(extensionsElement, 'values');
+    const extensionsElement = getProperty$1(parameter, 'extensions');
+    const values = getProperty$1(extensionsElement, 'values');
 
     return {
       extensionsElement,
@@ -40994,7 +41111,7 @@
 
   function getParametersValues(element) {
     const parametersElement = queryTypedExtensionElement(element, 'taskExt:Parameters');
-    const values = getProperty(parametersElement, 'values');
+    const values = getProperty$1(parametersElement, 'values');
 
     return {
       parametersElement,
@@ -41021,7 +41138,7 @@
   }
 
   function createDefaultParameterExtensionsElement(context, element, parameter) {
-    const oldElement = getProperty(parameter, 'extensions');
+    const oldElement = getProperty$1(parameter, 'extensions');
     if (oldElement) {
       return { extensionsElement: oldElement, commands: [] };
     }
@@ -41286,7 +41403,7 @@
       });
     }
 
-    const oldParameterValues = getProperty(parametersElement, 'values');
+    const oldParameterValues = getProperty$1(parametersElement, 'values');
     const newParameterValues = Array.isArray(oldParameterValues) ? oldParameterValues : [];
     const parameterElement = createElement('taskExt:Parameter', {
       name: toStr(parameter.name),
@@ -41315,7 +41432,7 @@
 
   function updateParameter(context, element, index, parameter = {}) {
     const parametersElement = queryTypedExtensionElement(element, 'taskExt:Parameters');
-    const oldParameterValues = getProperty(parametersElement, 'values');
+    const oldParameterValues = getProperty$1(parametersElement, 'values');
     const parameterElement = Array.isArray(oldParameterValues) ? oldParameterValues[index] : null;
 
     if (!parameterElement) {
@@ -41357,7 +41474,7 @@
 
     return values.map((parameter, index) => ({
       index,
-      ...createParameterProperties({ name: getProperty(parameter, 'name'), value: getProperty(parameter, 'value') })
+      ...createParameterProperties({ name: getProperty$1(parameter, 'name'), value: getProperty$1(parameter, 'value') })
     }));
   }
 
@@ -41369,9 +41486,9 @@
 
       return extensions.map((extension, extensionIndex) => ({
         parameterIndex,
-        parameterName: getStr(getProperty(parameter, 'name')),
+        parameterName: getStr(getProperty$1(parameter, 'name')),
         extensionIndex,
-        ...createExtensionProperties({ key: getProperty(extension, 'key') })
+        ...createExtensionProperties({ key: getProperty$1(extension, 'key') })
       }));
     });
   }
@@ -41833,6 +41950,7 @@
   const COMPONENTS = {
     EXPRESSION_EDITOR: 'ExpressionEditor',
     PARAMETER_EDITOR: 'ParameterEditor',
+    PICKER: 'Picker',
     SWITCH: 'Switch',
     TEXT_INPUT: 'TextInput',
     LISTENER_EDITOR: 'ListenerEditor',
@@ -41855,7 +41973,7 @@
     }
 
     const businessObject = getElementBusinessObject(element);
-    const value = getProperty(businessObject, key) !== undefined ? getProperty(businessObject, key) : '';
+    const value = getProperty$1(businessObject, key) !== undefined ? getProperty$1(businessObject, key) : '';
     if (key === 'conditionExpression') {
       if (!value) {
         return '';
@@ -41974,6 +42092,16 @@
     });
   }
 
+  function createPickerEntry(key, label, options = {}) {
+    return createEntry({
+      component: COMPONENTS.PICKER,
+      key,
+      label,
+      emptyText: options.emptyText || '未选择',
+      ...options
+    });
+  }
+
   function createSwitchEntry(key, label, options = {}) {
     return createEntry({
       component: COMPONENTS.SWITCH,
@@ -42026,6 +42154,56 @@
 
   function createSequenceFlowSetting(element) {
     return createPanelSetting(element, SEQUENCE_FLOW_GROUPS);
+  }
+
+  function getProperty(element, key) {
+    const businessObject = element && element.businessObject ? element.businessObject : element;
+    if (!businessObject) {
+      return undefined;
+    }
+
+    if (Object.prototype.hasOwnProperty.call(businessObject, key)) {
+      return businessObject[key];
+    }
+
+    return typeof businessObject.get === 'function' ? businessObject.get(key) : undefined;
+  }
+
+  function createProperties(data) {
+    const formKey = data && typeof data === 'object' ? data.id : data;
+    const formName = data && typeof data === 'object' ? data.name : '';
+
+    return {
+      'flowable:formKey': formKey === '' ? undefined : formKey,
+      'flowable:formName': formKey && formName ? formName : undefined
+    };
+  }
+
+  function createStartEventSetting(element, options = {}) {
+    return createPanelSetting(element, [
+      {
+        id: 'base',
+        label: '基本信息',
+        entries: [
+          createSimpleEntry('name', '节点名称'),
+          createSimpleEntry('id', '节点ID')
+        ]
+      },
+      {
+        id: 'form',
+        label: '表单配置',
+        entries: [
+          createPickerEntry('flowable:formKey', '表单', {
+            emptyText: '未选择表单',
+            pickValue: options.formPicker,
+            getText: function() {
+              return getProperty(element, 'flowable:formName') || '';
+            },
+            createProperties: createProperties
+          })
+        ]
+      }
+    ]);
   }
 
   const USER_TASK_GROUPS = [
@@ -42106,10 +42284,11 @@
   const SCHEMA_ROUTES = {
     'bpmn:Process': (element) => createPanelSetting(element, PROCESS_GROUPS),
     'bpmn:SequenceFlow': createSequenceFlowSetting,
+    'bpmn:StartEvent': createStartEventSetting,
     'bpmn:UserTask': createUserTaskSetting
   };
 
-  function resolvePanelSetting(element) {
+  function resolvePanelSetting(element, options = {}) {
     if (!element) {
       return createEmptyPanelSetting();
     }
@@ -42118,7 +42297,7 @@
     const resolver = SCHEMA_ROUTES[elementType];
 
     if (resolver) {
-      return resolver(element);
+      return resolver(element, options);
     }
 
     return createPanelSetting(element, FALLBACK_GROUPS);
@@ -42169,7 +42348,7 @@
         return null;
       }
 
-      const panelState = resolvePanelSetting(element);
+      const panelState = resolvePanelSetting(element, options);
 
       const _options = {
         context: options.context || null,
@@ -42354,7 +42533,8 @@
         context: this._context,
         uiState: this._uiState,
         userPicker: this._config.userPicker,
-        listenerSelectMode: this._config.listenerSelectMode
+        listenerSelectMode: this._config.listenerSelectMode,
+        formPicker: this._config.formPicker
       });
 
       const form = rerenderLayuiForm();

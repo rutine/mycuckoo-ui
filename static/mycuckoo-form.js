@@ -16,6 +16,9 @@
         const rate = layui.rate;
         const dropdown = layui.dropdown;
         const layer = layui.layer;
+        const queryObj = MyCuckoo.getQueryObject(location.search);
+        const resources = MyCuckoo.getResource(queryObj.reskey);
+        const resourceMap = MyCuckoo.getDictMap(resources);
 
         // ==================== 内部状态 ====================
 
@@ -23,7 +26,7 @@
             formConfig: [],
             formData: {},
             dataId: null,
-            bizType: '',
+            formId: null,
             bizId: '',
             mode: 'edit',
             loaded: false,
@@ -473,7 +476,7 @@
              * @param {Object} options
              * @param {string} options.elem 容器选择器
              * @param {string} [options.formFilter] 外部容器的 lay-filter 名称，默认 'editForm'
-             * @param {string} options.bizType 业务类型
+             * @param {string} options.formId 表单ID
              * @param {string} [options.bizId] 业务ID
              * @param {string} [options.mode] edit / view
              * @param {Function} [options.onLoaded] 加载完成回调
@@ -483,7 +486,7 @@
                     formConfig: [],
                     formData: {},
                     dataId: null,
-                    bizType: options.bizType || '',
+                    formId: options.formId || queryObj.formId,
                     bizId: options.bizId || '',
                     mode: options.mode || 'edit',
                     loaded: false,
@@ -491,8 +494,8 @@
                     formFilter: options.formFilter || 'editForm'
                 };
 
-                if (!state.bizType) {
-                    layer.msg('缺少 bizType 参数', { icon: 2 });
+                if (!state.formId) {
+                    layer.msg('缺少 formId 参数', { icon: 2 });
                     return;
                 }
 
@@ -502,16 +505,17 @@
                     return;
                 }
 
-                const action = {
-                    url: MyCuckoo.resolve('http://localhost:8080/cms/form/mgr/data/{bizType}?bizId={bizId}', {
-                        bizType: state.bizType,
+                let action = {
+                    url: MyCuckoo.resolve('http://localhost:8080/cms/form/mgr/data/{formId}?bizId={bizId}', {
+                        formId: state.formId,
                         bizId: state.bizId
                     }),
                     method: 'get',
                     canAccess: () => true
                 };
+                action = resourceMap[MyCuckoo.res.formMgr.viewData];
 
-                $.request(action).then(json => {
+                $.request(action, {formId: state.formId, bizId: state.bizId}).then(json => {
                     if (json.code === 0 && json.data) {
                         const vo = json.data;
                         state.formConfig = vo.configs || [];
@@ -556,17 +560,18 @@
 
                 const payload = {
                     id: state.dataId,
-                    bizType: state.bizType,
+                    formId: state.formId,
                     bizId: state.bizId,
                     data: result,
                     ...params
                 };
 
-                const action = {
+                let action = {
                     url: MyCuckoo.resolve('http://localhost:8080/cms/form/mgr/data'),
                     method: 'post',
                     canAccess: () => true
                 };
+                action = resourceMap[MyCuckoo.res.formMgr.saveData];
 
                 return $.request(action, payload).then(json => {
                     if (json.code === 0 && !state.dataId && json.data) {
